@@ -37,7 +37,105 @@ namespace :credentials do
     end
   end
 
+  desc "Generate a VAPID (Web Push) P-256 key pair and save it into an env's credentials (ENVIRONMENT=production by default; FORCE=1 to overwrite)"
+  task generate_vapid: :environment do
+    require "openssl"
+    require "base64"
+
+    env = ENV.fetch("ENVIRONMENT", "production")
+    config_path, key_path =
+      case env
+      when "production"  then ["config/credentials/production.yml.enc",  "config/credentials/production.key"]
+      when "development" then ["config/credentials/development.yml.enc", "config/credentials/development.key"]
+      when "base"        then ["config/credentials.yml.enc",            "config/master.key"]
+      else abort("Unknown ENVIRONMENT=#{env.inspect} (use production | development | base)")
+      end
+
+    abs = Rails.root.join(config_path)
+    abort("#{config_path} not found") unless abs.exist?
+
+    # 1. Generate the pair in the exact encoding Vendors::WebPush::Client expects.
+    curve       = Vendors::WebPush::Client::CURVE # "prime256v1"
+    ec          = OpenSSL::PKey::EC.generate(curve)
+    priv_bytes  = ec.private_key.to_s(2).rjust(32, "\x00")
+    pub_bytes   = ec.public_key.to_bn.to_s(2)
+    raise "bad public length #{pub_bytes.bytesize}" unless pub_bytes.bytesize == 65
+    raise "bad private length #{priv_bytes.bytesize}" unless priv_bytes.bytesize == 32
+    public_key  = Base64.urlsafe_encode64(pub_bytes, padding: false)
+    private_key = Base64.urlsafe_encode64(priv_bytes, padding: false)
+
+    enc     = encrypted_config(config_path, key_path)
+    content = enc.read.dup.force_encoding("UTF-8") # decrypted bytes come back ASCII-8BIT
+    data    = YAML.safe_load(content, aliases: true) || {}
+
+    if data.dig("vapid", "public_key").to_s != "" && ENV["FORCE"] != "1"
+      abort("#{config_path} already has a vapid block. Re-run with FORCE=1 to overwrite.")
+    end
+
+    new_content =
+      if data.key?("vapid")
+        # Replace the existing vapid block in place (preserve comments/order).
+        replace_block(content, "vapid", { "public_key" => public_key, "private_key" => private_key })
+      else
+        block = +"\n# ─────────────────────────────────────────────────────────────\n"
+        block << "# Web Push (VAPID) — PWA browser notifications. Required in every env.\n"
+        block << "# ─────────────────────────────────────────────────────────────\n"
+        block << "vapid:\n  public_key:  #{public_key}\n  private_key: #{private_key}\n"
+        (content.end_with?("\n") ? content : "#{content}\n") + block
+      end
+
+    # 2. Validate: parses, nothing else changed, and the private key round-trips
+    #    to the stored public point (proves sign + applicationServerKey match).
+    nd = YAML.safe_load(new_content, aliases: true) || {}
+    raise "vapid.public_key missing after write"  if nd.dig("vapid", "public_key").to_s.empty?
+    raise "vapid.private_key missing after write" if nd.dig("vapid", "private_key").to_s.empty?
+    data.except("vapid").each { |k, v| raise "lost/altered key #{k}" unless nd[k] == v }
+    verify_vapid_roundtrip!(private_key, public_key, curve)
+
+    File.binwrite("#{abs}.bak", File.binread(abs))
+    enc.write(new_content)
+
+    puts "VAPID written to #{config_path} (env=#{env})."
+    puts "  public_key  (applicationServerKey, safe to expose): #{public_key}"
+    puts "  private_key (secret): #{mask(private_key)}  [#{private_key.length} chars]"
+    puts "  round-trip: derived public point == stored public_key ✓"
+    puts "  backup: #{config_path}.bak"
+  end
+
   # ── helpers ──────────────────────────────────────────────────────────────
+
+  # Rebuild the EC key the way the app does and confirm the derived public point
+  # equals what we stored — a corrupt private key would fail here, not in prod.
+  def verify_vapid_roundtrip!(private_key, public_key, curve)
+    raw  = Base64.urlsafe_decode64(private_key.ljust((private_key.length + 3) & ~3, "="))
+    asn1 = OpenSSL::ASN1::Sequence([
+      OpenSSL::ASN1::Integer(OpenSSL::BN.new(1)),
+      OpenSSL::ASN1::OctetString(raw),
+      OpenSSL::ASN1::ASN1Data.new([OpenSSL::ASN1::ObjectId(curve)], 0, :CONTEXT_SPECIFIC)
+    ])
+    rebuilt = OpenSSL::PKey::EC.new(asn1.to_der)
+    derived = Base64.urlsafe_encode64(rebuilt.public_key.to_bn.to_s(2), padding: false)
+    raise "VAPID round-trip mismatch" unless derived == public_key
+  end
+
+  # Replace a top-level `name:` block's children with new key/values, in place.
+  def replace_block(content, name, kv)
+    lines = content.lines
+    out = []
+    i = 0
+    while i < lines.length
+      if lines[i] =~ /\A#{Regexp.escape(name)}:(\s|#|$)/
+        out << "#{name}:\n"
+        kv.each { |k, v| out << "  #{k}: #{v}\n" }
+        i += 1
+        i += 1 while i < lines.length && lines[i] =~ /\A[ \t]+\S/
+        next
+      end
+      out << lines[i]
+      i += 1
+    end
+    out.join
+  end
 
   def migrate_target(config_path, key_path, apply:)
     abs = Rails.root.join(config_path)
