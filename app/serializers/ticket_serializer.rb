@@ -1,0 +1,39 @@
+# frozen_string_literal: true
+
+# Full ticket detail (the contextual ticket view).
+class TicketSerializer < ActiveModel::Serializer
+  attributes :id, :title, :display_title, :status, :priority, :position,
+             :due_date, :scheduled_at, :published_at, :channels, :creative_type,
+             :ai_summaries, :fields, :workflow_step, :next_status,
+             :project, :assignee, :created_by, :allowed_field_keys, :created_at,
+             :archived, :archived_at
+
+  def display_title = object.display_title
+  def due_date = object.due_date&.iso8601
+  def scheduled_at = object.scheduled_at&.iso8601
+  def published_at = object.published_at&.iso8601
+  def created_at = object.created_at.iso8601
+  def archived = object.archived?
+  def archived_at = object.archived_at&.iso8601
+  def workflow_step = object.workflow_step
+  def next_status = object.next_status
+  def allowed_field_keys = Tickets::Fields.allowed_keys(object.status)
+
+  def project
+    p = object.project
+    return nil unless p
+
+    { id: p.id, name: p.name, color: p.color, client_name: p.client&.name }
+  end
+
+  def assignee = person(object.assignee)
+  def created_by = person(object.created_by)
+
+  private
+
+  def person(user)
+    return nil unless user
+
+    { id: user.id, name: user.display_name }
+  end
+end

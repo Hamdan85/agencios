@@ -1,0 +1,186 @@
+<% content_for :title, "agencios — o sistema operacional da sua agência" %>
+
+<%# ── Hero ──────────────────────────────────────────────────────── %>
+<section class="relative overflow-hidden bg-shell-gradient">
+  <div class="absolute inset-0 bg-aurora opacity-70"></div>
+  <div class="relative mx-auto max-w-6xl px-5 pb-20 pt-28 text-center sm:px-8 sm:pt-36">
+    <span class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-bold text-white/80 ring-1 ring-white/10">
+      <span class="text-amber"><%= icon "zap", size: 13 %></span> O sistema operacional da sua agência
+    </span>
+    <h1 class="mx-auto mt-6 max-w-3xl font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-white sm:text-6xl">
+      Clientes, projetos e conteúdo viral — <span class="text-gradient-brand">num só lugar.</span>
+    </h1>
+    <p class="mx-auto mt-5 max-w-xl text-lg text-white/70">
+      Do brief ao post no ar: um funil de produção com IA, publicação multi-rede, métricas e cobrança.
+      Tudo que sua agência de social media precisa para escalar.
+    </p>
+    <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+      <%= link_to "/cadastro", class: "inline-flex h-12 items-center gap-2 rounded-xl bg-brand-gradient px-6 text-base font-semibold text-white shadow-[0_10px_28px_-8px_rgba(124,58,237,0.7)] transition hover:brightness-105" do %>
+        Começar grátis <%= icon "arrow-right", size: 18 %>
+      <% end %>
+      <%= link_to "Como funciona", how_it_works_path, class: "inline-flex h-12 items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 text-base font-semibold text-white transition hover:bg-white/10" %>
+    </div>
+    <p class="mt-4 text-xs text-white/40">14 dias grátis · sem cartão · cancele quando quiser</p>
+
+    <%= render "pages/shared/board_preview", funnel: @funnel %>
+  </div>
+</section>
+
+<%# ── Trust / logos strip ───────────────────────────────────────── %>
+<section class="border-b border-border bg-surface">
+  <div class="mx-auto max-w-6xl px-5 py-8 sm:px-8">
+    <p class="text-center text-xs font-bold uppercase tracking-[0.16em] text-ink-muted">A operação inteira da agência, integrada</p>
+    <div class="mt-5 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-ink-faint">
+      <% [["Instagram", "share-2"], ["Mercado Pago", "receipt"], ["Google Meet", "calendar-days"], ["Claude", "sparkles"], ["HeyGen", "video"], ["Stripe", "shield-check"]].each do |name, ic| %>
+        <span class="inline-flex items-center gap-1.5 font-display text-sm font-bold text-ink-muted"><%= icon ic, size: 16 %> <%= name %></span>
+      <% end %>
+    </div>
+  </div>
+</section>
+
+<%# ── The funnel ────────────────────────────────────────────────── %>
+<section class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24">
+  <div class="text-center reveal">
+    <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand">O funil</p>
+    <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">Sete etapas, do insight ao impacto</h2>
+    <p class="mx-auto mt-3 max-w-lg text-ink-muted">Cada ticket caminha por um funil colorido e auto-explicativo — você sabe onde tudo está num piscar de olhos.</p>
+  </div>
+  <div class="mt-10 flex flex-wrap items-stretch justify-center gap-3 reveal">
+    <% @funnel.each_with_index do |s, i| %>
+      <div class="flex items-center gap-3">
+        <div class="flex w-28 flex-col items-center gap-2 rounded-2xl border border-border bg-surface p-4 lift">
+          <span class="flex size-11 items-center justify-center rounded-xl" style="background: <%= soft_bg(s[:color]) %>; color: <%= s[:color] %>;">
+            <%= icon s[:icon], size: 22, stroke: 2.3 %>
+          </span>
+          <span class="text-sm font-bold text-ink"><%= s[:label] %></span>
+        </div>
+        <% if i < @funnel.length - 1 %>
+          <span class="hidden text-ink-faint sm:block"><%= icon "arrow-right", size: 16 %></span>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+  <div class="mt-8 text-center">
+    <%= link_to how_it_works_path, class: "inline-flex items-center gap-1.5 text-sm font-semibold text-brand transition hover:gap-2.5" do %>
+      Ver o funil em detalhe <%= icon "arrow-right", size: 16 %>
+    <% end %>
+  </div>
+</section>
+
+<%# ── Features ──────────────────────────────────────────────────── %>
+<section class="bg-surface py-20 sm:py-24">
+  <div class="mx-auto max-w-6xl px-5 sm:px-8">
+    <div class="text-center reveal">
+      <p class="text-xs font-bold uppercase tracking-[0.16em] text-pink">Tudo incluso</p>
+      <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">Uma plataforma, a operação inteira</h2>
+      <p class="mx-auto mt-3 max-w-lg text-ink-muted">Seis frentes que normalmente exigem seis ferramentas — reunidas e conversando entre si.</p>
+    </div>
+    <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <% @features.each do |f| %>
+        <%= link_to feature_path(f[:slug]), class: "group block rounded-2xl border border-border bg-canvas p-6 lift reveal" do %>
+          <span class="flex size-12 items-center justify-center rounded-2xl" style="background: <%= soft_bg(f[:color]) %>; color: <%= f[:color] %>;">
+            <%= icon f[:icon], size: 24, stroke: 2.2 %>
+          </span>
+          <h3 class="mt-4 flex items-center gap-1.5 font-display text-lg font-bold text-ink">
+            <%= f[:name] %>
+            <span class="text-ink-faint transition-all group-hover:translate-x-0.5 group-hover:text-brand"><%= icon "arrow-right", size: 16 %></span>
+          </h3>
+          <p class="mt-1.5 text-sm leading-relaxed text-ink-muted"><%= f[:card] %></p>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</section>
+
+<%# ── Claude connector ──────────────────────────────────────────── %>
+<section class="bg-surface pb-20 sm:pb-24">
+  <div class="mx-auto max-w-6xl px-5 sm:px-8">
+    <div class="reveal relative overflow-hidden rounded-3xl bg-shell-gradient p-8 text-white shadow-[0_24px_60px_-30px_rgba(17,10,36,0.7)] sm:p-12">
+      <div class="bg-aurora pointer-events-none absolute inset-0 opacity-80"></div>
+      <div class="relative grid items-center gap-10 lg:grid-cols-2">
+        <div>
+          <span class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-white/80">
+            <%= icon "sparkles", size: 13 %> Novo — Conector do Claude
+          </span>
+          <h2 class="mt-4 font-display text-3xl font-extrabold leading-tight sm:text-4xl">
+            Opere a agência <span class="text-gradient-brand">conversando com o Claude</span>
+          </h2>
+          <p class="mt-3 max-w-md text-white/75">
+            Adicione o agencios como <strong class="text-white">conector no Claude</strong> e comande tudo
+            por linguagem natural — crie e mova tickets, gere criativos, agende posts e cobranças, sem sair
+            da conversa.
+          </p>
+          <ul class="mt-6 space-y-2.5 text-sm text-white/85">
+            <li class="flex items-center gap-2"><span class="text-emerald"><%= icon "check", size: 16 %></span> Cola uma URL — sem login, sem OAuth</li>
+            <li class="flex items-center gap-2"><span class="text-emerald"><%= icon "check", size: 16 %></span> Respeita seu papel e permissões em cada workspace</li>
+            <li class="flex items-center gap-2"><span class="text-emerald"><%= icon "check", size: 16 %></span> Mais de 70 ações da plataforma à disposição</li>
+          </ul>
+        </div>
+        <div class="rounded-2xl border border-white/10 bg-white/[0.06] p-5 backdrop-blur">
+          <div class="space-y-3">
+            <div class="ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-brand-bright/90 px-4 py-2.5 text-sm text-white shadow">
+              No workspace estúdio-pulse, crie um ticket no projeto Bloom: “Reel de lançamento”.
+            </div>
+            <div class="max-w-[90%] rounded-2xl rounded-bl-md bg-white/10 px-4 py-2.5 text-sm text-white/85">
+              Pronto ✅ — ticket <strong class="text-white">#214</strong> criado em <strong class="text-white">Ideação</strong>, atribuído a você. Quer que eu já gere um carrossel?
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%# ── How it works (3 steps) ────────────────────────────────────── %>
+<section class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24">
+  <div class="text-center reveal">
+    <p class="text-xs font-bold uppercase tracking-[0.16em] text-sky">Como funciona</p>
+    <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">Três passos até o post no ar</h2>
+  </div>
+  <div class="mt-12 grid gap-6 md:grid-cols-3">
+    <% @steps.each do |s| %>
+      <div class="relative rounded-2xl border border-border bg-surface p-7 reveal">
+        <span class="flex size-12 items-center justify-center rounded-2xl bg-brand-gradient font-display text-xl font-black text-white shadow-lg"><%= s[:n] %></span>
+        <h3 class="mt-4 font-display text-xl font-bold text-ink"><%= s[:title] %></h3>
+        <p class="mt-2 text-sm leading-relaxed text-ink-muted"><%= s[:desc] %></p>
+      </div>
+    <% end %>
+  </div>
+</section>
+
+<%# ── Pricing preview ───────────────────────────────────────────── %>
+<section class="bg-surface py-20 sm:py-24">
+  <div class="mx-auto max-w-6xl px-5 sm:px-8">
+    <div class="text-center reveal">
+      <p class="text-xs font-bold uppercase tracking-[0.16em] text-emerald">Planos</p>
+      <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">Preço que cresce com a agência</h2>
+    </div>
+    <div class="mx-auto mt-12 grid max-w-4xl gap-6 md:grid-cols-3">
+      <% @plans.each do |p| %>
+        <div class="<%= p[:highlight] ? 'relative rounded-3xl border-2 border-brand bg-brand-soft p-7 shadow-xl reveal' : 'rounded-3xl border border-border bg-canvas p-7 reveal' %>">
+          <% if p[:highlight] %>
+            <span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand-gradient px-3 py-1 text-xs font-bold text-white">Mais popular</span>
+          <% end %>
+          <h3 class="font-display text-xl font-extrabold text-ink"><%= p[:name] %></h3>
+          <p class="mt-1 text-sm text-ink-muted"><%= plan_seats_label(p[:seats]) %></p>
+          <p class="mt-4 font-display text-4xl font-extrabold text-ink"><%= brl_short(p[:price_cents]) %><span class="text-base font-semibold text-ink-muted">/mês</span></p>
+          <ul class="mt-6 space-y-2.5">
+            <% p[:features].first(5).each do |feat| %>
+              <li class="flex items-center gap-2 text-sm text-ink-secondary">
+                <span class="text-emerald shrink-0"><%= icon "check", size: 16, stroke: 3 %></span> <%= feat %>
+              </li>
+            <% end %>
+          </ul>
+          <%= link_to p[:cta], "/cadastro",
+                class: "mt-7 inline-flex h-11 w-full items-center justify-center rounded-xl text-sm font-semibold transition " +
+                  (p[:highlight] ? "bg-brand-gradient text-white shadow-lg hover:brightness-105" : "border border-border bg-surface text-ink hover:border-brand/40 hover:bg-brand-soft") %>
+        </div>
+      <% end %>
+    </div>
+    <p class="mt-6 text-center text-sm">
+      <%= link_to "Ver planos e perguntas frequentes", pricing_path, class: "font-semibold text-brand hover:underline" %>
+    </p>
+  </div>
+</section>
+
+<%= render "pages/shared/cta" %>

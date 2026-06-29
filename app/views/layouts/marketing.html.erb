@@ -1,0 +1,45 @@
+<% page_title = content_for?(:title) ? yield(:title) : "agencios — o sistema operacional da sua agência" %>
+<% page_description = content_for?(:description) ? yield(:description) : "Do brief ao post no ar: um funil de produção com IA, publicação multi-rede, métricas e cobrança. Tudo que sua agência de social media precisa para escalar." %>
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="csrf-token" content="<%= form_authenticity_token %>" />
+    <meta name="theme-color" content="#110A24" />
+
+    <title><%= page_title %></title>
+    <meta name="description" content="<%= page_description %>" />
+    <link rel="canonical" href="<%= request.original_url %>" />
+
+    <!-- Open Graph / social -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="agencios" />
+    <meta property="og:title" content="<%= page_title %>" />
+    <meta property="og:description" content="<%= page_description %>" />
+    <meta property="og:url" content="<%= request.original_url %>" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="<%= page_title %>" />
+    <meta name="twitter:description" content="<%= page_description %>" />
+
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400..800&family=Inter:opsz,wght@14..32,300..700&family=Space+Grotesk:wght@400..700&display=swap" />
+
+    <%= vite_client_tag %>
+    <%= vite_javascript_tag "marketing.js" %>
+  </head>
+  <body class="min-h-screen bg-canvas text-ink antialiased">
+    <%= render "pages/shared/header" %>
+    <main>
+      <%= yield %>
+    </main>
+    <%= render "pages/shared/footer" %>
+    <%= render "pages/shared/cookie_consent" %>
+  </body>
+</html>

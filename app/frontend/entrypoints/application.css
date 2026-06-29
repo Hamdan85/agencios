@@ -1,0 +1,27 @@
+/* Tailwind v4 core */
+@import 'tailwindcss';
+
+/* Scan all JSX/JS for class usage */
+@source '../**/*.{jsx,js,ts,tsx}';
+
+/* Design-system tokens */
+@import '../styles/theme.css';
+
+/* Plugins */
+@plugin '@tailwindcss/typography';
+@plugin '@tailwindcss/forms';
+
+html, body {
+  background-color: var(--color-canvas);
+}
+body {
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+#root { min-height: 100vh; }
+
+a, button, [role='button'] { touch-action: manipulation; }
+
+::selection { background: color-mix(in srgb, var(--color-brand) 22%, transparent); }

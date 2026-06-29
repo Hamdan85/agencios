@@ -1,0 +1,57 @@
+/*
+ * agencios — marketing / landing stylesheet (SSR)
+ * Mirrors the SPA design system, but scoped to the server-rendered ERB views.
+ * Tailwind scans the marketing views below so the utility classes used in ERB
+ * are emitted into THIS bundle (kept lean — the app's classes live elsewhere).
+ */
+@import 'tailwindcss';
+
+/* Scan the server-rendered marketing views for utility usage */
+@source '../../views/pages/**/*.erb';
+@source '../../views/layouts/marketing.html.erb';
+
+/* Shared design-system tokens + utilities — single source of truth */
+@import '../styles/theme.css';
+
+@plugin '@tailwindcss/typography';
+@plugin '@tailwindcss/forms';
+
+html { scroll-behavior: smooth; }
+html, body { background-color: var(--color-canvas); }
+body {
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+a, button, [role='button'] { touch-action: manipulation; }
+::selection { background: color-mix(in srgb, var(--color-brand) 22%, transparent); }
+
+/* Sticky header gains a hairline + shadow once the page scrolls. */
+[data-header] { transition: background-color .25s ease, box-shadow .25s ease, border-color .25s ease; }
+[data-header].is-scrolled {
+  background-color: color-mix(in srgb, var(--color-brand-ink) 88%, transparent);
+  box-shadow: 0 10px 30px -18px rgba(0, 0, 0, 0.7);
+}
+
+/* Reveal-on-scroll — progressive enhancement.
+   Hidden ONLY when JS is available (html.js), so no-JS visitors see everything. */
+.js .reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity .6s var(--ease-spring), transform .6s var(--ease-spring);
+}
+.js .reveal.is-visible { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .js .reveal { opacity: 1; transform: none; transition: none; }
+  html { scroll-behavior: auto; }
+}
+
+/* FAQ accordion — animated height via JS-set max-height. */
+[data-accordion-panel] {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height .3s var(--ease-spring);
+}
+[data-accordion-item][data-open] [data-accordion-chevron] { transform: rotate(180deg); }
+[data-accordion-chevron] { transition: transform .25s ease; }

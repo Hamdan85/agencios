@@ -1,0 +1,13 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="agencios">
+  <defs>
+    <linearGradient id="ag-tile" x1="48" y1="24" x2="456" y2="488" gradientUnits="userSpaceOnUse"><stop stop-color="#8B5CF6"/><stop offset="1" stop-color="#5B21B6"/></linearGradient>
+    <radialGradient id="ag-glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(132 104) rotate(58) scale(380)"><stop stop-color="#FFFFFF" stop-opacity="0.20"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient>
+    <linearGradient id="ag-spark" x1="344" y1="112" x2="416" y2="196" gradientUnits="userSpaceOnUse"><stop stop-color="#F9A8D4"/><stop offset="1" stop-color="#EC4899"/></linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#ag-tile)"/>
+  <rect width="512" height="512" fill="url(#ag-glow)"/>
+  <g transform="translate(256 262) scale(0.72) translate(-272 -262)">
+    <g stroke="#FFFFFF" stroke-width="54" stroke-linecap="round" fill="none"><circle cx="232" cy="300" r="92"/><path d="M324 198 V402"/></g>
+    <path d="M380 110 Q389 146 420 155 Q389 164 380 200 Q371 164 340 155 Q371 146 380 110 Z" fill="url(#ag-spark)"/>
+  </g>
+</svg>

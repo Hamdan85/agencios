@@ -1,0 +1,119 @@
+<% content_for :title, "Preços — agencios" %>
+<% content_for :description, "Planos que crescem com a sua agência: Solo, Agência e Enterprise. 14 dias grátis, sem cartão. Geração de criativos cobrada por uso, com transparência." %>
+
+<%# ── Hero ──────────────────────────────────────────────────────── %>
+<section class="relative overflow-hidden bg-shell-gradient">
+  <div class="absolute inset-0 bg-aurora opacity-70"></div>
+  <div class="relative mx-auto max-w-4xl px-5 pb-28 pt-28 text-center sm:px-8 sm:pt-36">
+    <span class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-bold text-white/80 ring-1 ring-white/10">
+      <span class="text-emerald"><%= icon "rocket", size: 13 %></span> Planos
+    </span>
+    <h1 class="mx-auto mt-6 max-w-3xl font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-white sm:text-5xl">
+      Preço que cresce <span class="text-gradient-brand">com a agência.</span>
+    </h1>
+    <p class="mx-auto mt-5 max-w-xl text-lg text-white/70">
+      Comece grátis e escale quando precisar. Sem surpresa: a geração de criativos é cobrada por uso,
+      transparente na fatura.
+    </p>
+  </div>
+</section>
+
+<%# ── Plans ─────────────────────────────────────────────────────── %>
+<section class="mx-auto -mt-16 max-w-6xl px-5 sm:px-8">
+  <div class="grid gap-6 md:grid-cols-3">
+    <% @plans.each do |p| %>
+      <div class="<%= p[:highlight] ? 'relative rounded-3xl border-2 border-brand bg-surface p-7 shadow-2xl reveal' : 'rounded-3xl border border-border bg-surface p-7 shadow-lg reveal' %>">
+        <% if p[:highlight] %>
+          <span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand-gradient px-3 py-1 text-xs font-bold text-white">Mais popular</span>
+        <% end %>
+        <h2 class="font-display text-xl font-extrabold text-ink"><%= p[:name] %></h2>
+        <p class="mt-1 text-sm text-ink-muted"><%= p[:tagline] %></p>
+        <p class="mt-5 font-display text-4xl font-extrabold text-ink"><%= brl_short(p[:price_cents]) %><span class="text-base font-semibold text-ink-muted">/mês</span></p>
+        <p class="mt-1 text-xs font-semibold uppercase tracking-wider text-ink-muted"><%= plan_seats_label(p[:seats]) %></p>
+        <%= link_to p[:cta], "/cadastro",
+              class: "mt-6 inline-flex h-11 w-full items-center justify-center rounded-xl text-sm font-semibold transition " +
+                (p[:highlight] ? "bg-brand-gradient text-white shadow-lg hover:brightness-105" : "border border-border bg-surface text-ink hover:border-brand/40 hover:bg-brand-soft") %>
+        <ul class="mt-7 space-y-3 border-t border-border pt-6">
+          <% p[:features].each do |feat| %>
+            <li class="flex items-center gap-2.5 text-sm text-ink-secondary">
+              <span class="flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald/12 text-emerald"><%= icon "check", size: 13, stroke: 3 %></span>
+              <%= feat %>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+  </div>
+  <p class="mt-6 text-center text-sm text-ink-muted">Todos os planos incluem 14 dias grátis · sem cartão de crédito · cancele quando quiser.</p>
+</section>
+
+<%# ── Usage-based metering explainer ────────────────────────────── %>
+<section class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24">
+  <div class="overflow-hidden rounded-3xl border border-border bg-surface reveal">
+    <div class="grid lg:grid-cols-2">
+      <div class="p-8 sm:p-10">
+        <span class="inline-flex items-center gap-2 rounded-full bg-brand-soft px-3 py-1.5 text-xs font-bold text-brand"><%= icon "zap", size: 13 %> Cobrança por uso</span>
+        <h2 class="mt-4 font-display text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">Você só paga pelo que gera</h2>
+        <p class="mt-3 text-ink-muted">A assinatura cobre a plataforma e os assentos. A geração de carrosséis e vídeos é medida por uso — cada peça aparece de forma transparente na sua fatura.</p>
+        <ul class="mt-6 space-y-3">
+          <% [
+            ["image", "#7C3AED", "Carrosséis", "Cobrados por geração."],
+            ["video", "#EC4899", "Vídeos UGC", "Cobrados por geração."],
+            ["sparkles", "#10B981", "Imagens", "Geradas sem cobrança por uso."],
+          ].each do |ic, cc, title, desc| %>
+            <li class="flex items-center gap-3">
+              <span class="flex size-10 items-center justify-center rounded-xl" style="background: <%= soft_bg(cc) %>; color: <%= cc %>;"><%= icon ic, size: 20, stroke: 2.2 %></span>
+              <div>
+                <span class="font-display text-sm font-bold text-ink"><%= title %></span>
+                <span class="ml-1.5 text-sm text-ink-muted"><%= desc %></span>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+      <div class="flex items-center justify-center bg-shell-gradient p-8 sm:p-10">
+        <div class="w-full max-w-sm rounded-2xl bg-surface/95 p-5 shadow-2xl backdrop-blur">
+          <div class="flex items-center justify-between border-b border-border pb-3">
+            <span class="font-display text-sm font-bold text-ink">Sua fatura</span>
+            <span class="rounded-full bg-surface-muted px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-ink-muted">exemplo</span>
+          </div>
+          <div class="mt-3 space-y-2.5 text-sm">
+            <div class="flex items-center justify-between"><span class="text-ink-secondary">Plano Agência</span><span class="font-semibold text-ink">R$ 299,00</span></div>
+            <div class="flex items-center justify-between"><span class="text-ink-secondary">42 carrosséis</span><span class="font-semibold text-ink">R$ 84,00</span></div>
+            <div class="flex items-center justify-between"><span class="text-ink-secondary">11 vídeos UGC</span><span class="font-semibold text-ink">R$ 132,00</span></div>
+            <div class="flex items-center justify-between text-ink-muted"><span>Imagens</span><span>—</span></div>
+          </div>
+          <div class="mt-3 flex items-center justify-between border-t border-border pt-3">
+            <span class="font-display font-bold text-ink">Total</span>
+            <span class="font-display text-lg font-extrabold text-brand">R$ 515,00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%# ── FAQ ───────────────────────────────────────────────────────── %>
+<section class="bg-surface py-20 sm:py-24">
+  <div class="mx-auto max-w-3xl px-5 sm:px-8">
+    <div class="text-center reveal">
+      <p class="text-xs font-bold uppercase tracking-[0.16em] text-sky">Dúvidas</p>
+      <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">Perguntas frequentes</h2>
+    </div>
+    <div class="mt-10 space-y-3" data-accordion>
+      <% @faqs.each do |faq| %>
+        <div data-accordion-item class="overflow-hidden rounded-2xl border border-border bg-canvas">
+          <button type="button" data-accordion-trigger aria-expanded="false" class="flex w-full items-center justify-between gap-4 px-5 py-4 text-left">
+            <span class="font-display text-base font-bold text-ink"><%= faq[:q] %></span>
+            <span data-accordion-chevron class="shrink-0 text-ink-muted"><%= icon "chevron-down", size: 20 %></span>
+          </button>
+          <div data-accordion-panel>
+            <p class="px-5 pb-5 text-sm leading-relaxed text-ink-secondary"><%= faq[:a] %></p>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</section>
+
+<%= render "pages/shared/cta", title: "Pronto quando você estiver", subtitle: "Crie sua conta grátis e comece a produzir hoje." %>

@@ -1,0 +1,10 @@
+<%= @recipient.display_name.present? ? "Olá, #{@recipient.display_name}!" : "Olá!" %>
+
+<%= @author_name %> mencionou você em um comentário no ticket "<%= @ticket.display_title %>":
+
+<%= @note.plain_body %>
+
+Abrir ticket: <%= @ticket_url %>
+
+—
+Você recebeu este e-mail porque foi mencionado neste ticket.

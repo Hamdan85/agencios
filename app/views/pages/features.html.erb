@@ -1,0 +1,47 @@
+<% content_for :title, "Funcionalidades — agencios" %>
+<% content_for :description, "Quadro de produção, estúdio criativo com IA, publicação multi-rede, calendário, reuniões e cobranças. Conheça todas as funcionalidades da agencios." %>
+
+<%# ── Hero ──────────────────────────────────────────────────────── %>
+<section class="relative overflow-hidden bg-shell-gradient">
+  <div class="absolute inset-0 bg-aurora opacity-70"></div>
+  <div class="relative mx-auto max-w-4xl px-5 pb-16 pt-28 text-center sm:px-8 sm:pt-36">
+    <span class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-bold text-white/80 ring-1 ring-white/10">
+      <span class="text-pink"><%= icon "sparkles", size: 13 %></span> Funcionalidades
+    </span>
+    <h1 class="mx-auto mt-6 max-w-3xl font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-white sm:text-5xl">
+      Tudo que sua agência faz, <span class="text-gradient-brand">num só sistema.</span>
+    </h1>
+    <p class="mx-auto mt-5 max-w-xl text-lg text-white/70">
+      Seis frentes que normalmente exigem seis ferramentas — reunidas, integradas e conversando entre si.
+      Clique em cada uma para ver em detalhe.
+    </p>
+  </div>
+</section>
+
+<%# ── Feature grid ──────────────────────────────────────────────── %>
+<section class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24">
+  <div class="grid gap-6 md:grid-cols-2">
+    <% @features.each do |f| %>
+      <%= link_to feature_path(f[:slug]), class: "group block rounded-3xl border border-border bg-surface p-7 lift reveal" do %>
+        <div class="flex items-start justify-between">
+          <span class="flex size-14 items-center justify-center rounded-2xl shadow-sm" style="background: <%= soft_bg(f[:color]) %>; color: <%= f[:color] %>;">
+            <%= icon f[:icon], size: 28, stroke: 2.1 %>
+          </span>
+          <span class="flex size-9 items-center justify-center rounded-full border border-border text-ink-faint transition-all group-hover:border-brand/40 group-hover:bg-brand-soft group-hover:text-brand"><%= icon "arrow-up-right", size: 18 %></span>
+        </div>
+        <p class="mt-5 text-[11px] font-bold uppercase tracking-[0.14em]" style="color: <%= f[:color] %>;"><%= f[:eyebrow] %></p>
+        <h2 class="mt-1 font-display text-xl font-extrabold text-ink"><%= f[:name] %></h2>
+        <p class="mt-2 text-sm leading-relaxed text-ink-muted"><%= f[:subhead] %></p>
+        <div class="mt-5 flex flex-wrap gap-2">
+          <% f[:highlights].first(3).each do |h| %>
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-canvas px-2.5 py-1 text-xs font-semibold text-ink-secondary">
+              <span style="color: <%= f[:color] %>;"><%= icon "check", size: 13, stroke: 3 %></span> <%= h %>
+            </span>
+          <% end %>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</section>
+
+<%= render "pages/shared/cta", title: "Experimente todas as funcionalidades", subtitle: "14 dias grátis, sem cartão. Monte sua agência em minutos." %>

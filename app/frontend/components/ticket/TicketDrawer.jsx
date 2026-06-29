@@ -1,0 +1,174 @@
+import { useNavigate } from 'react-router-dom'
+import {
+  Maximize2, X, ArrowRight, ChevronDown, Layers, Folder, Building2, Ghost,
+} from 'lucide-react'
+import { useTicket, useTicketMutations } from '@/hooks/useTicket'
+import { useTicketChannel } from '@/hooks/useRealtime'
+import { WORKFLOW, STATUS_META, statusMeta } from '@/lib/constants'
+import { Sheet, SheetContent, SheetClose, SheetTitle } from '@/components/ui/sheet'
+import { Button } from '@/components/ui/button'
+import { StatusPill } from '@/components/ui/iconography'
+import { ColorBadge } from '@/components/ui/badge'
+import { Spinner, EmptyState } from '@/components/ui/feedback'
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu'
+import StatusStepper from './StatusStepper'
+import TicketBody from './TicketBody'
+
+// The board side drawer: a near-complete, mobile-friendly mirror of the ticket
+// detail screen. The header carries an "Abrir tela cheia" action that hands off
+// to the full /tickets/:id page.
+export default function TicketDrawer({ ticketId, open, onOpenChange }) {
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent aria-describedby={undefined}>
+        {ticketId ? (
+          <DrawerContent id={String(ticketId)} onOpenChange={onOpenChange} />
+        ) : (
+          <SheetTitle className="sr-only">Ticket</SheetTitle>
+        )}
+      </SheetContent>
+    </Sheet>
+  )
+}
+
+function DrawerContent({ id, onOpenChange }) {
+  const navigate = useNavigate()
+  const { data, isLoading } = useTicket(id)
+  const mut = useTicketMutations(id)
+  useTicketChannel(id)
+
+  const ticket = data?.ticket
+  const status = ticket?.status
+  const m = statusMeta(status)
+  const nextStatus = ticket?.next_status
+  const nextMeta = nextStatus ? STATUS_META[nextStatus] : null
+
+  const expand = () => {
+    onOpenChange?.(false)
+    navigate(`/tickets/${id}`, { state: { from: '/quadro' } })
+  }
+
+  const jumpTo = (toStatus) => {
+    if (!status || toStatus === status) return
+    mut.advance.mutate({ toStatus })
+  }
+
+  return (
+    <>
+      {/* ── Sticky header ── */}
+      <div className="shrink-0 border-b border-border bg-surface/85 px-5 pb-4 pt-4 backdrop-blur">
+        <div className="mb-3 flex items-center justify-between">
+          <Button variant="ghost" size="sm" onClick={expand} className="-ml-2 text-ink-secondary">
+            <Maximize2 size={15} /> Abrir tela cheia
+          </Button>
+          <SheetClose asChild>
+            <Button variant="ghost" size="icon-sm" aria-label="Fechar">
+              <X size={18} />
+            </Button>
+          </SheetClose>
+        </div>
+
+        {isLoading || !ticket ? (
+          <SheetTitle className="text-lg font-bold">
+            {isLoading ? 'Carregando ticket…' : 'Ticket não encontrado'}
+          </SheetTitle>
+        ) : (
+          <>
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              {ticket.project && (
+                <ColorBadge color={ticket.project.color || m.color} solid className="gap-1.5">
+                  <Folder size={11} /> {ticket.project.name}
+                </ColorBadge>
+              )}
+              {ticket.project?.client_name && (
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-ink-muted">
+                  <Building2 size={12} /> {ticket.project.client_name}
+                </span>
+              )}
+              <StatusPill status={status} size="sm" />
+            </div>
+
+            <SheetTitle className="text-xl font-extrabold leading-tight">
+              {ticket.display_title || ticket.title}
+            </SheetTitle>
+
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" disabled={mut.advance.isPending}>
+                    <Layers size={14} /> Mover etapa <ChevronDown size={13} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="min-w-52">
+                  <DropdownMenuLabel>Ir para a etapa</DropdownMenuLabel>
+                  {WORKFLOW.map((key) => {
+                    const sm = STATUS_META[key]
+                    const Icon = sm.icon
+                    const active = key === status
+                    return (
+                      <DropdownMenuItem
+                        key={key}
+                        disabled={active}
+                        onClick={() => jumpTo(key)}
+                        className={active ? 'opacity-60' : ''}
+                      >
+                        <span className="flex size-5 items-center justify-center rounded-md" style={{ background: `${sm.color}1A`, color: sm.color }}>
+                          <Icon size={12} strokeWidth={2.5} />
+                        </span>
+                        <span className="font-semibold">{sm.label}</span>
+                        {active && <span className="ml-auto text-[10px] font-bold uppercase text-ink-faint">atual</span>}
+                      </DropdownMenuItem>
+                    )
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {nextStatus && nextMeta && (
+                <Button
+                  size="sm"
+                  onClick={() => mut.advance.mutate({ toStatus: nextStatus })}
+                  disabled={mut.advance.isPending}
+                  style={{ background: `linear-gradient(135deg, ${nextMeta.color}, ${nextMeta.color}cc)` }}
+                  className="text-white shadow-[0_8px_20px_-8px_rgba(0,0,0,0.4)] hover:brightness-105"
+                >
+                  Avançar para {nextMeta.label} <ArrowRight size={14} />
+                </Button>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* ── Scrollable body ── */}
+      <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto px-5 py-5">
+        {isLoading ? (
+          <div className="flex justify-center py-20"><Spinner size={28} /></div>
+        ) : !ticket ? (
+          <EmptyState
+            icon={Ghost}
+            title="Ticket não encontrado"
+            description="Este ticket pode ter sido removido ou você não tem acesso a ele."
+          />
+        ) : (
+          <div className="space-y-5">
+            <StatusStepper status={status} onJump={jumpTo} busy={mut.advance.isPending} />
+            <TicketBody
+              compact
+              id={id}
+              status={status}
+              ticket={ticket}
+              subtasks={data?.subtasks || []}
+              creatives={data?.creatives || []}
+              attachments={data?.attachments || []}
+              posts={data?.posts || []}
+              notes={data?.notes || []}
+              mut={mut}
+            />
+          </div>
+        )}
+      </div>
+    </>
+  )
+}

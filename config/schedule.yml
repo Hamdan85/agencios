@@ -1,0 +1,32 @@
+# sidekiq-cron schedule — loaded on Sidekiq server startup (see
+# config/initializers/sidekiq.rb).
+
+monitor_scheduled_posts:
+  cron: "*/5 * * * *"          # every 5 minutes
+  class: "MonitorScheduledPostsJob"
+  queue: default
+
+sync_post_metrics:
+  cron: "0 */4 * * *"          # every 4 hours
+  class: "Posts::SyncMetricsJob"
+  queue: media
+
+refresh_social_tokens:
+  cron: "30 3 * * *"           # daily at 03:30
+  class: "Social::RefreshTokenJob"
+  queue: low
+
+reconcile_seats:
+  cron: "0 4 * * *"            # daily at 04:00
+  class: "ReconcileSeatsJob"
+  queue: low
+
+reconcile_invoices:
+  cron: "*/30 * * * *"         # every 30 minutes (Mercado Pago Pix sweep)
+  class: "Invoices::ReconcileJob"
+  queue: default
+
+purge_expired_sessions:
+  cron: "0 5 * * 0"            # weekly, Sunday 05:00
+  class: "PurgeExpiredSessionsJob"
+  queue: low

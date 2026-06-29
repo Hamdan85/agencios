@@ -1,0 +1,158 @@
+<% content_for :title, "Termos de Uso — agencios" %>
+<% content_for :description, "Os termos e condições de uso da plataforma agencios." %>
+
+<section class="border-b border-border bg-shell-gradient">
+  <div class="mx-auto max-w-3xl px-5 py-16 sm:px-8 sm:py-20">
+    <p class="text-xs font-bold uppercase tracking-[0.16em] text-white/55">Legal</p>
+    <h1 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-white sm:text-4xl">Termos de Uso</h1>
+    <p class="mt-3 text-sm text-white/65">Última atualização: <%= @updated_on %></p>
+  </div>
+</section>
+
+<article class="mx-auto max-w-3xl space-y-8 px-5 py-14 text-[15px] leading-relaxed text-ink-secondary sm:px-8 sm:py-16
+  [&_h2]:font-display [&_h2]:text-xl [&_h2]:font-extrabold [&_h2]:tracking-tight [&_h2]:text-ink
+  [&_p]:mt-3 [&_ul]:mt-3 [&_ul]:list-disc [&_ul]:space-y-1.5 [&_ul]:pl-5 [&_a]:font-semibold [&_a]:text-brand [&_a:hover]:underline
+  [&_strong]:font-semibold [&_strong]:text-ink">
+
+  <section>
+    <h2>1. Aceitação</h2>
+    <p>
+      Ao criar uma conta ou usar o agencios ("Serviço"), operado por <strong>Gabriel Hamdan Ferreira Tecnologia - ME</strong>,
+      CNPJ <strong>23.858.108/0001-15</strong> ("agencios", "nós"), você concorda com estes Termos de
+      Uso e com a <%= link_to "Política de Privacidade", privacy_path %>. Se não concordar, não use o Serviço.
+    </p>
+  </section>
+
+  <section>
+    <h2>2. O Serviço</h2>
+    <p>
+      O agencios é uma plataforma SaaS para agências de social media e conteúdo, com quadro de produção,
+      estúdio criativo com IA, publicação em redes sociais, calendário, reuniões e cobranças. Podemos
+      evoluir, alterar ou descontinuar funcionalidades a qualquer momento.
+    </p>
+  </section>
+
+  <section>
+    <h2>3. Conta e elegibilidade</h2>
+    <ul>
+      <li>Você deve ter ao menos 18 anos e fornecer informações verídicas e atualizadas;</li>
+      <li>Você é responsável por manter a confidencialidade das credenciais e por toda atividade na sua conta;</li>
+      <li>Avise-nos imediatamente sobre uso não autorizado.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>4. Planos, pagamento e teste grátis</h2>
+    <ul>
+      <li>Os planos e preços vigentes estão na página de <%= link_to "Preços", pricing_path %>;</li>
+      <li>A assinatura é cobrada via <strong>Stripe</strong>, de forma recorrente, conforme o plano;</li>
+      <li>A geração de carrosséis e vídeos é cobrada <strong>por uso</strong>, de forma transparente na fatura;</li>
+      <li>O período de teste grátis, quando oferecido, dispensa cartão e converte em assinatura ao fim, salvo cancelamento;</li>
+      <li>Você pode cancelar quando quiser; o acesso permanece até o fim do ciclo pago. Tributos podem incidir conforme a legislação.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>5. Uso aceitável</h2>
+    <p>Você concorda em não:</p>
+    <ul>
+      <li>Usar o Serviço para fins ilegais, enganosos, difamatórios ou que violem direitos de terceiros;</li>
+      <li>Enviar spam, malware ou conteúdo que viole as políticas das redes sociais integradas;</li>
+      <li>Tentar acessar indevidamente, sobrecarregar, fazer engenharia reversa ou contornar limites e segurança;</li>
+      <li>Revender ou sublicenciar o Serviço sem autorização.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>6. Seu conteúdo</h2>
+    <p>
+      Você mantém todos os direitos sobre o conteúdo e os dados que inserir (clientes, criativos, textos,
+      mídias). Você nos concede uma licença limitada para hospedar, processar e exibir esse conteúdo
+      apenas para operar o Serviço. Você declara ter os direitos necessários sobre o material de seus
+      clientes e sobre as contas de redes sociais que conectar.
+    </p>
+  </section>
+
+  <section>
+    <h2>7. Conteúdo gerado por IA</h2>
+    <p>
+      Resultados de IA podem conter imprecisões e devem ser <strong>revisados por você</strong> antes do
+      uso ou publicação. Você é responsável pelo conteúdo final, pela conformidade com direitos de
+      terceiros e pelas regras de cada rede social.
+    </p>
+  </section>
+
+  <section>
+    <h2>8. Integrações de terceiros</h2>
+    <p>
+      O Serviço integra plataformas de terceiros (redes sociais, Google, Stripe, Mercado Pago, provedores
+      de IA) e pode ser conectado a assistentes como o Claude via conector (MCP). O uso dessas
+      integrações também está sujeito aos termos e políticas dos respectivos provedores. Não respondemos
+      por indisponibilidade ou mudanças desses serviços.
+    </p>
+  </section>
+
+  <section>
+    <h2>9. Propriedade intelectual</h2>
+    <p>
+      O software, a marca, o design e os conteúdos do agencios são de nossa propriedade ou licenciados,
+      protegidos por lei. Estes Termos não transferem qualquer direito sobre nossa propriedade intelectual.
+    </p>
+  </section>
+
+  <section>
+    <h2>10. Disponibilidade e garantias</h2>
+    <p>
+      Empenhamo-nos para manter o Serviço disponível, mas ele é fornecido <strong>"no estado em que se
+      encontra"</strong>, sem garantias de operação ininterrupta ou livre de erros. Podemos realizar
+      manutenções e atualizações.
+    </p>
+  </section>
+
+  <section>
+    <h2>11. Limitação de responsabilidade</h2>
+    <p>
+      Na máxima extensão permitida em lei, não nos responsabilizamos por danos indiretos, lucros cessantes
+      ou perda de dados. Nossa responsabilidade total, quando cabível, limita-se ao valor pago por você
+      nos 12 meses anteriores ao evento.
+    </p>
+  </section>
+
+  <section>
+    <h2>12. Indenização</h2>
+    <p>
+      Você concorda em nos indenizar por reclamações de terceiros decorrentes do seu uso do Serviço, do
+      seu conteúdo ou da violação destes Termos.
+    </p>
+  </section>
+
+  <section>
+    <h2>13. Suspensão e encerramento</h2>
+    <p>
+      Podemos suspender ou encerrar o acesso em caso de violação destes Termos, risco à segurança ou
+      exigência legal. Você pode encerrar sua conta a qualquer momento; após o encerramento, tratamos seus
+      dados conforme a <%= link_to "Política de Privacidade", privacy_path %>.
+    </p>
+  </section>
+
+  <section>
+    <h2>14. Alterações nos Termos</h2>
+    <p>
+      Podemos atualizar estes Termos. Mudanças relevantes serão comunicadas; o uso continuado após a
+      vigência implica concordância.
+    </p>
+  </section>
+
+  <section>
+    <h2>15. Lei aplicável e foro</h2>
+    <p>
+      Estes Termos são regidos pelas leis do Brasil. Fica eleito o foro da comarca de <strong>Belo Horizonte/MG</strong>,
+      salvo disposição legal em contrário.
+    </p>
+  </section>
+
+  <section>
+    <h2>16. Contato</h2>
+    <p>Dúvidas: <a href="mailto:suporte@agencios.app">suporte@agencios.app</a>.</p>
+  </section>
+</article>

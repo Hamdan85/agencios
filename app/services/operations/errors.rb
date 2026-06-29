@@ -1,0 +1,30 @@
+# frozen_string_literal: true
+
+module Operations
+  module Errors
+    class Error < StandardError; end
+
+    # Caller tried something the current membership role can't do.
+    class Forbidden < Error; end
+
+    # Inviting/adding a seat past the plan's seat limit.
+    class SeatLimitReached < Error
+      def initialize(msg = "Limite de assentos do plano atingido.")
+        super
+      end
+    end
+
+    # Workspace billing is not active and the action requires it.
+    class BillingRequired < Error
+      def initialize(msg = "Assinatura necessária para esta ação.")
+        super
+      end
+    end
+
+    # An invalid ticket status transition was requested.
+    class InvalidTransition < Error; end
+
+    # A required validation failed inside an operation.
+    class Invalid < Error; end
+  end
+end

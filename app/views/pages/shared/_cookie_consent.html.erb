@@ -1,0 +1,180 @@
+<%# LGPD cookie consent + tag bootstrapping (Google Consent Mode v2).
+
+    This partial is rendered at the end of <body> on EVERY surface (marketing
+    site, legacy app layout, and the React SPA shell), so it is the single,
+    framework-agnostic place where analytics is loaded and gated by consent.
+
+    Responsibilities (and ONLY these):
+      • Expose the public analytics config to JS as `window.__AGENCIOS_ANALYTICS`.
+      • Set Google Consent Mode v2 defaults to DENIED (LGPD requires opt-in).
+      • Load Google Tag Manager immediately (it respects Consent Mode and stays
+        cookieless until consent), so GA4 / tags configured in GTM never fire
+        non-essential storage before the user agrees.
+      • Lazy-load PostHog + the Meta Pixel ONLY after consent is granted.
+      • Render the consent banner and broadcast consent state to the app.
+
+    It deliberately does NOT fire any page views or events — every pageview and
+    conversion event is dispatched through the JS analytics facade
+    (app/frontend/lib/analytics), which fans out to dataLayer / PostHog / fbq.
+    All IDs below are PUBLIC client identifiers, so they live in ENV (non-secret),
+    not credentials. %>
+<%
+  gtm_id       = ENV["GTM_CONTAINER_ID"].presence
+  ga_id        = ENV["GA_MEASUREMENT_ID"].presence
+  pixel_id     = ENV["META_PIXEL_ID"].presence
+  posthog_key  = ENV["POSTHOG_KEY"].presence
+  posthog_host = ENV["POSTHOG_HOST"].presence || "https://us.i.posthog.com"
+%>
+
+<script>
+  window.__AGENCIOS_ANALYTICS = {
+    gtmId: <%= raw gtm_id.to_json %>,
+    gaId: <%= raw ga_id.to_json %>,
+    pixelId: <%= raw pixel_id.to_json %>,
+    posthogKey: <%= raw posthog_key.to_json %>,
+    posthogHost: <%= raw posthog_host.to_json %>
+  };
+
+  (function () {
+    var CFG = window.__AGENCIOS_ANALYTICS;
+    var KEY = 'agencios_cookie_consent';
+    var stored = null;
+    try { stored = localStorage.getItem(KEY); } catch (e) {}
+
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    window.gtag = window.gtag || gtag;
+
+    // Consent Mode v2 — deny everything non-essential by default (LGPD opt-in).
+    gtag('consent', 'default', {
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+      analytics_storage: 'denied',
+      functionality_storage: 'granted',
+      security_storage: 'granted',
+      wait_for_update: 500
+    });
+
+    // ── Marketing tags that may run pre-consent (cookieless) ──────────
+    // GTM is the consent-aware container: load it now; tags inside it are gated
+    // by Consent Mode. (If no GTM container is set, fall back to gtag.js GA4.)
+    if (CFG.gtmId) {
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || []; w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+        var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+        j.async = true; j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, 'script', 'dataLayer', CFG.gtmId);
+    } else if (CFG.gaId) {
+      var ga = document.createElement('script');
+      ga.async = true;
+      ga.src = 'https://www.googletagmanager.com/gtag/js?id=' + CFG.gaId;
+      document.head.appendChild(ga);
+      gtag('js', new Date());
+      gtag('config', CFG.gaId, { anonymize_ip: true });
+    }
+
+    // ── Consent-only tags: PostHog + Meta Pixel (lazy, once) ──────────
+    function loadPostHog() {
+      if (window.__phLoaded || !CFG.posthogKey) return;
+      window.__phLoaded = true;
+      !function (t, e) { var o, n, p, r; e.__SV || (window.posthog = e, e._i = [], e.init = function (i, s, a) { function g(t, e) { var o = e.split("."); 2 == o.length && (t = t[o[0]], e = o[1]), t[e] = function () { t.push([e].concat(Array.prototype.slice.call(arguments, 0))) } } (p = t.createElement("script")).type = "text/javascript", p.crossOrigin = "anonymous", p.async = !0, p.src = s.api_host.replace(".i.posthog.com", "-assets.i.posthog.com") + "/static/array.js", (r = t.getElementsByTagName("script")[0]).parentNode.insertBefore(p, r); var u = e; for (void 0 !== a ? u = e[a] = [] : a = "posthog", u.people = u.people || [], u.toString = function (t) { var e = "posthog"; return "posthog" !== a && (e += "." + a), t || (e += " (stub)"), e }, u.people.toString = function () { return u.toString(1) + ".people (stub)" }, o = "init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug getPageViewId".split(" "), n = 0; n < o.length; n++) g(u, o[n]); e._i.push([i, s, a]) }, e.__SV = 1) }(document, window.posthog || []);
+      window.posthog.init(CFG.posthogKey, {
+        api_host: CFG.posthogHost,
+        person_profiles: 'identified_only',
+        capture_pageview: false,    // the analytics facade drives all pageviews
+        autocapture: true,
+        persistence: 'localStorage+cookie'
+      });
+    }
+
+    function loadMetaPixel() {
+      if (window.__fbqLoaded || !CFG.pixelId) return;
+      window.__fbqLoaded = true;
+      !function (f, b, e, v, n, t, s) { if (f.fbq) return; n = f.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments) }; if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0'; n.queue = []; t = b.createElement(e); t.async = !0; t.src = v; s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s) }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+      window.fbq('init', CFG.pixelId);
+      // PageView fires through the facade; we just initialise the pixel here.
+    }
+
+    function enableConsentedTags() {
+      gtag('consent', 'update', {
+        ad_storage: 'granted',
+        ad_user_data: 'granted',
+        ad_personalization: 'granted',
+        analytics_storage: 'granted'
+      });
+      loadPostHog();
+      loadMetaPixel();
+    }
+
+    // Broadcast consent state so the JS facade can flush buffered events.
+    function broadcast(granted) {
+      window.__AGENCIOS_CONSENT = granted ? 'granted' : 'denied';
+      try { window.dispatchEvent(new CustomEvent('agencios:consent', { detail: { granted: granted } })); } catch (e) {}
+    }
+
+    window.__agenciosGrantConsent = function () {
+      enableConsentedTags();
+      broadcast(true);
+    };
+    window.__agenciosDenyConsent = function () { broadcast(false); };
+
+    window.__agenciosConsentStored = stored;
+    window.__AGENCIOS_CONSENT = stored || null;
+    if (stored === 'granted') window.__agenciosGrantConsent();
+    else if (stored === 'denied') broadcast(false);
+  })();
+</script>
+
+<div id="ag-cookie-banner" role="dialog" aria-live="polite" aria-label="Aviso de cookies" style="
+  display:none; position:fixed; left:0; right:0; bottom:0; z-index:2147483000;
+  padding:16px; padding-bottom:calc(16px + env(safe-area-inset-bottom));
+  pointer-events:none;">
+  <div style="
+    pointer-events:auto; margin:0 auto; max-width:760px;
+    display:flex; flex-wrap:wrap; align-items:center; gap:14px;
+    background:#15102B; color:#EDE9FB; border:1px solid rgba(255,255,255,0.10);
+    border-radius:18px; padding:16px 18px;
+    box-shadow:0 24px 60px -20px rgba(8,5,20,0.7); font-family:'Inter',system-ui,sans-serif;">
+    <p style="margin:0; flex:1 1 280px; font-size:13px; line-height:1.5; color:rgba(237,233,251,0.82);">
+      Usamos cookies essenciais para o funcionamento do site e, com seu consentimento, cookies de
+      análise para melhorar sua experiência. Veja a
+      <a href="/privacidade" style="color:#C4B5FD; text-decoration:underline; font-weight:600;">Política de Privacidade</a>.
+    </p>
+    <div style="display:flex; gap:10px; flex:0 0 auto;">
+      <button type="button" id="ag-cookie-reject" style="
+        cursor:pointer; height:40px; padding:0 16px; border-radius:12px;
+        border:1px solid rgba(255,255,255,0.16); background:transparent;
+        color:rgba(237,233,251,0.9); font-size:13px; font-weight:600;">
+        Rejeitar
+      </button>
+      <button type="button" id="ag-cookie-accept" style="
+        cursor:pointer; height:40px; padding:0 18px; border-radius:12px; border:none;
+        background:linear-gradient(135deg,#8B5CF6,#5B21B6); color:#fff; font-size:13px; font-weight:700;">
+        Aceitar todos
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var KEY = 'agencios_cookie_consent';
+    var banner = document.getElementById('ag-cookie-banner');
+    if (!banner) return;
+    function show() { banner.style.display = 'block'; }
+    function hide() { banner.style.display = 'none'; }
+    function choose(value) {
+      try { localStorage.setItem(KEY, value); } catch (e) {}
+      if (value === 'granted' && window.__agenciosGrantConsent) window.__agenciosGrantConsent();
+      if (value === 'denied' && window.__agenciosDenyConsent) window.__agenciosDenyConsent();
+      hide();
+    }
+    if (!window.__agenciosConsentStored) show();
+    document.getElementById('ag-cookie-accept').addEventListener('click', function () { choose('granted'); });
+    document.getElementById('ag-cookie-reject').addEventListener('click', function () { choose('denied'); });
+    // Footer "Preferências de cookies" can re-open the banner.
+    window.agenciosOpenCookiePrefs = show;
+  })();
+</script>
