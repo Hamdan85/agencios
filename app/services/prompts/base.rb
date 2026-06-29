@@ -16,7 +16,6 @@ module Prompts
       "value_proposition" => "Proposta de valor",
       "differentiators" => "Diferenciais",
       "competitors" => "Concorrentes",
-      "brand_voice" => "Voz da marca",
       "content_pillars" => "Pilares de conteúdo",
       "keywords" => "Palavras-chave",
       "guardrails" => "Restrições / o que evitar"
@@ -36,14 +35,33 @@ module Prompts
 
     attr_reader :workspace, :client, :context
 
+    # Brand identity injected into every generative prompt. Uses the CLIENT's
+    # brand when a client is in context (voice, @handle, colors), falling back to
+    # the agency (workspace) defaults for any field the client leaves unset.
     def brand_block
       return "" unless workspace
 
       <<~TXT.strip
-        Agência: #{workspace.name}
-        Voz da marca: #{workspace.brand_voice.presence || "tom profissional, próximo e criativo"}
-        @handle padrão: #{workspace.default_handle.presence || "—"}
+        Marca: #{client&.name.presence || workspace.name}
+        Voz da marca: #{brand_voice}
+        @handle padrão: #{brand_handle}
+        Cores da marca: #{brand_colors}
       TXT
+    end
+
+    def brand_voice
+      (client&.brand_voice).presence || workspace.brand_voice.presence ||
+        "tom profissional, próximo e criativo"
+    end
+
+    def brand_handle
+      (client&.default_handle).presence || workspace.default_handle.presence || "—"
+    end
+
+    def brand_colors
+      primary = (client&.brand_primary_color).presence || workspace.brand_primary_color
+      secondary = (client&.brand_secondary_color).presence || workspace.brand_secondary_color
+      [primary, secondary].compact.join(" / ")
     end
 
     # The client's brand positioning, rendered as labeled lines. This is the

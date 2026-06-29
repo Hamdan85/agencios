@@ -11,9 +11,10 @@ module Controllers
         client = workspace.clients.find(@params[:id])
         authorize!(client, :show?)
         {
-          client:   serialize(client, ClientSerializer),
-          projects: serialize_collection(client.projects.order(created_at: :desc), ProjectSerializer),
-          invoices: serialize_collection(client.invoices.order(created_at: :desc), InvoiceSerializer)
+          client:          serialize(client, ClientSerializer),
+          projects:        serialize_collection(client.projects.order(created_at: :desc), ProjectSerializer),
+          invoices:        serialize_collection(client.invoices.order(created_at: :desc), InvoiceSerializer),
+          social_accounts: serialize_collection(client.social_accounts.order(:provider), SocialAccountSerializer)
         }
       end
     end

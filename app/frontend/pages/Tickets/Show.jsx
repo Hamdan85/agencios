@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { StatusPill } from '@/components/ui/iconography'
 import { ColorBadge } from '@/components/ui/badge'
 import { PageLoader, EmptyState } from '@/components/ui/feedback'
+import { Page } from '@/components/ui/page'
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
@@ -47,14 +48,14 @@ export default function Show() {
   if (isLoading) return <PageLoader />
   if (!ticket) {
     return (
-      <div className="mx-auto max-w-2xl py-16">
+      <Page>
         <EmptyState
           icon={Ghost}
           title="Ticket não encontrado"
           description="Este ticket pode ter sido removido ou você não tem acesso a ele."
           action={<Button asChild><Link to={back.to}>{back.label}</Link></Button>}
         />
-      </div>
+      </Page>
     )
   }
 
@@ -69,7 +70,7 @@ export default function Show() {
     // StatusStepper's horizontal-scroll row then widens the whole page (mobile
     // horizontal scroll). With w-full the page stays at the viewport width and
     // the stepper scrolls inside its own card instead.
-    <div className="mx-auto w-full max-w-7xl animate-rise">
+    <Page className="animate-rise">
       {/* ── Top bar ── */}
       <div className="mb-5">
         <Link to={back.to} className="mb-3 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-muted transition hover:text-brand">
@@ -87,9 +88,18 @@ export default function Show() {
                 </Link>
               )}
               {ticket.project?.client_name && (
-                <span className="inline-flex items-center gap-1 text-xs font-semibold text-ink-muted">
-                  <Building2 size={12} /> {ticket.project.client_name}
-                </span>
+                ticket.project.client_id ? (
+                  <Link
+                    to={`/clientes/${ticket.project.client_id}`}
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-ink-muted transition hover:text-brand"
+                  >
+                    <Building2 size={12} /> {ticket.project.client_name}
+                  </Link>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-ink-muted">
+                    <Building2 size={12} /> {ticket.project.client_name}
+                  </span>
+                )
               )}
               <StatusPill status={status} size="sm" />
             </div>
@@ -165,6 +175,6 @@ export default function Show() {
         tab={tab}
         onTabChange={(v) => navigate(`/tickets/${id}/${v === 'activity' ? 'atividade' : 'detalhes'}`, { replace: true })}
       />
-    </div>
+    </Page>
   )
 }

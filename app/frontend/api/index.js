@@ -54,6 +54,7 @@ export const ticketsApi = {
   reorder: (id, position) => api.patch(`/tickets/${id}/reorder`, { position }),
   summarize: (id) => api.post(`/tickets/${id}/summarize`),
   aiAction: (id) => api.post(`/tickets/${id}/ai_action`),
+  generateSubtasks: (id) => api.post(`/tickets/${id}/generate_subtasks`),
   archive: (id) => api.post(`/tickets/${id}/archive`),
   unarchive: (id) => api.post(`/tickets/${id}/unarchive`),
   clearColumn: (status) => api.post('/tickets/clear_column', { status }),
@@ -112,6 +113,13 @@ export const clientsApi = {
   destroy: (id) => api.delete(`/clients/${id}`),
   synthesizePositioning: (data) => api.post('/clients/positioning_preview', data),
   updatePositioning: (id, positioning) => api.patch(`/clients/${id}/positioning`, { positioning }),
+  // Brand assets (logo / creator avatar) upload as multipart; either is optional.
+  uploadBrandAssets: (id, { logo, defaultCreatorAvatar } = {}) => {
+    const form = new FormData()
+    if (logo) form.append('logo', logo)
+    if (defaultCreatorAvatar) form.append('default_creator_avatar', defaultCreatorAvatar)
+    return api.patch(`/clients/${id}/brand_assets`, form)
+  },
 }
 
 export const projectsApi = {
@@ -131,10 +139,14 @@ export const generationsApi = {
   list: (params) => api.get('/generations', { params }),
 }
 
+// Social networks are connected per CLIENT (the agency connects each client's
+// own Instagram/TikTok/etc.), so every call is scoped to a client id.
 export const socialApi = {
-  list: () => api.get('/social_accounts'),
-  reconnect: (id) => api.post(`/social_accounts/${id}/reconnect`),
-  destroy: (id) => api.delete(`/social_accounts/${id}`),
+  list: (clientId) => api.get(`/clients/${clientId}/social_accounts`),
+  authorizeUrl: (clientId, network) =>
+    api.get(`/clients/${clientId}/social_accounts/authorize_url`, { params: { network } }),
+  reconnect: (clientId, id) => api.post(`/clients/${clientId}/social_accounts/${id}/reconnect`),
+  destroy: (clientId, id) => api.delete(`/clients/${clientId}/social_accounts/${id}`),
 }
 
 export const meetingsApi = {

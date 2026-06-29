@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_28_222657) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_29_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -84,8 +84,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_28_222657) do
 
   create_table "clients", force: :cascade do |t|
     t.jsonb "attribution", default: {}, null: false
+    t.string "brand_primary_color", default: "#7C3AED", null: false
+    t.string "brand_secondary_color", default: "#F59E0B", null: false
+    t.text "brand_voice"
     t.string "company"
     t.datetime "created_at", null: false
+    t.string "default_handle"
     t.string "document"
     t.string "email"
     t.string "name", null: false
@@ -374,6 +378,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_28_222657) do
     t.string "avatar_url"
     t.string "channel_id"
     t.string "channel_title"
+    t.bigint "client_id", null: false
     t.datetime "created_at", null: false
     t.string "default_org_urn"
     t.string "display_name"
@@ -395,6 +400,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_28_222657) do
     t.text "user_access_token"
     t.string "username"
     t.bigint "workspace_id", null: false
+    t.index ["client_id", "provider"], name: "index_social_accounts_on_client_id_and_provider"
+    t.index ["client_id"], name: "index_social_accounts_on_client_id"
     t.index ["workspace_id", "provider"], name: "index_social_accounts_on_workspace_id_and_provider"
     t.index ["workspace_id"], name: "index_social_accounts_on_workspace_id"
   end
@@ -428,6 +435,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_28_222657) do
     t.index ["assignee_id"], name: "index_subtasks_on_assignee_id"
     t.index ["ticket_id"], name: "index_subtasks_on_ticket_id"
     t.index ["workspace_id"], name: "index_subtasks_on_workspace_id"
+  end
+
+  create_table "ticket_relations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "kind", default: 0, null: false
+    t.bigint "related_ticket_id", null: false
+    t.bigint "ticket_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["related_ticket_id"], name: "index_ticket_relations_on_related_ticket_id"
+    t.index ["ticket_id", "related_ticket_id", "kind"], name: "index_ticket_relations_unique", unique: true
+    t.index ["ticket_id"], name: "index_ticket_relations_on_ticket_id"
+    t.index ["workspace_id"], name: "index_ticket_relations_on_workspace_id"
   end
 
   create_table "ticket_status_logs", force: :cascade do |t|
@@ -543,11 +563,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_28_222657) do
   add_foreign_key "sessions", "users"
   add_foreign_key "sessions", "workspaces"
   add_foreign_key "settings", "workspaces"
+  add_foreign_key "social_accounts", "clients"
   add_foreign_key "social_accounts", "workspaces"
   add_foreign_key "subscriptions", "workspaces"
   add_foreign_key "subtasks", "tickets"
   add_foreign_key "subtasks", "users", column: "assignee_id"
   add_foreign_key "subtasks", "workspaces"
+  add_foreign_key "ticket_relations", "tickets"
+  add_foreign_key "ticket_relations", "tickets", column: "related_ticket_id"
+  add_foreign_key "ticket_relations", "workspaces"
   add_foreign_key "ticket_status_logs", "tickets"
   add_foreign_key "ticket_status_logs", "users"
   add_foreign_key "ticket_status_logs", "workspaces"

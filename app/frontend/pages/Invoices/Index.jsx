@@ -2,10 +2,10 @@ import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   Receipt, Plus, MoreHorizontal, Ban, Copy, Check, Wallet, Link2, CheckCircle2,
-  CircleDollarSign, AlertTriangle, FileText, ExternalLink, Hash, Building2,
+  CircleDollarSign, AlertTriangle, FileText, ExternalLink, Hash,
 } from 'lucide-react'
 import { useInvoices, useInvoiceMutations } from '@/hooks/useData'
-import { clientsApi, projectsApi } from '@/api'
+import { projectsApi } from '@/api'
 import { PageHeader, StatCard } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
 import { Input, Textarea } from '@/components/ui/input'
@@ -13,10 +13,11 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { PageLoader, EmptyState } from '@/components/ui/feedback'
+import { Page } from '@/components/ui/page'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose,
 } from '@/components/ui/dialog'
-import { AsyncCombobox } from '@/components/ui/async-combobox'
+import { ClientSelect } from '@/components/ui/entity-select'
 import { DatePicker } from '@/components/ui/date-picker'
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
@@ -93,16 +94,11 @@ function InvoiceFormDialog({ open, onOpenChange, mutation }) {
         <form onSubmit={submit} className="space-y-3.5">
           <div className="space-y-1.5">
             <Label>Cliente</Label>
-            <AsyncCombobox
+            <ClientSelect
               variant="field"
               value={form.client_id}
               onChange={(v) => setForm((f) => ({ ...f, client_id: v || '', project_ids: [] }))}
               placeholder="Selecione o cliente"
-              icon={Building2}
-              queryKey={['clients', 'picker']}
-              fetchPage={({ q, page }) => clientsApi.list({ q, page, per: 20 })}
-              mapResponse={(d) => ({ items: d.clients || [], hasMore: d.meta?.has_more })}
-              getOption={(c) => ({ value: c.id, label: c.name, description: c.company })}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -342,7 +338,7 @@ export default function InvoicesIndex() {
   if (isLoading) return <PageLoader />
 
   return (
-    <div>
+    <Page>
       <PageHeader
         eyebrow="Financeiro"
         title="Cobranças"
@@ -400,6 +396,6 @@ export default function InvoicesIndex() {
         open={linkInvoiceId != null}
         onOpenChange={(v) => { if (!v) setLinkInvoiceId(null) }}
       />
-    </div>
+    </Page>
   )
 }

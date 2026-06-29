@@ -17,6 +17,7 @@ import {
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
 } from '@/components/ui/dropdown-menu'
+import { Page } from '@/components/ui/page'
 import { cn } from '@/lib/utils'
 import ClientWizard from '@/components/client/ClientWizard'
 
@@ -103,7 +104,7 @@ function ClientCard({ client, onEdit, onArchive }) {
 
 export default function ClientsIndex() {
   const { data: clients, isLoading } = useClients()
-  const { create, update, archive, synthesize } = useClientMutations()
+  const { create, update, archive, synthesize, uploadBrandAssets } = useClientMutations()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [search, setSearch] = useState('')
@@ -130,7 +131,7 @@ export default function ClientsIndex() {
   if (isLoading) return <PageLoader />
 
   return (
-    <div>
+    <Page>
       <PageHeader
         eyebrow="Carteira"
         title="Clientes"
@@ -188,8 +189,8 @@ export default function ClientsIndex() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         editing={editing}
-        mutations={{ create, update, synthesize }}
+        mutations={{ create, update, synthesize, uploadBrandAssets }}
       />
-    </div>
+    </Page>
   )
 }

@@ -20,10 +20,7 @@ module Controllers
       private
 
       def client_params
-        @params.require(:client).permit(
-          :name, :company, :email, :phone, :document, :notes, :status,
-          positioning: POSITIONING_PERMIT
-        )
+        @params.require(:client).permit(*ATTRS_PERMIT, positioning: POSITIONING_PERMIT)
       end
     end
   end

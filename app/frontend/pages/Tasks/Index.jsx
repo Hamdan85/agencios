@@ -1,12 +1,13 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ListChecks, ListTodo, Search, CheckCircle2, Circle, AlarmClock, Inbox,
   ArrowUpRight, CalendarClock, PartyPopper, Building2,
 } from 'lucide-react'
 import { useTasks, useTaskMutations, useOpenTicket } from '@/hooks/useData'
 import { PageHeader } from '@/components/ui/page-header'
-import { PageLoader, EmptyState } from '@/components/ui/feedback'
-import { Input } from '@/components/ui/input'
+import { EmptyState, Spinner } from '@/components/ui/feedback'
+import { SearchInput } from '@/components/ui/search-input'
+import { Page } from '@/components/ui/page'
 import { cn } from '@/lib/utils'
 import { relativeDay, shortDt } from '@/lib/formatters'
 
@@ -36,39 +37,41 @@ export default function TasksIndex({ scope } = {}) {
   const global = scope === 'all_workspaces'
   const [tab, setTab] = useState('pending')
   const [query, setQuery] = useState('')
-  const { data, isLoading } = useTasks(global ? { scope } : {})
+  const [q, setQ] = useState('')
   const mutate = useTaskMutations()
   const openTicket = useOpenTicket()
 
-  const counts = data?.counts || { pending: 0, overdue: 0, completed: 0 }
-  const pendingTasks = data?.tasks || []
-  const completedTasks = data?.completed || []
+  // Debounce the text search into the server query key.
+  useEffect(() => {
+    const t = setTimeout(() => setQ(query.trim()), 300)
+    return () => clearTimeout(t)
+  }, [query])
 
-  const lists = useMemo(() => ({
-    pending: pendingTasks.filter((t) => !isOverdue(t)),
-    overdue: pendingTasks.filter((t) => isOverdue(t)),
-    completed: completedTasks,
-  }), [pendingTasks, completedTasks])
+  const filters = { tab, ...(q ? { q } : {}), ...(global ? { scope } : {}) }
+  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useTasks(filters)
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    const base = lists[tab] || []
-    if (!q) return base
-    return base.filter((t) =>
-      (t.title || '').toLowerCase().includes(q) ||
-      (t.ticket_title || '').toLowerCase().includes(q) ||
-      (t.project_name || '').toLowerCase().includes(q),
-    )
-  }, [lists, tab, query])
+  const tasks = useMemo(() => (data?.pages || []).flatMap((p) => p.tasks || []), [data])
+  const counts = data?.pages?.[0]?.counts || { pending: 0, overdue: 0, completed: 0 }
 
   const toggle = (task) => mutate.mutate({ id: task.id, data: { done: !task.done } })
 
-  if (isLoading) return <PageLoader />
+  // Infinite scroll: load the next page as the sentinel nears the viewport.
+  const sentinelRef = useRef(null)
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el) return
+    const io = new IntersectionObserver(
+      (entries) => { if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) fetchNextPage() },
+      { rootMargin: '300px' },
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, tasks.length])
 
   const emptyMeta = EMPTY[tab]
 
   return (
-    <div className="animate-rise">
+    <Page className="animate-rise">
       <PageHeader
         eyebrow={global ? 'Você' : 'Gestão'}
         title="Minhas tarefas"
@@ -85,12 +88,12 @@ export default function TasksIndex({ scope } = {}) {
         }
       />
 
-      {/* Filter pills + search */}
+      {/* Tab pills + search — one row */}
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           {TABS.map((t) => {
             const active = tab === t.key
-            const count = counts[t.countKey] ?? (lists[t.key]?.length || 0)
+            const count = counts[t.countKey] ?? 0
             return (
               <button
                 key={t.key}
@@ -118,32 +121,30 @@ export default function TasksIndex({ scope } = {}) {
           })}
         </div>
 
-        <div className="relative w-full sm:w-64">
-          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar tarefas…"
-            className="pl-9"
-          />
-        </div>
+        <SearchInput value={query} onChange={setQuery} placeholder="Buscar tarefas…" className="w-full sm:w-64" />
       </div>
 
       {/* Task list */}
-      {filtered.length === 0 ? (
-        query.trim() ? (
-          <EmptyState icon={Search} color={HERO} title="Nenhum resultado" description={`Nada encontrado para “${query}”.`} />
+      {isLoading ? (
+        <div className="flex justify-center py-16"><Spinner size={28} /></div>
+      ) : tasks.length === 0 ? (
+        q ? (
+          <EmptyState icon={Search} color={HERO} title="Nenhum resultado" description={`Nada encontrado para “${q}”.`} />
         ) : (
           <EmptyState icon={emptyMeta.icon} color={TABS.find((t) => t.key === tab)?.color} title={emptyMeta.title} description={emptyMeta.description} />
         )
       ) : (
-        <div className="space-y-2.5">
-          {filtered.map((task) => (
-            <TaskRow key={task.id} task={task} overdue={isOverdue(task)} showWorkspace={global} onOpenTicket={openTicket} onToggle={() => toggle(task)} />
-          ))}
-        </div>
+        <>
+          <div className="space-y-2.5">
+            {tasks.map((task) => (
+              <TaskRow key={task.id} task={task} overdue={isOverdue(task)} showWorkspace={global} onOpenTicket={openTicket} onToggle={() => toggle(task)} />
+            ))}
+          </div>
+          <div ref={sentinelRef} aria-hidden className="h-1" />
+          {isFetchingNextPage && <div className="flex justify-center py-4"><Spinner size={20} /></div>}
+        </>
       )}
-    </div>
+    </Page>
   )
 }
 

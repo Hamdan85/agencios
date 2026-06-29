@@ -12,7 +12,8 @@ module Controllers
 
       def call
         deny_guests!
-        account = workspace.social_accounts.find(@params[:id])
+        client = workspace.clients.find(@params[:client_id])
+        account = client.social_accounts.find(@params[:id])
         account.update!(status: :connected)
         { social_account: serialize(account, SocialAccountSerializer) }
       end

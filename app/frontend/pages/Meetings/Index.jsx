@@ -4,17 +4,18 @@ import {
   Pencil, Trash2, StickyNote, Building2, History, CalendarPlus,
 } from 'lucide-react'
 import { useMeetings, useMeetingMutations } from '@/hooks/useData'
-import { clientsApi } from '@/api'
 import { PageHeader } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
 import { Input, Textarea } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
 import { PageLoader, EmptyState } from '@/components/ui/feedback'
+import { Page } from '@/components/ui/page'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose,
 } from '@/components/ui/dialog'
-import { AsyncCombobox } from '@/components/ui/async-combobox'
+import { ClientSelect } from '@/components/ui/entity-select'
+import { FilterBar } from '@/components/ui/filter-bar'
 import { DateTimePicker } from '@/components/ui/date-picker'
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
@@ -93,18 +94,13 @@ function MeetingFormDialog({ open, onOpenChange, editing, createMutation, update
           </div>
           <div className="space-y-1.5">
             <Label>Cliente (opcional)</Label>
-            <AsyncCombobox
+            <ClientSelect
               variant="field"
               clearable
               value={form.client_id}
               onChange={(v, opt) => setForm((f) => ({ ...f, client_id: v || '', client_name: opt?.label || '' }))}
               placeholder="Sem cliente"
-              icon={Building2}
               initialOption={form.client_id ? { value: form.client_id, label: form.client_name } : null}
-              queryKey={['clients', 'picker']}
-              fetchPage={({ q, page }) => clientsApi.list({ q, page, per: 20 })}
-              mapResponse={(d) => ({ items: d.clients || [], hasMore: d.meta?.has_more })}
-              getOption={(c) => ({ value: c.id, label: c.name, description: c.company })}
             />
           </div>
           <div className="space-y-1.5">
@@ -210,12 +206,14 @@ function MeetingCard({ meeting, past, onEdit, onCancel }) {
 }
 
 export default function MeetingsIndex() {
-  const { data: meetings, isLoading } = useMeetings()
+  const [filters, setFilters] = useState({})
+  const { data: meetings, isLoading } = useMeetings(filters)
   const { create, update, destroy } = useMeetingMutations()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
 
   const list = meetings || []
+  const hasFilters = !!(filters.q || filters.client_id)
 
   const { upcoming, past } = useMemo(() => {
     const now = Date.now()
@@ -230,10 +228,8 @@ export default function MeetingsIndex() {
   const onEdit = (m) => { setEditing(m); setOpen(true) }
   const onCancel = (m) => { if (window.confirm(`Cancelar "${m.title}"?`)) destroy.mutate(m.id) }
 
-  if (isLoading) return <PageLoader />
-
   return (
-    <div>
+    <Page>
       <PageHeader
         eyebrow="Agenda"
         title="Reuniões"
@@ -243,13 +239,28 @@ export default function MeetingsIndex() {
         actions={<Button onClick={openCreate}><Plus size={18} /> Agendar reunião</Button>}
       />
 
-      {list.length === 0 ? (
+      <FilterBar
+        search
+        searchValue={filters.q || ''}
+        onSearch={(v) => setFilters((f) => ({ ...f, q: v }))}
+        searchPlaceholder="Buscar reunião…"
+        filters={[{ key: 'client_id', type: 'client', label: 'Cliente' }]}
+        values={filters}
+        onChange={(key, value) => setFilters((f) => ({ ...f, [key]: value }))}
+        onClear={() => setFilters((f) => ({ ...f, client_id: undefined }))}
+      />
+
+      {isLoading ? (
+        <PageLoader />
+      ) : list.length === 0 ? (
         <EmptyState
           icon={Video}
           color="#14B8A6"
-          title="Nenhuma reunião agendada"
-          description="Agende a primeira reunião com um cliente — ela aparecerá aqui e no calendário."
-          action={<Button onClick={openCreate}><Plus size={18} /> Agendar reunião</Button>}
+          title={hasFilters ? 'Nenhuma reunião encontrada' : 'Nenhuma reunião agendada'}
+          description={hasFilters
+            ? 'Ajuste a busca ou o filtro de cliente.'
+            : 'Agende a primeira reunião com um cliente — ela aparecerá aqui e no calendário.'}
+          action={hasFilters ? undefined : <Button onClick={openCreate}><Plus size={18} /> Agendar reunião</Button>}
         />
       ) : (
         <div className="space-y-8">
@@ -292,6 +303,6 @@ export default function MeetingsIndex() {
         createMutation={create}
         updateMutation={update}
       />
-    </div>
+    </Page>
   )
 }

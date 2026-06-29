@@ -21,6 +21,9 @@ module Api
       # POST /api/v1/tickets/:id/ai_action — run the status's AI action.
       def ai_action = render_ok(Controllers::Tickets::AiAction.call(params:))
 
+      # POST /api/v1/tickets/:id/generate_subtasks — AI production checklist.
+      def generate_subtasks = render_ok(Controllers::Tickets::GenerateSubtasks.call(params:))
+
       # POST /api/v1/tickets/:id/archive — archive (soft-hide) a single ticket.
       def archive = render_ok(Controllers::Tickets::Archive.call(params:))
 

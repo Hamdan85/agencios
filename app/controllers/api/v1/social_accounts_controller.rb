@@ -2,18 +2,19 @@
 
 module Api
   module V1
-    # Connected social networks for the active workspace. Removing an account is
-    # manager-gated; reconnecting is a member action (enforced in the services).
+    # A client's connected social networks (nested under /clients/:client_id).
+    # Removing an account is manager-gated; reconnecting is a member action
+    # (enforced in the services).
     class SocialAccountsController < BaseController
-      def index   = render_ok(Controllers::SocialAccounts::Index.call)
+      def index   = render_ok(Controllers::SocialAccounts::Index.call(params:))
 
-      # GET /social_accounts/authorize?network=instagram — returns the OAuth URL
-      # the browser opens to connect the network (state carries the workspace).
+      # GET /clients/:client_id/social_accounts/authorize_url?network=instagram —
+      # returns the OAuth URL the browser opens (state carries the client).
       def authorize_url = render_ok(Controllers::SocialAccounts::AuthorizeUrl.call(params:))
 
       def destroy   = render_ok(Controllers::SocialAccounts::Destroy.call(params:))
 
-      # POST /social_accounts/:id/reconnect — STUB (see the service).
+      # POST /clients/:client_id/social_accounts/:id/reconnect — STUB (see the service).
       def reconnect = render_ok(Controllers::SocialAccounts::Reconnect.call(params:))
     end
   end

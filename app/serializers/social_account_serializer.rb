@@ -3,7 +3,7 @@
 # Never emits any token columns (user_access_token / page_access_token /
 # refresh_token are encrypted and stay server-side).
 class SocialAccountSerializer < ActiveModel::Serializer
-  attributes :id, :provider, :username, :status, :token_expired,
+  attributes :id, :client_id, :provider, :username, :status, :token_expired,
              :last_synced_at, :scopes, :created_at
 
   def provider = object.provider

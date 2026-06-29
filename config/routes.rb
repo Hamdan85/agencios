@@ -83,8 +83,15 @@ Rails.application.routes.draw do
         member do
           post  :archive
           patch :positioning, action: :update_positioning
+          patch :brand_assets
         end
         collection { post :positioning_preview }
+        # A client's own connected social networks (the agency connects each
+        # client's Instagram/TikTok/etc.; tickets under its projects publish here).
+        resources :social_accounts, only: %i[index destroy] do
+          collection { get :authorize_url }
+          member { post :reconnect }
+        end
       end
       resources :projects
 
@@ -101,6 +108,7 @@ Rails.application.routes.draw do
           patch :reorder
           post  :summarize
           post  :ai_action
+          post  :generate_subtasks
           post  :archive
           post  :unarchive
         end
@@ -119,11 +127,7 @@ Rails.application.routes.draw do
       post "studio/generate", to: "studio#generate"
       resources :generations, only: %i[index show]
 
-      # Social, meetings, billing
-      resources :social_accounts, only: %i[index destroy] do
-        collection { get :authorize_url }
-        member { post :reconnect }
-      end
+      # Meetings, billing (social accounts are nested under clients above)
       resources :meetings
       resources :invoices do
         member do

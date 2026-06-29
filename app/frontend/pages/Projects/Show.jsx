@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { StatusPill, PriorityDot } from '@/components/ui/iconography'
+import { Page } from '@/components/ui/page'
 import { TicketFilters } from '@/components/ticket/TicketFilters'
 import { brl, date, relativeDay } from '@/lib/formatters'
 
@@ -34,7 +35,7 @@ export default function ProjectShow() {
   const hasFilters = Object.values(filters).some(Boolean)
 
   return (
-    <div>
+    <Page>
       <Link to="/projetos" className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-muted transition hover:text-brand">
         <ArrowLeft size={16} /> Projetos
       </Link>
@@ -142,6 +143,6 @@ export default function ProjectShow() {
           })}
         </Card>
       )}
-    </div>
+    </Page>
   )
 }

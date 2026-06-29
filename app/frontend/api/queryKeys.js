@@ -13,7 +13,7 @@ export const keys = {
   project: (id, f = {}) => ['projects', String(id), f],
   studio: () => ['studio'],
   generations: (f = {}) => ['generations', f],
-  socialAccounts: () => ['social_accounts'],
+  socialAccounts: (clientId) => ['clients', String(clientId), 'social_accounts'],
   meetings: (f = {}) => ['meetings', f],
   invoices: (f = {}) => ['invoices', f],
   settings: () => ['settings'],

@@ -1,10 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  FolderKanban, Plus, ListChecks, Wallet, CalendarRange, Check, Sparkles, Building2,
+  FolderKanban, Plus, ListChecks, Wallet, CalendarRange, Check, Sparkles,
 } from 'lucide-react'
 import { useProjects, useProjectMutations } from '@/hooks/useData'
-import { clientsApi } from '@/api'
 import { PageHeader } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
 import { Input, Textarea } from '@/components/ui/input'
@@ -14,13 +13,14 @@ import { PageLoader, EmptyState } from '@/components/ui/feedback'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose,
 } from '@/components/ui/dialog'
-import { AsyncCombobox } from '@/components/ui/async-combobox'
+import { ClientSelect } from '@/components/ui/entity-select'
 import { SearchInput } from '@/components/ui/search-input'
 import { FilterSheet, FilterField } from '@/components/ui/filter-sheet'
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/components/ui/select'
 import { DatePicker } from '@/components/ui/date-picker'
+import { Page } from '@/components/ui/page'
 import { brl, date } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 
@@ -71,16 +71,11 @@ function ProjectFormDialog({ open, onOpenChange, mutation }) {
         <form onSubmit={submit} className="space-y-3.5">
           <div className="space-y-1.5">
             <Label>Cliente</Label>
-            <AsyncCombobox
+            <ClientSelect
               variant="field"
               value={form.client_id}
               onChange={(v) => set('client_id')(v || '')}
               placeholder="Selecione o cliente"
-              icon={Building2}
-              queryKey={['clients', 'picker']}
-              fetchPage={({ q, page }) => clientsApi.list({ q, page, per: 20 })}
-              mapResponse={(d) => ({ items: d.clients || [], hasMore: d.meta?.has_more })}
-              getOption={(c) => ({ value: c.id, label: c.name, description: c.company })}
             />
           </div>
           <div className="space-y-1.5">
@@ -219,11 +214,6 @@ export default function ProjectsIndex() {
     value: clientFilter === 'all' ? undefined : clientFilter,
     onChange: (v) => setClientFilter(v || 'all'),
     placeholder: 'Todos os clientes',
-    icon: Building2,
-    queryKey: ['clients', 'filter'],
-    fetchPage: ({ q, page }) => clientsApi.list({ q, page, per: 20 }),
-    mapResponse: (d) => ({ items: d.clients || [], hasMore: d.meta?.has_more }),
-    getOption: (c) => ({ value: c.id, label: c.name, description: c.company }),
   }
   const statusSelect = (className) => (
     <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -240,7 +230,7 @@ export default function ProjectsIndex() {
   if (isLoading) return <PageLoader />
 
   return (
-    <div>
+    <Page>
       <PageHeader
         eyebrow="Trabalho"
         title="Projetos"
@@ -260,11 +250,11 @@ export default function ProjectsIndex() {
           className="min-w-0 flex-1 lg:w-64 lg:flex-none"
         />
         <div className="hidden flex-wrap items-center gap-3 lg:flex">
-          <AsyncCombobox {...clientFilterProps} width="w-52" />
+          <ClientSelect {...clientFilterProps} width="w-52" />
           {statusSelect('w-44')}
         </div>
         <FilterSheet count={filterCount} onClear={clearFilters} className="lg:hidden">
-          <FilterField label="Cliente"><AsyncCombobox {...clientFilterProps} variant="field" /></FilterField>
+          <FilterField label="Cliente"><ClientSelect {...clientFilterProps} variant="field" /></FilterField>
           <FilterField label="Status">{statusSelect('w-full')}</FilterField>
         </FilterSheet>
       </div>
@@ -284,6 +274,6 @@ export default function ProjectsIndex() {
       )}
 
       <ProjectFormDialog open={open} onOpenChange={setOpen} mutation={create} />
-    </div>
+    </Page>
   )
 }

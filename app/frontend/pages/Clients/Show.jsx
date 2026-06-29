@@ -1,22 +1,128 @@
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, Mail, Phone, FileText, FolderKanban, Receipt, Wallet,
-  Building2, StickyNote, Pencil, Plus, ListChecks, Sparkles,
+  Building2, StickyNote, Pencil, Plus, ListChecks, Sparkles, Palette, AtSign,
+  Plug, Link2, Check, RefreshCw, Unplug,
 } from 'lucide-react'
-import { useClient, useClientMutations } from '@/hooks/useData'
+import { useClient, useClientMutations, useSocialAccountMutations } from '@/hooks/useData'
 import { PageLoader, EmptyState } from '@/components/ui/feedback'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar } from '@/components/ui/avatar'
 import { Card } from '@/components/ui/card'
-import { StatCard } from '@/components/ui/page-header'
-import PositioningEditDialog from '@/components/client/PositioningEditDialog'
-import { POSITIONING_FIELDS } from '@/lib/constants'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Page } from '@/components/ui/page'
+import ClientWizard from '@/components/client/ClientWizard'
+import { POSITIONING_FIELDS, CHANNEL_META } from '@/lib/constants'
 import { brl, date } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 
-// Read view of the client's brand positioning.
+const PROJECT_STATUS = {
+  active: { label: 'Ativo', variant: 'success' },
+  paused: { label: 'Pausado', variant: 'warning' },
+  archived: { label: 'Arquivado', variant: 'muted' },
+}
+const INVOICE_STATUS = {
+  draft: { label: 'Rascunho', variant: 'muted' },
+  open: { label: 'Em aberto', variant: 'default' },
+  paid: { label: 'Pago', variant: 'success' },
+  overdue: { label: 'Vencida', variant: 'danger' },
+  canceled: { label: 'Cancelada', variant: 'muted' },
+}
+
+function ContactChip({ icon: Icon, value, mono }) {
+  if (!value) return null
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-muted px-3 py-1.5 text-sm font-medium text-ink-secondary">
+      <Icon size={14} className="text-brand" />
+      <span className={cn(mono && 'font-mono text-xs')}>{value}</span>
+    </span>
+  )
+}
+
+// ── Section header ──────────────────────────────────────────────
+function SectionHead({ icon: Icon, color, title, onEdit }) {
+  return (
+    <div className="mb-3 flex items-center gap-2">
+      <Icon size={18} style={{ color }} />
+      <h2 className="font-display text-lg font-bold text-ink">{title}</h2>
+      {onEdit && (
+        <Button variant="ghost" size="sm" className="ml-auto text-ink-muted" onClick={onEdit}>
+          <Pencil size={14} /> Editar
+        </Button>
+      )}
+    </div>
+  )
+}
+
+// ── Brand identity (voice + @handle + colors + logo/avatar) ──────
+function BrandIdentitySection({ client, onEdit }) {
+  const has = client.has_brand
+  const swatch = (label, color) => (
+    <div className="flex items-center gap-2">
+      <span className="size-7 rounded-lg ring-1 ring-border" style={{ background: color }} />
+      <div>
+        <p className="text-xs font-bold uppercase tracking-wider text-ink-faint">{label}</p>
+        <p className="font-mono text-xs text-ink-secondary">{color}</p>
+      </div>
+    </div>
+  )
+
+  return (
+    <section className="mb-8">
+      <SectionHead icon={Palette} color="#7C3AED" title="Marca" onEdit={onEdit} />
+      {!has ? (
+        <EmptyState
+          icon={Palette}
+          color="#7C3AED"
+          title="Sem identidade de marca"
+          description="Defina voz, @handle, cores e logo deste cliente — usados na geração de criativos e nos prompts da IA."
+          action={<Button onClick={onEdit}><Palette size={16} /> Definir marca</Button>}
+        />
+      ) : (
+        <Card className="space-y-5 p-6">
+          <div className="flex flex-wrap items-center gap-5">
+            {client.logo_url && (
+              <div>
+                <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-ink-faint">Logo</p>
+                <div className="grid size-16 place-items-center overflow-hidden rounded-xl bg-surface-muted ring-1 ring-border">
+                  <img src={client.logo_url} alt="Logo" className="size-full object-contain" />
+                </div>
+              </div>
+            )}
+            {client.default_creator_avatar_url && (
+              <div>
+                <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-ink-faint">Avatar UGC</p>
+                <img src={client.default_creator_avatar_url} alt="Avatar" className="size-16 rounded-full object-cover ring-1 ring-border" />
+              </div>
+            )}
+            {client.default_handle && (
+              <div>
+                <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-ink-faint">@handle</p>
+                <p className="inline-flex items-center gap-1 font-display text-base font-bold text-ink">
+                  <AtSign size={15} className="text-brand" />{String(client.default_handle).replace(/^@/, '')}
+                </p>
+              </div>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-6">
+            {swatch('Cor primária', client.brand_primary_color)}
+            {swatch('Cor secundária', client.brand_secondary_color)}
+          </div>
+          {client.brand_voice && (
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-ink-faint">Voz da marca</p>
+              <p className="mt-1 text-sm leading-relaxed text-ink-secondary">{client.brand_voice}</p>
+            </div>
+          )}
+        </Card>
+      )}
+    </section>
+  )
+}
+
+// ── Positioning read view ───────────────────────────────────────
 function PositioningSection({ client, onEdit }) {
   const positioning = client.positioning || {}
   const has = client.has_positioning
@@ -26,23 +132,14 @@ function PositioningSection({ client, onEdit }) {
   })
 
   return (
-    <section className="mb-8">
-      <div className="mb-3 flex items-center gap-2">
-        <Sparkles size={18} className="text-indigo" />
-        <h2 className="font-display text-lg font-bold text-ink">Posicionamento</h2>
-        {has && (
-          <Button variant="ghost" size="sm" className="ml-auto text-ink-muted" onClick={onEdit}>
-            <Pencil size={14} /> Editar
-          </Button>
-        )}
-      </div>
-
+    <section className="mb-2">
+      <SectionHead icon={Sparkles} color="#6366F1" title="Posicionamento" onEdit={has ? onEdit : null} />
       {!has ? (
         <EmptyState
           icon={Sparkles}
           color="#6366F1"
           title="Sem posicionamento"
-          description="Defina o posicionamento de marca deste cliente — vira contexto da IA em todos os tickets dos seus projetos."
+          description="Descreva a marca e deixe a IA montar o posicionamento — vira contexto da IA em todos os tickets dos seus projetos."
           action={<Button onClick={onEdit}><Sparkles size={16} /> Definir posicionamento</Button>}
         />
       ) : (
@@ -77,188 +174,280 @@ function PositioningSection({ client, onEdit }) {
   )
 }
 
-const PROJECT_STATUS = {
-  active: { label: 'Ativo', variant: 'success' },
-  paused: { label: 'Pausado', variant: 'warning' },
-  archived: { label: 'Arquivado', variant: 'muted' },
-}
-const INVOICE_STATUS = {
-  draft: { label: 'Rascunho', variant: 'muted' },
-  open: { label: 'Em aberto', variant: 'default' },
-  paid: { label: 'Pago', variant: 'success' },
-  overdue: { label: 'Vencida', variant: 'danger' },
-  canceled: { label: 'Cancelada', variant: 'muted' },
-}
+// ── Social networks (connected per client) ──────────────────────
+function SocialCard({ provider, account, mutations }) {
+  const meta = CHANNEL_META[provider]
+  if (!meta) return null
+  const Icon = meta.icon
+  const connected = !!account && account.status === 'connected' && !account.token_expired
+  const needsReauth = !!account && (account.status === 'needs_reauth' || account.token_expired)
+  const busy = mutations.connect.isPending || mutations.disconnect.isPending
 
-function ContactChip({ icon: Icon, value, mono }) {
-  if (!value) return null
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-muted px-3 py-1.5 text-sm font-medium text-ink-secondary">
-      <Icon size={14} className="text-brand" />
-      <span className={cn(mono && 'font-mono text-xs')}>{value}</span>
-    </span>
+    <Card className="flex flex-col p-5">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex size-11 items-center justify-center rounded-xl" style={{ background: `${meta.color}16`, color: meta.color }}>
+          <Icon size={22} strokeWidth={2.2} />
+        </div>
+        {connected ? (
+          <Badge variant="success"><Check size={12} /> Conectado</Badge>
+        ) : needsReauth ? (
+          <Badge variant="warning"><RefreshCw size={12} /> Reautenticar</Badge>
+        ) : (
+          <Badge variant="muted">Desconectado</Badge>
+        )}
+      </div>
+      <h3 className="mt-3 font-display text-base font-bold text-ink">{meta.label}</h3>
+      <p className="mt-0.5 min-h-5 truncate text-sm text-ink-muted">
+        {account ? (needsReauth ? 'Sessão expirada — reconecte.' : `@${account.username || ''}`) : 'Conecte a conta deste cliente.'}
+      </p>
+      <div className="mt-4 flex gap-2">
+        {connected ? (
+          <Button variant="outline" size="sm" className="w-full" disabled={busy} onClick={() => mutations.disconnect.mutate(account.id)}>
+            <Unplug size={15} /> Desconectar
+          </Button>
+        ) : (
+          <Button variant="solid" size="sm" className="w-full" disabled={busy} onClick={() => mutations.connect.mutate(provider)}>
+            {needsReauth ? <><RefreshCw size={15} /> Reconectar</> : <><Link2 size={15} /> Conectar</>}
+          </Button>
+        )}
+      </div>
+    </Card>
   )
 }
 
+function SocialSection({ clientId, accounts }) {
+  const mutations = useSocialAccountMutations(clientId)
+  const byProvider = {}
+  for (const a of accounts || []) byProvider[a.provider] = a
+
+  return (
+    <section>
+      <SectionHead icon={Plug} color="var(--ag-brand, #7C3AED)" title="Redes sociais" />
+      <p className="mb-4 max-w-2xl text-sm text-ink-muted">
+        Conecte as redes deste cliente. Os tickets dos projetos dele publicam diretamente nestas contas.
+      </p>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {Object.keys(CHANNEL_META).map((provider) => (
+          <SocialCard key={provider} provider={provider} account={byProvider[provider]} mutations={mutations} />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+// ── Projects ────────────────────────────────────────────────────
+function ProjectsSection({ projects }) {
+  return (
+    <section>
+      <SectionHead icon={FolderKanban} color="#10B981" title="Projetos" />
+      {projects.length === 0 ? (
+        <EmptyState
+          icon={FolderKanban}
+          color="#10B981"
+          title="Nenhum projeto"
+          description="Este cliente ainda não tem projetos."
+          action={<Button asChild variant="outline"><Link to="/projetos"><Plus size={16} /> Novo projeto</Link></Button>}
+        />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {projects.map((p) => {
+            const color = p.color || '#7C3AED'
+            const st = PROJECT_STATUS[p.status] || PROJECT_STATUS.active
+            return (
+              <Link key={p.id} to={`/projetos/${p.id}`} className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-surface lift">
+                <div className="h-1.5 w-full" style={{ background: color }} />
+                <div className="flex flex-1 flex-col p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-display text-base font-bold text-ink">{p.name}</h3>
+                    <Badge variant={st.variant}>{st.label}</Badge>
+                  </div>
+                  <span className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: `${color}14`, color }}>
+                    <ListChecks size={13} /> {p.tickets_count ?? 0} tickets
+                  </span>
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+      )}
+    </section>
+  )
+}
+
+// ── Invoices ────────────────────────────────────────────────────
+function InvoicesSection({ invoices }) {
+  return (
+    <section>
+      <SectionHead icon={Receipt} color="#F97316" title="Faturas" />
+      {invoices.length === 0 ? (
+        <EmptyState
+          icon={Receipt}
+          color="#F97316"
+          title="Nenhuma fatura"
+          description="Nenhuma cobrança foi emitida para este cliente."
+          action={<Button asChild variant="outline"><Link to="/cobrancas"><Plus size={16} /> Nova cobrança</Link></Button>}
+        />
+      ) : (
+        <Card className="divide-y divide-border">
+          {invoices.map((inv) => {
+            const st = INVOICE_STATUS[inv.status] || INVOICE_STATUS.draft
+            return (
+              <div key={inv.id} className="flex items-center justify-between gap-4 p-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex size-10 items-center justify-center rounded-xl bg-orange/12 text-orange">
+                    <Receipt size={18} />
+                  </div>
+                  <div>
+                    <p className="font-display text-base font-bold text-ink">{brl(inv.amount_cents)}</p>
+                    {inv.description && <p className="text-xs text-ink-muted">{inv.description}</p>}
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-medium text-ink-muted">Venc. {date(inv.due_date)}</span>
+                  <Badge variant={st.variant}>{st.label}</Badge>
+                </div>
+              </div>
+            )
+          })}
+        </Card>
+      )}
+    </section>
+  )
+}
+
+// ── Left column: basic client data ──────────────────────────────
+function BasicColumn({ client, projects, invoices, totalPaid, archived, onEdit }) {
+  return (
+    <Card className="overflow-hidden lg:sticky lg:top-6">
+      <div className="h-1.5 w-full bg-brand-gradient" />
+      <div className="p-5">
+        <div className="flex flex-col items-center text-center">
+          <Avatar name={client.name} size={72} ring />
+          <h1 className="mt-3 font-display text-xl font-extrabold tracking-tight text-ink">{client.name || 'Cliente'}</h1>
+          <Badge className="mt-1.5" variant={archived ? 'muted' : 'success'}>{archived ? 'Arquivado' : 'Ativo'}</Badge>
+          {client.company && (
+            <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-ink-muted">
+              <Building2 size={14} /> {client.company}
+            </p>
+          )}
+          <Button variant="outline" size="sm" className="mt-4 w-full" onClick={onEdit}>
+            <Pencil size={15} /> Editar cliente
+          </Button>
+        </div>
+
+        <div className="mt-5 flex flex-wrap justify-center gap-2">
+          <ContactChip icon={Mail} value={client.email} />
+          <ContactChip icon={Phone} value={client.phone} />
+          <ContactChip icon={FileText} value={client.document} mono />
+        </div>
+
+        {client.notes && (
+          <p className="mt-4 flex items-start gap-2 rounded-xl bg-surface-muted/60 p-3 text-sm text-ink-secondary">
+            <StickyNote size={15} className="mt-0.5 shrink-0 text-amber" /> {client.notes}
+          </p>
+        )}
+
+        <div className="mt-5 grid grid-cols-3 gap-2 border-t border-border pt-4 text-center">
+          <Stat icon={FolderKanban} color="#10B981" label="Projetos" value={projects.length} />
+          <Stat icon={Receipt} color="#F97316" label="Faturas" value={invoices.length} />
+          <Stat icon={Wallet} color="#7C3AED" label="Faturado" value={brl(totalPaid)} />
+        </div>
+      </div>
+    </Card>
+  )
+}
+
+function Stat({ icon: Icon, color, label, value }) {
+  return (
+    <div>
+      <Icon size={16} className="mx-auto" style={{ color }} />
+      <p className="mt-1 font-display text-sm font-extrabold text-ink">{value}</p>
+      <p className="text-[11px] font-semibold text-ink-faint">{label}</p>
+    </div>
+  )
+}
+
+// Each tab is its own URL (Portuguese segment); "branding" is the base path.
+const TAB_TO_SEG = { branding: '', config: 'configuracoes', projects: 'projetos', invoices: 'faturas' }
+const SEG_TO_TAB = { configuracoes: 'config', projetos: 'projects', faturas: 'invoices' }
+
 export default function ClientShow() {
-  const { id } = useParams()
+  const { id, tab: seg } = useParams()
+  const navigate = useNavigate()
   const { data, isLoading } = useClient(id)
-  const { synthesize, updatePositioning } = useClientMutations()
-  const [positioningOpen, setPositioningOpen] = useState(false)
+  const { create, update, synthesize, uploadBrandAssets } = useClientMutations()
+  const [editorOpen, setEditorOpen] = useState(false)
+
+  const tab = SEG_TO_TAB[seg] || 'branding'
+  const setTab = (value) => {
+    const s = TAB_TO_SEG[value] || ''
+    navigate(`/clientes/${id}${s ? `/${s}` : ''}`, { replace: true })
+  }
 
   if (isLoading) return <PageLoader />
 
   const client = data?.client || {}
   const projects = data?.projects || []
   const invoices = data?.invoices || []
+  const socialAccounts = data?.social_accounts || []
   const archived = client.status === 'archived'
 
   const totalPaid = invoices
     .filter((i) => i.status === 'paid')
     .reduce((sum, i) => sum + (Number(i.amount_cents) || 0), 0)
 
+  const openEditor = () => setEditorOpen(true)
+
   return (
-    <div>
+    <Page>
       <Link to="/clientes" className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-muted transition hover:text-brand">
         <ArrowLeft size={16} /> Clientes
       </Link>
 
-      {/* Hero header */}
-      <Card className="mb-6 overflow-hidden">
-        <div className="h-2 w-full bg-brand-gradient" />
-        <div className="flex flex-wrap items-start justify-between gap-4 p-6">
-          <div className="flex items-start gap-4">
-            <Avatar name={client.name} size={72} ring />
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="font-display text-2xl font-extrabold tracking-tight text-ink">{client.name || 'Cliente'}</h1>
-                <Badge variant={archived ? 'muted' : 'success'}>{archived ? 'Arquivado' : 'Ativo'}</Badge>
-              </div>
-              {client.company && (
-                <p className="mt-0.5 flex items-center gap-1.5 text-sm font-medium text-ink-muted">
-                  <Building2 size={14} /> {client.company}
-                </p>
-              )}
-              <div className="mt-3 flex flex-wrap gap-2">
-                <ContactChip icon={Mail} value={client.email} />
-                <ContactChip icon={Phone} value={client.phone} />
-                <ContactChip icon={FileText} value={client.document} mono />
-              </div>
-            </div>
-          </div>
-          <Button asChild variant="outline">
-            <Link to="/clientes"><Pencil size={16} /> Editar</Link>
-          </Button>
-        </div>
-        {client.notes && (
-          <div className="border-t border-border bg-surface-muted/50 px-6 py-4">
-            <p className="flex items-start gap-2 text-sm text-ink-secondary">
-              <StickyNote size={15} className="mt-0.5 shrink-0 text-amber" /> {client.notes}
-            </p>
-          </div>
-        )}
-      </Card>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[340px_1fr]">
+        <BasicColumn
+          client={client}
+          projects={projects}
+          invoices={invoices}
+          totalPaid={totalPaid}
+          archived={archived}
+          onEdit={openEditor}
+        />
 
-      {/* Stat row */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard label="Projetos" value={projects.length} icon={FolderKanban} color="#10B981" sub="vinculados ao cliente" />
-        <StatCard label="Faturas" value={invoices.length} icon={Receipt} color="#F97316" sub="emitidas" />
-        <StatCard label="Total faturado" value={brl(totalPaid)} icon={Wallet} color="#7C3AED" sub="cobranças pagas" />
+        <Tabs value={tab} onValueChange={setTab}>
+          <TabsList className="mb-5">
+            <TabsTrigger value="branding"><Palette size={15} /> Posicionamento & Marca</TabsTrigger>
+            <TabsTrigger value="config"><Plug size={15} /> Configurações</TabsTrigger>
+            <TabsTrigger value="projects"><FolderKanban size={15} /> Projetos</TabsTrigger>
+            <TabsTrigger value="invoices"><Receipt size={15} /> Faturas</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="branding" className="animate-rise">
+            <BrandIdentitySection client={client} onEdit={openEditor} />
+            <PositioningSection client={client} onEdit={openEditor} />
+          </TabsContent>
+
+          <TabsContent value="config" className="animate-rise">
+            <SocialSection clientId={id} accounts={socialAccounts} />
+          </TabsContent>
+
+          <TabsContent value="projects" className="animate-rise">
+            <ProjectsSection projects={projects} />
+          </TabsContent>
+
+          <TabsContent value="invoices" className="animate-rise">
+            <InvoicesSection invoices={invoices} />
+          </TabsContent>
+        </Tabs>
       </div>
 
-      {/* Positioning */}
-      <PositioningSection client={client} onEdit={() => setPositioningOpen(true)} />
-
-      {/* Projects */}
-      <section className="mb-8">
-        <div className="mb-3 flex items-center gap-2">
-          <FolderKanban size={18} className="text-emerald" />
-          <h2 className="font-display text-lg font-bold text-ink">Projetos</h2>
-          <span className="rounded-full bg-emerald/12 px-2 py-0.5 text-xs font-bold text-emerald">{projects.length}</span>
-        </div>
-        {projects.length === 0 ? (
-          <EmptyState
-            icon={FolderKanban}
-            color="#10B981"
-            title="Nenhum projeto"
-            description="Este cliente ainda não tem projetos."
-            action={<Button asChild variant="outline"><Link to="/projetos"><Plus size={16} /> Novo projeto</Link></Button>}
-          />
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {projects.map((p) => {
-              const color = p.color || '#7C3AED'
-              const st = PROJECT_STATUS[p.status] || PROJECT_STATUS.active
-              return (
-                <Link
-                  key={p.id}
-                  to={`/projetos/${p.id}`}
-                  className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-surface lift"
-                >
-                  <div className="h-1.5 w-full" style={{ background: color }} />
-                  <div className="flex flex-1 flex-col p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-display text-base font-bold text-ink">{p.name}</h3>
-                      <Badge variant={st.variant}>{st.label}</Badge>
-                    </div>
-                    <span className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: `${color}14`, color }}>
-                      <ListChecks size={13} /> {p.tickets_count ?? 0} tickets
-                    </span>
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
-        )}
-      </section>
-
-      {/* Invoices */}
-      <section>
-        <div className="mb-3 flex items-center gap-2">
-          <Receipt size={18} className="text-orange" />
-          <h2 className="font-display text-lg font-bold text-ink">Faturas</h2>
-          <span className="rounded-full bg-orange/12 px-2 py-0.5 text-xs font-bold text-orange">{invoices.length}</span>
-        </div>
-        {invoices.length === 0 ? (
-          <EmptyState
-            icon={Receipt}
-            color="#F97316"
-            title="Nenhuma fatura"
-            description="Nenhuma cobrança foi emitida para este cliente."
-            action={<Button asChild variant="outline"><Link to="/cobrancas"><Plus size={16} /> Nova cobrança</Link></Button>}
-          />
-        ) : (
-          <Card className="divide-y divide-border">
-            {invoices.map((inv) => {
-              const st = INVOICE_STATUS[inv.status] || INVOICE_STATUS.draft
-              return (
-                <div key={inv.id} className="flex items-center justify-between gap-4 p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex size-10 items-center justify-center rounded-xl bg-orange/12 text-orange">
-                      <Receipt size={18} />
-                    </div>
-                    <div>
-                      <p className="font-display text-base font-bold text-ink">{brl(inv.amount_cents)}</p>
-                      {inv.description && <p className="text-xs text-ink-muted">{inv.description}</p>}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-medium text-ink-muted">Venc. {date(inv.due_date)}</span>
-                    <Badge variant={st.variant}>{st.label}</Badge>
-                  </div>
-                </div>
-              )
-            })}
-          </Card>
-        )}
-      </section>
-
-      <PositioningEditDialog
-        open={positioningOpen}
-        onOpenChange={setPositioningOpen}
-        client={client}
-        mutations={{ synthesize, updatePositioning }}
+      <ClientWizard
+        open={editorOpen}
+        onOpenChange={setEditorOpen}
+        editing={client}
+        mutations={{ create, update, synthesize, uploadBrandAssets }}
       />
-    </div>
+    </Page>
   )
 }

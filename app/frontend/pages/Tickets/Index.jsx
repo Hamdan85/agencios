@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  Rows3, SlidersHorizontal, Folder, Building2, User, Archive, ArchiveRestore,
-  MoreVertical, Ghost, X, CalendarClock,
+  Rows3, Archive, ArchiveRestore, MoreVertical, Ghost, CalendarClock,
 } from 'lucide-react'
 import {
   WORKFLOW, STATUS_META, CHANNEL_META, CREATIVE_TYPE_META, PRIORITY_META, statusMeta,
 } from '@/lib/constants'
-import { projectsApi, clientsApi, workspaceApi } from '@/api'
 import { useTicketsList, useTicketArchiveMutations } from '@/hooks/useData'
 import { useCurrentUser } from '@/hooks/useAuth'
 import { canManage } from '@/lib/roles'
@@ -14,14 +12,9 @@ import { relativeDay } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 import { PageHeader } from '@/components/ui/page-header'
 import { Spinner, EmptyState } from '@/components/ui/feedback'
-import { Button } from '@/components/ui/button'
-import { SearchInput } from '@/components/ui/search-input'
-import { AsyncCombobox } from '@/components/ui/async-combobox'
-import { FilterSheet, FilterField } from '@/components/ui/filter-sheet'
+import { FilterBar } from '@/components/ui/filter-bar'
+import { Page } from '@/components/ui/page'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
-} from '@/components/ui/select'
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
 } from '@/components/ui/dropdown-menu'
@@ -32,29 +25,6 @@ import { Avatar } from '@/components/ui/avatar'
 import TicketDrawer from '@/components/ticket/TicketDrawer'
 
 const BRAND = '#06B6D4'
-const ALL = '__all__'
-
-function StaticSelect({ value, onChange, placeholder, options, fullWidth }) {
-  return (
-    <Select value={value || ALL} onValueChange={(v) => onChange(v === ALL ? undefined : v)}>
-      <SelectTrigger className={cn('h-9 gap-1.5 rounded-xl text-[13px]', fullWidth ? 'w-full' : 'w-auto min-w-[120px]')}>
-        <SelectValue placeholder={placeholder} />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value={ALL}>{placeholder}</SelectItem>
-        {options.map((o) => (
-          <SelectItem key={o.value} value={String(o.value)}>
-            <span className="inline-flex items-center gap-2">
-              {o.color && <span className="size-2.5 rounded-full" style={{ background: o.color }} />}
-              {o.icon ? <o.icon size={14} strokeWidth={2.3} style={{ color: o.color }} /> : null}
-              {o.label}
-            </span>
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  )
-}
 
 // A single ticket row. Clicking the body opens the side drawer; the trailing
 // menu archives / restores (managers only).
@@ -75,7 +45,7 @@ function TicketRow({ ticket, onOpen, manager, onArchive, onUnarchive, busy }) {
       <button onClick={() => onOpen(ticket.id)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-2">
-            <span className="truncate font-semibold text-ink">{ticket.display_title}</span>
+            <span className="truncate font-display text-[15px] font-semibold text-ink">{ticket.display_title}</span>
             {ticket.archived && (
               <span className="shrink-0 rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ink-muted">
                 Arquivado
@@ -155,13 +125,6 @@ export default function TicketsList() {
 
   const set = (key) => (value) => setFilters((f) => ({ ...f, [key]: value }))
 
-  // Debounced text search.
-  const [q, setQ] = useState('')
-  useEffect(() => {
-    const t = setTimeout(() => setFilters((f) => ({ ...f, q: q || undefined })), 300)
-    return () => clearTimeout(t)
-  }, [q])
-
   // Infinite scroll.
   const sentinelRef = useRef(null)
   useEffect(() => {
@@ -181,9 +144,7 @@ export default function TicketsList() {
   const priorityOptions = Object.entries(PRIORITY_META).map(([k, m]) => ({ value: k, label: m.label, color: m.dot }))
 
   const filterKeys = ['project_id', 'client_id', 'assignee_id', 'status', 'channel', 'creative_type', 'priority']
-  const filterCount = filterKeys.filter((k) => filters[k]).length
-  const activeCount = filterCount + (filters.q ? 1 : 0)
-  const clearAll = () => { setQ(''); setFilters((f) => ({ view: f.view })) }
+  const activeCount = filterKeys.filter((k) => filters[k]).length + (filters.q ? 1 : 0)
   // Clear filters but keep the current tab (view) and the text search.
   const clearFilters = () => setFilters((f) => {
     const next = { ...f }
@@ -191,38 +152,18 @@ export default function TicketsList() {
     return next
   })
 
-  // Shared combobox configs so the inline (pill) and sheet (field) variants stay
-  // in sync without duplicating the fetch wiring.
-  const projectProps = {
-    value: filters.project_id, onChange: set('project_id'), placeholder: 'Projeto', icon: Folder,
-    queryKey: ['projects', 'filter'],
-    fetchPage: ({ q: term, page }) => projectsApi.list({ q: term, page, per: 20 }),
-    mapResponse: (d) => ({ items: d.projects || [], hasMore: d.meta?.has_more }),
-    getOption: (p) => ({ value: p.id, label: p.name, color: p.color }),
-  }
-  const clientProps = {
-    value: filters.client_id, onChange: set('client_id'), placeholder: 'Cliente', icon: Building2,
-    queryKey: ['clients', 'filter'],
-    fetchPage: ({ q: term, page }) => clientsApi.list({ q: term, page, per: 20 }),
-    mapResponse: (d) => ({ items: d.clients || [], hasMore: d.meta?.has_more }),
-    getOption: (c) => ({ value: c.id, label: c.name, description: c.company }),
-  }
-  const assigneeProps = {
-    value: filters.assignee_id, onChange: set('assignee_id'), placeholder: 'Responsável', icon: User,
-    queryKey: ['members', 'filter'],
-    fetchPage: ({ q: term, page }) => workspaceApi.members({ q: term, page, per: 20 }),
-    mapResponse: (d) => ({ items: d.memberships || [], hasMore: d.meta?.has_more }),
-    getOption: (m) => ({ value: m.user_id, label: m.name }),
-  }
-  const staticFilters = [
-    { key: 'status', label: 'Etapa', options: statusOptions },
-    { key: 'channel', label: 'Canal', options: channelOptions },
-    { key: 'creative_type', label: 'Tipo', options: creativeOptions },
-    { key: 'priority', label: 'Prioridade', options: priorityOptions },
+  const filterSpec = [
+    { key: 'project_id', type: 'project', label: 'Projeto' },
+    { key: 'client_id', type: 'client', label: 'Cliente' },
+    { key: 'assignee_id', type: 'assignee', label: 'Responsável' },
+    { key: 'status', type: 'options', label: 'Etapa', options: statusOptions },
+    { key: 'channel', type: 'options', label: 'Canal', options: channelOptions },
+    { key: 'creative_type', type: 'options', label: 'Tipo', options: creativeOptions },
+    { key: 'priority', type: 'options', label: 'Prioridade', options: priorityOptions },
   ]
 
   return (
-    <div className="mx-auto w-full max-w-7xl animate-rise">
+    <Page className="animate-rise">
       <PageHeader
         eyebrow="Operação"
         title="Tickets"
@@ -231,49 +172,26 @@ export default function TicketsList() {
         description="Todos os tickets do workspace em lista — busque, filtre e arquive."
       />
 
-      {/* ── Toolbar ── */}
+      {/* ── Toolbar: view tabs, then search + filters on one line ── */}
       <div className="mb-5 space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <Tabs value={filters.view} onValueChange={(v) => set('view')(v)}>
-            <TabsList>
-              <TabsTrigger value="active">Ativos</TabsTrigger>
-              <TabsTrigger value="archived">Arquivados</TabsTrigger>
-              <TabsTrigger value="all">Todos</TabsTrigger>
-            </TabsList>
-          </Tabs>
-          <div className="flex w-full items-center gap-2.5 sm:w-auto">
-            <SearchInput value={q} onChange={setQ} placeholder="Buscar por título…" className="min-w-0 flex-1 sm:w-72" />
-            {/* Mobile: filters condensed into a bottom sheet */}
-            <FilterSheet count={filterCount} onClear={clearFilters} className="lg:hidden">
-              <FilterField label="Projeto"><AsyncCombobox {...projectProps} variant="field" /></FilterField>
-              <FilterField label="Cliente"><AsyncCombobox {...clientProps} variant="field" /></FilterField>
-              <FilterField label="Responsável"><AsyncCombobox {...assigneeProps} variant="field" /></FilterField>
-              {staticFilters.map((c) => (
-                <FilterField key={c.key} label={c.label}>
-                  <StaticSelect fullWidth value={filters[c.key]} onChange={set(c.key)} placeholder={c.label} options={c.options} />
-                </FilterField>
-              ))}
-            </FilterSheet>
-          </div>
-        </div>
-
-        {/* Desktop: inline filter row */}
-        <div className="hidden flex-wrap items-center gap-2.5 lg:flex">
-          <span className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wider text-ink-muted">
-            <SlidersHorizontal size={14} strokeWidth={2.4} /> Filtros
-          </span>
-          <AsyncCombobox {...projectProps} />
-          <AsyncCombobox {...clientProps} />
-          <AsyncCombobox {...assigneeProps} />
-          {staticFilters.map((c) => (
-            <StaticSelect key={c.key} value={filters[c.key]} onChange={set(c.key)} placeholder={c.label} options={c.options} />
-          ))}
-          {activeCount > 0 && (
-            <Button variant="ghost" size="sm" className="gap-1 text-ink-muted" onClick={clearAll}>
-              <X size={14} /> Limpar ({activeCount})
-            </Button>
-          )}
-        </div>
+        <Tabs value={filters.view} onValueChange={(v) => set('view')(v)}>
+          <TabsList>
+            <TabsTrigger value="active">Ativos</TabsTrigger>
+            <TabsTrigger value="archived">Arquivados</TabsTrigger>
+            <TabsTrigger value="all">Todos</TabsTrigger>
+          </TabsList>
+        </Tabs>
+        <FilterBar
+          search
+          searchValue={filters.q || ''}
+          onSearch={(v) => setFilters((f) => ({ ...f, q: v }))}
+          searchPlaceholder="Buscar por título…"
+          filters={filterSpec}
+          values={filters}
+          onChange={(key, value) => set(key)(value)}
+          onClear={clearFilters}
+          className="mb-0"
+        />
       </div>
 
       {/* ── List ── */}
@@ -320,6 +238,6 @@ export default function TicketsList() {
         open={!!drawerId}
         onOpenChange={(o) => { if (!o) setDrawerId(null) }}
       />
-    </div>
+    </Page>
   )
 }

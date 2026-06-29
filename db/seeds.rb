@@ -9,9 +9,10 @@
 # ─────────────────────────────────────────────────────────────────────
 
 puts "🌱 Resetting demo data…"
-[PostMetric, Post, Generation, Creative, Subtask, Note, TicketStatusLog, Ticket,
- InvoiceProject, Charge, Invoice, Meeting, Project, Client, SocialAccount,
- Session, Membership, Setting, Subscription, Workspace, User].each(&:delete_all)
+[Attachment, McpCallLog, PushSubscription, PostMetric, Post, Generation, Creative,
+ Subtask, Note, TicketStatusLog, TicketRelation, Ticket, InvoiceProject, Charge,
+ Invoice, Meeting, SocialAccount, Project, Client, Session, Membership, Setting,
+ Subscription, Workspace, User].each(&:delete_all)
 
 # ── Users ────────────────────────────────────────────────────────────
 owner = User.create!(email: "demo@agencios.app", password: "demo1234", name: "Marina Costa", confirmed_at: Time.current)
@@ -40,29 +41,33 @@ Membership.create!(workspace: ws, user: team[:pedro], role: :member)
 Membership.create!(workspace: ws, user: team[:bia], role: :member)
 assignees = [owner, team[:julia], team[:pedro], team[:bia]]
 
-# ── Social accounts ──────────────────────────────────────────────────
-{ instagram: "estudiopulse", facebook: "estudiopulse", tiktok: "estudiopulse",
-  youtube: "EstudioPulse", linkedin: "estudio-pulse" }.each do |provider, handle|
-  SocialAccount.create!(workspace: ws, provider: provider, username: handle, status: :connected,
-                        external_user_id: "ext_#{SecureRandom.hex(4)}",
-                        user_access_token: "tok_#{SecureRandom.hex(6)}",
-                        token_expires_at: 50.days.from_now, last_synced_at: 2.hours.ago,
-                        scopes: %w[read publish insights])
-end
-
 # ── Clients + projects ───────────────────────────────────────────────
 client_data = [
-  { name: "Açaí da Vila",     company: "Vila Foods Ltda",  email: "contato@acaidavila.com.br", phone: "(11) 98888-1010", color: "#7C3AED" },
-  { name: "GymFit Academia",  company: "GymFit S.A.",      email: "mkt@gymfit.com.br",         phone: "(11) 97777-2020", color: "#10B981" },
-  { name: "Bloom Cosméticos", company: "Bloom Beauty",     email: "social@bloom.com.br",       phone: "(21) 96666-3030", color: "#EC4899" },
-  { name: "TechNova",         company: "TechNova Startup", email: "growth@technova.io",        phone: "(11) 95555-4040", color: "#0EA5E9" },
-  { name: "Vinho & Cia",      company: "Adega Premium",    email: "marketing@vinhoecia.com",   phone: "(51) 94444-5050", color: "#F43F5E" },
+  { name: "Açaí da Vila",     company: "Vila Foods Ltda",  email: "contato@acaidavila.com.br", phone: "(11) 98888-1010", color: "#7C3AED", secondary: "#F59E0B", voice: "Jovem, vibrante e saudável — tom de verão, gírias leves." },
+  { name: "GymFit Academia",  company: "GymFit S.A.",      email: "mkt@gymfit.com.br",         phone: "(11) 97777-2020", color: "#10B981", secondary: "#111827", voice: "Motivacional e direto — energia de treino, foco em resultado." },
+  { name: "Bloom Cosméticos", company: "Bloom Beauty",     email: "social@bloom.com.br",       phone: "(21) 96666-3030", color: "#EC4899", secondary: "#9D174D", voice: "Delicada, sofisticada e acolhedora — beleza com autocuidado." },
+  { name: "TechNova",         company: "TechNova Startup", email: "growth@technova.io",        phone: "(11) 95555-4040", color: "#0EA5E9", secondary: "#1E293B", voice: "Inovadora e confiante — linguagem de produto, clara e objetiva." },
+  { name: "Vinho & Cia",      company: "Adega Premium",    email: "marketing@vinhoecia.com",   phone: "(51) 94444-5050", color: "#F43F5E", secondary: "#7F1D1D", voice: "Elegante e sensorial — apreciação, harmonização, exclusividade." },
 ]
 clients = client_data.map do |c|
   cl = Client.create!(workspace: ws, name: c[:name], company: c[:company], email: c[:email],
                       phone: c[:phone], document: "12.345.678/0001-#{rand(10..99)}", status: :active,
-                      notes: "Cliente desde #{rand(2022..2024)}. Foco em conteúdo orgânico + tráfego pago.")
+                      notes: "Cliente desde #{rand(2022..2024)}. Foco em conteúdo orgânico + tráfego pago.",
+                      brand_voice: c[:voice], default_handle: c[:name].parameterize(separator: ""),
+                      brand_primary_color: c[:color], brand_secondary_color: c[:secondary])
   [cl, c[:color]]
+end
+
+# ── Social accounts (per client — the agency connects each client's networks) ──
+clients.each do |client, _color|
+  handle = client.name.parameterize(separator: "")
+  %i[instagram facebook tiktok youtube linkedin].each do |provider|
+    client.social_accounts.create!(workspace: ws, provider: provider, username: handle,
+                                   status: :connected, external_user_id: "ext_#{SecureRandom.hex(4)}",
+                                   user_access_token: "tok_#{SecureRandom.hex(6)}",
+                                   token_expires_at: 50.days.from_now, last_synced_at: 2.hours.ago,
+                                   scopes: %w[read publish insights])
+  end
 end
 
 projects = []
@@ -204,11 +209,11 @@ end
 
 # ── Posts + metrics ──────────────────────────────────────────────────
 puts "📡 Creating posts + metrics…"
-accounts = ws.social_accounts.index_by(&:provider)
 tickets.each do |t|
   next unless %w[published retrospective done].include?(t.status)
+  client_accounts = t.project.client.social_accounts.index_by(&:provider)
   t.channels.each do |ch|
-    acct = accounts[ch] || ws.social_accounts.first
+    acct = client_accounts[ch] || client_accounts.values.first
     next unless acct
     post = Post.create!(workspace: ws, ticket: t, social_account: acct, status: :published,
                         scheduled_at: t.published_at, published_at: t.published_at,

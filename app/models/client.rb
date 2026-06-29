@@ -5,6 +5,13 @@ class Client < ApplicationRecord
   has_many :projects, dependent: :destroy
   has_many :invoices, dependent: :destroy
   has_many :meetings, dependent: :nullify
+  has_many :social_accounts, dependent: :destroy
+
+  # Brand identity (used by creative generation + AI prompts). Visual identity
+  # lives in columns + these attachments; voice is `brand_voice`. The workspace
+  # carries the agency-level default that these override per client.
+  has_one_attached :logo
+  has_one_attached :default_creator_avatar
 
   enum :status, { active: 0, archived: 1 }, prefix: true
 
@@ -14,10 +21,10 @@ class Client < ApplicationRecord
   # `positioning` jsonb bag and threaded into every AI prompt for tickets under
   # this client (via Prompts::Base#positioning_block). `content_pillars` is an
   # array; the rest are free text. `statement` is the AI-synthesized one-paragraph
-  # positioning statement.
+  # positioning statement. Brand voice is NOT here — it is the `brand_voice` column.
   POSITIONING_KEYS = %w[
     one_liner category mission target_audience audience_pain value_proposition
-    differentiators competitors brand_voice content_pillars keywords guardrails
+    differentiators competitors content_pillars keywords guardrails
     statement
   ].freeze
 

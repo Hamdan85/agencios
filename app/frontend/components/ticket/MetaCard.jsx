@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useWorkspaceMembers } from '@/hooks/useData'
 import { PRIORITY_META } from '@/lib/constants'
 import { Card } from '@/components/ui/card'
@@ -8,7 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { dt, date, relativeDay } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
-import { User, Flag, CalendarClock, CalendarDays, Radio, Wand2, ChevronDown, Check } from 'lucide-react'
+import { User, Flag, CalendarClock, CalendarDays, Radio, Wand2, ChevronDown, Check, GitBranch } from 'lucide-react'
 
 function Row({ icon: Icon, label, children }) {
   return (
@@ -120,6 +121,26 @@ export default function MetaCard({ ticket, onUpdate }) {
         <Row icon={Wand2} label="Criativo">
           {ticket?.creative_type ? <CreativeTypeChip type={ticket.creative_type} /> : <span className="text-sm text-ink-faint">—</span>}
         </Row>
+
+        {ticket?.relations?.length > 0 && (
+          <div className="px-4 py-3">
+            <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+              <GitBranch size={14} /> Relações
+            </p>
+            <div className="space-y-1">
+              {ticket.relations.map((r) => (
+                <Link
+                  key={`${r.kind}-${r.ticket_id}`}
+                  to={`/tickets/${r.ticket_id}`}
+                  className="flex items-center gap-2 rounded-lg px-1.5 py-1.5 transition hover:bg-surface-muted"
+                >
+                  <span className="shrink-0 rounded-md bg-brand/12 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand">{r.label}</span>
+                  <span className="truncate text-sm text-ink-secondary">{r.title}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </Card>
   )

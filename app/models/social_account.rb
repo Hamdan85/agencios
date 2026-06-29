@@ -1,8 +1,11 @@
 # frozen_string_literal: true
 
-# One row per connected network per workspace. All OAuth tokens encrypted.
+# One row per connected network per CLIENT. The agency (workspace) connects each
+# of its clients' own social networks; the tickets under that client's projects
+# publish to them. `workspace_id` is kept for tenant scoping. OAuth tokens encrypted.
 class SocialAccount < ApplicationRecord
   belongs_to :workspace
+  belongs_to :client
   has_many :posts, dependent: :nullify
 
   # Networks integrate directly by default; `upload_post` is the aggregator

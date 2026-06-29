@@ -6,6 +6,7 @@ import { useCalendar, useOpenTicket } from '@/hooks/useData'
 import { PageHeader } from '@/components/ui/page-header'
 import { PageLoader } from '@/components/ui/feedback'
 import { Button } from '@/components/ui/button'
+import { Page } from '@/components/ui/page'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 import {
@@ -55,7 +56,7 @@ export default function CalendarIndex({ scope } = {}) {
   const label = view === 'month' ? monthLabel(cursor) : weekLabel(cursor)
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col animate-rise">
+    <Page wide className="flex min-h-0 flex-1 flex-col animate-rise">
       <PageHeader
         className="shrink-0"
         eyebrow={global ? 'Você' : 'Planejamento'}
@@ -121,7 +122,7 @@ export default function CalendarIndex({ scope } = {}) {
         open={!!selected}
         onOpenChange={(o) => !o && setSelected(null)}
       />
-    </div>
+    </Page>
   )
 }
 

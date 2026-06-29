@@ -41,9 +41,17 @@ export const useDashboard = () =>
 export const useCalendar = (filters = {}) =>
   useQuery({ queryKey: keys.calendar(filters), queryFn: () => calendarApi.get(filters), placeholderData: keepPreviousData })
 
-// ── My Tasks ───────────────────────────────────────────────────
+// ── My Tasks (paginated, infinite scroll) ──────────────────────
+// `filters` carries scope / tab / q. Each page returns { tasks, counts, meta };
+// counts come from the first page (they reflect the active search).
 export const useTasks = (filters = {}) =>
-  useQuery({ queryKey: keys.tasks(filters), queryFn: () => tasksApi.list(filters), placeholderData: keepPreviousData })
+  useInfiniteQuery({
+    queryKey: keys.tasks(filters),
+    queryFn: ({ pageParam = 1 }) => tasksApi.list({ ...filters, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, pages) => (lastPage?.meta?.has_more ? pages.length + 1 : undefined),
+    placeholderData: keepPreviousData,
+  })
 
 export function useTaskMutations() {
   const qc = useQueryClient()
@@ -96,6 +104,7 @@ export function useClientMutations() {
     archive: useMutation({ mutationFn: clientsApi.archive, onSuccess: () => { inv(); toast.success('Cliente arquivado.') }, onError: onErr('Erro.') }),
     synthesize: useMutation({ mutationFn: clientsApi.synthesizePositioning, onError: onErr('Erro ao gerar posicionamento com IA.') }),
     updatePositioning: useMutation({ mutationFn: ({ id, positioning }) => clientsApi.updatePositioning(id, positioning), onSuccess: () => { inv(); toast.success('Posicionamento atualizado!') }, onError: onErr('Erro ao salvar posicionamento.') }),
+    uploadBrandAssets: useMutation({ mutationFn: ({ id, assets }) => clientsApi.uploadBrandAssets(id, assets), onSuccess: () => inv(), onError: onErr('Erro ao enviar imagens da marca.') }),
   }
 }
 
@@ -134,9 +143,39 @@ export function useGenerate() {
   })
 }
 
-// ── Social accounts ────────────────────────────────────────────
-export const useSocialAccounts = () =>
-  useQuery({ queryKey: keys.socialAccounts(), queryFn: socialApi.list, select: (d) => d.social_accounts })
+// ── Social accounts (connected per client) ─────────────────────
+export const useSocialAccounts = (clientId) =>
+  useQuery({
+    queryKey: keys.socialAccounts(clientId),
+    queryFn: () => socialApi.list(clientId),
+    select: (d) => d.social_accounts,
+    enabled: !!clientId,
+  })
+
+// Connect opens the network's OAuth flow (full-page redirect); the callback lands
+// back on the client page. Disconnect/reconnect refresh the client payload (which
+// carries the client's `social_accounts`).
+export function useSocialAccountMutations(clientId) {
+  const qc = useQueryClient()
+  const inv = () => qc.invalidateQueries({ queryKey: keys.client(clientId) })
+  return {
+    connect: useMutation({
+      mutationFn: (network) => socialApi.authorizeUrl(clientId, network),
+      onSuccess: (d) => { if (d?.url) window.location.href = d.url },
+      onError: onErr('Não foi possível iniciar a conexão.'),
+    }),
+    disconnect: useMutation({
+      mutationFn: (id) => socialApi.destroy(clientId, id),
+      onSuccess: () => { inv(); toast.success('Conta desconectada.') },
+      onError: onErr('Erro ao desconectar.'),
+    }),
+    reconnect: useMutation({
+      mutationFn: (id) => socialApi.reconnect(clientId, id),
+      onSuccess: () => { inv(); toast.success('Conta reconectada.') },
+      onError: onErr('Erro ao reconectar.'),
+    }),
+  }
+}
 
 // ── Meetings ───────────────────────────────────────────────────
 export const useMeetings = (filters = {}) =>

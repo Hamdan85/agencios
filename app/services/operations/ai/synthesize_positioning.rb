@@ -2,41 +2,48 @@
 
 module Operations
   module Ai
-    # Synthesizes a brand positioning statement (+ suggested content pillars) from
-    # the wizard inputs. Stateless on purpose: the wizard calls this BEFORE the
-    # client exists, so it takes a raw inputs hash rather than a Client.
+    # AI-first positioning: takes the client's free-text brand description and
+    # returns the FULL structured positioning bag (the model fills the fields).
+    # Stateless on purpose — the wizard calls this BEFORE the client exists.
     #
-    # Returns { statement: String, content_pillars: [String] }. Parsing is
-    # defensive: if the model output lacks the expected markers (e.g. the offline
-    # Anthropic stub), the whole text becomes the statement and pillars stay empty.
+    # Returns a sanitized positioning Hash (Client::POSITIONING_KEYS only). Parsing
+    # is defensive: when the model output isn't valid JSON (e.g. the offline
+    # Anthropic stub), it degrades to seeding `one_liner` with the brief so the
+    # wizard still has something to show.
     class SynthesizePositioning < Operations::Base
-      def initialize(inputs:, name: nil)
-        @inputs = inputs.to_h
+      def initialize(brief:, name: nil)
+        @brief = brief.to_s
         @name = name
       end
 
       def call
-        builder = Prompts::ClientPositioning.new(inputs: @inputs, name: @name)
-        text = AiAdapter.complete(builder, max_tokens: 700).to_s.strip
+        builder = Prompts::ClientPositioning.new(brief: @brief, name: @name)
+        text = AiAdapter.complete(builder, max_tokens: 900).to_s
 
-        { statement: extract_statement(text), content_pillars: extract_pillars(text) }
+        parsed = parse(text)
+        Client.sanitize_positioning(parsed.presence || fallback)
+      rescue StandardError => e
+        # The wizard calls this synchronously — never hard-fail it. Degrade to the
+        # brief so the user still has something to edit.
+        Rails.logger.warn("[Ai::SynthesizePositioning] #{e.class}: #{e.message}")
+        Client.sanitize_positioning(fallback)
       end
 
       private
 
-      def extract_statement(text)
-        section = text[/POSICIONAMENTO:\s*(.+?)(?:\n\s*PILARES:|\z)/mi, 1]
-        (section || text).strip
+      def parse(text)
+        raw = text[/\{.*\}/m]
+        return {} unless raw
+
+        JSON.parse(raw)
+      rescue JSON::ParserError
+        {}
       end
 
-      def extract_pillars(text)
-        block = text[/PILARES:\s*(.+)\z/mi, 1]
-        return [] if block.blank?
+      def fallback
+        return {} if @brief.blank?
 
-        block.lines.filter_map do |line|
-          pillar = line.strip.sub(/\A[-*\d.]+\s*/, "").strip
-          pillar.presence
-        end.first(5)
+        { "one_liner" => @brief.strip[0, 280] }
       end
     end
   end

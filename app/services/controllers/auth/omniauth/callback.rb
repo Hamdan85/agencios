@@ -3,9 +3,10 @@
 module Controllers
   module Auth
     module Omniauth
-      # Verifies the signed OAuth state (which carries the connecting workspace),
-      # exchanges the code via the network vendor, and persists the SocialAccount(s).
-      # Returns the network slug on success; the controller maps it to a redirect.
+      # Verifies the signed OAuth state (which carries the connecting client),
+      # exchanges the code via the network vendor, and persists the SocialAccount(s)
+      # onto that client. Returns the network slug + client id on success; the
+      # controller maps it to a redirect back to the client page.
       class Callback < Controllers::Base
         def initialize(provider:, code:, state:)
           @provider = provider.to_s
@@ -17,14 +18,14 @@ module Controllers
           data = verify_state(@state)
           raise Operations::Errors::Invalid, "state" unless data
 
-          target = Workspace.find(data["workspace_id"])
+          client = Client.find(data["client_id"])
           vendor = Publishers::SocialPublisher.vendor_for_slug(@provider)
           attrs = vendor::Actions::ConnectAccount.call(
-            code: @code, workspace: target, redirect_uri: redirect_uri
+            code: @code, workspace: client.workspace, redirect_uri: redirect_uri
           )
 
-          Array(attrs).each { |a| Operations::Social::ConnectAccount.call(workspace: target, attrs: a) }
-          @provider
+          Array(attrs).each { |a| Operations::Social::ConnectAccount.call(client: client, attrs: a) }
+          { slug: @provider, client_id: client.id }
         end
 
         private

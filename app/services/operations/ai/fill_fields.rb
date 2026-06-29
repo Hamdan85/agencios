@@ -1,0 +1,99 @@
+# frozen_string_literal: true
+
+module Operations
+  module Ai
+    # The per-phase "Gerar com IA" action: fills the ticket's CURRENT status
+    # fields using everything produced in the earlier funnel stages. Status-aware
+    # via Prompts::FieldFill; writes through Operations::Tickets::UpdateFields so
+    # the same sanitize + mirror-columns + broadcast path is reused.
+    class FillFields < Operations::Base
+      def initialize(ticket:)
+        @ticket = ticket
+        @status = ticket.status.to_s
+      end
+
+      def call
+        keys = Prompts::FieldFill.fillable_keys(@status)
+        return { filled: [] } if keys.empty?
+
+        text = AiAdapter.complete(build_prompt, max_tokens: 1300).to_s
+        data = parse_json(text)
+        return { filled: [] } if data.blank?
+
+        values = coerce(data.slice(*keys))
+        return { filled: [] } if values.empty?
+
+        Operations::Tickets::UpdateFields.call(ticket: @ticket, status: @status, values: values)
+        Operations::Notes::Create.call(
+          ticket: @ticket, user: nil, kind: :ai,
+          body: "Campos da etapa “#{label}” preenchidos com IA: #{values.keys.join(', ')}."
+        )
+        { filled: values.keys }
+      end
+
+      private
+
+      def build_prompt
+        Prompts::FieldFill.new(
+          workspace: @ticket.workspace, client: @ticket.project.client,
+          status: @status, status_label: label, ctx: context_dump
+        )
+      end
+
+      # Labeled dump of every prior (and current) phase's non-blank fields, plus
+      # the ticket's headline meta — the raw material the model fills from.
+      def context_dump
+        lines = ["Ticket: #{@ticket.display_title}"]
+        lines << "Tipo de criativo: #{@ticket.creative_type}" if @ticket.creative_type.present?
+        lines << "Canais: #{Array(@ticket.channels).join(', ')}" if @ticket.channels.present?
+
+        current_idx = Ticket::WORKFLOW.index(@status.to_sym) || 0
+        Ticket::WORKFLOW.each_with_index do |status, idx|
+          break if idx > current_idx
+
+          fields = @ticket.fields_for(status.to_s)
+          pairs = fields.filter_map do |key, value|
+            value = Array(value).reject(&:blank?).join("; ") if value.is_a?(Array)
+            next if value.blank?
+
+            "  - #{key}: #{value}"
+          end
+          next if pairs.empty?
+
+          lines << "[#{Ticket::STATUS_LABELS[status.to_s]}]"
+          lines.concat(pairs)
+        end
+
+        lines.join("\n")
+      end
+
+      def parse_json(text)
+        raw = text[/\{.*\}/m]
+        raw && JSON.parse(raw)
+      rescue JSON::ParserError
+        nil
+      end
+
+      # Light type coercion so the persisted shape matches the field contracts.
+      def coerce(values)
+        values.each_with_object({}) do |(key, value), out|
+          out[key] =
+            case key
+            when "deliverables", "wins", "improvements"
+              Array(value).map { |v| v.to_s.strip }.reject(&:blank?)
+            when "hashtags"
+              Array(value).map { |v| v.to_s.sub(/\A#/, "").strip }.reject(&:blank?)
+            when "repeat_recommendation"
+              %w[repeat iterate retire].include?(value.to_s) ? value.to_s : nil
+            else
+              value.is_a?(Array) ? value.join("\n") : value
+            end
+        end.compact
+      end
+
+      def label
+        Ticket::STATUS_LABELS[@status] || @status
+      end
+    end
+  end
+end

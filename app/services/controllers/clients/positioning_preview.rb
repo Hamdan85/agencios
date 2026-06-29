@@ -2,7 +2,8 @@
 
 module Controllers
   module Clients
-    # Stateless AI synthesis of a positioning statement from the wizard inputs,
+    # AI-first positioning preview: the client describes the brand in free text
+    # (`brief`) and the model fills the structured positioning fields. Stateless —
     # called before the client exists. Gated to client creators (managers+).
     class PositioningPreview < Base
       def initialize(params:)
@@ -12,15 +13,9 @@ module Controllers
       def call
         authorize!(Client, :create?)
         result = Operations::Ai::SynthesizePositioning.call(
-          inputs: positioning_inputs, name: @params[:name].presence
+          brief: @params[:brief].to_s, name: @params[:name].presence
         )
         { positioning: result }
-      end
-
-      private
-
-      def positioning_inputs
-        @params.permit(POSITIONING_PERMIT).to_h
       end
     end
   end

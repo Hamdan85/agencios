@@ -34,7 +34,8 @@ export function useTicketMutations(id) {
     update: mk((data) => ticketsApi.update(id, data)),
     advance: mk(({ toStatus, position }) => ticketsApi.advance(id, toStatus, position), 'Status atualizado!'),
     summarize: mk(() => ticketsApi.summarize(id)),
-    aiAction: mk(() => ticketsApi.aiAction(id), 'IA gerou novidades ✨', () => analytics.track(EVENTS.AI_ACTION)),
+    aiAction: mk(() => ticketsApi.aiAction(id), 'IA atualizou o ticket ✨', () => analytics.track(EVENTS.AI_ACTION)),
+    generateSubtasks: mk(() => ticketsApi.generateSubtasks(id), 'Checklist gerada com IA ✨', () => analytics.track(EVENTS.AI_ACTION)),
     addSubtask: mk((data) => ticketsApi.createSubtask(id, data)),
     addNote: mk((payload) => ticketsApi.createNote(id, payload)),
     generate: mk(

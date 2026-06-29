@@ -7,10 +7,10 @@ import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/feedback'
 import { cn } from '@/lib/utils'
 import { date } from '@/lib/formatters'
-import { ListChecks, Plus, Check } from 'lucide-react'
+import { ListChecks, Plus, Check, Wand2 } from 'lucide-react'
 
 // The right-rail checklist: progress bar, toggleable items, inline add.
-export default function SubtasksPanel({ ticketId, subtasks = [], onAdd, adding = false }) {
+export default function SubtasksPanel({ ticketId, subtasks = [], onAdd, adding = false, onGenerate, generating = false }) {
   const qc = useQueryClient()
   const [title, setTitle] = useState('')
   const [pending, setPending] = useState({}) // optimistic in-flight toggles
@@ -53,7 +53,21 @@ export default function SubtasksPanel({ ticketId, subtasks = [], onAdd, adding =
             </div>
             <h3 className="font-display text-sm font-bold text-ink">Subtarefas</h3>
           </div>
-          <span className="font-mono text-xs font-bold text-ink-muted">{done}/{total}</span>
+          <div className="flex items-center gap-2">
+            {onGenerate && (
+              <button
+                type="button"
+                onClick={() => onGenerate()}
+                disabled={generating}
+                title="Gerar a checklist de produção com IA a partir do brief e do escopo"
+                className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold text-emerald transition hover:bg-emerald/10 disabled:opacity-50"
+              >
+                {generating ? <Spinner size={12} className="border-emerald/30 border-t-emerald" /> : <Wand2 size={12} />}
+                IA
+              </button>
+            )}
+            <span className="font-mono text-xs font-bold text-ink-muted">{done}/{total}</span>
+          </div>
         </div>
         {total > 0 && (
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-muted">

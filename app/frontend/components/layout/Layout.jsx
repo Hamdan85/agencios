@@ -99,13 +99,11 @@ export default function Layout() {
           <span className="size-8" />
         </header>
 
+        {/* Full-bleed shell — each page wraps its content in <Page>, which owns
+            the width + padding (default "respiro", or `wide` for column-dense
+            screens like the board / calendar). */}
         <main className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain" style={{ scrollbarGutter: 'stable' }}>
-          {/* Generous, safe-area-aware bottom padding on mobile so every page's
-              last component (and any bottom button bar) clears the browser bar /
-              home indicator. Desktop keeps the original py-9. */}
-          <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-5 pt-7 pb-[calc(env(safe-area-inset-bottom)+4rem)] sm:px-8 sm:py-9">
-            <Outlet />
-          </div>
+          <Outlet />
         </main>
       </div>
 

@@ -148,11 +148,10 @@ export const POSITIONING_STEPS = [
     ],
   },
   {
-    key: 'voice',
-    title: 'Voz & conteúdo',
+    key: 'content',
+    title: 'Conteúdo',
     description: 'Como a marca se comunica.',
     fields: [
-      { key: 'brand_voice', label: 'Voz da marca', type: 'textarea', placeholder: 'Personalidade e tom (ex.: próxima, divertida, especialista).' },
       { key: 'content_pillars', label: 'Pilares de conteúdo', type: 'pillars', placeholder: 'Um pilar por linha (ex.: bastidores, dicas, prova social).' },
       { key: 'keywords', label: 'Palavras-chave / hashtags', type: 'text', placeholder: 'Termos e hashtags recorrentes.' },
       { key: 'guardrails', label: 'Restrições / o que evitar', type: 'textarea', placeholder: 'Assuntos, palavras ou abordagens proibidas.' },
@@ -166,8 +165,17 @@ export const EMPTY_POSITIONING = {
   one_liner: '', category: '', mission: '',
   target_audience: '', audience_pain: '',
   value_proposition: '', differentiators: '', competitors: '',
-  brand_voice: '', content_pillars: [], keywords: '', guardrails: '',
+  content_pillars: [], keywords: '', guardrails: '',
   statement: '',
+}
+
+// Brand identity (voice, @handle, colors) lives on the client itself — distinct
+// from the strategic positioning. Logo + creator avatar upload separately.
+export const EMPTY_BRAND = {
+  brand_voice: '',
+  default_handle: '',
+  brand_primary_color: '#7C3AED',
+  brand_secondary_color: '#F59E0B',
 }
 
 // All positioning field metadata flattened (used to render the read view).

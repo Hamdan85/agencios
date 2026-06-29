@@ -1,11 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import {
   Settings, Palette, Users2, Plug, Save, AtSign, Sparkles, UserPlus,
   Link2, Check, Calendar, Wallet, Copy, ShieldCheck, Bot, Trash2, RefreshCw,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
-  useSettings, useSettingsMutation, useWorkspaceMembers, useWorkspaceMutations, useSocialAccounts,
+  useSettings, useSettingsMutation, useWorkspaceMembers, useWorkspaceMutations,
   useConnections, useRevokeConnection, useMcpConnector, useRotateMcpConnector,
 } from '@/hooks/useData'
 import { PageHeader } from '@/components/ui/page-header'
@@ -17,13 +17,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Switch } from '@/components/ui/switch'
 import { Avatar } from '@/components/ui/avatar'
 import { PageLoader } from '@/components/ui/feedback'
+import { Page } from '@/components/ui/page'
 import {
   Tabs, TabsList, TabsTrigger, TabsContent,
 } from '@/components/ui/tabs'
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/components/ui/select'
-import { CHANNEL_META, ROLE_LABELS } from '@/lib/constants'
+import { ROLE_LABELS } from '@/lib/constants'
 
 const ROLE_VARIANT = { owner: 'default', admin: 'soft', manager: 'success', member: 'outline', guest: 'muted' }
 
@@ -287,45 +288,12 @@ function IntegrationCard({ icon: Icon, color, name, connected, sub, onConnect })
 
 function IntegrationsTab() {
   const { data: setting } = useSettings()
-  const { data: accounts } = useSocialAccounts()
-
-  const byProvider = useMemo(() => {
-    const map = {}
-    for (const a of accounts || []) map[a.provider] = a
-    return map
-  }, [accounts])
 
   const s = setting?.setting || setting || {}
   const stub = () => toast.info('Conexão indisponível nesta demonstração.')
 
   return (
     <div className="space-y-8">
-      <section>
-        <div className="mb-3 flex items-center gap-2">
-          <Plug size={18} className="text-brand" />
-          <h2 className="font-display text-lg font-bold text-ink">Redes sociais</h2>
-        </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Object.entries(CHANNEL_META).map(([provider, meta]) => {
-            const acc = byProvider[provider]
-            const connected = !!acc && acc.status === 'connected'
-            return (
-              <IntegrationCard
-                key={provider}
-                icon={meta.icon}
-                color={meta.color}
-                name={meta.label}
-                connected={connected}
-                sub={acc
-                  ? (acc.token_expired || acc.status === 'needs_reauth' ? 'Reautenticação necessária' : `@${acc.username || ''}`)
-                  : 'Publique direto nesta rede.'}
-                onConnect={stub}
-              />
-            )
-          })}
-        </div>
-      </section>
-
       <section>
         <div className="mb-3 flex items-center gap-2">
           <Plug size={18} className="text-emerald" />
@@ -461,7 +429,7 @@ export default function SettingsIndex() {
   if (isLoading) return <PageLoader />
 
   return (
-    <div>
+    <Page>
       <PageHeader
         eyebrow="Conta"
         title="Configurações"
@@ -491,6 +459,6 @@ export default function SettingsIndex() {
           <ConnectionsTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </Page>
   )
 }

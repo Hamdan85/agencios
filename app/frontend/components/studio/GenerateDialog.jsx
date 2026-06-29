@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Sparkles, Loader2, CheckCircle2, Wand2 } from 'lucide-react'
+import { Sparkles, Loader2, CheckCircle2, Wand2, AtSign } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
@@ -9,7 +9,29 @@ import { Label } from '@/components/ui/label'
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/components/ui/select'
+import { ClientSelect } from '@/components/ui/entity-select'
 import { GENERATION_KIND_META } from '@/lib/constants'
+
+// Compact preview of the chosen client's brand — the content is generated in
+// this brand's voice / colors / handle.
+function BrandPreview({ client }) {
+  const b = client.brand || {}
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-muted/50 p-3">
+      <div className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-xl bg-white text-brand ring-1 ring-border">
+        {b.logo_url ? <img src={b.logo_url} alt="" className="size-full object-contain p-0.5" /> : <AtSign size={18} />}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-bold text-ink">{client.name}</p>
+        <p className="truncate text-xs text-ink-muted">@{String(b.handle || client.name).replace(/^@/, '')}</p>
+      </div>
+      <div className="flex shrink-0 items-center gap-1.5">
+        <span className="size-5 rounded-md ring-1 ring-border" style={{ background: b.primary || '#7C3AED' }} />
+        <span className="size-5 rounded-md ring-1 ring-border" style={{ background: b.secondary || '#EC4899' }} />
+      </div>
+    </div>
+  )
+}
 
 // Static demo options for the video generator (avatar/voice).
 const AVATARS = [
@@ -46,33 +68,42 @@ const emptyForm = () => ({
   prompt: '',
 })
 
-export function GenerateDialog({ kind, open, onOpenChange, generate }) {
+export function GenerateDialog({ kind, open, onOpenChange, generate, clients = [] }) {
   const [form, setForm] = useState(emptyForm)
   const [done, setDone] = useState(false)
+  const [clientId, setClientId] = useState(null)
   const meta = META[kind] || META.carousel
   const kindMeta = GENERATION_KIND_META[kind] || GENERATION_KIND_META.carousel
   const KindIcon = kindMeta.icon
   const pending = generate?.isPending
 
-  // Reset the form whenever the dialog (re)opens for a kind.
+  // Reset the form + default the client whenever the dialog (re)opens.
   useEffect(() => {
     if (open) {
       setForm(emptyForm())
       setDone(false)
+      setClientId(clients[0]?.id ?? null)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, kind])
 
   const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }))
 
-  const isValid =
+  const selectedClient = clients.find((c) => String(c.id) === String(clientId)) || null
+  const clientOption = selectedClient ? { value: selectedClient.id, label: selectedClient.name } : null
+
+  const isValid = !!clientId && (
     kind === 'carousel' ? form.topic.trim().length > 1 :
     kind === 'video' ? form.script.trim().length > 1 :
     form.prompt.trim().length > 1
+  )
 
   const buildParams = () => {
-    if (kind === 'carousel') return { topic: form.topic.trim(), slides: Number(form.slides) || 6, objective: form.objective.trim() }
-    if (kind === 'video') return { script: form.script.trim(), avatar: form.avatar, voice: form.voice }
-    return { prompt: form.prompt.trim() }
+    // The generation carries the client it's FOR, so it uses the client's brand.
+    const base = clientId ? { client_id: clientId } : {}
+    if (kind === 'carousel') return { ...base, topic: form.topic.trim(), slides: Number(form.slides) || 6, objective: form.objective.trim() }
+    if (kind === 'video') return { ...base, script: form.script.trim(), avatar: form.avatar, voice: form.voice }
+    return { ...base, prompt: form.prompt.trim() }
   }
 
   const submit = (e) => {
@@ -117,6 +148,18 @@ export function GenerateDialog({ kind, open, onOpenChange, generate }) {
           <GeneratingState color={kindMeta.color} label={kindMeta.label} />
         ) : (
           <form onSubmit={submit} className="space-y-4">
+            <Field label="Cliente">
+              <ClientSelect
+                variant="field"
+                value={clientId || ''}
+                onChange={(v) => setClientId(v ? Number(v) : null)}
+                initialOption={clientOption}
+                placeholder="Para qual cliente?"
+                emptyMessage="Crie um cliente primeiro."
+              />
+            </Field>
+            {selectedClient && <BrandPreview client={selectedClient} />}
+
             {kind === 'carousel' && (
               <>
                 <Field label="Tema" htmlFor="gen-topic">

@@ -7,8 +7,10 @@ import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Spinner } from '@/components/ui/feedback'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { ChipsInput } from '@/components/ui/chips-input'
 import { DatePicker, DateTimePicker } from '@/components/ui/date-picker'
 import { ChannelIcons } from '@/components/ui/iconography'
+import DoneSummary from './DoneSummary'
 import { dt } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 import {
@@ -55,9 +57,9 @@ const SCHEMAS = {
     helper: 'A copy final, hashtags e o status de aprovação do cliente.',
     fields: [
       { key: 'caption', label: 'Legenda', kind: 'textarea', rows: 5, icon: MessageSquareText, placeholder: 'Escreva ou gere a legenda final…', full: true },
-      { key: 'hashtags', label: 'Hashtags', kind: 'lines', icon: Hash, placeholder: '#umaPorLinha', full: true, hint: 'Uma hashtag por linha' },
+      { key: 'hashtags', label: 'Hashtags', kind: 'chips', icon: Hash, placeholder: 'Digite e tecle Enter…', full: true, hint: 'Enter ou vírgula adiciona; clique no × para remover' },
       { key: 'approval_status', label: 'Aprovação', kind: 'select', icon: ShieldCheck, options: 'approval' },
-      { key: 'internal_notes', label: 'Notas internas', kind: 'textarea', rows: 3, icon: FileText, placeholder: 'Observações para a equipe…', full: true },
+      { key: 'internal_notes', label: 'Notas internas', kind: 'textarea', rich: true, rows: 3, icon: FileText, placeholder: 'Observações para a equipe…', full: true },
     ],
   },
   scheduled: {
@@ -78,8 +80,8 @@ const SCHEMAS = {
     fields: [
       { key: 'wins', label: 'Vitórias', kind: 'lines', icon: ThumbsUp, placeholder: 'O que deu certo? Uma por linha…', full: true, hint: 'Uma por linha' },
       { key: 'improvements', label: 'Melhorias', kind: 'lines', icon: AlertTriangle, placeholder: 'O que pode melhorar? Uma por linha…', full: true, hint: 'Uma por linha' },
-      { key: 'repeat_recommendation', label: 'Recomendação', kind: 'select', icon: Repeat, options: 'repeat' },
-      { key: 'lessons_learned', label: 'Lições aprendidas', kind: 'textarea', rows: 4, icon: FileText, placeholder: 'O aprendizado consolidado…', full: true },
+      { key: 'repeat_recommendation', label: 'Recomendação', kind: 'radio', icon: Repeat, options: 'repeat' },
+      { key: 'lessons_learned', label: 'Lições aprendidas', kind: 'textarea', rich: true, rows: 4, icon: FileText, placeholder: 'O aprendizado consolidado…', full: true },
     ],
   },
 }
@@ -189,7 +191,7 @@ function PublishedView({ status, posts, color }) {
 }
 
 // ── The contextual editable field group ──────────────────────────────────
-export default function FieldGroup({ ticket, posts, onSave, saving = false }) {
+export default function FieldGroup({ ticket, posts, subtasks = [], onSave, saving = false }) {
   const status = ticket?.status
   const m = statusMeta(status)
   const schema = SCHEMAS[status]
@@ -211,14 +213,18 @@ export default function FieldGroup({ ticket, posts, onSave, saving = false }) {
       const a = draft[f.key]
       const b = serverValues[f.key]
       if (f.kind === 'lines') return arrayToLines(a) !== arrayToLines(b)
-      if (f.kind === 'channels') return JSON.stringify(a || []) !== JSON.stringify(b || [])
+      if (f.kind === 'channels' || f.kind === 'chips') return JSON.stringify(a || []) !== JSON.stringify(b || [])
       return (a ?? '') !== (b ?? '')
     })
   }, [draft, serverValues, schema])
 
   // Read-only stages render a different surface entirely.
-  if (status === 'published' || status === 'done') {
+  if (status === 'published') {
     return <PublishedView status={status} posts={posts} color={m.color} />
+  }
+  // "Concluído" gets a rich, graphic case-study summary of the whole ticket.
+  if (status === 'done') {
+    return <DoneSummary ticket={ticket} posts={posts} subtasks={subtasks} />
   }
   if (!schema) return null
 
@@ -262,6 +268,7 @@ export default function FieldGroup({ ticket, posts, onSave, saving = false }) {
       case 'textarea':
         control = (
           <Textarea
+            rich={f.rich}
             rows={f.rows}
             value={value || ''}
             placeholder={f.placeholder}
@@ -270,6 +277,49 @@ export default function FieldGroup({ ticket, posts, onSave, saving = false }) {
           />
         )
         break
+      case 'chips':
+        control = (
+          <ChipsInput
+            value={Array.isArray(value) ? value : []}
+            onChange={(v) => setAndPersist(f.key, v)}
+            placeholder={f.placeholder}
+            prefix={f.key === 'hashtags' ? '#' : ''}
+          />
+        )
+        break
+      case 'radio': {
+        const opts =
+          f.options === 'approval' ? APPROVAL_OPTIONS :
+          f.options === 'repeat' ? REPEAT_OPTIONS : []
+        control = (
+          <div className="flex flex-wrap gap-2">
+            {opts.map((o) => {
+              const active = value === o.value
+              return (
+                <button
+                  key={o.value}
+                  type="button"
+                  onClick={() => setAndPersist(f.key, o.value)}
+                  aria-pressed={active}
+                  className={cn(
+                    'inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all',
+                    active
+                      ? 'border-transparent text-white shadow-sm'
+                      : 'border-border bg-surface text-ink-secondary hover:border-brand/40',
+                  )}
+                  style={active ? { background: m.color } : undefined}
+                >
+                  <span className={cn('grid size-4 place-items-center rounded-full border-2', active ? 'border-white' : 'border-ink-faint')}>
+                    {active && <span className="size-1.5 rounded-full bg-white" />}
+                  </span>
+                  {o.label}
+                </button>
+              )
+            })}
+          </div>
+        )
+        break
+      }
       case 'lines':
         control = (
           <Textarea
@@ -321,12 +371,47 @@ export default function FieldGroup({ ticket, posts, onSave, saving = false }) {
         )
         break
       }
-      case 'channels':
+      case 'channels': {
+        const connected = ticket?.connected_channels || []
+        const clientId = ticket?.project?.client_id
         control = (
           <div className="flex flex-wrap gap-2">
             {Object.entries(CHANNEL_META).map(([ch, meta]) => {
               const Ch = meta.icon
               const active = Array.isArray(value) && value.includes(ch)
+              const isConnected = connected.includes(ch)
+
+              // Not connected for this client → render disabled; clicking opens
+              // the client's integrations (Configurações tab) in a new tab.
+              if (!isConnected) {
+                const inner = (
+                  <>
+                    <Ch size={14} strokeWidth={2.3} />
+                    {meta.label}
+                    <ExternalLink size={12} className="opacity-70" />
+                  </>
+                )
+                const cls = cn(
+                  'inline-flex items-center gap-1.5 rounded-xl border border-dashed px-3 py-1.5 text-sm font-semibold text-ink-faint transition-all',
+                  active ? 'border-amber/60 ring-1 ring-amber/40' : 'border-border',
+                  clientId ? 'hover:border-brand/40 hover:text-ink-secondary' : 'cursor-not-allowed opacity-60',
+                )
+                return clientId ? (
+                  <a
+                    key={ch}
+                    href={`/clientes/${clientId}/configuracoes`}
+                    target="_blank"
+                    rel="noreferrer"
+                    title={`${meta.label} não está conectado neste cliente — clique para conectar`}
+                    className={cls}
+                  >
+                    {inner}
+                  </a>
+                ) : (
+                  <span key={ch} className={cls} title={`${meta.label} não está conectado`}>{inner}</span>
+                )
+              }
+
               return (
                 <button
                   key={ch}
@@ -350,6 +435,7 @@ export default function FieldGroup({ ticket, posts, onSave, saving = false }) {
           </div>
         )
         break
+      }
       case 'switch':
         control = (
           <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-muted/50 px-3.5 py-2.5">

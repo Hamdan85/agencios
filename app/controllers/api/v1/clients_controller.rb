@@ -18,6 +18,10 @@ module Api
 
       # PATCH /api/v1/clients/:id/positioning — replace a client's positioning.
       def update_positioning = render_ok(Controllers::Clients::UpdatePositioning.call(params:))
+
+      # PATCH /api/v1/clients/:id/brand_assets — upload the client's logo and/or
+      # creator avatar (multipart). Brand text fields go through #update.
+      def brand_assets = render_ok(Controllers::Clients::UpdateBrandAssets.call(params:))
     end
   end
 end

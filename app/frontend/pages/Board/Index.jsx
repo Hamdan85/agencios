@@ -13,6 +13,7 @@ import { canManage } from '@/lib/roles'
 import { PageHeader } from '@/components/ui/page-header'
 import { PageLoader, EmptyState } from '@/components/ui/feedback'
 import { Button } from '@/components/ui/button'
+import { Page } from '@/components/ui/page'
 import { ScrollShadow } from '@/components/ui/scroll-shadow'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { BoardColumn } from '@/components/board/BoardColumn'
@@ -161,7 +162,7 @@ export default function Board() {
   if (isLoading) return <PageLoader />
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col animate-rise">
+    <Page wide className="flex min-h-0 flex-1 flex-col animate-rise">
       <PageHeader
         className="shrink-0"
         eyebrow="Produção"
@@ -247,6 +248,6 @@ export default function Board() {
         open={!!drawerTicketId}
         onOpenChange={(o) => { if (!o) setDrawerTicketId(null) }}
       />
-    </div>
+    </Page>
   )
 }

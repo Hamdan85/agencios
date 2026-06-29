@@ -46,3 +46,4 @@ node_modules
 /config/credentials/*.key
 
 dump.rdb
+dump.rdb

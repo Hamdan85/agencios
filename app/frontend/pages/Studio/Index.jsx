@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import {
-  Sparkles, GalleryHorizontalEnd, Video, Image as ImageIcon, AtSign, Mic,
+  Sparkles, GalleryHorizontalEnd, Video, Image as ImageIcon,
   Wand2, Zap, Layers, CheckCircle2, Clock, Loader2, XCircle, BadgeDollarSign, Gauge,
 } from 'lucide-react'
 import { useStudio, useGenerations, useGenerate } from '@/hooks/useData'
@@ -9,6 +9,7 @@ import { useGenerationsChannel } from '@/hooks/useRealtime'
 import { PageHeader } from '@/components/ui/page-header'
 import { PageLoader, EmptyState } from '@/components/ui/feedback'
 import { Badge } from '@/components/ui/badge'
+import { Page } from '@/components/ui/page'
 import { ChannelIcons } from '@/components/ui/iconography'
 import { cn } from '@/lib/utils'
 import { brl, relativeDay } from '@/lib/formatters'
@@ -44,21 +45,19 @@ export default function StudioIndex() {
 
   if (isLoading) return <PageLoader />
 
-  const brand = studio?.brand || {}
+  const clients = studio?.clients || []
   const creativeTypes = studio?.creative_types || []
   const recent = live || studio?.recent_generations || []
 
   return (
-    <div className="animate-rise">
+    <Page className="animate-rise">
       <PageHeader
         eyebrow="Criação"
         title="Estúdio"
         icon={Sparkles}
         color={HERO}
-        description="Gere criativos com IA — carrosséis, vídeos UGC e imagens, no padrão da sua marca."
+        description="Gere criativos com IA — carrosséis, vídeos UGC e imagens, no padrão da marca do cliente."
       />
-
-      <BrandStrip brand={brand} />
 
       {/* Generator cards */}
       <section className="mt-6">
@@ -111,59 +110,9 @@ export default function StudioIndex() {
         open={!!dialogKind}
         onOpenChange={(o) => !o && setDialogKind(null)}
         generate={generate}
+        clients={clients}
       />
-    </div>
-  )
-}
-
-// ── Brand strip ────────────────────────────────────────────────────
-function BrandStrip({ brand }) {
-  const primary = brand?.primary || '#7C3AED'
-  const secondary = brand?.secondary || '#EC4899'
-  const handle = brand?.handle || 'sua_agencia'
-  const voice = brand?.voice
-
-  return (
-    <div className="relative overflow-hidden rounded-2xl border border-border bg-aurora p-5">
-      <div className="relative flex flex-wrap items-center gap-x-8 gap-y-4">
-        <div className="flex items-center gap-3">
-          <div className="grid size-11 place-items-center rounded-2xl bg-white/70 text-brand shadow-sm ring-1 ring-border backdrop-blur">
-            <AtSign size={22} strokeWidth={2.4} />
-          </div>
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">Handle da marca</p>
-            <p className="font-display text-lg font-extrabold text-ink">@{String(handle).replace(/^@/, '')}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">Cores</p>
-          <Swatch color={primary} />
-          <Swatch color={secondary} />
-        </div>
-
-        {voice && (
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="grid size-9 place-items-center rounded-xl bg-white/60 text-pink shadow-sm ring-1 ring-border">
-              <Mic size={16} strokeWidth={2.4} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">Tom de voz</p>
-              <p className="truncate text-sm font-semibold text-ink-secondary">{voice}</p>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function Swatch({ color }) {
-  return (
-    <div className="flex items-center gap-2 rounded-xl bg-white/60 px-2.5 py-1.5 ring-1 ring-border">
-      <span className="size-7 rounded-lg shadow-inner ring-1 ring-black/5" style={{ background: color }} />
-      <span className="font-mono text-[11px] font-bold uppercase text-ink-secondary">{color}</span>
-    </div>
+    </Page>
   )
 }
 

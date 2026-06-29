@@ -68,22 +68,33 @@ RSpec.describe "Client positioning AI threading" do
   end
 
   describe Operations::Ai::SynthesizePositioning do
-    it "returns a statement and pillars, parsing the model output" do
+    it "fills the structured fields from a free-text brief, parsing the JSON output" do
       allow(AiAdapter).to receive(:complete).and_return(
-        "POSICIONAMENTO:\nPara PMEs que vendem doces, somos a parceira criativa.\n\nPILARES:\n- bastidores\n- dicas rápidas"
+        <<~JSON
+          Claro! Segue o posicionamento:
+          {
+            "one_liner": "Doces artesanais sob encomenda",
+            "target_audience": "PMEs de confeitaria",
+            "content_pillars": ["bastidores", "dicas rápidas"],
+            "statement": "Para PMEs que vendem doces, somos a parceira criativa.",
+            "bogus": "drop"
+          }
+        JSON
       )
 
-      result = described_class.call(inputs: { "one_liner" => "doces" }, name: "ACME")
+      result = described_class.call(brief: "Marca de doces para PMEs", name: "ACME")
 
-      expect(result[:statement]).to eq("Para PMEs que vendem doces, somos a parceira criativa.")
-      expect(result[:content_pillars]).to eq(["bastidores", "dicas rápidas"])
+      expect(result["one_liner"]).to eq("Doces artesanais sob encomenda")
+      expect(result["target_audience"]).to eq("PMEs de confeitaria")
+      expect(result["content_pillars"]).to eq(["bastidores", "dicas rápidas"])
+      expect(result["statement"]).to eq("Para PMEs que vendem doces, somos a parceira criativa.")
+      expect(result).not_to have_key("bogus")
     end
 
-    it "degrades to the whole text as the statement when markers are absent" do
-      allow(AiAdapter).to receive(:complete).and_return("texto livre sem marcadores")
-      result = described_class.call(inputs: {}, name: "X")
-      expect(result[:statement]).to eq("texto livre sem marcadores")
-      expect(result[:content_pillars]).to eq([])
+    it "degrades to seeding one_liner with the brief when the output isn't JSON" do
+      allow(AiAdapter).to receive(:complete).and_return("[stub] texto livre sem json")
+      result = described_class.call(brief: "Uma marca incrível", name: "X")
+      expect(result["one_liner"]).to eq("Uma marca incrível")
     end
   end
 end

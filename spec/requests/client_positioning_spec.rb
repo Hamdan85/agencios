@@ -29,15 +29,17 @@ RSpec.describe "Client positioning API", type: :request do
     expect(body.dig("client", "positioning")).not_to have_key("bogus")
   end
 
-  it "returns an AI-synthesized positioning preview" do
+  it "returns an AI-filled positioning preview from a free-text brief" do
     post "/api/v1/clients/positioning_preview", params: {
-      name: "ACME", one_liner: "vende doces", target_audience: "PMEs"
+      name: "ACME", brief: "Marca de doces artesanais para PMEs que vendem pelo Instagram"
     }, as: :json
 
     expect(response).to have_http_status(:ok)
     body = JSON.parse(response.body)
-    expect(body["positioning"]).to have_key("statement")
-    expect(body.dig("positioning", "statement")).to be_present
+    # Offline (no API key) the adapter stubs non-JSON text, so the operation
+    # degrades to seeding one_liner with the brief — the bag is still filled.
+    expect(body["positioning"]).to be_present
+    expect(body.dig("positioning", "one_liner")).to include("doces artesanais")
   end
 
   it "updates an existing client's positioning" do

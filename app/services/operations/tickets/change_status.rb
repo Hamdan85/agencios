@@ -90,15 +90,28 @@ module Operations
         when "scheduled"     then ensure_posts_for_channels
         when "published"     then publish_scheduled_posts
         when "retrospective" then draft_retrospective
+        when "done"          then spawn_follow_ups
         end
+      end
+
+      # On completion, if the retrospective recommends iterating/repeating, spawn a
+      # pre-filled ideation ticket linked back to this one (iteration/repetition of).
+      def spawn_follow_ups
+        rec = @ticket.fields_for("retrospective")["repeat_recommendation"].to_s
+        return unless %w[iterate repeat].include?(rec)
+
+        Operations::Tickets::SpawnFollowUp.call(source: @ticket, recommendation: rec, user: @user)
+      rescue StandardError => e
+        Rails.logger.warn("[ChangeStatus] spawn_follow_ups failed: #{e.message}")
       end
 
       def ensure_posts_for_channels
         # Validate channels + scheduled_at, then ensure a Post per channel.
         return if @ticket.channels.blank?
 
+        client = @ticket.project.client
         @ticket.channels.each do |channel|
-          account = @ticket.workspace.social_accounts.find_by(provider: channel)
+          account = client.social_accounts.find_by(provider: channel)
           next unless account
 
           @ticket.posts.find_or_create_by!(social_account_id: account.id) do |post|

@@ -34,7 +34,7 @@ export default function TicketBody({
         summarizing={mut.summarize.isPending}
         acting={mut.aiAction.isPending}
       />
-      <FieldGroup ticket={ticket} posts={posts} onSave={saveFields} saving={mut.update.isPending} />
+      <FieldGroup ticket={ticket} posts={posts} subtasks={subtasks} onSave={saveFields} saving={mut.update.isPending} />
       {(showCreativesInMain || creatives.length > 0) && (
         <CreativesPanel
           creatives={creatives}
@@ -60,6 +60,8 @@ export default function TicketBody({
       subtasks={subtasks}
       onAdd={(payload) => mut.addSubtask.mutate(payload)}
       adding={mut.addSubtask.isPending}
+      onGenerate={() => mut.generateSubtasks.mutate()}
+      generating={mut.generateSubtasks.isPending}
     />
   )
   const activity = (

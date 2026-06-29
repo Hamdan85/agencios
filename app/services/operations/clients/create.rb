@@ -4,7 +4,10 @@ module Operations
   module Clients
     # Creates a Client on the active workspace (the aggregate root itself).
     class Create < Operations::Base
-      PERMITTED = %i[name company email phone document notes status].freeze
+      PERMITTED = %i[
+        name company email phone document notes status
+        brand_voice default_handle brand_primary_color brand_secondary_color
+      ].freeze
 
       def initialize(params)
         params = params.to_h.symbolize_keys

@@ -25,7 +25,11 @@ const MediaViewer = lazy(() => import('./MediaViewer'))
 function FileTile({ att, onOpen, onRename, onRemove }) {
   const meta = attachmentKindMeta(att.kind)
   const Icon = meta.icon
-  const thumb = att.kind === 'image' ? (att.preview_url || att.url) : (att.kind === 'video' ? att.preview_url : null)
+  const rawThumb = att.kind === 'image' ? (att.preview_url || att.url) : (att.kind === 'video' ? att.preview_url : null)
+  // Fall back to a clean icon tile when there's no preview OR the image fails to
+  // load (missing blob / unsupported type / broken URL).
+  const [failed, setFailed] = useState(false)
+  const thumb = rawThumb && !failed ? rawThumb : null
 
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-border bg-surface transition-all lift">
@@ -37,12 +41,21 @@ function FileTile({ att, onOpen, onRename, onRemove }) {
       >
         <div className="relative aspect-[4/3] overflow-hidden" style={{ background: `${meta.color}12` }}>
           {thumb ? (
-            <img src={thumb} alt={att.display_name} className="size-full object-cover" loading="lazy" />
+            <img
+              src={thumb}
+              alt={att.display_name}
+              className="size-full object-cover"
+              loading="lazy"
+              onError={() => setFailed(true)}
+            />
           ) : (
-            <div className="flex size-full flex-col items-center justify-center gap-2">
+            <div className="flex size-full flex-col items-center justify-center gap-2 px-2 text-center">
               <div className="flex size-12 items-center justify-center rounded-2xl" style={{ background: `${meta.color}1F`, color: meta.color }}>
                 <Icon size={24} strokeWidth={2.1} />
               </div>
+              <span className="line-clamp-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: meta.color }}>
+                {meta.label}
+              </span>
             </div>
           )}
           {att.kind === 'video' && (

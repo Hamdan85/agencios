@@ -16,6 +16,14 @@ class Ticket < ApplicationRecord
   has_many :notes, dependent: :destroy
   has_many :ticket_status_logs, dependent: :destroy
 
+  # Typed links to other tickets. `ticket_relations` are this ticket's OUTGOING
+  # links (e.g. "this is an iteration of #4"); `inverse_ticket_relations` are
+  # INCOMING (e.g. "#9 is an iteration of this").
+  has_many :ticket_relations, dependent: :destroy
+  has_many :related_tickets, through: :ticket_relations
+  has_many :inverse_ticket_relations, class_name: "TicketRelation",
+           foreign_key: :related_ticket_id, dependent: :destroy
+
   # `scopes: false` — the `scoping` status would otherwise generate a
   # `Ticket.scoping` scope that clashes with ActiveRecord::Relation#scoping.
   # The board groups by status in a single query; predicates remain available.

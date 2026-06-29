@@ -1,14 +1,13 @@
 import { useState } from 'react'
-import { Sparkles, FolderOpen, Folder } from 'lucide-react'
+import { Sparkles, FolderOpen } from 'lucide-react'
 import { PRIORITY_META } from '@/lib/constants'
-import { projectsApi } from '@/api'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input, Textarea } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { AsyncCombobox } from '@/components/ui/async-combobox'
+import { ProjectSelect } from '@/components/ui/entity-select'
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/components/ui/select'
@@ -72,18 +71,14 @@ export function NewTicketDialog({ open, onOpenChange, create }) {
           {/* project */}
           <div className="space-y-1.5">
             <Label htmlFor="nt-project">Projeto</Label>
-            <AsyncCombobox
+            <ProjectSelect
               id="nt-project"
               variant="field"
               value={form.project_id}
               onChange={(v) => set('project_id', v || '')}
               placeholder="Selecione um projeto"
-              icon={Folder}
               emptyMessage="Crie um projeto primeiro para abrir tickets."
-              queryKey={['projects', 'picker', 'active']}
-              fetchPage={({ q, page }) => projectsApi.list({ q, page, per: 20, exclude_archived: true })}
-              mapResponse={(d) => ({ items: d.projects || [], hasMore: d.meta?.has_more })}
-              getOption={(p) => ({ value: p.id, label: p.name, color: p.color || '#7C3AED', description: p.client_name })}
+              listParams={{ exclude_archived: true }}
             />
           </div>
 

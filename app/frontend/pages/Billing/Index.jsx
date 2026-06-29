@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { PageLoader } from '@/components/ui/feedback'
+import { Page } from '@/components/ui/page'
 import { PLAN_META } from '@/lib/constants'
 import { brl, date } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
@@ -106,7 +107,7 @@ export default function BillingIndex() {
   const gradient = PLAN_GRADIENT[sub.plan] || 'linear-gradient(135deg, #7C3AED, #EC4899)'
 
   return (
-    <div>
+    <Page>
       <PageHeader
         eyebrow="Plano"
         title="Assinatura"
@@ -225,6 +226,6 @@ export default function BillingIndex() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </Page>
   )
 }

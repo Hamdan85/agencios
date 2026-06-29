@@ -14,6 +14,7 @@ import { StatCard } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { PageLoader, EmptyState } from '@/components/ui/feedback'
+import { Page } from '@/components/ui/page'
 
 function greeting() {
   const h = new Date().getHours()
@@ -69,7 +70,7 @@ export default function Dashboard() {
   ]
 
   return (
-    <div className="space-y-6 sm:space-y-7">
+    <Page className="space-y-6 sm:space-y-7">
       {/* ── Hero ───────────────────────────────────────────────── */}
       <section className="animate-rise relative overflow-hidden rounded-3xl bg-shell-gradient p-6 text-white shadow-[0_24px_60px_-30px_rgba(17,10,36,0.7)] sm:p-9">
         <div className="bg-aurora pointer-events-none absolute inset-0 opacity-90" />
@@ -264,6 +265,6 @@ export default function Dashboard() {
           })}
         </div>
       </section>
-    </div>
+    </Page>
   )
 }

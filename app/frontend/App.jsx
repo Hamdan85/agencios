@@ -61,6 +61,7 @@ const router = createBrowserRouter(
           <Route path="/projetos/:id" element={<ProjectShow />} />
           <Route path="/clientes" element={<Clients />} />
           <Route path="/clientes/:id" element={<ClientShow />} />
+          <Route path="/clientes/:id/:tab" element={<ClientShow />} />
           <Route path="/tickets" element={<TicketsList />} />
           <Route path="/tickets/:id" element={<TicketShow />} />
           <Route path="/tickets/:id/:tab" element={<TicketShow />} />
