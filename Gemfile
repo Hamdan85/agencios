@@ -6,6 +6,10 @@ gem "pg", "~> 1.1"
 gem "puma", ">= 5.0"
 gem "aws-sdk-s3", require: false
 
+# HTTP/2 proxy, asset caching + X-Sendfile in front of Puma (used as the
+# container CMD: `bin/thrust bin/rails server`).
+gem "thruster", require: false
+
 # Active Storage image analysis + variants, via libvips (loaded lazily).
 gem "image_processing", "~> 2.0"
 gem "ruby-vips", "~> 2.2", require: false

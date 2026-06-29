@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# ─────────────────────────────────────────────────────────────────────────────
+# bin/deploy — production deploy to Upuai Cloud (git-connected).
+#
+# Order of operations:
+#   1. Ensure production credentials exist + are complete (non-interactive).
+#   2. Push the production master key to the platform as RAILS_MASTER_KEY so the
+#      container can decrypt config/credentials/production.yml.enc at runtime
+#      (the key file itself is gitignored and never shipped in the image).
+#   3. Commit the (encrypted) credentials if they changed, then push to GitHub.
+#   4. Trigger the git-connected deploy and wait for a terminal status.
+#
+# Requires: a one-time `upuai login` and a linked project (`upuai status`).
+# ─────────────────────────────────────────────────────────────────────────────
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+# Remote that the current branch tracks (falls back to the first configured one).
+REMOTE="$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null | cut -d/ -f1)"
+REMOTE="${REMOTE:-$(git remote | head -n1)}"
+KEY_FILE="config/credentials/production.key"
+
+echo "▸ 1/4  Preparing production credentials (non-interactive)…"
+bin/setup_production_credentials
+
+echo "▸ 2/4  Syncing RAILS_MASTER_KEY to the platform…"
+if upuai status >/dev/null 2>&1; then
+  if [ -f "$KEY_FILE" ]; then
+    upuai variables set "RAILS_MASTER_KEY=$(tr -d '[:space:]' < "$KEY_FILE")" --yes >/dev/null
+    echo "  ✓ RAILS_MASTER_KEY set"
+  else
+    echo "  ✗ $KEY_FILE missing — cannot set RAILS_MASTER_KEY" >&2; exit 1
+  fi
+else
+  echo "  ✗ no linked Upuai project — run 'upuai init' or 'upuai link' first" >&2; exit 1
+fi
+
+echo "▸ 3/4  Committing encrypted credentials + pushing '$BRANCH'…"
+if ! git diff --quiet -- config/credentials/production.yml.enc 2>/dev/null; then
+  git add config/credentials/production.yml.enc
+  git commit -m "chore(credentials): update encrypted production credentials" >/dev/null
+  echo "  ✓ credentials committed"
+fi
+git push origin "$BRANCH"
+
+echo "▸ 4/4  Deploying (git-connected) and waiting for rollout…"
+upuai deploy --wait
+
+echo "✓ Deploy finished. Tail logs with: upuai logs --process web -f"

@@ -35,6 +35,14 @@ RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y build-essential git libpq-dev libvips libyaml-dev pkg-config && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
+# Install Node.js (build-only) so Vite can bundle the React SPA during
+# assets:precompile. The base image is Debian bookworm; pull a glibc-matching
+# Node from the official bookworm-slim image. Node is NOT needed at runtime.
+COPY --from=node:20-bookworm-slim /usr/local/lib/node_modules /usr/local/lib/node_modules
+COPY --from=node:20-bookworm-slim /usr/local/bin/node /usr/local/bin/node
+RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
+    ln -sf /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
+
 # Install application gems
 COPY vendor/* ./vendor/
 COPY Gemfile Gemfile.lock ./
@@ -44,6 +52,10 @@ RUN bundle install && \
     # -j 1 disable parallel compilation to avoid a QEMU bug: https://github.com/rails/bootsnap/issues/495
     bundle exec bootsnap precompile -j 1 --gemfile
 
+# Install JS dependencies (cached separately from the rest of the source)
+COPY package.json package-lock.json ./
+RUN npm ci
+
 # Copy application code
 COPY . .
 
@@ -51,8 +63,13 @@ COPY . .
 # -j 1 disable parallel compilation to avoid a QEMU bug: https://github.com/rails/bootsnap/issues/495
 RUN bundle exec bootsnap precompile -j 1 app/ lib/
 
-# Precompiling assets for production without requiring secret RAILS_MASTER_KEY
+# Precompiling assets for production without requiring secret RAILS_MASTER_KEY.
+# vite_rails hooks into assets:precompile and runs `vite build` (needs Node).
 RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
+
+# Drop the JS toolchain + node_modules — the compiled assets in public/vite are
+# all the runtime needs, and this keeps the final image lean.
+RUN rm -rf node_modules
 
 
 

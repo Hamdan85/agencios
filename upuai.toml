@@ -1,0 +1,28 @@
+#:schema https://upuai.com.br/schemas/upuai-toml-v1.json
+# Upuai Cloud project configuration for agencios.
+# One image is built from the Dockerfile and shared by every process below.
+
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+# Runs in an ephemeral job before each rollout (zero-downtime): a failure blocks
+# the traffic shift and the old pods keep serving. db:prepare creates the DB on
+# first deploy and applies pending migrations on every subsequent one.
+releaseCommand = "./bin/rails db:prepare"
+releaseTimeoutSeconds = 600
+healthCheckPath = "/up"
+
+# Rails web server, fronted by Thruster (HTTP caching, X-Sendfile, TLS offload).
+[processes.web]
+command = "./bin/thrust ./bin/rails server"
+type = "web"
+instances = 1
+
+# Sidekiq background worker. sidekiq-cron loads config/schedule.yml on boot, so
+# all scheduled jobs run inside this process — no separate clock process needed.
+[processes.worker]
+command = "bundle exec sidekiq -C config/sidekiq.yml"
+type = "worker"
+instances = 1
