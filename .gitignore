@@ -45,5 +45,8 @@ node_modules
 # Ignore key files for decrypting credentials and more.
 /config/credentials/*.key
 
+# Backups written by `rails credentials:unify_google` — encrypted, but never commit.
+*.yml.enc.bak
+
 dump.rdb
 dump.rdb

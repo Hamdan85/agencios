@@ -43,10 +43,6 @@ tiktok:
   client_secret:  "..."
   webhook_secret: "..."
 
-youtube:                       # YouTube Data API v3 + Analytics
-  client_id:     "..."
-  client_secret: "..."
-
 linkedin:
   client_id:     "..."
   client_secret: "..."
@@ -72,9 +68,11 @@ image_gen:                     # carousel + image model (e.g. Replicate-style)
   model_version:  "..."        # optional — model/version id
 
 # ─────────────────────────────────────────────────────────────
-# Calendar
+# Google — ONE OAuth client for every Google surface: Sign in with
+# Google, Calendar + Meet, and YouTube (Data API v3 + Analytics).
+# There is no separate `youtube:` block — they share this client.
 # ─────────────────────────────────────────────────────────────
-google:                        # Google Calendar + Meet (and Google sign-in)
+google:
   client_id:     "...apps.googleusercontent.com"
   client_secret: "..."
 
@@ -100,7 +98,17 @@ mercado_pago:
   client_id:      "..."          # for per-workspace OAuth (split payments) — optional now
   client_secret:  "..."          # optional now
   webhook_secret: "..."          # x-signature HMAC secret
+
+# ─────────────────────────────────────────────────────────────
+# Web Push (VAPID) — PWA browser notifications. Required in EVERY environment.
+# ─────────────────────────────────────────────────────────────
+vapid:
+  public_key:  "..."
+  private_key: "..."
 ```
+
+> The committed template [`config/credentials.example.yml`](../config/credentials.example.yml) mirrors
+> this structure key-for-key — use it as the canonical reference for every environment.
 
 ---
 
@@ -113,13 +121,12 @@ put these in `.env` instead of editing credentials:
 |---|---|
 | `meta.app_id` / `app_secret` / `webhook_verify_token` | `META_APP_ID` / `META_APP_SECRET` / `META_WEBHOOK_VERIFY_TOKEN` |
 | `tiktok.client_key` / `client_secret` / `webhook_secret` | `TIKTOK_CLIENT_KEY` / `TIKTOK_CLIENT_SECRET` / `TIKTOK_WEBHOOK_SECRET` |
-| `youtube.client_id` / `client_secret` | `YOUTUBE_CLIENT_ID` / `YOUTUBE_CLIENT_SECRET` |
 | `linkedin.client_id` / `client_secret` | `LINKEDIN_CLIENT_ID` / `LINKEDIN_CLIENT_SECRET` |
 | `x.client_id` / `client_secret` | `X_CLIENT_ID` / `X_CLIENT_SECRET` |
 | `anthropic.api_key` / `model` | `ANTHROPIC_API_KEY` / `ANTHROPIC_MODEL` |
 | `heygen.api_key` / `webhook_secret` | `HEYGEN_API_KEY` / `HEYGEN_WEBHOOK_SECRET` |
 | `image_gen.api_key` / `base_url` / `model_version` | `IMAGE_GEN_API_KEY` / `IMAGE_GEN_BASE_URL` / `IMAGE_GEN_MODEL_VERSION` |
-| `google.client_id` / `client_secret` | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` |
+| `google.client_id` / `client_secret` (sign-in + Calendar + YouTube) | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` |
 | `stripe.secret_key` / `webhook_secret` | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` |
 | `mercado_pago.access_token` / `client_id` / `client_secret` / `webhook_secret` | `MERCADO_PAGO_ACCESS_TOKEN` / `MERCADO_PAGO_CLIENT_ID` / `MERCADO_PAGO_CLIENT_SECRET` / `MERCADO_PAGO_WEBHOOK_SECRET` |
 | AR encryption | `AR_ENCRYPTION_PRIMARY_KEY` / `AR_ENCRYPTION_DETERMINISTIC_KEY` / `AR_ENCRYPTION_KEY_DERIVATION_SALT` |

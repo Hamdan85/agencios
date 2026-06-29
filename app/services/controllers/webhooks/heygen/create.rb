@@ -7,14 +7,16 @@ module Controllers
       # (download + attach + meter) or marks it failed. Returns the HTTP status
       # symbol the controller should head (:unauthorized on a bad signature).
       class Create < Controllers::Base
-        def initialize(signature:, payload:, params:)
+        def initialize(signature:, payload:, params:, timestamp: nil)
           @signature = signature
+          @timestamp = timestamp
           @payload = payload
           @params = params
         end
 
         def call
           return :unauthorized unless Vendors::Heygen::Webhook.verify(@payload, @signature)
+          return :unauthorized unless Vendors::Heygen::Webhook.fresh?(@timestamp)
 
           generation = Generation.find_by(external_id: video_id) if video_id.present?
           if generation && status.match?(/success|completed|ready/)

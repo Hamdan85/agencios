@@ -28,7 +28,7 @@ A workspace-scoped YouTube integration that can:
 | One verb per operation | `app/services/vendors/youtube/actions/<verb>.rb` → `Vendors::Youtube::Actions::UploadVideo.call(...)` |
 | Side effects (DB writes, token refresh, orchestration) | `app/services/operations/youtube/*` |
 | OAuth tokens (encrypted), `belongs_to :workspace` | `SocialAccount` model |
-| `client_id` / `client_secret` | Rails encrypted credentials |
+| `client_id` / `client_secret` | Rails encrypted credentials — shared `google:` block |
 | Long-running uploads | Sidekiq jobs |
 
 ```
@@ -239,13 +239,17 @@ Returns a fresh `access_token` + `expires_in` (no new `refresh_token`). Persist 
 ```bash
 EDITOR=nano bin/rails credentials:edit
 ```
+YouTube uses the **shared Google OAuth client** — the same `google:` block that backs Google
+sign-in and Calendar. There is **no** separate `youtube:` block; just register this YouTube
+flow's redirect URI (`/auth/youtube/callback`) on that one OAuth client in Google Cloud.
 ```yaml
-youtube:
+google:
   client_id: "xxxx.apps.googleusercontent.com"
   client_secret: "GOCSPX-xxxx"
-  redirect_uri: "https://app.agencios.com/oauth/youtube/callback"
 ```
-Read via `Rails.application.credentials.dig(:youtube, :client_id)`. **Never** put these in `.env` or commit them.
+Read via `Rails.application.credentials.dig(:google, :client_id)` (ENV fallback `GOOGLE_CLIENT_ID` /
+`GOOGLE_CLIENT_SECRET`). The `redirect_uri` is built in code from `SystemConfig.app_host`, not stored
+here. **Never** put these in `.env` or commit them. See [`docs/CREDENTIALS.md`](../CREDENTIALS.md).
 
 ### [BACKEND] `SocialAccount` model + migration
 

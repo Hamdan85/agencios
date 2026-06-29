@@ -5,8 +5,10 @@ module Vendors
     # Low-level YouTube wrapper: Data API v3 (videos.insert resumable, thumbnails.set,
     # channels.list), Analytics API (reports.query), and Google OAuth 2.0. Raw HTTP
     # only — no DB writes, no domain logic. OAuth app credentials (client_id /
-    # client_secret) come from credentials with ENV fallback; per-account access
-    # tokens are passed in. See docs/integrations/youtube.md.
+    # client_secret) are the shared Google OAuth client (`credentials.google.*`,
+    # ENV fallback GOOGLE_CLIENT_ID/SECRET) — the same client backs Google sign-in
+    # and Calendar; per-account access tokens are passed in. See
+    # docs/integrations/youtube.md.
     #
     # Hosts:
     #   AUTH      = https://accounts.google.com   (browser consent URL, §4.1)
@@ -157,11 +159,11 @@ module Vendors
       private
 
       def client_id
-        require_credential!(credential(:youtube, :client_id, env: "YOUTUBE_CLIENT_ID"), "youtube.client_id")
+        require_credential!(credential(:google, :client_id, env: "GOOGLE_CLIENT_ID"), "google.client_id")
       end
 
       def client_secret
-        require_credential!(credential(:youtube, :client_secret, env: "YOUTUBE_CLIENT_SECRET"), "youtube.client_secret")
+        require_credential!(credential(:google, :client_secret, env: "GOOGLE_CLIENT_SECRET"), "google.client_secret")
       end
 
       # Google token endpoint — form-encoded; returns a flat { error:, error_description: }
