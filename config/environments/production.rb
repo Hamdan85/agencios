@@ -86,13 +86,14 @@ Rails.application.configure do
   # Only use :id for inspections in production.
   config.active_record.attributes_for_inspect = [ :id ]
 
-  # DNS-rebinding / Host-header protection. Opt-in via ALLOWED_HOSTS (comma-
-  # separated) so the platform-generated domain can be added without a code
-  # change — leaving it unset keeps Rails' permissive default and avoids a
-  # self-inflicted outage on the very first deploy. APP_HOST is always allowed.
+  # DNS-rebinding / Host-header protection. FULLY opt-in via ALLOWED_HOSTS
+  # (comma-separated) — leaving it unset keeps Rails' permissive default so we
+  # never lock out a domain by surprise (the app is served on both apex and
+  # www). Setting APP_HOST alone does NOT enable it; when the allowlist IS set,
+  # APP_HOST's host is folded in automatically.
   allowed = ENV.fetch("ALLOWED_HOSTS", "").split(",").map(&:strip).reject(&:empty?)
-  allowed << _app_uri.host if _app_uri.host.present?
   if allowed.any?
+    allowed << _app_uri.host if _app_uri.host.present?
     allowed.uniq.each { |h| config.hosts << h }
     # The platform health-checks /up by IP/internal hostname — never block it.
     config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
