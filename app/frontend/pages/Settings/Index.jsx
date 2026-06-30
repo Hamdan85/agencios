@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import {
   useSettings, useSettingsMutation, useWorkspaceMembers, useWorkspaceMutations,
   useConnections, useRevokeConnection, useMcpConnector, useRotateMcpConnector,
+  useGoogleCalendarMutations,
 } from '@/hooks/useData'
 import { PageHeader } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
@@ -256,7 +257,7 @@ function TeamTab() {
 }
 
 // ── Integrations tab ───────────────────────────────────────────
-function IntegrationCard({ icon: Icon, color, name, connected, sub, onConnect }) {
+function IntegrationCard({ icon: Icon, color, name, connected, sub, onConnect, onDisconnect, connectPending, disconnectPending }) {
   return (
     <Card className="flex flex-col p-5">
       <div className="flex items-start justify-between gap-2">
@@ -270,15 +271,22 @@ function IntegrationCard({ icon: Icon, color, name, connected, sub, onConnect })
         )}
       </div>
       <h3 className="mt-3 font-display text-base font-bold text-ink">{name}</h3>
-      <p className="mt-0.5 min-h-[20px] text-sm text-ink-muted">{sub}</p>
-      <div className="mt-4">
+      <p className="mt-0.5 min-h-5 text-sm text-ink-muted">{sub}</p>
+      <div className="mt-4 flex gap-2">
         {connected ? (
-          <Button variant="outline" size="sm" className="w-full" disabled>
-            <ShieldCheck size={15} /> Ativo
-          </Button>
+          <>
+            <Button variant="outline" size="sm" className="flex-1" disabled>
+              <ShieldCheck size={15} /> Ativo
+            </Button>
+            {onDisconnect && (
+              <Button variant="ghost" size="sm" className="text-danger" onClick={onDisconnect} disabled={disconnectPending}>
+                {disconnectPending ? 'Desconectando…' : 'Desconectar'}
+              </Button>
+            )}
+          </>
         ) : (
-          <Button variant="solid" size="sm" className="w-full" onClick={onConnect}>
-            <Link2 size={15} /> Conectar
+          <Button variant="solid" size="sm" className="w-full" onClick={onConnect} disabled={connectPending}>
+            <Link2 size={15} /> {connectPending ? 'Abrindo…' : 'Conectar'}
           </Button>
         )}
       </div>
@@ -288,9 +296,9 @@ function IntegrationCard({ icon: Icon, color, name, connected, sub, onConnect })
 
 function IntegrationsTab() {
   const { data: setting } = useSettings()
+  const calendar = useGoogleCalendarMutations()
 
   const s = setting?.setting || setting || {}
-  const stub = () => toast.info('Conexão indisponível nesta demonstração.')
 
   return (
     <div className="space-y-8">
@@ -306,7 +314,10 @@ function IntegrationsTab() {
             name="Google Calendar"
             connected={!!s.google_connected}
             sub="Sincronize reuniões e crie links do Meet."
-            onConnect={stub}
+            onConnect={() => calendar.connect.mutate()}
+            onDisconnect={() => calendar.disconnect.mutate()}
+            connectPending={calendar.connect.isPending}
+            disconnectPending={calendar.disconnect.isPending}
           />
           <IntegrationCard
             icon={Wallet}
@@ -314,7 +325,7 @@ function IntegrationsTab() {
             name="Mercado Pago"
             connected={!!s.mercadopago_connected}
             sub="Cobre seus clientes via Pix."
-            onConnect={stub}
+            onConnect={() => toast.info('Conexão indisponível nesta demonstração.')}
           />
         </div>
       </section>

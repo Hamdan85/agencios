@@ -5,11 +5,11 @@ default: &default
 
 development:
   <<: *default
-  database: brand_os_development
+  database: agencios_development
 
 test:
   <<: *default
-  database: brand_os_test
+  database: agencios_test
 
 production:
   <<: *default

@@ -14,9 +14,19 @@ Rails.application.routes.draw do
   mount ActionCable.server => "/cable"
   mount Sidekiq::Web => "/sidekiq" if Rails.env.development?
 
-  # ── OAuth callbacks (Google sign-in + Calendar, social networks) ────
+  # ── Google sign-in / sign-up (full-page OAuth) ─────────────────────
+  # Declared before the generic social callback so "/auth/google/callback"
+  # isn't captured by the ":provider" route below.
+  get "/auth/google",            to: "auth/google#start"
+  get "/auth/google/callback",   to: "auth/google#callback"
+
+  # ── Google Calendar workspace connect ──────────────────────────────
+  get "/auth/calendar/callback", to: "auth/calendar#callback"
+
+  # ── OAuth callbacks (Calendar, social-network account connect) ─────
   match "/auth/:provider/callback", to: "auth/omniauth#callback", via: %i[get post]
-  get   "/auth/failure", to: "auth/omniauth#failure"
+  get   "/auth/failure",           to: "auth/omniauth#failure"
+  get   "/auth/social-connected",  to: "auth/omniauth#social_connected"
 
   # ── Inbound webhooks (vendor → us) ─────────────────────────────────
   namespace :webhooks do
@@ -138,7 +148,10 @@ Rails.application.routes.draw do
         end
       end
 
-      resource :settings, only: %i[show update], controller: "settings"
+      resource :settings, only: %i[show update], controller: "settings" do
+        get    :google_calendar_authorize_url
+        delete :google_calendar
+      end
 
       resource :billing, only: %i[show], controller: "billing" do
         post :checkout_session

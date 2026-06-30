@@ -2,44 +2,50 @@
 
 module Operations
   module Creatives
-    # Generates a single feed image. Produces a Creative (generated, ready) plus
-    # an `image` Generation. Image generation is tracked but NOT metered.
+    # Generates a single feed image via Google Banana (Imagen 3).
+    # Produces a Creative (generated, ready) with the image attached to assets,
+    # plus a tracked `image` Generation. Image generation is NOT metered via Stripe.
     class GenerateImage < Operations::Base
-      PROVIDER = "image_gen"
+      PROVIDER = "google_banana"
 
-      def initialize(ticket: nil, prompt:, ref_images: [])
-        @ticket = ticket
-        @prompt = prompt
-        @ref_images = ref_images || []
+      def initialize(ticket: nil, prompt:, ref_images: [], aspect_ratio: "1:1")
+        @ticket       = ticket
+        @prompt       = prompt
+        @ref_images   = ref_images || []
+        @aspect_ratio = aspect_ratio
       end
 
       def call
-        image = Vendors::ImageGen::Actions::GenerateImage.call(
-          prompt: @prompt,
-          width: 1080,
-          height: 1350,
-          ref_images: @ref_images
+        creative = Operations::Creatives::Create.call(
+          ticket:        @ticket,
+          creative_type: "feed_image",
+          source:        :generated,
+          status:        :generating,
+          provider:      PROVIDER,
+          metadata:      { prompt: @prompt }
         )
 
-        creative = Operations::Creatives::Create.call(
-          ticket: @ticket,
-          creative_type: "feed_image",
-          source: :generated,
-          status: :ready,
-          provider: PROVIDER,
-          metadata: { image_url: image[:url], prompt: @prompt }
+        result = Vendors::Google::Banana::Actions::GenerateImage.call(
+          prompt:       @prompt,
+          aspect_ratio: @aspect_ratio
         )
+
+        creative.assets.attach(
+          io:           StringIO.new(result[:bytes]),
+          filename:     "creative-#{creative.id}.jpg",
+          content_type: result[:content_type]
+        )
+        creative.update!(status: :ready)
 
         generation = workspace.generations.create!(
-          user: Current.user,
-          creative: creative,
-          kind: :image,
-          status: :completed,
-          provider: PROVIDER,
-          external_id: image[:external_id],
+          user:       Current.user,
+          creative:   creative,
+          kind:       :image,
+          status:     :completed,
+          provider:   PROVIDER,
           cost_cents: 0,
-          params: { prompt: @prompt, ref_images: @ref_images },
-          result: { image_url: image[:url] }
+          params:     { prompt: @prompt, aspect_ratio: @aspect_ratio },
+          result:     {}
         )
 
         broadcast(event: "generation_done", id: generation.id, kind: "image")

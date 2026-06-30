@@ -80,7 +80,7 @@ EDITOR=nano bin/rails credentials:edit
 - `@dnd-kit` (or equivalent) for the drag-and-drop Kanban board.
 - Tiptap for rich-text fields (briefs, scripts, captions, retrospectives).
 - AI: Anthropic Claude (summaries, captions, scope, retrospectives). Creative generation vendors:
-  HeyGen + HyperFrames (video), an image model (carousels + images).
+  HeyGen + HyperFrames (video), **Google Banana** (Imagen 3 via Google AI API — carousels + images).
 
 ## Secrets
 
@@ -217,7 +217,7 @@ Classes: `TicketSummary` (status-aware — produces the contextual summary per s
 | Operation needing external API | `Vendors::*::Actions::*` |
 | Operation publishing a post | `Publishers::SocialPublisher` |
 | Operation generating AI text | `Prompts::*` + `Vendors::Anthropic::*` |
-| Operation generating a creative | `Operations::Creatives::*` + `Vendors::Heygen`/image vendor |
+| Operation generating a creative | `Operations::Creatives::*` + `Vendors::Heygen` (video) / `Vendors::Google::Banana` (image) |
 
 Controllers must not contain business logic: no status transitions, no metric writes, no
 side-effect orchestration. If it belongs in a service, create one.
@@ -265,7 +265,7 @@ screen (`/tarefas`) across all tickets/workspaces.
 **Creative** — `belongs_to :ticket`. A creative has a `creative_type` (registry key, acts as the
 spec) and a `source`: `uploaded` or `generated`. Generatable types route to a generation pipeline:
 `ugc_video` (HeyGen / HyperFrames), `carousel` (viral-pattern generator: brand identity, @handle,
-user avatar, optional stock imagery), `image` (image model). Holds ActiveStorage attachments +
+user avatar, optional stock imagery), `image` (Google Banana / Imagen 3). Holds ActiveStorage attachments +
 `metadata` jsonb.
 
 **Generation** — `belongs_to :workspace, :user`; optional `belongs_to :creative`. `kind`:
@@ -379,8 +379,9 @@ Direct integration is the default and preferred path (full control + deeper anal
 `upload_post` aggregator is a per-network fallback to ship fast. Each network's app creation, OAuth
 scopes, publishing endpoints, and analytics endpoints are documented step-by-step in
 `docs/integrations/`:
-- `instagram.md`, `facebook.md` (one Meta app), `tiktok.md`, `youtube.md`, `linkedin.md`,
-  `x-twitter.md`, `upload-post.md` (aggregator), and `README.md` for the direct-vs-aggregator
+- `meta.md` (Instagram + Facebook — one Meta app), `tiktok.md`, `linkedin.md`,
+  `x-twitter.md`, `upload-post.md` (aggregator), `google.md` (Sign-In, Calendar, YouTube,
+  and Google Banana image generation), and `README.md` for the direct-vs-aggregator
   decision matrix.
 
 Each guide maps every API call to a concrete `Vendors::<Network>::Actions::*` class and the

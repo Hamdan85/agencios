@@ -169,6 +169,8 @@ export const invoicesApi = {
 export const settingsApi = {
   get: () => api.get('/settings'),
   update: (data) => api.patch('/settings', data),
+  calendarAuthorizeUrl: () => api.get('/settings/google_calendar_authorize_url'),
+  calendarDisconnect: () => api.delete('/settings/google_calendar'),
 }
 
 export const billingApi = {

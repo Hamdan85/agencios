@@ -10,16 +10,28 @@ module Auth
       result = Controllers::Auth::Omniauth::Callback.call(
         provider: params[:provider], code: params[:code], state: params[:state]
       )
-      redirect_to("/clientes/#{result[:client_id]}?connected=#{result[:slug]}", allow_other_host: false)
+      redirect_to(
+        "/auth/social-connected?client_id=#{result[:client_id]}&connected=#{result[:slug]}",
+        allow_other_host: false
+      )
     rescue Operations::Errors::Invalid
-      redirect_to("/clientes?error=state", allow_other_host: false)
+      redirect_to("/auth/social-connected?error=state", allow_other_host: false)
     rescue StandardError => e
       Rails.logger.warn("[Auth::Omniauth] #{params[:provider]}: #{e.message}")
-      redirect_to("/clientes?error=#{params[:provider]}", allow_other_host: false)
+      redirect_to("/auth/social-connected?error=#{params[:provider]}", allow_other_host: false)
     end
 
     def failure
-      redirect_to("/clientes?error=oauth", allow_other_host: false)
+      redirect_to("/auth/social-connected?error=oauth", allow_other_host: false)
+    end
+
+    # Tiny inline page — posts a postMessage to the opener and closes the popup.
+    # Falls back to a full redirect when not opened as a popup.
+    def social_connected
+      @client_id = params[:client_id].to_s
+      @connected = params[:connected].to_s
+      @error     = params[:error].to_s
+      render layout: false
     end
   end
 end

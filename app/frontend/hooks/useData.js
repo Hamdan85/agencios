@@ -152,16 +152,38 @@ export const useSocialAccounts = (clientId) =>
     enabled: !!clientId,
   })
 
-// Connect opens the network's OAuth flow (full-page redirect); the callback lands
-// back on the client page. Disconnect/reconnect refresh the client payload (which
-// carries the client's `social_accounts`).
+// Connect opens the network's OAuth flow in a popup. When the popup callback
+// posts an 'oauth_connected' message, we close the popup and refresh the client.
 export function useSocialAccountMutations(clientId) {
   const qc = useQueryClient()
   const inv = () => qc.invalidateQueries({ queryKey: keys.client(clientId) })
+
+  function openOAuthPopup(url) {
+    const w = 600
+    const h = 700
+    const left = Math.round(window.screenX + (window.outerWidth - w) / 2)
+    const top = Math.round(window.screenY + (window.outerHeight - h) / 2)
+    const popup = window.open(url, 'oauth_popup', `width=${w},height=${h},left=${left},top=${top},toolbar=no,menubar=no`)
+
+    const onMessage = (e) => {
+      if (e.origin !== window.location.origin) return
+      if (e.data?.type !== 'oauth_connected') return
+      window.removeEventListener('message', onMessage)
+      if (popup && !popup.closed) popup.close()
+      if (e.data.error) {
+        toast.error('Erro ao conectar. Tente novamente.')
+      } else {
+        inv()
+        toast.success('Conta conectada com sucesso!')
+      }
+    }
+    window.addEventListener('message', onMessage)
+  }
+
   return {
     connect: useMutation({
       mutationFn: (network) => socialApi.authorizeUrl(clientId, network),
-      onSuccess: (d) => { if (d?.url) window.location.href = d.url },
+      onSuccess: (d) => { if (d?.url) openOAuthPopup(d.url) },
       onError: onErr('Não foi possível iniciar a conexão.'),
     }),
     disconnect: useMutation({
@@ -208,6 +230,46 @@ export function useInvoiceMutations() {
 
 // ── Settings ───────────────────────────────────────────────────
 export const useSettings = () => useQuery({ queryKey: keys.settings(), queryFn: settingsApi.get })
+
+export function useGoogleCalendarMutations() {
+  const qc = useQueryClient()
+  const inv = () => qc.invalidateQueries({ queryKey: keys.settings() })
+
+  function openCalendarPopup(url) {
+    const w = 600, h = 700
+    const left = Math.round(window.screenX + (window.outerWidth - w) / 2)
+    const top = Math.round(window.screenY + (window.outerHeight - h) / 2)
+    const popup = window.open(url, 'calendar_oauth', `width=${w},height=${h},left=${left},top=${top},toolbar=no,menubar=no`)
+
+    const onMessage = (e) => {
+      if (e.origin !== window.location.origin) return
+      if (e.data?.type !== 'calendar_connected') return
+      window.removeEventListener('message', onMessage)
+      if (popup && !popup.closed) popup.close()
+      if (e.data.error) {
+        toast.error('Erro ao conectar o Google Calendar.')
+      } else {
+        inv()
+        toast.success('Google Calendar conectado!')
+      }
+    }
+    window.addEventListener('message', onMessage)
+  }
+
+  return {
+    connect: useMutation({
+      mutationFn: settingsApi.calendarAuthorizeUrl,
+      onSuccess: (d) => { if (d?.url) openCalendarPopup(d.url) },
+      onError: onErr('Não foi possível iniciar a conexão.'),
+    }),
+    disconnect: useMutation({
+      mutationFn: settingsApi.calendarDisconnect,
+      onSuccess: () => { inv(); toast.success('Google Calendar desconectado.') },
+      onError: onErr('Erro ao desconectar.'),
+    }),
+  }
+}
+
 export function useSettingsMutation() {
   const qc = useQueryClient()
   return useMutation({

@@ -5,7 +5,9 @@ module SystemConfig
   module_function
 
   def app_host
-    ENV.fetch("APP_HOST", "http://localhost:3000")
+    host = ENV.fetch("APP_HOST", "http://localhost:3000")
+    return host if host.start_with?("http://", "https://")
+    "https://#{host}"
   end
 
   def mailer_from

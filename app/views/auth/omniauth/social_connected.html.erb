@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Conectando…</title>
+  <style>
+    body { font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f8f7ff; color: #3b2f6e; }
+    .box { text-align: center; padding: 2rem; }
+    .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+    p { margin: 0; font-size: 0.95rem; color: #6b7280; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="icon"><%= @error.present? ? "❌" : "✅" %></div>
+    <p><%= @error.present? ? "Erro ao conectar. Feche esta janela e tente novamente." : "Conectado! Fechando…" %></p>
+  </div>
+  <script>
+    (function () {
+      var payload = {
+        type: "oauth_connected",
+        clientId: <%= @client_id.to_json %>,
+        network:  <%= @connected.to_json %>,
+        error:    <%= @error.presence.to_json %>
+      };
+
+      if (window.opener && !window.opener.closed) {
+        window.opener.postMessage(payload, window.location.origin);
+        window.close();
+      } else {
+        // Not a popup (e.g. mobile) — navigate to the client config tab.
+        var path = payload.error
+          ? "/clientes?error=" + payload.error
+          : "/clientes/" + payload.clientId + "/configuracoes?connected=" + payload.network;
+        window.location.replace(path);
+      }
+    }());
+  </script>
+</body>
+</html>

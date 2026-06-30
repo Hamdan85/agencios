@@ -72,7 +72,7 @@ module Vendors
             client_secret: credential(:google, :client_secret, env: "GOOGLE_CLIENT_SECRET"),
             access_token: @setting.google_access_token,
             refresh_token: @setting.google_refresh_token,
-            scope: "https://www.googleapis.com/auth/calendar"
+            scope: "https://www.googleapis.com/auth/calendar.events"
           )
         end
       end

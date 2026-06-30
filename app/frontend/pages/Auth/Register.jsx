@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { User, Mail, Lock, Building2, ArrowRight } from 'lucide-react'
 import AuthShell from './AuthShell'
+import GoogleAuth from './GoogleAuth'
 import { useRegister } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -57,6 +58,7 @@ export default function Register() {
         <Button type="submit" size="lg" className="w-full" disabled={register.isPending}>
           {register.isPending ? 'Criando…' : <>Criar conta <ArrowRight size={18} /></>}
         </Button>
+        <GoogleAuth label="Criar conta com Google" />
         <p className="text-center text-xs text-ink-faint">14 dias de teste · sem cartão</p>
         <p className="text-center text-xs text-ink-faint">
           Ao criar conta, você concorda com os{' '}

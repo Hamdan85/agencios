@@ -17,26 +17,28 @@ agencios backend plan (vendor classes, `SocialAccount`/model columns, operations
 ## Index
 
 ### Social networks — publishing & analytics
+
 | Guide | Platform | Notes |
 |---|---|---|
-| [instagram.md](./instagram.md) | Instagram (Meta Graph) | Reels/carousel/image; one Meta app shared with Facebook |
-| [facebook.md](./facebook.md) | Facebook Pages (Meta Graph) | Page posts, video, Reels; same Meta app |
+| [meta.md](./meta.md) | Instagram + Facebook (Meta Graph) | **One guide, one app.** Reels/carousel/image for IG; page posts/video/Reels for FB; shared OAuth, `SocialAccount`, webhook endpoint |
 | [tiktok.md](./tiktok.md) | TikTok | Content Posting API; audit required before public posts |
-| [youtube.md](./youtube.md) | YouTube (Data API v3) | Resumable upload, Shorts; quota-sensitive |
 | [linkedin.md](./linkedin.md) | LinkedIn | Posts API; org posting/analytics need partner approval |
 | [x-twitter.md](./x-twitter.md) | X (Twitter) | v2 API; **Free is write-only, no analytics** |
 | [upload-post.md](./upload-post.md) | Upload-Post (aggregator) | One API → many networks; the fast-path fallback |
 
-### Creative generation
-| Guide | Platform | Notes |
+### Creative generation + Google integrations
+
+| Guide | Platform | Sections |
 |---|---|---|
+| [google.md](./google.md) | **All Google surfaces** | §3 Sign-In with Google · §4 Calendar + Meet · §5 YouTube (Data API v3 + Analytics) · §6 **Google Banana** (Imagen 3 image generation) |
 | [heygen.md](./heygen.md) | HeyGen | UGC / avatar talking-head video; metered (`video_generation`) |
 
-> HyperFrames (the other video engine) and the image/carousel model are documented inline in
-> [`../SPECIFICATION.md`](../SPECIFICATION.md) §5; add dedicated guides here when those vendors are
+> HyperFrames (the second video engine) is documented inline in
+> [`../SPECIFICATION.md`](../SPECIFICATION.md) §5; add a dedicated guide when that vendor is
 > finalized.
 
 ### Billing
+
 | Guide | Platform | Notes |
 |---|---|---|
 | [stripe-billing.md](./stripe-billing.md) | Stripe | SaaS billing: plan tiers + usage meters (carousel/video) |
@@ -61,6 +63,7 @@ doesn't matter for that network yet. Trade-offs: per-upload cost, a dependency, 
 and ToS exposure. See [upload-post.md](./upload-post.md).
 
 ### Recommended rollout
+
 1. **Meta first (direct)** — Instagram + Facebook share one app and OAuth; highest-value networks.
 2. **YouTube (direct)** — straightforward OAuth, but watch the upload quota.
 3. **TikTok, LinkedIn, X** — start via **Upload-Post** to ship, because each has a real gate
@@ -68,10 +71,11 @@ and ToS exposure. See [upload-post.md](./upload-post.md).
    approvals land and analytics needs grow.
 
 ### Effort & gating at a glance
+
 | Network | Direct approval gate | Analytics depth (direct) | Aggregator-friendly |
 |---|---|---|---|
 | Instagram / Facebook | App Review + Business Verification | High | Yes |
-| YouTube | OAuth consent verification | High | Yes |
+| YouTube | Sensitive-scope verification (~days–weeks) | High | Yes |
 | TikTok | **App audit** (public posts blocked until done) | Medium | Yes (recommended first) |
 | LinkedIn | **Partner approval** for org posting/analytics | Medium (org only) | Yes (recommended first) |
 | X (Twitter) | Paid tier for any read/analytics | Low on Free | Yes (recommended first) |
@@ -84,9 +88,10 @@ and ToS exposure. See [upload-post.md](./upload-post.md).
   (`.call`-style). All external knowledge stays here.
 - **OAuth tokens & account ids** live on the `SocialAccount` model (`belongs_to :workspace`), with
   **encrypted** token columns. Provider-specific columns are listed in each guide; add them as
-  migrations.
+  migrations. Exception: Google Calendar/Sign-In tokens live on the **`User`** model.
 - **App-level secrets** (app id/secret, API keys, webhook secrets) live in **Rails encrypted
-  credentials**, namespaced per vendor (`credentials.meta`, `credentials.stripe`, …).
+  credentials**, namespaced per vendor (`credentials.meta`, `credentials.google`,
+  `credentials.google_banana`, …). See [`../CREDENTIALS.md`](../CREDENTIALS.md).
 - **Side effects** (publishing, token refresh, metric sync, generation finalization) live in
   `Operations::*` and run on **Sidekiq**; webhooks are handled by `Controllers::Webhooks::*` →
   `Operations::*` and always verify signatures.

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Mail, Lock, ArrowRight } from 'lucide-react'
 import AuthShell from './AuthShell'
+import GoogleAuth from './GoogleAuth'
 import { useLogin } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -19,7 +20,9 @@ export default function Login() {
   const [searchParams] = useSearchParams()
   const login = useLogin()
   const [form, setForm] = useState({ email: '', password: '' })
-  const [error, setError] = useState(null)
+  const [error, setError] = useState(() =>
+    searchParams.get('error') === 'google' ? 'Não foi possível entrar com o Google. Tente novamente.' : null,
+  )
   const returnTo = safeReturnTo(searchParams.get('return_to'))
 
   const submit = (e) => {
@@ -61,6 +64,7 @@ export default function Login() {
         <Button type="submit" size="lg" className="w-full" disabled={login.isPending}>
           {login.isPending ? 'Entrando…' : <>Entrar <ArrowRight size={18} /></>}
         </Button>
+        <GoogleAuth label="Entrar com Google" returnTo={returnTo} />
       </form>
     </AuthShell>
   )

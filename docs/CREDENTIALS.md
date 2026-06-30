@@ -62,15 +62,16 @@ heygen:                        # UGC / avatar video (metered: video_generation)
   api_key:        "..."
   webhook_secret: "..."
 
-image_gen:                     # carousel + image model (e.g. Replicate-style)
-  api_key:        "..."
-  base_url:       "..."        # optional — provider endpoint
-  model_version:  "..."        # optional — model/version id
+google_banana:                 # Imagen 3 image generation (feed_image, carousel, story, ad, thumbnail)
+  api_key:   "AIza..."         # Google AI Studio API key — https://aistudio.google.com/apikey
+  model:     "imagen-3.0-generate-002"   # optional — model version override
 
 # ─────────────────────────────────────────────────────────────
-# Google — ONE OAuth client for every Google surface: Sign in with
-# Google, Calendar + Meet, and YouTube (Data API v3 + Analytics).
-# There is no separate `youtube:` block — they share this client.
+# Google — ONE OAuth client for every user-facing Google surface:
+# Sign in with Google, Calendar + Meet, and YouTube (Data API v3
+# + Analytics). There is no separate `youtube:` block — they all
+# share this client. Google Banana uses its own API key above.
+# See docs/integrations/google.md.
 # ─────────────────────────────────────────────────────────────
 google:
   client_id:     "...apps.googleusercontent.com"
@@ -125,7 +126,7 @@ put these in `.env` instead of editing credentials:
 | `x.client_id` / `client_secret` | `X_CLIENT_ID` / `X_CLIENT_SECRET` |
 | `anthropic.api_key` / `model` | `ANTHROPIC_API_KEY` / `ANTHROPIC_MODEL` |
 | `heygen.api_key` / `webhook_secret` | `HEYGEN_API_KEY` / `HEYGEN_WEBHOOK_SECRET` |
-| `image_gen.api_key` / `base_url` / `model_version` | `IMAGE_GEN_API_KEY` / `IMAGE_GEN_BASE_URL` / `IMAGE_GEN_MODEL_VERSION` |
+| `google_banana.api_key` / `model` | `GOOGLE_BANANA_API_KEY` / `GOOGLE_BANANA_MODEL` |
 | `google.client_id` / `client_secret` (sign-in + Calendar + YouTube) | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` |
 | `stripe.secret_key` / `webhook_secret` | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` |
 | `mercado_pago.access_token` / `client_id` / `client_secret` / `webhook_secret` | `MERCADO_PAGO_ACCESS_TOKEN` / `MERCADO_PAGO_CLIENT_ID` / `MERCADO_PAGO_CLIENT_SECRET` / `MERCADO_PAGO_WEBHOOK_SECRET` |
@@ -135,7 +136,10 @@ put these in `.env` instead of editing credentials:
 
 ## OAuth redirect URIs to register in each portal
 
-`<APP_HOST>/auth/<slug>/callback` — where `slug` is `meta` (IG+FB), `tiktok`, `youtube`, `linkedin`, `x`.
+Social-account connect: `<APP_HOST>/auth/<slug>/callback` — where `slug` is `meta` (IG+FB), `tiktok`,
+`youtube`, `linkedin`, `x`.
+Google sign-in / sign-up: `<APP_HOST>/auth/google/callback` (register this on the shared `google:`
+OAuth client too — alongside the YouTube and Calendar callbacks).
 Webhooks: `<APP_HOST>/webhooks/{stripe,mercadopago,heygen,meta}`.
 
 ## Generate fresh encryption keys
