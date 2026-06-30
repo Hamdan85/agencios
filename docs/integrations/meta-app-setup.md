@@ -80,13 +80,24 @@ Connect/publish/insights do NOT need webhooks. Configure only if you want inboun
 events (comments, mentions, deauthorization). Each product's Webhooks section asks
 for a Callback URL + Verify Token (use the SAME `webhook_verify_token` for all):
 
-| Product | Callback URL |
+| Product | Webhook Callback URL |
 |---|---|
 | Facebook | `https://agencios.app/webhooks/meta` |
 | Instagram | `https://agencios.app/webhooks/instagram` |
 | Threads | `https://agencios.app/webhooks/threads` |
 
 Verify token field = your `meta.webhook_verify_token` value (same in all three).
+
+**Deauthorize callbacks** (Product/App Settings → *Deauthorize Callback URL*). When
+a user removes the app, Meta POSTs a signed_request and we mark their account(s)
+`revoked` (`Operations::Social::Deauthorize`). Signature is verified with each
+product's own app secret.
+
+| Product | Deauthorize Callback URL |
+|---|---|
+| Facebook | `https://agencios.app/webhooks/facebook/deauthorize` |
+| Instagram | `https://agencios.app/webhooks/instagram/deauthorize` |
+| Threads | `https://agencios.app/webhooks/threads/deauthorize` |
 
 ---
 

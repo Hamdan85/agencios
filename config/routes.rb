@@ -46,6 +46,11 @@ Rails.application.routes.draw do
     # endpoint per provider (verifies with the right secret).
     match "instagram", to: "social#handle", via: %i[get post], defaults: { provider: "instagram" }
     match "threads",   to: "social#handle", via: %i[get post], defaults: { provider: "threads" }
+    # Deauthorize callbacks (user removed the app → revoke their accounts). Meta
+    # POSTs a signed_request; each product has its own app secret.
+    post "facebook/deauthorize",  to: "social#deauthorize", defaults: { provider: "facebook" }
+    post "instagram/deauthorize", to: "social#deauthorize", defaults: { provider: "instagram" }
+    post "threads/deauthorize",   to: "social#deauthorize", defaults: { provider: "threads" }
   end
 
   # ── MCP connector: OAuth 2.1 provider + discovery + the MCP server ──

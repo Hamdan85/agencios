@@ -21,6 +21,18 @@ module Webhooks
       head :ok
     end
 
+    # POST deauthorize callback — Meta sends a signed_request when a user removes
+    # the app. We revoke that user's accounts for this provider.
+    def deauthorize
+      Controllers::Webhooks::Social::Deauthorize.call(
+        provider: params[:provider], signed_request: params[:signed_request]
+      )
+      head :ok
+    rescue StandardError => e
+      Rails.logger.warn("[Webhooks::Social] deauthorize #{params[:provider]}: #{e.message}")
+      head :ok
+    end
+
     private
 
     def verify_subscription
