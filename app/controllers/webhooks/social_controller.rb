@@ -33,6 +33,16 @@ module Webhooks
       head :ok
     end
 
+    # POST data deletion request callback — Meta sends a signed_request; we delete
+    # the user's data and respond with JSON { url, confirmation_code } (a status
+    # page + tracking code, required by Meta).
+    def data_deletion
+      result = Controllers::Webhooks::Social::DataDeletion.call(
+        provider: params[:provider], signed_request: params[:signed_request]
+      )
+      render json: result
+    end
+
     private
 
     def verify_subscription

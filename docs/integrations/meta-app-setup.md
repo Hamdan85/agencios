@@ -99,6 +99,18 @@ product's own app secret.
 | Instagram | `https://agencios.app/webhooks/instagram/deauthorize` |
 | Threads | `https://agencios.app/webhooks/threads/deauthorize` |
 
+**Data Deletion Request callbacks** (Product Settings → *Data Deletion Request
+URL*; required for App Review / LGPD-GDPR). Meta POSTs a signed_request; we delete
+the user's stored data (`Operations::Social::DeleteUserData`) and reply with
+`{ url, confirmation_code }`. The `url` points at the public status page
+`https://agencios.app/data-deletion`.
+
+| Product | Data Deletion Request URL |
+|---|---|
+| Facebook | `https://agencios.app/webhooks/facebook/data-deletion` |
+| Instagram | `https://agencios.app/webhooks/instagram/data-deletion` |
+| Threads | `https://agencios.app/webhooks/threads/data-deletion` |
+
 ---
 
 ## Reference — URLs to register

@@ -36,6 +36,9 @@ Rails.application.routes.draw do
   get "/conectar/:token",           to: "public_connect#show", format: false
   get "/conectar/:token/authorize", to: "public_connect#authorize", format: false
 
+  # Public status page for a Meta data-deletion request (linked from the callback).
+  get "/data-deletion", to: "data_deletion#show"
+
   # ── Inbound webhooks (vendor → us) ─────────────────────────────────
   namespace :webhooks do
     post "stripe",      to: "stripe#create"
@@ -51,6 +54,11 @@ Rails.application.routes.draw do
     post "facebook/deauthorize",  to: "social#deauthorize", defaults: { provider: "facebook" }
     post "instagram/deauthorize", to: "social#deauthorize", defaults: { provider: "instagram" }
     post "threads/deauthorize",   to: "social#deauthorize", defaults: { provider: "threads" }
+    # Data deletion request callbacks (LGPD/GDPR) — delete the user's data + reply
+    # with { url, confirmation_code }.
+    post "facebook/data-deletion",  to: "social#data_deletion", defaults: { provider: "facebook" }
+    post "instagram/data-deletion", to: "social#data_deletion", defaults: { provider: "instagram" }
+    post "threads/data-deletion",   to: "social#data_deletion", defaults: { provider: "threads" }
   end
 
   # ── MCP connector: OAuth 2.1 provider + discovery + the MCP server ──
