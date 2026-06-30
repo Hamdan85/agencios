@@ -15,7 +15,9 @@ module Operations
           workspace: @ticket.workspace, client: @ticket.project.client,
           brief: fields["brief"], objective: fields["objective"], persona: fields["target_persona"]
         )
-        text = AiAdapter.complete(builder, max_tokens: 700).to_s.strip
+        text = AiAdapter.complete(
+          builder, max_tokens: 700, operation: "synthesize_idea", subject: @ticket
+        ).to_s.strip
         Operations::Notes::Create.call(ticket: @ticket, user: nil, kind: :ai, body: text)
         text
       end

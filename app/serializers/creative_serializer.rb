@@ -1,11 +1,20 @@
 # frozen_string_literal: true
 
 class CreativeSerializer < ActiveModel::Serializer
-  attributes :id, :creative_type, :source, :status, :provider, :caption,
-             :version, :metadata, :asset_urls, :ticket_id, :created_at
+  attributes :id, :name, :creative_type, :source, :status, :provider, :caption,
+             :version, :metadata, :asset_urls, :ticket_id, :client_id, :client_name,
+             :created_at
 
   def source = object.source
   def status = object.status
+
+  def client_id
+    object.client_id || object.ticket&.project&.client_id
+  end
+
+  def client_name
+    object.client&.name || object.ticket&.project&.client&.name
+  end
 
   def asset_urls
     return [] unless object.assets.attached?

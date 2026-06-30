@@ -10,9 +10,44 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_29_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_01_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "account_metrics", force: :cascade do |t|
+    t.integer "accounts_reached", default: 0, null: false
+    t.datetime "captured_at", null: false
+    t.datetime "created_at", null: false
+    t.integer "followers", default: 0, null: false
+    t.integer "new_followers", default: 0, null: false
+    t.date "period_end"
+    t.date "period_start"
+    t.integer "profile_views", default: 0, null: false
+    t.jsonb "raw", default: {}, null: false
+    t.bigint "social_account_id", null: false
+    t.integer "story_replies", default: 0, null: false
+    t.integer "total_interactions", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.integer "views", default: 0, null: false
+    t.bigint "workspace_id", null: false
+    t.index ["social_account_id", "captured_at"], name: "index_account_metrics_on_social_account_id_and_captured_at"
+    t.index ["social_account_id"], name: "index_account_metrics_on_social_account_id"
+    t.index ["workspace_id", "captured_at"], name: "index_account_metrics_on_workspace_id_and_captured_at"
+  end
+
+  create_table "active_admin_comments", force: :cascade do |t|
+    t.bigint "author_id"
+    t.string "author_type"
+    t.text "body"
+    t.datetime "created_at", null: false
+    t.string "namespace"
+    t.bigint "resource_id"
+    t.string "resource_type"
+    t.datetime "updated_at", null: false
+    t.index ["author_type", "author_id"], name: "index_active_admin_comments_on_author"
+    t.index ["namespace"], name: "index_active_admin_comments_on_namespace"
+    t.index ["resource_type", "resource_id"], name: "index_active_admin_comments_on_resource"
+  end
 
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
@@ -40,6 +75,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_140000) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "ai_usage_logs", force: :cascade do |t|
+    t.integer "cache_creation_input_tokens", default: 0, null: false
+    t.integer "cache_read_input_tokens", default: 0, null: false
+    t.decimal "cost_cents", precision: 14, scale: 4, default: "0.0", null: false
+    t.datetime "created_at", null: false
+    t.integer "input_tokens", default: 0, null: false
+    t.string "model"
+    t.string "operation", null: false
+    t.integer "output_tokens", default: 0, null: false
+    t.string "provider", null: false
+    t.bigint "subject_id"
+    t.string "subject_type"
+    t.string "unit_kind"
+    t.decimal "units", precision: 12, scale: 3, default: "0.0", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.bigint "workspace_id", null: false
+    t.index ["operation", "created_at"], name: "index_ai_usage_logs_on_operation_and_created_at"
+    t.index ["provider", "created_at"], name: "index_ai_usage_logs_on_provider_and_created_at"
+    t.index ["subject_type", "subject_id"], name: "index_ai_usage_logs_on_subject_type_and_subject_id"
+    t.index ["user_id"], name: "index_ai_usage_logs_on_user_id"
+    t.index ["workspace_id", "created_at"], name: "index_ai_usage_logs_on_workspace_id_and_created_at"
   end
 
   create_table "attachments", force: :cascade do |t|
@@ -105,9 +164,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_140000) do
 
   create_table "creatives", force: :cascade do |t|
     t.text "caption"
+    t.bigint "client_id"
     t.datetime "created_at", null: false
     t.string "creative_type", null: false
     t.jsonb "metadata", default: {}, null: false
+    t.string "name"
     t.bigint "parent_id"
     t.string "provider"
     t.integer "source", default: 0, null: false
@@ -116,6 +177,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_140000) do
     t.datetime "updated_at", null: false
     t.integer "version", default: 1, null: false
     t.bigint "workspace_id", null: false
+    t.index ["client_id"], name: "index_creatives_on_client_id"
     t.index ["parent_id"], name: "index_creatives_on_parent_id"
     t.index ["ticket_id"], name: "index_creatives_on_ticket_id"
     t.index ["workspace_id", "status"], name: "index_creatives_on_workspace_id_and_status"
@@ -316,10 +378,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_140000) do
     t.index ["workspace_id"], name: "index_posts_on_workspace_id"
   end
 
+  create_table "project_reports", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.jsonb "data", default: {}, null: false
+    t.datetime "generated_at"
+    t.decimal "overall_score", precision: 4, scale: 2
+    t.date "period_end"
+    t.date "period_start"
+    t.bigint "project_id", null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["project_id", "created_at"], name: "index_project_reports_on_project_id_and_created_at"
+    t.index ["project_id"], name: "index_project_reports_on_project_id"
+    t.index ["workspace_id", "created_at"], name: "index_project_reports_on_workspace_id_and_created_at"
+  end
+
   create_table "projects", force: :cascade do |t|
     t.integer "budget_cents"
     t.bigint "client_id", null: false
     t.string "color", default: "#7C3AED", null: false
+    t.datetime "completed_at"
     t.datetime "created_at", null: false
     t.text "description"
     t.date "ends_on"
@@ -379,6 +458,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_140000) do
     t.string "channel_id"
     t.string "channel_title"
     t.bigint "client_id", null: false
+    t.integer "connection_type", default: 0, null: false
     t.datetime "created_at", null: false
     t.string "default_org_urn"
     t.string "display_name"
@@ -522,8 +602,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_140000) do
     t.index ["slug"], name: "index_workspaces_on_slug", unique: true
   end
 
+  add_foreign_key "account_metrics", "social_accounts"
+  add_foreign_key "account_metrics", "workspaces"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "ai_usage_logs", "users"
+  add_foreign_key "ai_usage_logs", "workspaces"
   add_foreign_key "attachments", "notes", on_delete: :nullify
   add_foreign_key "attachments", "tickets"
   add_foreign_key "attachments", "users", column: "uploaded_by_id"
@@ -531,6 +615,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_140000) do
   add_foreign_key "charges", "invoices"
   add_foreign_key "charges", "workspaces"
   add_foreign_key "clients", "workspaces"
+  add_foreign_key "creatives", "clients"
   add_foreign_key "creatives", "creatives", column: "parent_id"
   add_foreign_key "creatives", "tickets"
   add_foreign_key "creatives", "workspaces"
@@ -557,6 +642,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_140000) do
   add_foreign_key "posts", "social_accounts"
   add_foreign_key "posts", "tickets"
   add_foreign_key "posts", "workspaces"
+  add_foreign_key "project_reports", "projects"
+  add_foreign_key "project_reports", "workspaces"
   add_foreign_key "projects", "clients"
   add_foreign_key "projects", "workspaces"
   add_foreign_key "push_subscriptions", "users"

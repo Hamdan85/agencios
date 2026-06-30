@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import { NavLink, Link } from 'react-router-dom'
 import { ChevronsUpDown, LogOut, Check, Plus } from 'lucide-react'
 import { BrandMark } from '@/components/brand/BrandMark'
 import { PERSONAL_NAV, NAV_ITEMS, FOOTER_NAV } from './navItems'
 import { useLogout } from '@/hooks/useAuth'
 import { useWorkspaceMutations } from '@/hooks/useData'
+import CreateWorkspaceDialog from '@/components/workspace/CreateWorkspaceDialog'
 import { Avatar } from '@/components/ui/avatar'
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
@@ -45,8 +47,10 @@ function SectionLabel({ children }) {
 export default function Sidebar({ me, onNavigate }) {
   const logout = useLogout()
   const { switch: switchWs } = useWorkspaceMutations()
+  const [createOpen, setCreateOpen] = useState(false)
   const workspace = me?.workspace
   const workspaces = me?.workspaces || []
+  const canCreateWorkspace = me?.can_create_workspace
   const user = me?.user
 
   return (
@@ -60,7 +64,7 @@ export default function Sidebar({ me, onNavigate }) {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 pb-2 no-scrollbar">
+      <nav className="flex min-h-0 flex-1 flex-col space-y-0.5 overflow-hidden px-3 pb-2">
         {/* Você — the user's own views, across every team */}
         <SectionLabel>Você</SectionLabel>
         {PERSONAL_NAV.map((item) => <NavRow key={item.to} {...item} onNavigate={onNavigate} />)}
@@ -68,9 +72,9 @@ export default function Sidebar({ me, onNavigate }) {
         {/* Team — switcher + workspace-scoped nav, grouped in a frosted "glass" panel
             so these controls read clearly as "this team", distinct from the personal
             items above. */}
-        <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.05] p-2 backdrop-blur-sm">
+        <div className="mt-3 flex min-h-0 flex-1 flex-col rounded-2xl border border-white/10 bg-white/[0.05] p-2 backdrop-blur-sm">
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex w-full items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.04] px-2.5 py-2 text-left transition hover:bg-white/[0.08]">
+            <DropdownMenuTrigger className="flex w-full shrink-0 items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.04] px-2.5 py-2 text-left transition hover:bg-white/[0.08]">
               <span className="flex size-8 items-center justify-center rounded-lg bg-brand-gradient text-xs font-black text-white">
                 {(workspace?.name || 'A')[0].toUpperCase()}
               </span>
@@ -90,11 +94,16 @@ export default function Sidebar({ me, onNavigate }) {
                 </DropdownMenuItem>
               ))}
               <DropdownMenuSeparator />
-              <DropdownMenuItem disabled><Plus size={15} /> Novo workspace</DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={!canCreateWorkspace}
+                onSelect={() => canCreateWorkspace && setCreateOpen(true)}
+              >
+                <Plus size={15} /> Novo workspace
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <div className="mt-1 space-y-0.5">
+          <div className="mt-1 min-h-0 flex-1 space-y-0.5 overflow-y-auto no-scrollbar">
             <SectionLabel>Operação</SectionLabel>
             {NAV_ITEMS.map((item) => <NavRow key={item.to} {...item} onNavigate={onNavigate} />)}
             <SectionLabel>Conta</SectionLabel>
@@ -120,6 +129,8 @@ export default function Sidebar({ me, onNavigate }) {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      <CreateWorkspaceDialog open={createOpen} onOpenChange={setCreateOpen} />
     </aside>
   )
 }

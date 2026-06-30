@@ -5,6 +5,7 @@
 class Creative < ApplicationRecord
   belongs_to :workspace
   belongs_to :ticket, optional: true
+  belongs_to :client, optional: true
   belongs_to :parent, class_name: "Creative", optional: true
 
   has_many :versions, class_name: "Creative", foreign_key: :parent_id, dependent: :nullify, inverse_of: :parent

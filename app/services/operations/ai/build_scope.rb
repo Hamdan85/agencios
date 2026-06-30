@@ -17,7 +17,9 @@ module Operations
           channels: Array(fields["channels"]).join(", "),
           copy_brief: fields["copy_brief"], script: fields["script"]
         )
-        text = AiAdapter.complete(builder, max_tokens: 700).to_s
+        text = AiAdapter.complete(
+          builder, max_tokens: 700, operation: "build_scope", subject: @ticket
+        ).to_s
 
         titles = text.lines.map { |l| l.strip.sub(/\A[-*\d.]+\s*/, "") }.reject(&:blank?).first(8)
         created = titles.map do |title|

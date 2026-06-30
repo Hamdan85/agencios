@@ -1,4 +1,4 @@
-import { Sparkles, Loader2, Wand2, Image as ImageIcon, UserCircle2 } from 'lucide-react'
+import { Sparkles, Loader2, Wand2, Image as ImageIcon, UserCircle2, Globe } from 'lucide-react'
 import { Input, Textarea } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -114,6 +114,45 @@ export function BrandIdentityFields({ brand, onBrand, assets, onAsset, logoUrl, 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <ImageField label="Logo" icon={ImageIcon} file={assets.logo} currentUrl={logoUrl} onFile={(f) => onAsset('logo', f)} />
         <ImageField label="Avatar do criador (UGC)" icon={UserCircle2} rounded file={assets.defaultCreatorAvatar} currentUrl={avatarUrl} onFile={(f) => onAsset('defaultCreatorAvatar', f)} />
+      </div>
+    </div>
+  )
+}
+
+// First step: import the whole client from the brand's site. The AI reads the
+// page and fills name, contact, brand identity (logo + colors) and positioning.
+export function SiteImportPanel({ url, onUrl, onImport, importing }) {
+  const ready = String(url || '').trim().length > 0
+  return (
+    <div className="space-y-4">
+      <div className="flex items-start gap-2.5 rounded-xl border border-brand/20 bg-brand-soft px-4 py-3">
+        <Sparkles size={18} className="mt-0.5 shrink-0 text-brand" />
+        <p className="text-sm text-ink-secondary">
+          Cole o link do site / landing page da marca. A IA lê a página e preenche
+          automaticamente nome, contato, identidade visual (logo e cores) e o
+          posicionamento. Você revisa tudo antes de salvar.
+        </p>
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="brand-url">Site da marca</Label>
+        <div className="flex gap-2">
+          <Input
+            id="brand-url"
+            type="url"
+            autoFocus
+            value={url || ''}
+            onChange={(e) => onUrl(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); if (!importing && ready) onImport() } }}
+            placeholder="https://marca.com.br"
+          />
+          <Button type="button" onClick={onImport} disabled={importing || !ready} className="shrink-0">
+            {importing ? <Loader2 className="animate-spin" /> : <Globe />}
+            {importing ? 'Lendo…' : 'Importar'}
+          </Button>
+        </div>
+        <p className="text-xs text-ink-faint">
+          Preenche nome, e-mail, telefone, @, cores, logo e posicionamento — você pode pular e preencher manualmente.
+        </p>
       </div>
     </div>
   )

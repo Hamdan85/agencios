@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/select'
 import { DatePicker } from '@/components/ui/date-picker'
 import { Page } from '@/components/ui/page'
-import { brl, date } from '@/lib/formatters'
+import { brl, date, maskCurrency, centsFromMasked } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 
 const PALETTE = ['#7C3AED', '#EC4899', '#0EA5E9', '#10B981', '#F59E0B', '#6366F1', '#F43F5E', '#14B8A6']
@@ -53,7 +53,7 @@ function ProjectFormDialog({ open, onOpenChange, mutation }) {
       status: form.status,
       starts_on: form.starts_on || null,
       ends_on: form.ends_on || null,
-      budget_cents: form.budget ? Math.round(parseFloat(form.budget.replace(',', '.')) * 100) : null,
+      budget_cents: form.budget ? centsFromMasked(form.budget) : null,
     }
     mutation.mutate(payload, { onSuccess: () => { setForm(EMPTY_FORM); onOpenChange(false) } })
   }
@@ -118,7 +118,7 @@ function ProjectFormDialog({ open, onOpenChange, mutation }) {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="pj-budget">Orçamento (R$)</Label>
-              <Input id="pj-budget" inputMode="decimal" value={form.budget} onChange={(e) => set('budget')(e.target.value)} placeholder="0,00" />
+              <Input id="pj-budget" inputMode="decimal" value={form.budget} onChange={(e) => set('budget')(maskCurrency(e.target.value))} placeholder="0,00" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">

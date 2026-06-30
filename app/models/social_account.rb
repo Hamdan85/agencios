@@ -7,14 +7,22 @@ class SocialAccount < ApplicationRecord
   belongs_to :workspace
   belongs_to :client
   has_many :posts, dependent: :nullify
+  has_many :account_metrics, dependent: :destroy
 
   # Networks integrate directly by default; `upload_post` is the aggregator
   # fallback provider (publisher seam routes to it per workspace/network).
   enum :provider, {
-    instagram: 0, facebook: 1, tiktok: 2, youtube: 3, linkedin: 4, x: 5, upload_post: 6
+    instagram: 0, facebook: 1, tiktok: 2, youtube: 3, linkedin: 4, x: 5, upload_post: 6,
+    threads: 7
   }, prefix: true
 
   enum :status, { connected: 0, needs_reauth: 1, revoked: 2 }, prefix: true
+
+  # How the account authenticated, which decides the publish/insights transport:
+  # `facebook_login` → Page token on graph.facebook.com (IG via a linked Page,
+  # plus all Facebook Pages); `instagram_login` → IG user token on
+  # graph.instagram.com (Instagram-only, no Facebook Page required).
+  enum :connection_type, { facebook_login: 0, instagram_login: 1 }, prefix: true
 
   encrypts :user_access_token, :page_access_token, :refresh_token
 

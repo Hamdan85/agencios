@@ -11,6 +11,11 @@ sync_post_metrics:
   class: "Posts::SyncMetricsJob"
   queue: media
 
+sync_account_insights:
+  cron: "20 2 * * *"           # daily at 02:20 — builds account-metric history
+  class: "Social::SyncAccountInsightsJob"
+  queue: media
+
 refresh_social_tokens:
   cron: "30 3 * * *"           # daily at 03:30
   class: "Social::RefreshTokenJob"

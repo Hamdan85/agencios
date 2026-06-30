@@ -3,6 +3,7 @@
 require "sidekiq/web"
 
 Rails.application.routes.draw do
+  ActiveAdmin.routes(self)
   get "up" => "rails/health#show", as: :rails_health_check
 
   # ── PWA ────────────────────────────────────────────────────────────
@@ -25,8 +26,15 @@ Rails.application.routes.draw do
 
   # ── OAuth callbacks (Calendar, social-network account connect) ─────
   match "/auth/:provider/callback", to: "auth/omniauth#callback", via: %i[get post]
+  post  "/auth/facebook/select",   to: "auth/omniauth#choose_page"
   get   "/auth/failure",           to: "auth/omniauth#failure"
   get   "/auth/social-connected",  to: "auth/omniauth#social_connected"
+
+  # ── Public per-client connect page (login-less; token is the credential) ───
+  # The agency shares /conectar/:token with the client to connect their own
+  # networks. Declared before the SPA catch-all so it isn't swallowed.
+  get "/conectar/:token",           to: "public_connect#show", format: false
+  get "/conectar/:token/authorize", to: "public_connect#authorize", format: false
 
   # ── Inbound webhooks (vendor → us) ─────────────────────────────────
   namespace :webhooks do
@@ -34,6 +42,10 @@ Rails.application.routes.draw do
     post "mercadopago", to: "mercado_pago#create"
     post "heygen",      to: "heygen#create"
     match "meta", to: "meta#handle", via: %i[get post]
+    # Instagram-Login + Threads have their own app secrets, so a dedicated
+    # endpoint per provider (verifies with the right secret).
+    match "instagram", to: "social#handle", via: %i[get post], defaults: { provider: "instagram" }
+    match "threads",   to: "social#handle", via: %i[get post], defaults: { provider: "threads" }
   end
 
   # ── MCP connector: OAuth 2.1 provider + discovery + the MCP server ──
@@ -81,7 +93,7 @@ Rails.application.routes.draw do
       end
 
       # Tenancy
-      resource :workspace, only: %i[show update], controller: "workspaces" do
+      resource :workspace, only: %i[show create update], controller: "workspaces" do
         post "switch", on: :collection
         resources :memberships, only: %i[index update destroy]
         resources :invitations, only: %i[index create destroy]
@@ -95,15 +107,27 @@ Rails.application.routes.draw do
           patch :positioning, action: :update_positioning
           patch :brand_assets
         end
-        collection { post :positioning_preview }
+        collection do
+          post :positioning_preview
+          post :extract_from_url
+        end
         # A client's own connected social networks (the agency connects each
         # client's Instagram/TikTok/etc.; tickets under its projects publish here).
         resources :social_accounts, only: %i[index destroy] do
-          collection { get :authorize_url }
+          collection do
+            get :authorize_url
+            get :connect_link
+          end
           member { post :reconnect }
         end
       end
-      resources :projects
+      resources :projects do
+        member { post :finalize }
+        # End-of-run audit reports (the finalize deck). Listed under a project;
+        # a single report is fetched by its own id (the deck page).
+        resources :reports, only: %i[index]
+      end
+      resources :reports, only: %i[show]
 
       # Board, tickets & funnel
       get "board", to: "board#index"
@@ -137,6 +161,11 @@ Rails.application.routes.draw do
       post "studio/generate", to: "studio#generate"
       resources :generations, only: %i[index show]
 
+      # Workspace-level creative management (Studio gallery)
+      get    "creatives",     to: "creatives#workspace_index"
+      patch  "creatives/:id", to: "creatives#update",            as: :creative
+      delete "creatives/:id", to: "creatives#workspace_destroy"
+
       # Meetings, billing (social accounts are nested under clients above)
       resources :meetings
       resources :invoices do
@@ -149,6 +178,7 @@ Rails.application.routes.draw do
       end
 
       resource :settings, only: %i[show update], controller: "settings" do
+        patch  :brand_assets
         get    :google_calendar_authorize_url
         delete :google_calendar
       end

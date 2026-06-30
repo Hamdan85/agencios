@@ -8,6 +8,7 @@ module Api
       def create  = render_created(Controllers::Projects::Create.call(params:))
       def update  = render_ok(Controllers::Projects::Update.call(params:))
       def destroy = render_ok(Controllers::Projects::Destroy.call(params:))
+      def finalize = render_ok(Controllers::Projects::Finalize.call(params:))
     end
   end
 end

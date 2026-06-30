@@ -16,6 +16,10 @@ module Vendors
       DEFAULT_GRAPH_VERSION = "v25.0"
 
       GRAPH_HOST  = "https://graph.facebook.com"
+      # Graph host for Instagram-Login accounts (no Facebook Page): the same
+      # publishing/insights endpoints, served under graph.instagram.com with the
+      # IG user token (instagram-login.md §6).
+      IG_GRAPH_HOST = "https://graph.instagram.com"
       # Host the user is redirected to for the OAuth authorize dialog.
       DIALOG_HOST = "https://www.facebook.com"
       # Resumable upload host for IG Reels raw bytes + FB Reels binary.
@@ -23,11 +27,13 @@ module Vendors
 
       attr_reader :access_token, :graph_version
 
-      # Pass a SocialAccount (publishing/insights use its page_access_token) or an
-      # explicit access_token (OAuth steps, before an account exists).
+      # Pass a SocialAccount (publishing/insights use its token) or an explicit
+      # access_token (OAuth steps, before an account exists). Facebook-Login
+      # accounts use the Page token on graph.facebook.com; Instagram-Login
+      # accounts use the IG user token on graph.instagram.com.
       def initialize(social_account = nil, access_token: nil, graph_version: nil)
         @social_account = social_account
-        @access_token   = access_token || social_account&.page_access_token
+        @access_token   = access_token || default_token(social_account)
         @graph_version  = graph_version || credential(:meta, :graph_version) || DEFAULT_GRAPH_VERSION
       end
 
@@ -39,13 +45,22 @@ module Vendors
         require_credential!(credential(:meta, :app_secret, env: "META_APP_SECRET"), "meta.app_secret")
       end
 
+      # Optional "Facebook Login for Business" configuration id. When set, the
+      # authorize dialog sends `config_id` instead of `scope` (Business apps use a
+      # dashboard-created configuration). Absent → fall back to the scope-based
+      # classic dialog. See docs/integrations/meta.md §4.
+      def fb_login_config_id
+        credential(:meta, :fb_login_config_id, env: "META_FB_LOGIN_CONFIG_ID")
+      end
+
       def webhook_verify_token
         credential(:meta, :webhook_verify_token, env: "META_WEBHOOK_VERIFY_TOKEN")
       end
 
       # Base for all versioned Graph calls, e.g. https://graph.facebook.com/v25.0
+      # (graph.instagram.com for Instagram-Login accounts).
       def graph_base
-        "#{GRAPH_HOST}/#{graph_version}"
+        "#{graph_host}/#{graph_version}"
       end
 
       def dialog_url
@@ -80,6 +95,23 @@ module Vendors
       end
 
       private
+
+      # Instagram-Login accounts publish/read via graph.instagram.com with the IG
+      # user token; everything else uses graph.facebook.com with the Page token.
+      def instagram_login?
+        @social_account.respond_to?(:connection_type_instagram_login?) &&
+          @social_account.connection_type_instagram_login?
+      end
+
+      def graph_host
+        instagram_login? ? IG_GRAPH_HOST : GRAPH_HOST
+      end
+
+      def default_token(account)
+        return nil unless account
+
+        instagram_login? ? account.user_access_token : account.page_access_token
+      end
 
       # JSON-decoding connection for GETs (Graph returns JSON). Inherited
       # build_connection adds JSON encode/decode + retry.

@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Link, useLocation, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft, Wallet, CalendarRange, ListChecks, KanbanSquare, Pencil, Building2,
+  FileText, CheckCircle2,
 } from 'lucide-react'
-import { useProject } from '@/hooks/useData'
+import { useProject, useProjectMutations } from '@/hooks/useData'
 import { PageLoader, EmptyState } from '@/components/ui/feedback'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -17,13 +18,16 @@ const STATUS = {
   active: { label: 'Ativo', variant: 'success' },
   paused: { label: 'Pausado', variant: 'warning' },
   archived: { label: 'Arquivado', variant: 'muted' },
+  completed: { label: 'Finalizado', variant: 'soft' },
 }
 
 export default function ProjectShow() {
   const { id } = useParams()
   const location = useLocation()
+  const navigate = useNavigate()
   const [filters, setFilters] = useState({})
   const { data, isLoading } = useProject(id, filters)
+  const { finalize } = useProjectMutations()
 
   if (isLoading) return <PageLoader />
 
@@ -33,6 +37,14 @@ export default function ProjectShow() {
   const st = STATUS[project.status] || STATUS.active
   const hasRange = project.starts_on || project.ends_on
   const hasFilters = Object.values(filters).some(Boolean)
+  const isCompleted = project.status === 'completed'
+
+  const handleFinalize = async () => {
+    if (!window.confirm('Finalizar este projeto e gerar o relatório de auditoria?')) return
+    const res = await finalize.mutateAsync(id)
+    const reportId = res?.report?.id
+    if (reportId) navigate(`/relatorios/${reportId}`)
+  }
 
   return (
     <Page>
@@ -66,9 +78,21 @@ export default function ProjectShow() {
               )}
             </div>
           </div>
-          <Button asChild variant="outline">
-            <Link to="/projetos"><Pencil size={16} /> Editar</Link>
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button asChild variant="outline">
+              <Link to="/projetos"><Pencil size={16} /> Editar</Link>
+            </Button>
+            {project.latest_report_id && (
+              <Button asChild variant="outline">
+                <Link to={`/relatorios/${project.latest_report_id}`}><FileText size={16} /> Ver relatório</Link>
+              </Button>
+            )}
+            {!isCompleted && (
+              <Button onClick={handleFinalize} disabled={finalize.isPending}>
+                <CheckCircle2 size={16} /> Finalizar projeto
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2 border-t border-border bg-surface-muted/50 px-6 py-4">

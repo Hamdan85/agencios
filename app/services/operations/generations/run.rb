@@ -16,9 +16,9 @@ module Operations
       def call
         case @kind
         when "carousel"
-          Operations::Creatives::GenerateCarousel.call(
+          Operations::Creatives::GenerateViralCarousel.call(
             ticket: ticket,
-            slides: @params.fetch(:slides, 6),
+            slides: @params[:slides],
             params: @params
           )
         when "video"
@@ -26,13 +26,15 @@ module Operations
             ticket: ticket,
             script: @params[:script],
             avatar: @params[:avatar],
-            voice: @params[:voice]
+            voice: @params[:voice],
+            client_id: @params[:client_id]
           )
         when "image"
           Operations::Creatives::GenerateImage.call(
             ticket: ticket,
             prompt: @params[:prompt],
-            ref_images: @params.fetch(:ref_images, [])
+            ref_images: @params.fetch(:ref_images, []),
+            client_id: @params[:client_id]
           )
         else
           raise Operations::Errors::Invalid, "Tipo de geração desconhecido: #{@kind}"

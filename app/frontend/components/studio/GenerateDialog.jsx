@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/select'
 import { ClientSelect } from '@/components/ui/entity-select'
 import { GENERATION_KIND_META } from '@/lib/constants'
+import { cn } from '@/lib/utils'
 
 // Compact preview of the chosen client's brand — the content is generated in
 // this brand's voice / colors / handle.
@@ -45,12 +46,13 @@ const VOICES = [
   { value: 'pt_br_pro', label: 'PT-BR · Profissional' },
 ]
 
-const SLIDE_OPTIONS = [4, 5, 6, 7, 8, 10]
+const SLIDE_OPTIONS = ['auto', 4, 5, 6, 7, 8, 10]
+const slideLabel = (n) => (n === 'auto' ? 'Automático' : `${n} slides`)
 
 const META = {
   carousel: {
     title: 'Gerar Carrossel',
-    description: 'Um carrossel viral a partir do tema — copy, slides e identidade da marca.',
+    description: 'Um carrossel viral a partir de uma ideia, texto ou link — copy, slides e identidade da marca.',
   },
   video: {
     title: 'Gerar Vídeo UGC',
@@ -62,11 +64,21 @@ const META = {
   },
 }
 
+// Carousel can be generated from three kinds of source.
+const CAROUSEL_SOURCES = [
+  { value: 'idea', label: 'Ideia' },
+  { value: 'text', label: 'Texto' },
+  { value: 'link', label: 'Link' },
+]
+
 const emptyForm = () => ({
-  topic: '', slides: 6, objective: '',
+  source_mode: 'idea', idea: '', text: '', url: '',
+  slides: 'auto', objective: '',
   script: '', avatar: 'creator_default', voice: 'pt_br_warm',
   prompt: '',
 })
+
+const isHttpUrl = (v) => /^https?:\/\/\S+\.\S+/i.test(String(v || '').trim())
 
 export function GenerateDialog({ kind, open, onOpenChange, generate, clients = [] }) {
   const [form, setForm] = useState(emptyForm)
@@ -90,10 +102,18 @@ export function GenerateDialog({ kind, open, onOpenChange, generate, clients = [
   const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }))
 
   const selectedClient = clients.find((c) => String(c.id) === String(clientId)) || null
-  const clientOption = selectedClient ? { value: selectedClient.id, label: selectedClient.name } : null
+  const clientOption = selectedClient
+    ? { value: selectedClient.id, label: selectedClient.name, avatar: selectedClient.logo_url, avatarName: selectedClient.name }
+    : null
+
+  const carouselSourceValid = (
+    form.source_mode === 'idea' ? form.idea.trim().length > 1 :
+    form.source_mode === 'text' ? form.text.trim().length > 1 :
+    isHttpUrl(form.url)
+  )
 
   const isValid = !!clientId && (
-    kind === 'carousel' ? form.topic.trim().length > 1 :
+    kind === 'carousel' ? carouselSourceValid :
     kind === 'video' ? form.script.trim().length > 1 :
     form.prompt.trim().length > 1
   )
@@ -101,7 +121,14 @@ export function GenerateDialog({ kind, open, onOpenChange, generate, clients = [
   const buildParams = () => {
     // The generation carries the client it's FOR, so it uses the client's brand.
     const base = clientId ? { client_id: clientId } : {}
-    if (kind === 'carousel') return { ...base, topic: form.topic.trim(), slides: Number(form.slides) || 6, objective: form.objective.trim() }
+    if (kind === 'carousel') {
+      const source =
+        form.source_mode === 'idea' ? { topic: form.idea.trim() } :
+        form.source_mode === 'text' ? { text: form.text.trim() } :
+        { url: form.url.trim() }
+      const slides = form.slides === 'auto' ? 'auto' : Number(form.slides) || 'auto'
+      return { ...base, ...source, slides, objective: form.objective.trim() }
+    }
     if (kind === 'video') return { ...base, script: form.script.trim(), avatar: form.avatar, voice: form.voice }
     return { ...base, prompt: form.prompt.trim() }
   }
@@ -162,19 +189,55 @@ export function GenerateDialog({ kind, open, onOpenChange, generate, clients = [
 
             {kind === 'carousel' && (
               <>
-                <Field label="Tema" htmlFor="gen-topic">
-                  <Input
-                    id="gen-topic" value={form.topic} onChange={(e) => set('topic')(e.target.value)}
-                    placeholder="Ex.: 5 erros ao começar no marketing de conteúdo" autoFocus
-                  />
+                <Field label="Fonte do conteúdo">
+                  <div className="flex gap-1.5 rounded-xl bg-surface-muted/60 p-1">
+                    {CAROUSEL_SOURCES.map((s) => (
+                      <button
+                        key={s.value} type="button" onClick={() => set('source_mode')(s.value)}
+                        className={cn(
+                          'flex-1 rounded-lg px-3 py-1.5 text-sm font-semibold transition',
+                          form.source_mode === s.value ? 'bg-white text-ink shadow-sm' : 'text-ink-muted hover:text-ink',
+                        )}
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
                 </Field>
+
+                {form.source_mode === 'idea' && (
+                  <Field label="Ideia / tema" htmlFor="gen-idea">
+                    <Input
+                      id="gen-idea" value={form.idea} onChange={(e) => set('idea')(e.target.value)}
+                      placeholder="Ex.: 5 erros ao começar no marketing de conteúdo" autoFocus
+                    />
+                  </Field>
+                )}
+                {form.source_mode === 'text' && (
+                  <Field label="Texto base" htmlFor="gen-text">
+                    <Textarea
+                      id="gen-text" value={form.text} onChange={(e) => set('text')(e.target.value)}
+                      placeholder="Cole o texto (artigo, roteiro, notas) que vira o carrossel…"
+                      rows={5} autoFocus className="min-h-28"
+                    />
+                  </Field>
+                )}
+                {form.source_mode === 'link' && (
+                  <Field label="Link" htmlFor="gen-url">
+                    <Input
+                      id="gen-url" type="url" value={form.url} onChange={(e) => set('url')(e.target.value)}
+                      placeholder="https://exemplo.com/artigo" autoFocus
+                    />
+                  </Field>
+                )}
+
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Nº de slides">
-                    <Select value={String(form.slides)} onValueChange={(v) => set('slides')(Number(v))}>
+                    <Select value={String(form.slides)} onValueChange={(v) => set('slides')(v === 'auto' ? 'auto' : Number(v))}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {SLIDE_OPTIONS.map((n) => (
-                          <SelectItem key={n} value={String(n)}>{n} slides</SelectItem>
+                          <SelectItem key={n} value={String(n)}>{slideLabel(n)}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>

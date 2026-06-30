@@ -10,14 +10,23 @@ module Operations
       end
 
       def call
-        vendor = Publishers::SocialPublisher.vendor_for(@account.provider)
-        attrs = vendor::Actions::RefreshToken.call(@account) || {}
+        attrs = refresh_vendor::Actions::RefreshToken.call(@account) || {}
         @account.update!(attrs.to_h.symbolize_keys.merge(status: :connected))
         @account
       rescue StandardError => e
         @account.update!(status: :needs_reauth)
         Rails.logger.warn("[Social::RefreshToken] #{@account.provider} ##{@account.id}: #{e.message}")
         @account
+      end
+
+      private
+
+      # Instagram-Login accounts refresh the IG user token via graph.instagram.com,
+      # not the Meta Facebook-Login flow.
+      def refresh_vendor
+        return Vendors::InstagramLogin if @account.connection_type_instagram_login?
+
+        Publishers::SocialPublisher.vendor_for(@account.provider)
       end
     end
   end

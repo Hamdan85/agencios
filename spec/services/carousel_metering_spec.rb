@@ -4,8 +4,9 @@ require "rails_helper"
 
 # Carousel generations are one of the two usage-based billing meters
 # (SPECIFICATION.md §9). On completion they must emit a Stripe meter event
-# exactly once — image generations must not.
-RSpec.describe Operations::Creatives::GenerateCarousel do
+# exactly once. The viral carousel writes its copy with Claude and rasterizes
+# branded HTML slides — both are stubbed here so the spec stays offline.
+RSpec.describe Operations::Creatives::GenerateViralCarousel do
   include ActiveJob::TestHelper
 
   let(:user) { User.create!(email: "gen@agencios.app", password: "secret123", name: "Gen") }
@@ -23,8 +24,17 @@ RSpec.describe Operations::Creatives::GenerateCarousel do
     ActiveJob::Base.queue_adapter = :test
     Current.workspace = workspace
     Current.actor = user
-    allow(Vendors::ImageGen::Actions::GenerateImage).to receive(:call)
-      .and_return(url: "https://img.example/slide.png", external_id: "img_1")
+
+    # Deterministic, image-free copy (no Pexels/Banana slots needed).
+    slides_json = [
+      { role: "hook",  headline: "Gancho", body: "a", image: false, image_query: "" },
+      { role: "value", headline: "Valor",  body: "b", image: false, image_query: "" },
+      { role: "cta",   headline: "CTA",    body: "c", image: false, image_query: "" }
+    ].to_json
+    allow(AiAdapter).to receive(:complete).and_return(slides_json)
+
+    # Stub the headless renderer so no Chromium is launched.
+    allow(Vendors::Render::Html).to receive(:batch) { |htmls:, **_| htmls.map { "PNGBYTES" } }
   end
 
   after { Current.reset }
@@ -38,6 +48,7 @@ RSpec.describe Operations::Creatives::GenerateCarousel do
     expect(generation.kind).to eq("carousel")
     expect(generation.status).to eq("completed")
     expect(generation.metered_at).to be_present
+    expect(generation.creative.assets.count).to eq(3)
     expect(Vendors::Stripe::Actions::ReportMeterEvent).to have_received(:call).once
   end
 

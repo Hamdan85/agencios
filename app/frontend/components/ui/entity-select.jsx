@@ -30,7 +30,7 @@ export function ClientSelect({ placeholder = 'Cliente', listParams, ...props }) 
       queryKey={['clients', 'select']}
       fetchPage={({ q, page }) => clientsApi.list({ q, page, per: 20, ...listParams })}
       mapResponse={(d) => ({ items: d.clients || [], hasMore: d.meta?.has_more })}
-      getOption={(c) => ({ value: c.id, label: c.name, description: c.company })}
+      getOption={(c) => ({ value: c.id, label: c.name, description: c.company, avatar: c.logo_url, avatarName: c.name })}
       {...props}
     />
   )

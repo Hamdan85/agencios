@@ -12,6 +12,10 @@ module Api
       # returns the OAuth URL the browser opens (state carries the client).
       def authorize_url = render_ok(Controllers::SocialAccounts::AuthorizeUrl.call(params:))
 
+      # GET /clients/:client_id/social_accounts/connect_link — shareable login-less
+      # link the client opens to connect their own networks.
+      def connect_link = render_ok(Controllers::SocialAccounts::ConnectLink.call(params:))
+
       def destroy   = render_ok(Controllers::SocialAccounts::Destroy.call(params:))
 
       # POST /clients/:client_id/social_accounts/:id/reconnect — STUB (see the service).

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Conectar redes — <%= @data[:agency_name] %></title>
+  <style>
+    :root { --brand: <%= @data[:brand_color].present? ? @data[:brand_color] : "#7C3AED" %>; }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; margin: 0; min-height: 100vh; background: #f6f5fb; color: #1f2937; display: flex; align-items: center; justify-content: center; padding: 1.25rem; }
+    .card { width: 100%; max-width: 440px; background: #fff; border-radius: 1.25rem; box-shadow: 0 10px 40px rgba(31,41,55,.08); overflow: hidden; }
+    .head { background: var(--brand); color: #fff; padding: 1.6rem 1.5rem; }
+    .head .agency { font-size: 0.8rem; opacity: .85; }
+    .head h1 { margin: .3rem 0 0; font-size: 1.25rem; }
+    .head p { margin: .45rem 0 0; font-size: .9rem; opacity: .92; line-height: 1.4; }
+    .body { padding: 1.25rem 1.5rem 1.75rem; }
+    .net { display: flex; align-items: center; gap: .9rem; width: 100%; padding: 1rem 1.1rem; margin-top: .7rem; border: 1px solid #ececf3; border-radius: .9rem; background: #fff; font: inherit; color: inherit; cursor: pointer; transition: border-color .12s, box-shadow .12s; }
+    .net:hover:not(:disabled) { border-color: var(--brand); box-shadow: 0 2px 10px rgba(124,58,237,.12); }
+    .net:disabled { cursor: default; background: #f8fafc; }
+    .net .ico { width: 38px; height: 38px; border-radius: .6rem; display: grid; place-items: center; color: #fff; font-weight: 700; flex: none; }
+    .net .txt { flex: 1; text-align: left; }
+    .net .txt .n { font-weight: 600; font-size: .95rem; }
+    .net .txt .s { font-size: .78rem; color: #6b7280; }
+    .net .state { font-size: .82rem; font-weight: 600; color: #16a34a; }
+    .net .cta { font-size: .82rem; font-weight: 600; color: var(--brand); }
+    .foot { margin-top: 1.2rem; font-size: .72rem; color: #9ca3af; text-align: center; line-height: 1.5; }
+    .ig { background: linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888); }
+    .fb { background: #1877F2; }
+    .th { background: #000000; }
+    .tt { background: #111111; }
+    .yt { background: #FF0000; }
+    .li { background: #0A66C2; }
+    .xx { background: #111111; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="head">
+      <div class="agency"><%= @data[:agency_name] %></div>
+      <h1>Conecte suas redes</h1>
+      <p>Conecte as redes sociais de <strong><%= @data[:client_name] %></strong> para que a equipe possa publicar por você. Leva menos de um minuto.</p>
+    </div>
+    <div class="body">
+      <% labels = {
+        "instagram" => ["Instagram", "ig", "Entre com sua conta do Instagram"],
+        "facebook" => ["Facebook", "fb", "Conecte sua Página do Facebook"],
+        "threads" => ["Threads", "th", "Entre com sua conta do Threads"],
+        "tiktok" => ["TikTok", "tt", "Entre com sua conta do TikTok"],
+        "youtube" => ["YouTube", "yt", "Conecte seu canal do YouTube"],
+        "linkedin" => ["LinkedIn", "li", "Conecte sua página do LinkedIn"],
+        "x" => ["X", "xx", "Entre com sua conta do X"]
+      } %>
+      <% @data[:networks].each do |net| %>
+        <% label, css, sub = labels[net[:key]] %>
+        <button type="button" class="net" data-network="<%= net[:key] %>" <%= "disabled" if net[:connected] %>>
+          <span class="ico <%= css %>"><%= label.first %></span>
+          <span class="txt">
+            <span class="n"><%= label %></span>
+            <span class="s"><%= sub %></span>
+          </span>
+          <span class="state" data-role="state" style="<%= "display:none" unless net[:connected] %>">Conectado ✓</span>
+          <span class="cta" data-role="cta" style="<%= "display:none" if net[:connected] %>">Conectar →</span>
+        </button>
+      <% end %>
+      <p class="foot">Você usa o login da sua própria conta. <%= @data[:agency_name] %> nunca vê sua senha.</p>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var token = <%= @data[:token].to_json %>;
+
+      function markConnected(network) {
+        var btn = document.querySelector('.net[data-network="' + network + '"]');
+        if (!btn) return;
+        btn.disabled = true;
+        btn.querySelector('[data-role="state"]').style.display = "";
+        btn.querySelector('[data-role="cta"]').style.display = "none";
+      }
+
+      function openPopup(network) {
+        var w = 600, h = 760;
+        var left = Math.round(window.screenX + (window.outerWidth - w) / 2);
+        var top = Math.round(window.screenY + (window.outerHeight - h) / 2);
+        var url = "/conectar/" + encodeURIComponent(token) + "/authorize?network=" + encodeURIComponent(network);
+        return window.open(url, "oauth_popup", "width=" + w + ",height=" + h + ",left=" + left + ",top=" + top);
+      }
+
+      function onResult(payload) {
+        if (!payload || payload.type !== "oauth_connected") return;
+        if (popup && !popup.closed) { try { popup.close(); } catch (e) {} }
+        if (!payload.error && payload.network) markConnected(payload.network);
+      }
+
+      var popup = null;
+      var bc = "BroadcastChannel" in window ? new BroadcastChannel("agencios_oauth") : null;
+      if (bc) bc.onmessage = function (e) { onResult(e.data); };
+      window.addEventListener("message", function (e) {
+        if (e.origin === window.location.origin) onResult(e.data);
+      });
+      window.addEventListener("storage", function (e) {
+        if (e.key === "agencios_oauth" && e.newValue) { try { onResult(JSON.parse(e.newValue)); } catch (x) {} }
+      });
+
+      document.querySelectorAll(".net[data-network]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          if (btn.disabled) return;
+          popup = openPopup(btn.getAttribute("data-network"));
+        });
+      });
+
+      // Mobile full-redirect return (?connected=instagram) — reflect it on load.
+      var params = new URLSearchParams(window.location.search);
+      if (params.get("connected")) markConnected(params.get("connected"));
+    }());
+  </script>
+</body>
+</html>

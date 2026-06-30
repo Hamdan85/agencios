@@ -21,6 +21,7 @@ export const connectorApi = {
 
 export const workspaceApi = {
   get: () => api.get('/workspace'),
+  create: (data) => api.post('/workspace', { workspace: data }),
   update: (data) => api.patch('/workspace', { workspace: data }),
   switch: (workspaceId) => api.post('/workspace/switch', { workspace_id: workspaceId }),
   members: (params) => api.get('/workspace/memberships', { params }),
@@ -112,6 +113,7 @@ export const clientsApi = {
   archive: (id) => api.post(`/clients/${id}/archive`),
   destroy: (id) => api.delete(`/clients/${id}`),
   synthesizePositioning: (data) => api.post('/clients/positioning_preview', data),
+  extractFromUrl: (data) => api.post('/clients/extract_from_url', data),
   updatePositioning: (id, positioning) => api.patch(`/clients/${id}/positioning`, { positioning }),
   // Brand assets (logo / creator avatar) upload as multipart; either is optional.
   uploadBrandAssets: (id, { logo, defaultCreatorAvatar } = {}) => {
@@ -128,11 +130,25 @@ export const projectsApi = {
   create: (data) => api.post('/projects', { project: data }),
   update: (id, data) => api.patch(`/projects/${id}`, { project: data }),
   destroy: (id) => api.delete(`/projects/${id}`),
+  // Finalizes a project (→ `completed`) and kicks off its audit report.
+  finalize: (id) => api.post(`/projects/${id}/finalize`),
+}
+
+// End-of-run project audit reports (the finalize deck).
+export const reportsApi = {
+  listByProject: (projectId) => api.get(`/projects/${projectId}/reports`),
+  get: (id) => api.get(`/reports/${id}`),
 }
 
 export const studioApi = {
   get: () => api.get('/studio'),
   generate: (kind, params) => api.post('/studio/generate', { kind, params }),
+}
+
+export const creativesApi = {
+  list: (params) => api.get('/creatives', { params }),
+  update: (id, data) => api.patch(`/creatives/${id}`, { creative: data }),
+  destroy: (id) => api.delete(`/creatives/${id}`),
 }
 
 export const generationsApi = {
@@ -145,6 +161,7 @@ export const socialApi = {
   list: (clientId) => api.get(`/clients/${clientId}/social_accounts`),
   authorizeUrl: (clientId, network) =>
     api.get(`/clients/${clientId}/social_accounts/authorize_url`, { params: { network } }),
+  connectLink: (clientId) => api.get(`/clients/${clientId}/social_accounts/connect_link`),
   reconnect: (clientId, id) => api.post(`/clients/${clientId}/social_accounts/${id}/reconnect`),
   destroy: (clientId, id) => api.delete(`/clients/${clientId}/social_accounts/${id}`),
 }
@@ -169,6 +186,13 @@ export const invoicesApi = {
 export const settingsApi = {
   get: () => api.get('/settings'),
   update: (data) => api.patch('/settings', data),
+  // Brand assets (agency logo / creator avatar) upload as multipart; either is optional.
+  uploadBrandAssets: ({ logo, defaultCreatorAvatar } = {}) => {
+    const form = new FormData()
+    if (logo) form.append('logo', logo)
+    if (defaultCreatorAvatar) form.append('default_creator_avatar', defaultCreatorAvatar)
+    return api.patch('/settings/brand_assets', form)
+  },
   calendarAuthorizeUrl: () => api.get('/settings/google_calendar_authorize_url'),
   calendarDisconnect: () => api.delete('/settings/google_calendar'),
 }

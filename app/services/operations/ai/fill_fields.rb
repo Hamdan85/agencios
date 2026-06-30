@@ -16,7 +16,9 @@ module Operations
         keys = Prompts::FieldFill.fillable_keys(@status)
         return { filled: [] } if keys.empty?
 
-        text = AiAdapter.complete(build_prompt, max_tokens: 1300).to_s
+        text = AiAdapter.complete(
+          build_prompt, max_tokens: 1300, operation: "fill_fields", subject: @ticket
+        ).to_s
         data = parse_json(text)
         return { filled: [] } if data.blank?
 

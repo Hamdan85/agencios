@@ -8,21 +8,26 @@ module Publishers
     DIRECT = {
       "instagram" => "Vendors::Meta",
       "facebook"  => "Vendors::Meta",
+      "threads"   => "Vendors::Threads",
       "tiktok"    => "Vendors::TikTok",
       "youtube"   => "Vendors::Youtube",
       "linkedin"  => "Vendors::Linkedin",
       "x"         => "Vendors::X",
     }.freeze
 
-    # OAuth connect routing: which app/slug a network authenticates through
-    # (Instagram + Facebook share one Meta app), and the vendor for a slug.
+    # OAuth connect routing: which slug a network authenticates through, and the
+    # vendor for a slug. Slugs match the network name. Instagram connects via
+    # Instagram Login (no Facebook Page / Business Manager — the easy path for
+    # non-technical clients); Facebook via the Meta Facebook-Login app; Threads
+    # via the Threads API. All three live in one Meta app.
     CONNECT_SLUG = {
-      "instagram" => "meta", "facebook" => "meta", "tiktok" => "tiktok",
-      "youtube" => "youtube", "linkedin" => "linkedin", "x" => "x",
+      "instagram" => "instagram", "facebook" => "facebook", "threads" => "threads",
+      "tiktok" => "tiktok", "youtube" => "youtube", "linkedin" => "linkedin", "x" => "x",
     }.freeze
     SLUG_VENDOR = {
-      "meta" => "Vendors::Meta", "tiktok" => "Vendors::TikTok", "youtube" => "Vendors::Youtube",
-      "linkedin" => "Vendors::Linkedin", "x" => "Vendors::X",
+      "facebook" => "Vendors::Meta", "instagram" => "Vendors::InstagramLogin",
+      "threads" => "Vendors::Threads", "tiktok" => "Vendors::TikTok",
+      "youtube" => "Vendors::Youtube", "linkedin" => "Vendors::Linkedin", "x" => "Vendors::X",
     }.freeze
 
     def self.publish(post) = new(post).publish

@@ -3,8 +3,10 @@ import { Link, useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, Mail, Phone, FileText, FolderKanban, Receipt, Wallet,
   Building2, StickyNote, Pencil, Plus, ListChecks, Sparkles, Palette, AtSign,
-  Plug, Link2, Check, RefreshCw, Unplug,
+  Plug, Link2, Check, RefreshCw, Unplug, Copy, Share2,
 } from 'lucide-react'
+import { toast } from 'sonner'
+import { socialApi } from '@/api'
 import { useClient, useClientMutations, useSocialAccountMutations } from '@/hooks/useData'
 import { PageLoader, EmptyState } from '@/components/ui/feedback'
 import { Button } from '@/components/ui/button'
@@ -218,14 +220,52 @@ function SocialCard({ provider, account, mutations }) {
 
 function SocialSection({ clientId, accounts }) {
   const mutations = useSocialAccountMutations(clientId)
+  const [linking, setLinking] = useState(false)
   const byProvider = {}
   for (const a of accounts || []) byProvider[a.provider] = a
+
+  async function copyConnectLink() {
+    setLinking(true)
+    try {
+      const { url } = await socialApi.connectLink(clientId)
+      await navigator.clipboard.writeText(url)
+      toast.success('Link copiado! Envie ao cliente para ele conectar as próprias redes.')
+    } catch {
+      toast.error('Não foi possível gerar o link.')
+    } finally {
+      setLinking(false)
+    }
+  }
 
   return (
     <section>
       <SectionHead icon={Plug} color="var(--ag-brand, #7C3AED)" title="Redes sociais" />
+
+      {/* Banner: send the login-less self-serve link to the client. */}
+      <Card className="mb-5 mt-1">
+        <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div
+              className="grid size-10 shrink-0 place-items-center rounded-xl text-white"
+              style={{ background: 'var(--ag-brand, #7C3AED)' }}
+            >
+              <Share2 size={18} />
+            </div>
+            <div>
+              <p className="font-semibold text-ink">Deixe o cliente conectar sozinho</p>
+              <p className="text-sm text-ink-muted">
+                Envie um link e o cliente conecta as próprias redes com o login dele — sem precisar de conta aqui.
+              </p>
+            </div>
+          </div>
+          <Button variant="solid" disabled={linking} onClick={copyConnectLink} className="shrink-0">
+            <Copy size={15} /> Copiar link de conexão
+          </Button>
+        </div>
+      </Card>
+
       <p className="mb-4 max-w-2xl text-sm text-ink-muted">
-        Conecte as redes deste cliente. Os tickets dos projetos dele publicam diretamente nestas contas.
+        Ou conecte as redes deste cliente você mesmo. Os tickets dos projetos publicam nestas contas.
       </p>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {Object.keys(CHANNEL_META).map((provider) => (
@@ -323,7 +363,7 @@ function BasicColumn({ client, projects, invoices, totalPaid, archived, onEdit }
       <div className="h-1.5 w-full bg-brand-gradient" />
       <div className="p-5">
         <div className="flex flex-col items-center text-center">
-          <Avatar name={client.name} size={72} ring />
+          <Avatar name={client.name} src={client.logo_url} size={72} ring />
           <h1 className="mt-3 font-display text-xl font-extrabold tracking-tight text-ink">{client.name || 'Cliente'}</h1>
           <Badge className="mt-1.5" variant={archived ? 'muted' : 'success'}>{archived ? 'Arquivado' : 'Ativo'}</Badge>
           {client.company && (
@@ -376,7 +416,7 @@ export default function ClientShow() {
   const { id, tab: seg } = useParams()
   const navigate = useNavigate()
   const { data, isLoading } = useClient(id)
-  const { create, update, synthesize, uploadBrandAssets } = useClientMutations()
+  const { create, update, synthesize, importFromUrl, uploadBrandAssets } = useClientMutations()
   const [editorOpen, setEditorOpen] = useState(false)
 
   const tab = SEG_TO_TAB[seg] || 'branding'
@@ -446,7 +486,7 @@ export default function ClientShow() {
         open={editorOpen}
         onOpenChange={setEditorOpen}
         editing={client}
-        mutations={{ create, update, synthesize, uploadBrandAssets }}
+        mutations={{ create, update, synthesize, importFromUrl, uploadBrandAssets }}
       />
     </Page>
   )

@@ -2,8 +2,8 @@ import { useQuery, useInfiniteQuery, useMutation, useQueryClient, keepPreviousDa
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import {
-  dashboardApi, calendarApi, tasksApi, ticketsApi, clientsApi, projectsApi, studioApi,
-  generationsApi, socialApi, meetingsApi, invoicesApi, settingsApi, billingApi,
+  dashboardApi, calendarApi, tasksApi, ticketsApi, clientsApi, projectsApi, reportsApi, studioApi,
+  generationsApi, creativesApi, socialApi, meetingsApi, invoicesApi, settingsApi, billingApi,
   workspaceApi, subtasksApi, connectionsApi, connectorApi,
 } from '@/api'
 import { keys } from '@/api/queryKeys'
@@ -103,6 +103,7 @@ export function useClientMutations() {
     update: useMutation({ mutationFn: ({ id, data }) => clientsApi.update(id, data), onSuccess: () => { inv(); toast.success('Cliente atualizado!') }, onError: onErr('Erro ao atualizar.') }),
     archive: useMutation({ mutationFn: clientsApi.archive, onSuccess: () => { inv(); toast.success('Cliente arquivado.') }, onError: onErr('Erro.') }),
     synthesize: useMutation({ mutationFn: clientsApi.synthesizePositioning, onError: onErr('Erro ao gerar posicionamento com IA.') }),
+    importFromUrl: useMutation({ mutationFn: clientsApi.extractFromUrl, onError: onErr('Não foi possível ler a landing page.') }),
     updatePositioning: useMutation({ mutationFn: ({ id, positioning }) => clientsApi.updatePositioning(id, positioning), onSuccess: () => { inv(); toast.success('Posicionamento atualizado!') }, onError: onErr('Erro ao salvar posicionamento.') }),
     uploadBrandAssets: useMutation({ mutationFn: ({ id, assets }) => clientsApi.uploadBrandAssets(id, assets), onSuccess: () => inv(), onError: onErr('Erro ao enviar imagens da marca.') }),
   }
@@ -120,8 +121,28 @@ export function useProjectMutations() {
   return {
     create: useMutation({ mutationFn: projectsApi.create, onSuccess: () => { inv(); analytics.track(EVENTS.PROJECT_CREATED); toast.success('Projeto criado!') }, onError: onErr('Erro ao criar projeto.') }),
     update: useMutation({ mutationFn: ({ id, data }) => projectsApi.update(id, data), onSuccess: inv, onError: onErr('Erro.') }),
+    finalize: useMutation({ mutationFn: projectsApi.finalize, onSuccess: () => { inv(); toast.success('Projeto finalizado! Gerando o relatório…') }, onError: onErr('Erro ao finalizar o projeto.') }),
   }
 }
+
+// ── Project reports (the finalize audit deck) ───────────────────
+export const useProjectReports = (projectId) =>
+  useQuery({
+    queryKey: keys.projectReports(projectId),
+    queryFn: () => reportsApi.listByProject(projectId),
+    select: (d) => d.reports,
+    enabled: !!projectId,
+  })
+
+export const useReport = (id) =>
+  useQuery({
+    queryKey: keys.report(id),
+    queryFn: () => reportsApi.get(id),
+    select: (d) => d.report,
+    enabled: !!id,
+    // While the deck is being generated, poll until it's ready/failed.
+    refetchInterval: (q) => (q.state.data?.report?.status === 'generating' ? 4000 : false),
+  })
 
 // ── Studio / generations ───────────────────────────────────────
 export const useStudio = () => useQuery({ queryKey: keys.studio(), queryFn: studioApi.get })
@@ -135,12 +156,39 @@ export function useGenerate() {
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: keys.studio() })
       qc.invalidateQueries({ queryKey: ['generations'] })
+      qc.invalidateQueries({ queryKey: ['creatives'] })
+      qc.invalidateQueries({ queryKey: ['tickets'] })
       // Activation + the usage-billing meter (carousel/video are metered).
       analytics.track(EVENTS.CREATIVE_GENERATED, { kind: variables?.kind, source: 'studio' })
       toast.success('Geração concluída ✨')
     },
     onError: onErr('Erro ao gerar criativo.'),
   })
+}
+
+// ── Workspace creatives (Studio gallery) ──────────────────────
+export const useWorkspaceCreatives = (filters = {}) =>
+  useQuery({
+    queryKey: keys.creatives(filters),
+    queryFn: () => creativesApi.list(filters),
+    placeholderData: keepPreviousData,
+  })
+
+export function useCreativeMutations() {
+  const qc = useQueryClient()
+  const inv = () => qc.invalidateQueries({ queryKey: ['creatives'] })
+  return {
+    update: useMutation({
+      mutationFn: ({ id, ...data }) => creativesApi.update(id, data),
+      onSuccess: () => { inv(); toast.success('Criativo atualizado.') },
+      onError: onErr('Erro ao atualizar criativo.'),
+    }),
+    destroy: useMutation({
+      mutationFn: (id) => creativesApi.destroy(id),
+      onSuccess: () => { inv(); toast.success('Criativo removido.') },
+      onError: onErr('Erro ao remover criativo.'),
+    }),
+  }
 }
 
 // ── Social accounts (connected per client) ─────────────────────
@@ -165,19 +213,54 @@ export function useSocialAccountMutations(clientId) {
     const top = Math.round(window.screenY + (window.outerHeight - h) / 2)
     const popup = window.open(url, 'oauth_popup', `width=${w},height=${h},left=${left},top=${top},toolbar=no,menubar=no`)
 
-    const onMessage = (e) => {
-      if (e.origin !== window.location.origin) return
-      if (e.data?.type !== 'oauth_connected') return
+    // Facebook's OAuth hop can sever the popup's `window.opener` (COOP), so the
+    // popup can't reliably postMessage us or close itself. We listen on
+    // same-origin side channels that survive that — BroadcastChannel + a
+    // localStorage ping — plus the legacy postMessage, and WE close the popup
+    // (the opener keeps the reference). A poll on `popup.closed` is the backstop.
+    let done = false
+    const bc = 'BroadcastChannel' in window ? new BroadcastChannel('agencios_oauth') : null
+
+    function cleanup() {
       window.removeEventListener('message', onMessage)
-      if (popup && !popup.closed) popup.close()
-      if (e.data.error) {
-        toast.error('Erro ao conectar. Tente novamente.')
+      window.removeEventListener('storage', onStorage)
+      if (bc) bc.close()
+      if (poll) window.clearInterval(poll)
+    }
+
+    function finish(payload) {
+      if (done) return
+      done = true
+      cleanup()
+      try { if (popup && !popup.closed) popup.close() } catch { /* cross-origin */ }
+      if (payload?.error) {
+        toast.error(payload.error === 'no_instagram'
+          ? 'Esta Página não tem uma conta Instagram Business vinculada.'
+          : 'Erro ao conectar. Tente novamente.')
       } else {
         inv()
         toast.success('Conta conectada com sucesso!')
       }
     }
+
+    const onMessage = (e) => {
+      if (e.origin !== window.location.origin) return
+      if (e.data?.type === 'oauth_connected') finish(e.data)
+    }
+    const onStorage = (e) => {
+      if (e.key !== 'agencios_oauth' || !e.newValue) return
+      try { finish(JSON.parse(e.newValue)) } catch { /* ignore */ }
+    }
+
     window.addEventListener('message', onMessage)
+    window.addEventListener('storage', onStorage)
+    if (bc) bc.onmessage = (e) => { if (e.data?.type === 'oauth_connected') finish(e.data) }
+
+    // Backstop: if the popup is closed manually (or the channels are blocked),
+    // stop listening and refresh so a completed connection still shows up.
+    const poll = window.setInterval(() => {
+      if (popup && popup.closed) { cleanup(); if (!done) { done = true; inv() } }
+    }, 800)
   }
 
   return {
@@ -279,6 +362,15 @@ export function useSettingsMutation() {
   })
 }
 
+export function useSettingsBrandAssetsMutation() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: settingsApi.uploadBrandAssets,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: keys.settings() }); qc.invalidateQueries({ queryKey: keys.me() }) },
+    onError: onErr('Erro ao enviar o logo.'),
+  })
+}
+
 // ── Billing ────────────────────────────────────────────────────
 export const useBilling = () => useQuery({ queryKey: keys.billing(), queryFn: billingApi.get })
 export function useBillingMutations() {
@@ -299,6 +391,17 @@ export function useWorkspaceMutations() {
   const qc = useQueryClient()
   return {
     switch: useMutation({ mutationFn: workspaceApi.switch, onSuccess: () => window.location.reload() }),
+    // The backend already pointed the session at the new workspace; hard-load the
+    // dashboard so the whole SPA re-bootstraps inside the fresh tenant.
+    create: useMutation({
+      mutationFn: workspaceApi.create,
+      onSuccess: (data) => {
+        analytics.track(EVENTS.WORKSPACE_CREATED, { plan: data?.workspace?.plan })
+        toast.success('Workspace criado!')
+        window.location.assign('/painel')
+      },
+      onError: onErr('Erro ao criar workspace.'),
+    }),
     update: useMutation({ mutationFn: workspaceApi.update, onSuccess: () => { qc.invalidateQueries({ queryKey: keys.me() }); toast.success('Workspace atualizado!') }, onError: onErr('Erro.') }),
     invite: useMutation({ mutationFn: ({ email, role }) => workspaceApi.invite(email, role), onSuccess: (_data, { role }) => { analytics.track(EVENTS.MEMBER_INVITED, { role }); toast.success('Convite gerado!') }, onError: onErr('Erro ao convidar.') }),
   }

@@ -24,8 +24,17 @@ module Controllers
           brand_voice: workspace.brand_voice,
           default_handle: workspace.default_handle,
           brand_primary_color: workspace.brand_primary_color,
-          brand_secondary_color: workspace.brand_secondary_color
+          brand_secondary_color: workspace.brand_secondary_color,
+          logo_url: blob_url(workspace.logo)
         }
+      end
+
+      def blob_url(attachment)
+        return nil unless attachment.attached?
+
+        Rails.application.routes.url_helpers.rails_blob_url(attachment, host: SystemConfig.app_host)
+      rescue StandardError
+        nil
       end
     end
   end

@@ -14,7 +14,9 @@ class DraftRetrospectiveJob < ApplicationJob
       metrics: "engajamento total: #{metrics}",
       history: ticket.notes.chronological.last(8).map(&:body).join(" | ")
     )
-    draft = AiAdapter.complete(builder, max_tokens: 600).to_s.strip
+    draft = AiAdapter.complete(
+      builder, max_tokens: 600, operation: "draft_retrospective", subject: ticket
+    ).to_s.strip
 
     fields = ticket.fields.merge("retrospective" => ticket.fields_for("retrospective").merge("lessons_learned" => draft))
     ticket.update!(fields: fields)

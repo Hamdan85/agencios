@@ -22,8 +22,8 @@ module Controllers
         gen_params = generation_params
         case @params[:kind].to_s
         when "carousel"
-          Operations::Creatives::GenerateCarousel.call(
-            ticket: ticket, slides: gen_params.fetch(:slides, 6), params: gen_params
+          Operations::Creatives::GenerateViralCarousel.call(
+            ticket: ticket, slides: gen_params[:slides], params: gen_params
           )
         when "video"
           Operations::Creatives::GenerateUgcVideo.call(

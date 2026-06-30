@@ -1,0 +1,146 @@
+# frozen_string_literal: true
+
+module Tickets
+  # The creative-generation presenter: the single seam that gathers everything
+  # the generators and prompt builders need — the client + brand identity +
+  # positioning, the ticket scope (ideation/scoping/production fields), the
+  # status-scoped AI summary, and the target creative type's spec (dimensions /
+  # aspect / safe areas / prompt scaffold).
+  #
+  # Works with OR without a ticket: the studio passes an explicit `client:` and
+  # `overrides:` (topic / objective / text / url source), while ticket-driven
+  # generation derives them from the funnel. Overrides always win over scope.
+  class CreativeContext
+    def self.for(ticket, creative_type: nil, client: nil, overrides: {})
+      new(ticket: ticket, creative_type: creative_type, client: client, overrides: overrides)
+    end
+
+    def initialize(ticket:, creative_type: nil, client: nil, overrides: {})
+      @ticket          = ticket
+      @creative_type   = (creative_type || ticket&.creative_type).to_s.presence
+      @explicit_client = client
+      @overrides       = (overrides || {}).symbolize_keys
+    end
+
+    attr_reader :ticket, :creative_type
+
+    def client    = @explicit_client || ticket&.project&.client
+    def workspace = ticket&.workspace || client&.workspace || Current.workspace
+
+    # --- creative spec (proportions) ------------------------------------------
+
+    def spec = (creative_type && Creatives.spec_for(creative_type)) || {}
+
+    def width  = spec[:width]
+    def height = spec[:height]
+    def dimensions = [width, height].compact
+
+    def aspect_ratio = spec[:aspect].presence || "1:1"
+
+    def banana_aspect_ratio
+      supported = Vendors::Google::Banana::Client::SUPPORTED_ASPECT_RATIOS
+      return aspect_ratio if supported.include?(aspect_ratio)
+
+      portrait? ? "3:4" : (landscape? ? "4:3" : "1:1")
+    end
+
+    def portrait?  = width && height && height > width
+    def landscape? = width && height && width > height
+
+    # --- scope (funnel fields) + overrides ------------------------------------
+
+    def ideation   = ticket&.fields_for("ideation") || {}
+    def scoping    = ticket&.fields_for("scoping") || {}
+    def production = ticket&.fields_for("production") || {}
+
+    def brief          = ideation["brief"]
+    def persona        = ideation["target_persona"]
+    def content_pillar = ideation["content_pillar"]
+    def script         = @overrides[:script].presence || scoping["script"]
+    def caption        = production["caption"]
+
+    def objective
+      @overrides[:objective].presence || ideation["objective"]
+    end
+
+    # The message/source material: an explicit text/url-extracted source wins,
+    # then the scoping copy brief.
+    def copy_brief
+      @overrides[:source_text].presence || @overrides[:text].presence || scoping["copy_brief"]
+    end
+
+    def channels
+      vals = Array(scoping["channels"]).reject(&:blank?)
+      vals.presence || Array(ticket&.channels).reject(&:blank?)
+    end
+
+    def summary = ticket && ticket.summary_for(ticket.status)
+
+    # A SHORT one-line subject for prompts/headlines — never the full source body
+    # (the body lives in copy_brief). Falls back to the first sentence of the
+    # source, then the ticket title.
+    def topic
+      explicit = [@overrides[:topic], @overrides[:idea], @overrides[:prompt]].map { |v| v.to_s.strip.presence }.compact.first
+      base = explicit || objective.presence || first_sentence(copy_brief) || brief.presence || ticket&.display_title
+      base.to_s.strip[0, 160]
+    end
+
+    def first_sentence(text)
+      return nil if text.blank?
+
+      text.to_s.split(/(?<=[.!?])\s+/).first.to_s.strip[0, 120].presence
+    end
+
+    # --- brand identity (client → workspace fallback) -------------------------
+
+    def brand_name      = client&.name.presence || workspace&.name
+    def brand_voice     = (client&.brand_voice).presence || workspace&.brand_voice.presence || "tom profissional, próximo e criativo"
+    def brand_handle    = (client&.default_handle).presence || workspace&.default_handle.presence
+    def brand_primary   = (client&.brand_primary_color).presence || workspace&.brand_primary_color.presence || "#7C3AED"
+    def brand_secondary = (client&.brand_secondary_color).presence || workspace&.brand_secondary_color.presence || "#F59E0B"
+
+    def logo   = attachment(:logo)
+    def avatar = attachment(:default_creator_avatar)
+
+    # --- prompt + image helpers -----------------------------------------------
+
+    def prompt_context
+      {
+        topic: topic, objective: objective, brief: brief, persona: persona,
+        copy_brief: copy_brief, script: script, content_pillar: content_pillar,
+        channels: channels.join(", "), summary: summary, caption: caption,
+        creative_type: creative_type, aspect: aspect_ratio,
+        width: width, height: height
+      }.compact
+    end
+
+    def image_prompt(base = nil)
+      [
+        base.to_s.strip.presence || topic.presence,
+        copy_brief.present? ? "Escopo: #{copy_brief}" : nil,
+        content_pillar.present? ? "Pilar: #{content_pillar}" : nil,
+        spec[:prompt_scaffold],
+        brand_descriptor
+      ].compact.join(". ")
+    end
+
+    def brand_descriptor
+      bits = []
+      bits << "Marca: #{brand_name}" if brand_name.present?
+      bits << "tom #{brand_voice}" if brand_voice.present?
+      colors = [brand_primary, brand_secondary].compact.join(" e ")
+      bits << "paleta #{colors}" if colors.present?
+      bits.join(", ")
+    end
+
+    private
+
+    def attachment(name)
+      [client, workspace].compact.each do |owner|
+        att = owner.public_send(name) if owner.respond_to?(name)
+        return att if att&.attached?
+      end
+      nil
+    end
+  end
+end

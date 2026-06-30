@@ -54,6 +54,7 @@ module Operations
         )
 
         meter!
+        log_ai_cost!(cost_cents)
         broadcast!(creative)
 
         @generation
@@ -108,6 +109,26 @@ module Operations
       end
 
       # --- billing -------------------------------------------------------------
+
+      # Record the internal AI vendor cost (HeyGen, per-second) in the unified
+      # ledger. Engine-specific rate is already folded into cost_cents, so pass it
+      # explicitly. Runs outside a request — resolve tenant from the Generation.
+      def log_ai_cost!(cost_cents)
+        return unless @generation.kind == "video"
+
+        duration = (@duration || @generation.result["duration"] || @generation.params["duration"]).to_f
+        Operations::Ai::LogUsage.call(
+          provider:   AiUsageLog::PROVIDER_HEYGEN,
+          operation:  "generate_ugc_video",
+          model:      engine,
+          units:      duration,
+          unit_kind:  AiUsageLog::UNIT_SECOND,
+          cost_cents: cost_cents,
+          subject:    @generation,
+          workspace:  @generation.workspace,
+          user:       @generation.user
+        )
+      end
 
       # Meter billable kinds (carousel/video). RecordUsage is owned by the Stripe
       # builder; if it isn't loaded yet, skip silently (NameError).

@@ -8,23 +8,41 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
-import { PositioningStepFields, BrandIdentityFields, BriefPanel, StatementPanel } from './positioningFields'
+import { maskPhone, maskDocument } from '@/lib/formatters'
+import { PositioningStepFields, BrandIdentityFields, SiteImportPanel, BriefPanel, StatementPanel } from './positioningFields'
 
 const ACCENT = '#6366F1'
 const EMPTY_CONTACT = { name: '', company: '', email: '', phone: '', document: '', notes: '' }
 const EMPTY_ASSETS = { logo: null, defaultCreatorAvatar: null }
 
-// Contact → brand identity → free-text brief (AI fills positioning) → review the
-// structured positioning → final statement.
+// Site import (AI fills everything) → contact → brand identity → free-text brief
+// → review the structured positioning → final statement.
 const STEPS = [
+  { key: 'site', title: 'Site', description: 'Importe tudo da landing page da marca.' },
   { key: 'contact', title: 'Contato', description: 'Quem é o cliente.' },
   { key: 'brand', title: 'Marca', description: 'Identidade visual e voz da marca.' },
   { key: 'brief', title: 'Descrição', description: 'Descreva a marca — a IA preenche o posicionamento.' },
   ...POSITIONING_STEPS,
   { key: 'statement', title: 'Posicionamento', description: 'Síntese final de marca.' },
 ]
-const FIRST_POSITIONING = 3 // index of POSITIONING_STEPS[0] within STEPS
+const FIRST_POSITIONING = 4 // index of POSITIONING_STEPS[0] within STEPS
 const LAST = STEPS.length - 1
+
+// Converts a base64 data URL (the logo the backend extracted from the site) into
+// a File so it previews and uploads through the same brand-assets path as a pick.
+function dataUrlToFile(dataUrl, filename) {
+  try {
+    const [meta, b64] = String(dataUrl).split(',')
+    if (!b64) return null
+    const mime = meta.match(/data:(.*?);base64/)?.[1] || 'image/png'
+    const bin = atob(b64)
+    const arr = new Uint8Array(bin.length)
+    for (let i = 0; i < bin.length; i += 1) arr[i] = bin.charCodeAt(i)
+    return new File([arr], filename || 'logo.png', { type: mime })
+  } catch {
+    return null
+  }
+}
 
 // Compact horizontal step indicator.
 function WizardSteps({ step, onJump }) {
@@ -62,9 +80,12 @@ export default function ClientWizard({ open, onOpenChange, editing, mutations })
   const [brand, setBrand] = useState(EMPTY_BRAND)
   const [assets, setAssets] = useState(EMPTY_ASSETS)
   const [brief, setBrief] = useState('')
+  const [url, setUrl] = useState('')
   const [positioning, setPositioning] = useState(EMPTY_POSITIONING)
 
   const setC = (k) => (e) => setContact((c) => ({ ...c, [k]: e.target.value }))
+  // Same as setC, but runs the typed value through a mask first.
+  const setMaskedC = (k, mask) => (e) => setContact((c) => ({ ...c, [k]: mask(e.target.value) }))
   const setBrandField = (k, v) => setBrand((b) => ({ ...b, [k]: v }))
   const setAsset = (k, v) => setAssets((a) => ({ ...a, [k]: v }))
   const setField = (k, v) => setPositioning((p) => ({ ...p, [k]: v }))
@@ -74,11 +95,12 @@ export default function ClientWizard({ open, onOpenChange, editing, mutations })
   const [syncedKey, setSyncedKey] = useState(null)
   if (open && openKey !== syncedKey) {
     setSyncedKey(openKey)
-    setStep(0)
+    setStep(isEdit ? 1 : 0) // editing: skip the site-import step, start at Contato
     setBrief('')
+    setUrl('')
     setAssets(EMPTY_ASSETS)
     setContact(isEdit
-      ? { name: editing.name || '', company: editing.company || '', email: editing.email || '', phone: editing.phone || '', document: editing.document || '', notes: editing.notes || '' }
+      ? { name: editing.name || '', company: editing.company || '', email: editing.email || '', phone: maskPhone(editing.phone || ''), document: maskDocument(editing.document || ''), notes: editing.notes || '' }
       : EMPTY_CONTACT)
     setBrand(isEdit
       ? {
@@ -91,7 +113,7 @@ export default function ClientWizard({ open, onOpenChange, editing, mutations })
     setPositioning(isEdit ? { ...EMPTY_POSITIONING, ...(editing.positioning || {}), content_pillars: editing.positioning?.content_pillars || [] } : EMPTY_POSITIONING)
   }
 
-  const { create, update, synthesize, uploadBrandAssets } = mutations
+  const { create, update, synthesize, importFromUrl, uploadBrandAssets } = mutations
   const saving = create?.isPending || update?.isPending || uploadBrandAssets?.isPending
 
   const close = () => { setSyncedKey(null); onOpenChange(false) }
@@ -123,10 +145,44 @@ export default function ClientWizard({ open, onOpenChange, editing, mutations })
     })
   }
 
+  // Site URL → AI extracts contact + brand identity (logo + colors) + positioning
+  // in one shot. Anything the user already typed wins; positioning is replaced.
+  // Lands on Contato so the user reviews the auto-filled fields from the top.
+  const importUrl = () => {
+    if (!url.trim() || !importFromUrl) return
+    importFromUrl.mutate({ url: url.trim() }, {
+      onSuccess: (res) => {
+        const ex = res?.extracted || {}
+        const c = ex.contact || {}
+        const b = ex.brand || {}
+        const p = ex.positioning || {}
+        setContact((cur) => ({
+          ...cur,
+          name: cur.name || c.name || '',
+          company: cur.company || c.company || '',
+          email: cur.email || c.email || '',
+          phone: cur.phone ? cur.phone : maskPhone(c.phone || ''),
+        }))
+        setBrand((cur) => ({
+          ...cur,
+          brand_voice: cur.brand_voice || b.brand_voice || '',
+          default_handle: cur.default_handle || b.default_handle || '',
+          brand_primary_color: b.brand_primary_color || cur.brand_primary_color,
+          brand_secondary_color: b.brand_secondary_color || cur.brand_secondary_color,
+        }))
+        const logoFile = ex.logo?.data_url ? dataUrlToFile(ex.logo.data_url, ex.logo.filename) : null
+        if (logoFile) setAssets((cur) => ({ ...cur, logo: cur.logo || logoFile }))
+        setPositioning((cur) => ({ ...cur, ...p, content_pillars: p.content_pillars || cur.content_pillars || [] }))
+        setStep(1)
+      },
+    })
+  }
+
   const current = STEPS[step]
-  const isContact = step === 0
-  const isBrand = step === 1
-  const isBrief = step === 2
+  const isSite = step === 0
+  const isContact = step === 1
+  const isBrand = step === 2
+  const isBrief = step === 3
   const isStatement = step === LAST
   const positioningStep = step >= FIRST_POSITIONING && !isStatement ? POSITIONING_STEPS[step - FIRST_POSITIONING] : null
 
@@ -143,10 +199,19 @@ export default function ClientWizard({ open, onOpenChange, editing, mutations })
           </DialogDescription>
         </DialogHeader>
 
-        <WizardSteps step={step} onJump={(i) => { if (contact.name.trim() || i === 0) setStep(i) }} />
+        <WizardSteps step={step} onJump={(i) => { if (i <= 1 || contact.name.trim()) setStep(i) }} />
 
         {/* Step body */}
         <div className="max-h-[52vh] overflow-y-auto px-0.5">
+          {isSite && (
+            <SiteImportPanel
+              url={url}
+              onUrl={setUrl}
+              onImport={importUrl}
+              importing={importFromUrl?.isPending}
+            />
+          )}
+
           {isContact && (
             <div className="space-y-3.5">
               <div className="space-y-1.5">
@@ -164,12 +229,12 @@ export default function ClientWizard({ open, onOpenChange, editing, mutations })
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="cl-phone">Telefone</Label>
-                  <Input id="cl-phone" value={contact.phone} onChange={setC('phone')} placeholder="(11) 99999-9999" />
+                  <Input id="cl-phone" type="tel" inputMode="numeric" value={contact.phone} onChange={setMaskedC('phone', maskPhone)} placeholder="(11) 99999-9999" />
                 </div>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="cl-document">Documento</Label>
-                <Input id="cl-document" value={contact.document} onChange={setC('document')} placeholder="CNPJ / CPF" />
+                <Input id="cl-document" inputMode="numeric" value={contact.document} onChange={setMaskedC('document', maskDocument)} placeholder="CNPJ / CPF" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="cl-notes">Observações</Label>
@@ -210,7 +275,7 @@ export default function ClientWizard({ open, onOpenChange, editing, mutations })
 
         <DialogFooter className="sm:justify-between">
           <div>
-            {!isContact && (
+            {!isSite && (
               <Button type="button" variant="ghost" onClick={() => setStep((s) => s - 1)}>
                 <ArrowLeft /> Voltar
               </Button>
@@ -223,8 +288,8 @@ export default function ClientWizard({ open, onOpenChange, editing, mutations })
               </Button>
             )}
             {!isStatement ? (
-              <Button type="button" onClick={() => setStep((s) => s + 1)} disabled={!contact.name.trim()}>
-                {isBrief ? 'Pular' : 'Continuar'} <ArrowRight />
+              <Button type="button" onClick={() => setStep((s) => s + 1)} disabled={!isSite && !contact.name.trim()}>
+                {(isSite || isBrief) ? 'Pular' : 'Continuar'} <ArrowRight />
               </Button>
             ) : (
               <Button type="button" onClick={submit} disabled={!contact.name.trim() || saving}>

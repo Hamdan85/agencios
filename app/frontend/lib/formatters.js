@@ -43,6 +43,52 @@ export function centsFromMasked(value) {
   return digits ? parseInt(digits, 10) : 0
 }
 
+// Raw digits of a masked value ("(11) 99999-9999" → "11999999999"). Use to read
+// back the unformatted value for submission/validation.
+export function onlyDigits(value) {
+  return String(value ?? '').replace(/\D/g, '')
+}
+
+// Brazilian phone mask: progressive "(00) 00000-0000" (mobile, 11 digits) and
+// "(00) 0000-0000" (landline, 10 digits). Caps at 11 digits.
+export function maskPhone(value) {
+  const d = onlyDigits(value).slice(0, 11)
+  if (d.length <= 2) return d.replace(/^(\d{0,2})/, '($1')
+  if (d.length <= 6) return d.replace(/^(\d{2})(\d{0,4})/, '($1) $2')
+  if (d.length <= 10) return d.replace(/^(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3')
+  return d.replace(/^(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3')
+}
+
+// CPF mask: "000.000.000-00". Caps at 11 digits.
+export function maskCpf(value) {
+  const d = onlyDigits(value).slice(0, 11)
+  return d
+    .replace(/^(\d{3})(\d)/, '$1.$2')
+    .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
+    .replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4')
+}
+
+// CNPJ mask: "00.000.000/0000-00". Caps at 14 digits.
+export function maskCnpj(value) {
+  const d = onlyDigits(value).slice(0, 14)
+  return d
+    .replace(/^(\d{2})(\d)/, '$1.$2')
+    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+    .replace(/^(\d{2})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3/$4')
+    .replace(/^(\d{2})\.(\d{3})\.(\d{3})\/(\d{4})(\d)/, '$1.$2.$3/$4-$5')
+}
+
+// CPF/CNPJ auto-detect by digit count: ≤11 digits → CPF, otherwise CNPJ.
+export function maskDocument(value) {
+  return onlyDigits(value).length <= 11 ? maskCpf(value) : maskCnpj(value)
+}
+
+// CEP mask: "00000-000". Caps at 8 digits.
+export function maskCep(value) {
+  const d = onlyDigits(value).slice(0, 8)
+  return d.replace(/^(\d{5})(\d)/, '$1-$2')
+}
+
 export function compact(n) {
   return Number(n || 0).toLocaleString(LOCALE, { notation: 'compact', maximumFractionDigits: 1 })
 }

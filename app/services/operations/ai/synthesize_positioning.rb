@@ -18,7 +18,7 @@ module Operations
 
       def call
         builder = Prompts::ClientPositioning.new(brief: @brief, name: @name)
-        text = AiAdapter.complete(builder, max_tokens: 900).to_s
+        text = AiAdapter.complete(builder, max_tokens: 900, operation: "synthesize_positioning").to_s
 
         parsed = parse(text)
         Client.sanitize_positioning(parsed.presence || fallback)

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Escolha a Página</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; min-height: 100vh; background: #f8f7ff; color: #3b2f6e; display: flex; align-items: center; justify-content: center; }
+    .box { width: 100%; max-width: 420px; padding: 1.75rem; }
+    h1 { font-size: 1.05rem; margin: 0 0 0.35rem; }
+    p.sub { margin: 0 0 1.25rem; font-size: 0.85rem; color: #6b7280; }
+    .pages { display: flex; flex-direction: column; gap: 0.6rem; }
+    .page { display: flex; align-items: center; gap: 0.75rem; width: 100%; text-align: left; padding: 0.85rem 1rem; border: 1px solid #e5e1f5; border-radius: 0.75rem; background: #fff; cursor: pointer; font: inherit; color: inherit; transition: border-color .12s, box-shadow .12s; }
+    .page:hover { border-color: #8b5cf6; box-shadow: 0 1px 6px rgba(139,92,246,.15); }
+    .page:disabled { opacity: .55; cursor: not-allowed; }
+    .page .meta { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+    .page .name { font-weight: 600; font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .page .ig { font-size: 0.78rem; color: #6b7280; }
+    .page .ig.none { color: #b91c1c; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; background: #22c55e; }
+    .dot.none { background: #d1d5db; }
+    .note { margin-top: 1.1rem; font-size: 0.75rem; color: #9ca3af; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Escolha qual Página conectar</h1>
+    <p class="sub">
+      <% if @network == "instagram" %>
+        Selecione a Página do Facebook que tem a conta do Instagram que você quer conectar a este cliente.
+      <% else %>
+        Selecione a Página do Facebook para conectar a este cliente.
+      <% end %>
+    </p>
+
+    <div class="pages">
+      <% @pages.each do |page| %>
+        <% ig_ok = !(@network == "instagram" && !page[:has_ig]) %>
+        <button type="button" class="page"
+                data-page-id="<%= page[:id] %>"
+                <%= "disabled" unless ig_ok %>>
+          <span class="dot <%= "none" unless page[:has_ig] %>"></span>
+          <span class="meta">
+            <span class="name"><%= page[:name].presence || "Página #{page[:id]}" %></span>
+            <% if page[:has_ig] %>
+              <span class="ig">Instagram: @<%= page[:ig_username].presence || page[:id] %></span>
+            <% else %>
+              <span class="ig none">Sem conta Instagram Business vinculada</span>
+            <% end %>
+          </span>
+        </button>
+      <% end %>
+    </div>
+
+    <% if @network == "instagram" && @pages.none? { |p| p[:has_ig] } %>
+      <p class="note">
+        Nenhuma destas Páginas tem uma conta Instagram Business/Creator vinculada. Vincule uma
+        conta Instagram à Página nas configurações do Facebook e tente novamente.
+      </p>
+    <% end %>
+  </div>
+
+  <form id="select-form" method="post" action="/auth/facebook/select" style="display:none">
+    <input type="hidden" name="nonce" value="<%= @nonce %>">
+    <input type="hidden" name="page_id" id="page-id-input" value="">
+  </form>
+
+  <script>
+    (function () {
+      var form = document.getElementById("select-form");
+      var input = document.getElementById("page-id-input");
+      document.querySelectorAll(".page[data-page-id]").forEach(function (btn) {
+        if (btn.disabled) return;
+        btn.addEventListener("click", function () {
+          input.value = btn.getAttribute("data-page-id");
+          document.querySelectorAll(".page").forEach(function (b) { b.disabled = true; });
+          form.submit();
+        });
+      });
+    }());
+  </script>
+</body>
+</html>

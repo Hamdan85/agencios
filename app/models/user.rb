@@ -52,6 +52,15 @@ class User < ApplicationRecord
   def owner_of?(workspace) = membership_for(workspace)&.owner? || false
   def admin_of?(workspace) = membership_for(workspace)&.can_admin? || false
 
+  # Workspaces this user created (i.e. owns). The owned count is what the
+  # per-user creation limit is measured against — being invited into other
+  # workspaces as a non-owner does not consume the quota.
+  def owned_workspaces_count = memberships.owner.count
+
+  # Whether the user may create another workspace, per the configurable
+  # per-user limit (see SystemConfig.max_workspaces_per_user).
+  def can_create_workspace? = owned_workspaces_count < SystemConfig.max_workspaces_per_user
+
   # ── Display / integration state ──────────────────────────────────
   def display_name
     name.presence || email.to_s.split("@").first

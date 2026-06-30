@@ -4,6 +4,7 @@ module Api
   module V1
     class WorkspacesController < BaseController
       def show   = render_ok(Controllers::Workspaces::Show.call)
+      def create = render_created(Controllers::Workspaces::Create.call(params:))
       def update = render_ok(Controllers::Workspaces::Update.call(params:))
 
       # POST /api/v1/workspace/switch

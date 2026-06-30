@@ -114,7 +114,17 @@ GET https://www.facebook.com/v25.0/dialog/oauth
          pages_show_list,pages_read_engagement,pages_manage_posts,read_insights,business_management
   &response_type=code
 ```
-→ `Operations::Meta::BuildAuthorizeUrl`
+→ `Vendors::Meta::Actions::AuthorizeUrl`
+
+> **Facebook Login for Business (Business apps).** A Business-type app uses
+> **Facebook Login for Business**, where a dashboard-created **configuration**
+> replaces `scope`. Create it at **App Dashboard → Facebook Login for Business →
+> Configurations** (pick the permissions in §3 + the assets the business grants),
+> copy the **Configuration ID**, and set it in credentials as
+> `meta.fb_login_config_id` (env `META_FB_LOGIN_CONFIG_ID`). When present,
+> `AuthorizeUrl` sends `config_id=...` **instead of** `scope`; absent, it falls
+> back to the classic scope-based dialog above. The code→token exchange (Step 2)
+> is identical either way.
 
 ### Step 2 — Exchange `code` for a short-lived user token (on callback)
 

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { creativeMeta, CREATIVE_TYPE_META, GENERATION_KIND_META } from '@/lib/constants'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,8 @@ import {
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import { ImagePlus, Sparkles, GalleryHorizontalEnd, Video, Image as ImageIcon, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
+
+const MediaViewer = lazy(() => import('./MediaViewer'))
 
 // Status badge per creative lifecycle state.
 const CREATIVE_STATUS = {
@@ -26,54 +28,119 @@ const GENERATABLE = [
   { kind: 'image', type: 'feed_image', label: 'Imagem', desc: 'Imagem única para o feed', icon: ImageIcon, color: CREATIVE_TYPE_META.feed_image.color },
 ]
 
-function CreativeCard({ creative }) {
+// Convert a creative's asset_urls to MediaViewer attachment objects. A carousel
+// is ONE creative with several slides — every slide shares the creative's name
+// and is captioned "Slide i de N" so the viewer reads as a single carousel, not
+// a pile of separate creatives.
+function creativeToAttachments(creative) {
+  const m = creativeMeta(creative?.creative_type)
+  const urls = creative?.asset_urls || []
+  const total = urls.length
+  const isCarousel = creative?.creative_type === 'carousel' || total > 1
+
+  return urls.map((url, i) => {
+    const isVideo = /\.(mp4|mov|webm|avi)(\?|$)/i.test(url)
+    return {
+      id: `${creative.id}-${i}`,
+      url,
+      filename: isCarousel ? `${m.label}-${creative.id}-slide-${i + 1}` : `${m.label}-${creative.id}`,
+      display_name: creative.name || m.label,
+      kind: isVideo ? 'video' : 'image',
+      content_type: isVideo ? 'video/mp4' : 'image/jpeg',
+      // The lightbox Counter plugin already shows "i / N" — no extra slide label.
+      description: creative.caption || undefined,
+    }
+  })
+}
+
+// ── Creative card (fixed square ratio, no size shift from title) ───
+function CreativeCard({ creative, onClick }) {
   const m = creativeMeta(creative?.creative_type)
   const st = CREATIVE_STATUS[creative?.status] || CREATIVE_STATUS.draft
   const StIcon = st.icon
   const thumb = creative?.asset_urls?.[0]
   const generating = creative?.status === 'generating'
+  const hasAssets = (creative?.asset_urls?.length || 0) > 0
 
   return (
-    <div className="group overflow-hidden rounded-2xl border border-border bg-surface transition-all lift">
-      <div className="relative aspect-[4/5] overflow-hidden" style={{ background: `${m.color}10` }}>
-        {thumb ? (
-          <img src={thumb} alt={m.label} className="size-full object-cover" />
-        ) : (
-          <div className="flex size-full flex-col items-center justify-center gap-2">
-            <div className="flex size-14 items-center justify-center rounded-2xl" style={{ background: `${m.color}1F`, color: m.color }}>
-              {generating ? <Loader2 size={26} className="animate-spin" /> : <m.icon size={26} strokeWidth={2.1} />}
-            </div>
-            <CreativeTypeChip type={creative?.creative_type} />
-          </div>
-        )}
-        <div className="absolute left-2 top-2">
-          <Badge variant={st.variant} className="shadow-sm">
-            <StIcon size={11} className={cn('mr-0.5', generating && 'animate-spin')} />
-            {st.label}
-          </Badge>
-        </div>
-        {creative?.source === 'generated' && (
-          <div className="absolute right-2 top-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-white/85 px-2 py-0.5 text-[10px] font-bold text-brand shadow-sm backdrop-blur">
-              <Sparkles size={10} /> IA
-            </span>
-          </div>
-        )}
-      </div>
-      {creative?.caption && (
-        <p className="line-clamp-2 px-3 py-2.5 text-xs text-ink-secondary">{creative.caption}</p>
+    <button
+      type="button"
+      onClick={hasAssets ? onClick : undefined}
+      className={cn(
+        'group relative w-full overflow-hidden rounded-2xl border border-border bg-surface text-left transition-all lift',
+        hasAssets ? 'cursor-pointer hover:border-brand/40' : 'cursor-default',
       )}
-    </div>
+    >
+      {/* Fixed 1:1 thumbnail — uses padding-bottom trick so height never depends on content */}
+      <div className="relative w-full" style={{ paddingBottom: '100%' }}>
+        <div className="absolute inset-0 overflow-hidden" style={{ background: `${m.color}10` }}>
+          {thumb ? (
+            <img
+              src={thumb}
+              alt={m.label}
+              className="size-full object-cover transition-transform group-hover:scale-105"
+            />
+          ) : (
+            <div className="flex size-full flex-col items-center justify-center gap-2">
+              <div className="flex size-14 items-center justify-center rounded-2xl" style={{ background: `${m.color}1F`, color: m.color }}>
+                {generating ? <Loader2 size={26} className="animate-spin" /> : <m.icon size={26} strokeWidth={2.1} />}
+              </div>
+              <CreativeTypeChip type={creative?.creative_type} />
+            </div>
+          )}
+          {/* Only surface a status badge when it carries information — a "ready"
+              creative needs no label, just the thumbnail. */}
+          {(generating || creative?.status === 'failed') && (
+            <div className="absolute left-2 top-2">
+              <Badge variant={st.variant} className="shadow-sm">
+                <StIcon size={11} className={cn('mr-0.5', generating && 'animate-spin')} />
+                {st.label}
+              </Badge>
+            </div>
+          )}
+          {creative?.source === 'generated' && (
+            <div className="absolute right-2 top-2">
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/85 px-2 py-0.5 text-[10px] font-bold text-brand shadow-sm backdrop-blur">
+                <Sparkles size={10} /> IA
+              </span>
+            </div>
+          )}
+          {hasAssets && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/20 group-hover:opacity-100">
+              <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-ink shadow">Ver</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Name row — fixed single line, no caption spill that resizes the card */}
+      <div className="px-3 py-2">
+        <p className="truncate text-xs font-semibold text-ink">
+          {creative?.name || m.label}
+        </p>
+      </div>
+    </button>
   )
 }
 
 export default function CreativesPanel({ creatives = [], onGenerate, generating = false }) {
   const [open, setOpen] = useState(false)
+  const [viewerOpen, setViewerOpen] = useState(false)
+  const [viewerIndex, setViewerIndex] = useState(0)
+  const [viewerAttachments, setViewerAttachments] = useState([])
   const items = creatives || []
 
   const fire = (item) => {
     onGenerate?.({ kind: item.kind, type: item.type, params: {} })
     setOpen(false)
+  }
+
+  const openViewer = (creative) => {
+    const atts = creativeToAttachments(creative)
+    if (!atts.length) return
+    setViewerAttachments(atts)
+    setViewerIndex(0)
+    setViewerOpen(true)
   }
 
   return (
@@ -108,12 +175,23 @@ export default function CreativesPanel({ creatives = [], onGenerate, generating 
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {items.map((c) => (
-              <CreativeCard key={c.id} creative={c} />
+              <CreativeCard key={c.id} creative={c} onClick={() => openViewer(c)} />
             ))}
           </div>
         )}
       </div>
 
+      {/* MediaViewer lightbox */}
+      <Suspense fallback={null}>
+        <MediaViewer
+          attachments={viewerAttachments}
+          index={viewerIndex}
+          open={viewerOpen}
+          onClose={() => setViewerOpen(false)}
+        />
+      </Suspense>
+
+      {/* Generate dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>

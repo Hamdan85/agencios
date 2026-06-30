@@ -17,6 +17,7 @@ const MyTasks = lazy(() => import('@/pages/Tasks/Global'))
 const MyCalendar = lazy(() => import('@/pages/Calendar/Global'))
 const Projects = lazy(() => import('@/pages/Projects/Index'))
 const ProjectShow = lazy(() => import('@/pages/Projects/Show'))
+const ReportShow = lazy(() => import('@/pages/Reports/Show'))
 const Clients = lazy(() => import('@/pages/Clients/Index'))
 const ClientShow = lazy(() => import('@/pages/Clients/Show'))
 const TicketsList = lazy(() => import('@/pages/Tickets/Index'))
@@ -59,6 +60,7 @@ const router = createBrowserRouter(
           <Route path="/tarefas" element={<Tasks />} />
           <Route path="/projetos" element={<Projects />} />
           <Route path="/projetos/:id" element={<ProjectShow />} />
+          <Route path="/relatorios/:id" element={<ReportShow />} />
           <Route path="/clientes" element={<Clients />} />
           <Route path="/clientes/:id" element={<ClientShow />} />
           <Route path="/clientes/:id/:tab" element={<ClientShow />} />
@@ -69,6 +71,7 @@ const router = createBrowserRouter(
           <Route path="/reunioes" element={<Meetings />} />
           <Route path="/cobrancas" element={<Invoices />} />
           <Route path="/configuracoes" element={<Settings />} />
+          <Route path="/configuracoes/:tab" element={<Settings />} />
           <Route path="/assinatura" element={<Billing />} />
         </Route>
       </Route>

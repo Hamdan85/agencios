@@ -13,7 +13,16 @@
 <body>
   <div class="box">
     <div class="icon"><%= @error.present? ? "❌" : "✅" %></div>
-    <p><%= @error.present? ? "Erro ao conectar. Feche esta janela e tente novamente." : "Conectado! Fechando…" %></p>
+    <p>
+      <% if @error == "no_instagram" %>
+        Esta Página não tem uma conta Instagram Business vinculada. Vincule uma conta Instagram à
+        Página e tente novamente. Pode fechar esta janela.
+      <% elsif @error.present? %>
+        Erro ao conectar. Feche esta janela e tente novamente.
+      <% else %>
+        Conectado! Fechando…
+      <% end %>
+    </p>
   </div>
   <script>
     (function () {
@@ -23,17 +32,46 @@
         network:  <%= @connected.to_json %>,
         error:    <%= @error.presence.to_json %>
       };
+      var link = <%= @link.presence.to_json %>;
+
+      // Facebook serves Cross-Origin-Opener-Policy during the OAuth hop, which
+      // can permanently sever `window.opener` (and block window.close()) even
+      // after we return to our origin. So we signal the opener over same-origin
+      // side channels that survive that — BroadcastChannel + a localStorage ping
+      // — and let the opener close us. postMessage + self-close stay as the happy
+      // path when the opener link is intact.
+      try {
+        var bc = new BroadcastChannel("agencios_oauth");
+        bc.postMessage(payload);
+        bc.close();
+      } catch (e) { /* no BroadcastChannel — localStorage below covers it */ }
+
+      try {
+        localStorage.setItem("agencios_oauth", JSON.stringify(
+          Object.assign({ t: new Date().getTime() }, payload)
+        ));
+      } catch (e) { /* private mode / storage disabled */ }
 
       if (window.opener && !window.opener.closed) {
-        window.opener.postMessage(payload, window.location.origin);
+        try { window.opener.postMessage(payload, window.location.origin); } catch (e) {}
         window.close();
+        return;
+      }
+
+      // Opener severed or this isn't a popup. Try to self-close (works when the
+      // browser still allows it); otherwise navigate back. The public per-client
+      // flow returns to /conectar/:token; the agency flow to the client config tab.
+      window.close();
+      var path;
+      if (link) {
+        path = "/conectar/" + encodeURIComponent(link) +
+          (payload.error ? "?error=" + payload.error : "?connected=" + payload.network);
       } else {
-        // Not a popup (e.g. mobile) — navigate to the client config tab.
-        var path = payload.error
+        path = payload.error
           ? "/clientes?error=" + payload.error
           : "/clientes/" + payload.clientId + "/configuracoes?connected=" + payload.network;
-        window.location.replace(path);
       }
+      window.setTimeout(function () { window.location.replace(path); }, 400);
     }());
   </script>
 </body>

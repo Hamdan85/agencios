@@ -3,6 +3,7 @@ import { useInfiniteQuery } from '@tanstack/react-query'
 import { Check, ChevronDown, Search, X, Loader2 } from 'lucide-react'
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
 import { Spinner } from '@/components/ui/feedback'
+import { Avatar } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 
 function useDebounced(value, delay = 250) {
@@ -21,7 +22,11 @@ function useDebounced(value, delay = 250) {
 //
 //   fetchPage:   ({ q, page }) => Promise(response)
 //   mapResponse: (response) => ({ items, hasMore })
-//   getOption:   (item) => ({ value, label, description?, color?, icon? })
+//   getOption:   (item) => ({ value, label, description?, color?, icon?, avatar?, avatarName? })
+//
+// When `avatarName` is set, the option renders a round <Avatar> (the `avatar`
+// URL as the image, falling back to coloured initials of `avatarName`) instead
+// of `icon`.
 //
 // Two looks via `variant`:
 //   'pill'  — a compact filter chip (default; used in filter bars)
@@ -143,7 +148,9 @@ export function AsyncCombobox({
         open ? 'border-brand ring-2 ring-brand/20' : 'border-border',
       )}
     >
-      {TriggerIcon && <TriggerIcon size={15} strokeWidth={2.2} className="shrink-0 text-ink-muted" />}
+      {selected?.avatarName && value
+        ? <Avatar name={selected.avatarName} src={selected.avatar} size={20} className="-ml-0.5" />
+        : TriggerIcon && <TriggerIcon size={15} strokeWidth={2.2} className="shrink-0 text-ink-muted" />}
       {selected?.color && value && <span className="size-2.5 shrink-0 rounded-full" style={{ background: selected.color }} />}
       <span className={cn('flex-1 truncate text-left', activeLabel ? 'text-ink' : 'text-ink-faint')}>
         {activeLabel || placeholder}
@@ -183,7 +190,8 @@ export function AsyncCombobox({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar…"
-              className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-ink-faint"
+              type="text"
+              className="w-full border-0 bg-transparent p-0 text-sm text-ink shadow-none outline-none ring-0 focus:border-0 focus:shadow-none focus:outline-none focus:ring-0 placeholder:text-ink-faint"
             />
             {query.isFetching && !isFetchingNextPage && <Loader2 size={14} className="shrink-0 animate-spin text-ink-faint" />}
           </div>
@@ -204,6 +212,7 @@ export function AsyncCombobox({
                     active && 'bg-brand-soft',
                   )}
                 >
+                  {o.avatarName && <Avatar name={o.avatarName} src={o.avatar} size={24} />}
                   {o.color && <span className="size-2.5 shrink-0 rounded-full" style={{ background: o.color }} />}
                   {o.icon && <o.icon size={14} strokeWidth={2.3} style={{ color: o.color }} className="shrink-0" />}
                   <span className="min-w-0 flex-1 truncate text-ink">

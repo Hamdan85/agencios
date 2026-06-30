@@ -42,6 +42,36 @@ RSpec.describe "Client positioning API", type: :request do
     expect(body.dig("positioning", "one_liner")).to include("doces artesanais")
   end
 
+  it "extracts a client draft from a landing page URL" do
+    digest = {
+      url: "https://docearte.com.br", title: "Doce Arte", site_name: "Doce Arte",
+      description: "Bolos artesanais", theme_color: "#E91E63",
+      emails: ["contato@docearte.com.br"], phones: [],
+      socials: { instagram: "https://instagram.com/docearte_oficial" },
+      text: "Bolos que encantam."
+    }
+    allow_any_instance_of(Vendors::Web::Client).to receive(:fetch_digest).and_return(digest)
+
+    post "/api/v1/clients/extract_from_url", params: { url: "docearte.com.br" }, as: :json
+
+    expect(response).to have_http_status(:ok)
+    body = JSON.parse(response.body)
+    expect(body.dig("extracted", "source_url")).to eq("https://docearte.com.br")
+    expect(body.dig("extracted", "contact", "name")).to eq("Doce Arte")
+    expect(body.dig("extracted", "contact", "email")).to eq("contato@docearte.com.br")
+    expect(body.dig("extracted", "brand", "default_handle")).to eq("docearte_oficial")
+  end
+
+  it "returns 422 when the landing page can't be reached" do
+    allow_any_instance_of(Vendors::Web::Client)
+      .to receive(:fetch_digest).and_raise(Vendors::Base::Error.new("Não foi possível acessar a página."))
+
+    post "/api/v1/clients/extract_from_url", params: { url: "https://broken.example" }, as: :json
+
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(JSON.parse(response.body)["error"]).to match(/não foi possível acessar/i)
+  end
+
   it "updates an existing client's positioning" do
     client = @workspace.clients.create!(name: "ACME")
 

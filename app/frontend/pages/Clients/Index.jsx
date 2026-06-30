@@ -37,7 +37,7 @@ function ClientCard({ client, onEdit, onArchive }) {
       )}
     >
       <div className="flex items-start gap-3.5">
-        <Avatar name={client.name} size={48} />
+        <Avatar name={client.name} src={client.logo_url} size={48} />
         <div className="min-w-0 flex-1">
           <h3 className="truncate font-display text-base font-bold text-ink">{client.name}</h3>
           {client.company && (
@@ -104,7 +104,7 @@ function ClientCard({ client, onEdit, onArchive }) {
 
 export default function ClientsIndex() {
   const { data: clients, isLoading } = useClients()
-  const { create, update, archive, synthesize, uploadBrandAssets } = useClientMutations()
+  const { create, update, archive, synthesize, importFromUrl, uploadBrandAssets } = useClientMutations()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [search, setSearch] = useState('')
@@ -189,7 +189,7 @@ export default function ClientsIndex() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         editing={editing}
-        mutations={{ create, update, synthesize, uploadBrandAssets }}
+        mutations={{ create, update, synthesize, importFromUrl, uploadBrandAssets }}
       />
     </Page>
   )

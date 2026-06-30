@@ -83,3 +83,9 @@ group :development do
   gem "web-console"
   gem "letter_opener_web"
 end
+
+gem "activeadmin", "~> 4.0.0.beta"
+# Active Admin 4 serves its own JS via importmap (the SPA still uses Vite).
+gem "importmap-rails"
+
+gem "ferrum", "~> 0.17.2"

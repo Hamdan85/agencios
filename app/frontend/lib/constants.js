@@ -35,6 +35,7 @@ export const STATUS_META = {
 export const CHANNEL_META = {
   instagram: { label: 'Instagram', color: '#E1306C', icon: Instagram },
   facebook:  { label: 'Facebook',  color: '#1877F2', icon: Facebook },
+  threads:   { label: 'Threads',   color: '#000000', icon: AtSign },
   tiktok:    { label: 'TikTok',    color: '#111111', icon: Music2 },
   youtube:   { label: 'YouTube',   color: '#FF0000', icon: Youtube },
   linkedin:  { label: 'LinkedIn',  color: '#0A66C2', icon: Linkedin },

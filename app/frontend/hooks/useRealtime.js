@@ -42,6 +42,7 @@ export function useGenerationsChannel(workspaceId, onEvent) {
         received: (data) => {
           qc.invalidateQueries({ queryKey: keys.studio() })
           qc.invalidateQueries({ queryKey: ['generations'] })
+          qc.invalidateQueries({ queryKey: ['creatives'] })
           onEvent?.(data)
         },
       },

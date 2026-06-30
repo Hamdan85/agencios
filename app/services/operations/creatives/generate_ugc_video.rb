@@ -5,40 +5,51 @@ module Operations
     # Kicks off a UGC avatar video render. Produces a Creative (generated, still
     # generating) and a `video` Generation in `processing` — the render is async.
     #
-    # A webhook / PollHeygenVideoJob finalizes the Creative + Generation
-    # (status completed, asset attached) and meters it via
-    # Operations::Billing::RecordUsage. Not yet billed here.
+    # The script falls back to the ticket's scoping script, and the aspect ratio
+    # comes from the creative type's spec (e.g. 9:16 for ugc_video / reel). A
+    # webhook / PollHeygenVideoJob finalizes the Creative + Generation and meters
+    # it (Stripe) + records the HeyGen vendor cost (AiUsageLog).
     class GenerateUgcVideo < Operations::Base
       PROVIDER = "heygen"
 
-      def initialize(ticket: nil, script:, avatar: nil, voice: nil)
-        @ticket = ticket
-        @script = script
-        @avatar = avatar
-        @voice = voice
+      def initialize(ticket: nil, script: nil, avatar: nil, voice: nil, creative_type: nil, client_id: nil)
+        @ticket        = ticket
+        @script        = script
+        @avatar        = avatar
+        @voice         = voice
+        @creative_type = creative_type
+        @client_id     = client_id
       end
 
       def call
+        ctx    = ::Tickets::CreativeContext.for(@ticket, creative_type: type, client: resolve_client)
+        script = @script.presence || ctx.script
+        aspect = ctx.aspect_ratio.presence || "9:16"
+
         creative = Operations::Creatives::Create.call(
-          ticket: @ticket,
-          creative_type: "ugc_video",
-          source: :generated,
-          status: :generating,
-          provider: PROVIDER
+          ticket:        @ticket,
+          creative_type: ctx.creative_type || type,
+          source:        :generated,
+          status:        :generating,
+          provider:      PROVIDER
         )
 
-        result = Vendors::Heygen::Actions::GenerateVideo.call(
-          avatar: @avatar, voice: @voice, script: @script
+        video_id = Vendors::Heygen::Actions::GenerateVideo.call(
+          avatar:       @avatar,
+          voice:        @voice,
+          script:       script,
+          aspect_ratio: aspect,
+          dimension:    dimension(ctx)
         )
 
         generation = workspace.generations.create!(
-          user: Current.user,
-          creative: creative,
-          kind: :video,
-          status: :processing,
-          provider: PROVIDER,
-          external_id: result[:external_id],
-          params: { script: @script, avatar: @avatar, voice: @voice }
+          user:        Current.user,
+          creative:    creative,
+          kind:        :video,
+          status:      :processing,
+          provider:    PROVIDER,
+          external_id: video_id,
+          params:      { script: script, avatar: @avatar, voice: @voice, aspect_ratio: aspect }
         )
 
         broadcast(event: "generation_progress", id: generation.id, kind: "video", status: "processing")
@@ -46,6 +57,22 @@ module Operations
       end
 
       private
+
+      def type
+        @creative_type.presence || @ticket&.creative_type.presence || "ugc_video"
+      end
+
+      def resolve_client
+        return nil if @client_id.blank?
+
+        workspace.clients.find_by(id: @client_id)
+      end
+
+      def dimension(ctx)
+        return { width: ctx.width, height: ctx.height } if ctx.width && ctx.height
+
+        { width: 1080, height: 1920 }
+      end
 
       def broadcast(payload)
         ActionCable.server.broadcast("generations_#{workspace.id}", payload)

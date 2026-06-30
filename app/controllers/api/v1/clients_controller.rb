@@ -16,6 +16,11 @@ module Api
       # (stateless; used by the creation wizard before the client exists).
       def positioning_preview = render_ok(Controllers::Clients::PositioningPreview.call(params:))
 
+      # POST /api/v1/clients/extract_from_url — fetches a brand's landing page and
+      # returns a full client draft (contact + brand + positioning) for the wizard
+      # to pre-fill (stateless; used before the client exists).
+      def extract_from_url = render_ok(Controllers::Clients::ExtractFromUrl.call(params:))
+
       # PATCH /api/v1/clients/:id/positioning — replace a client's positioning.
       def update_positioning = render_ok(Controllers::Clients::UpdatePositioning.call(params:))
 

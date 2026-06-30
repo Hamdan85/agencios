@@ -29,6 +29,7 @@ export const EVENTS = {
   MEETING_SCHEDULED: 'meeting_scheduled',
   INVOICE_CREATED: 'invoice_created',
   MEMBER_INVITED: 'member_invited',
+  WORKSPACE_CREATED: 'workspace_created',
 
   // ── Engagement: AI surface usage ─────────────────────────────
   AI_ACTION: 'ai_action',

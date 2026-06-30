@@ -1,7 +1,13 @@
 {
   "private": true,
   "type": "module",
+  "scripts": {
+    "build:admin:css": "tailwindcss -i app/assets/tailwind/active_admin.css -o app/assets/stylesheets/active_admin.css --minify",
+    "watch:admin:css": "tailwindcss -i app/assets/tailwind/active_admin.css -o app/assets/stylesheets/active_admin.css --watch"
+  },
   "devDependencies": {
+    "@activeadmin/activeadmin": "4.0.0-beta22",
+    "@tailwindcss/cli": "^4.3.2",
     "@vitejs/plugin-react": "^6.0.3",
     "vite": "^8.1.0",
     "vite-plugin-ruby": "^5.2.2"

@@ -1,11 +1,14 @@
 import { useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import {
   Settings, Palette, Users2, Plug, Save, AtSign, Sparkles, UserPlus,
   Link2, Check, Calendar, Wallet, Copy, ShieldCheck, Bot, Trash2, RefreshCw,
+  Image as ImageIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
-  useSettings, useSettingsMutation, useWorkspaceMembers, useWorkspaceMutations,
+  useSettings, useSettingsMutation, useSettingsBrandAssetsMutation,
+  useWorkspaceMembers, useWorkspaceMutations,
   useConnections, useRevokeConnection, useMcpConnector, useRotateMcpConnector,
   useGoogleCalendarMutations,
 } from '@/hooks/useData'
@@ -33,6 +36,7 @@ const ROLE_VARIANT = { owner: 'default', admin: 'soft', manager: 'success', memb
 function BrandTab({ data, mutation }) {
   const setting = data?.setting || {}
   const workspace = data?.workspace || {}
+  const brandAssets = useSettingsBrandAssetsMutation()
   const init = {
     name: workspace.name ?? data?.name ?? '',
     brand_voice: workspace.brand_voice ?? data?.brand_voice ?? '',
@@ -43,12 +47,33 @@ function BrandTab({ data, mutation }) {
     auto_publish_default: setting.auto_publish_default ?? data?.auto_publish_default ?? false,
   }
   const [form, setForm] = useState(init)
+  const [logoFile, setLogoFile] = useState(null)
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }))
+
+  const logoPreview = logoFile ? URL.createObjectURL(logoFile) : workspace.logo_url
 
   const submit = (e) => {
     e.preventDefault()
-    mutation.mutate(form)
+    // The backend Update splits the payload into a Setting record and the
+    // workspace's brand fields, so the keys must be nested accordingly.
+    mutation.mutate({
+      workspace: {
+        name: form.name,
+        brand_voice: form.brand_voice,
+        default_handle: form.default_handle,
+        brand_primary_color: form.brand_primary_color,
+        brand_secondary_color: form.brand_secondary_color,
+      },
+      setting: {
+        brand_tone: form.brand_tone,
+        auto_publish_default: form.auto_publish_default,
+      },
+    })
+    // The logo uploads as a separate multipart request (only when changed).
+    if (logoFile) brandAssets.mutate({ logo: logoFile }, { onSuccess: () => setLogoFile(null) })
   }
+
+  const saving = mutation.isPending || brandAssets.isPending
 
   return (
     <form onSubmit={submit} className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -56,9 +81,24 @@ function BrandTab({ data, mutation }) {
         <Card>
           <CardHeader>
             <CardTitle>Identidade da agência</CardTitle>
-            <CardDescription>Nome, voz e @ usados em legendas e criativos.</CardDescription>
+            <CardDescription>Logo, nome, voz e @ usados em legendas e criativos.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Logo</Label>
+              <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-border bg-surface-muted/40 p-3 transition hover:border-brand/50">
+                <div className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-lg bg-surface text-ink-faint ring-1 ring-border">
+                  {logoPreview ? <img src={logoPreview} alt="" className="size-full object-contain" /> : <ImageIcon size={20} />}
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-ink-secondary">
+                    {logoFile ? logoFile.name : (workspace.logo_url ? 'Logo atual' : 'Escolher imagem')}
+                  </p>
+                  <p className="text-xs text-ink-faint">PNG, JPG ou SVG</p>
+                </div>
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => setLogoFile(e.target.files?.[0] || null)} />
+              </label>
+            </div>
             <div className="space-y-1.5">
               <Label htmlFor="st-name">Nome da agência</Label>
               <Input id="st-name" value={form.name} onChange={(e) => set('name')(e.target.value)} placeholder="Sua Agência" />
@@ -123,8 +163,8 @@ function BrandTab({ data, mutation }) {
         </Card>
 
         <div className="flex justify-end">
-          <Button type="submit" size="lg" disabled={mutation.isPending}>
-            <Save size={18} /> {mutation.isPending ? 'Salvando…' : 'Salvar alterações'}
+          <Button type="submit" size="lg" disabled={saving}>
+            <Save size={18} /> {saving ? 'Salvando…' : 'Salvar alterações'}
           </Button>
         </div>
       </div>
@@ -136,8 +176,8 @@ function BrandTab({ data, mutation }) {
           <Card className="overflow-hidden">
             <div className="h-24 w-full" style={{ background: `linear-gradient(135deg, ${form.brand_primary_color}, ${form.brand_secondary_color})` }} />
             <CardContent className="-mt-8 pt-0">
-              <div className="flex size-16 items-center justify-center rounded-2xl text-white shadow-lg ring-4 ring-surface" style={{ background: form.brand_primary_color }}>
-                <Sparkles size={28} />
+              <div className="flex size-16 items-center justify-center overflow-hidden rounded-2xl text-white shadow-lg ring-4 ring-surface" style={{ background: form.brand_primary_color }}>
+                {logoPreview ? <img src={logoPreview} alt="" className="size-full object-contain" /> : <Sparkles size={28} />}
               </div>
               <h3 className="mt-3 font-display text-lg font-extrabold text-ink">{form.name || 'Sua Agência'}</h3>
               {form.default_handle && <p className="text-sm font-semibold" style={{ color: form.brand_primary_color }}>@{form.default_handle}</p>}
@@ -433,9 +473,21 @@ function ConnectionsTab() {
   )
 }
 
+// Each tab is its own URL (Portuguese segment); "brand" is the base path.
+const TAB_TO_SEG = { brand: '', team: 'equipe', integrations: 'integracoes', connections: 'conexoes' }
+const SEG_TO_TAB = { equipe: 'team', integracoes: 'integrations', conexoes: 'connections' }
+
 export default function SettingsIndex() {
+  const { tab: seg } = useParams()
+  const navigate = useNavigate()
   const { data, isLoading } = useSettings()
   const mutation = useSettingsMutation()
+
+  const tab = SEG_TO_TAB[seg] || 'brand'
+  const setTab = (value) => {
+    const s = TAB_TO_SEG[value] || ''
+    navigate(`/configuracoes${s ? `/${s}` : ''}`, { replace: true })
+  }
 
   if (isLoading) return <PageLoader />
 
@@ -449,7 +501,7 @@ export default function SettingsIndex() {
         description="Marca, equipe e integrações do workspace."
       />
 
-      <Tabs defaultValue="brand">
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="mb-6">
           <TabsTrigger value="brand"><Palette size={15} /> Marca</TabsTrigger>
           <TabsTrigger value="team"><Users2 size={15} /> Equipe</TabsTrigger>
