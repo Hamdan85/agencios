@@ -24,6 +24,12 @@ export const ROUTE_PATTERNS = [
   '/cobrancas',
   '/configuracoes',
   '/assinatura',
+  // ── Public marketing site (SSR, Portuguese segments — see config/routes.rb) ──
+  '/como-funciona',
+  '/funcionalidades',
+  '/precos',
+  '/privacidade',
+  '/termos',
 ]
 
 const compiled = ROUTE_PATTERNS
@@ -49,7 +55,17 @@ export function maskPath(pathname) {
   if (parts.length === 0) return '/'
 
   const hit = compiled.find(({ segments }) => matchPattern(parts, segments))
-  return hit ? hit.pattern : '/*'
+  if (hit) return hit.pattern
+
+  // Public marketing feature pages (`/funcionalidades/:slug`) carry a fixed,
+  // word-only slug (never a record id — see the route constraint), so keep it
+  // literal to get a per-feature funnel instead of collapsing to '/*'. The
+  // `[a-z-]` guard means anything id-shaped still falls through to '/*'.
+  if (parts.length === 2 && parts[0] === 'funcionalidades' && /^[a-z-]+$/.test(parts[1])) {
+    return `/${parts.join('/')}`
+  }
+
+  return '/*'
 }
 
 export default maskPath
