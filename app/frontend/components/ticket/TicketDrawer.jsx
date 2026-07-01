@@ -60,11 +60,11 @@ function DrawerContent({ id, onOpenChange }) {
       {/* ── Sticky header ── */}
       <div className="shrink-0 border-b border-border bg-surface/85 px-5 pb-4 pt-4 backdrop-blur">
         <div className="mb-3 flex items-center justify-between">
-          <Button variant="ghost" size="sm" onClick={expand} className="-ml-2 text-ink-secondary">
+          <Button variant="ghost" size="sm" onClick={expand} className="-ml-2 hidden text-ink-secondary md:inline-flex">
             <Maximize2 size={15} /> Abrir tela cheia
           </Button>
           <SheetClose asChild>
-            <Button variant="ghost" size="icon-sm" aria-label="Fechar">
+            <Button variant="ghost" size="icon-sm" aria-label="Fechar" className="ml-auto">
               <X size={18} />
             </Button>
           </SheetClose>
