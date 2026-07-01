@@ -1,0 +1,6 @@
+Olá<%= @owner&.display_name.present? ? ", #{@owner.display_name}" : "" %>!
+
+O período de teste da <%= @workspace.name %> na agencios <% if @subscription&.trial_ends_at %>termina em <%= email_date(@subscription.trial_ends_at) %><% else %>está chegando ao fim<% end %>.
+
+Para continuar com o plano <%= @plan_label %> sem interrupções, adicione uma forma de pagamento:
+<%= @billing_url %>

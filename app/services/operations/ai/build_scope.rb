@@ -21,7 +21,7 @@ module Operations
           builder, max_tokens: 700, operation: "build_scope", subject: @ticket
         ).to_s
 
-        titles = text.lines.map { |l| l.strip.sub(/\A[-*\d.]+\s*/, "") }.reject(&:blank?).first(8)
+        titles = text.lines.filter_map { |l| clean_title(l) }.first(8)
         created = titles.map do |title|
           Operations::Subtasks::Create.call(ticket: @ticket, title: title)
         end
@@ -29,6 +29,25 @@ module Operations
         Operations::Notes::Create.call(ticket: @ticket, user: nil, kind: :ai,
                                        body: "Checklist de produção gerada com #{created.size} subtarefas.")
         created
+      end
+
+      private
+
+      # The model is asked for one plain task per line, but it occasionally wraps
+      # items in markdown (bullets, numbering, **bold**, headings, code fences).
+      # Strip all of that down to clean prose so subtasks never carry `**`/`#`/`-`.
+      def clean_title(line)
+        title = line.strip
+        return if title.blank?
+        return if title.match?(/\A(```|---|===|\#{1,6}\s*$)/) # fences / rules / empty headings
+
+        title = title.sub(/\A\s*(?:[-*+•–—]\s+|\d+[.)]\s+)/, "") # leading bullet or "1." / "1)"
+        title = title.sub(/\A#{'#'}{1,6}\s*/, "")               # leading markdown heading
+        title = title.sub(/\A>\s*/, "")                         # blockquote
+        title = title.gsub(/\*\*|__|`|~~/, "")                  # bold / code / strike markers
+        title = title.gsub(/(?<!\w)[*_](?=\S)|(?<=\S)[*_](?!\w)/, "") # stray emphasis
+        title = title.sub(/\A\[[ xX]?\]\s*/, "")                # leftover "[ ]" checkbox
+        title.strip.presence
       end
     end
   end

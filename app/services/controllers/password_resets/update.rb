@@ -12,6 +12,7 @@ module Controllers
         raise Operations::Errors::Invalid, "Token inválido ou expirado." unless user
 
         user.update!(password: @params.require(:password))
+        AuthMailer.password_changed(user: user).deliver_later
         { message: "Senha redefinida." }
       end
     end

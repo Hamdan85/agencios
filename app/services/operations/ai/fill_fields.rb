@@ -7,13 +7,18 @@ module Operations
     # via Prompts::FieldFill; writes through Operations::Tickets::UpdateFields so
     # the same sanitize + mirror-columns + broadcast path is reused.
     class FillFields < Operations::Base
-      def initialize(ticket:)
+      # only_blank: when true, never overwrite fields the team already filled —
+      # only the empty ones are completed. Used by the automatic carry-over on
+      # status advance; the manual "Gerar com IA" button refills everything.
+      def initialize(ticket:, only_blank: false)
         @ticket = ticket
         @status = ticket.status.to_s
+        @only_blank = only_blank
       end
 
       def call
         keys = Prompts::FieldFill.fillable_keys(@status)
+        keys = keys.reject { |k| @ticket.fields_for(@status)[k].present? } if @only_blank
         return { filled: [] } if keys.empty?
 
         text = AiAdapter.complete(

@@ -1,0 +1,8 @@
+Olá<%= @owner&.display_name.present? ? ", #{@owner.display_name}" : "" %>!
+
+Não conseguimos processar o pagamento da assinatura <%= @plan_label %> da <%= @workspace.name %>.
+
+Para evitar a suspensão do acesso, atualize sua forma de pagamento:
+<%= @billing_url %>
+
+Faremos uma nova tentativa automaticamente nos próximos dias.

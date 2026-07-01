@@ -33,6 +33,7 @@ export function useTicketMutations(id) {
   return {
     update: mk((data) => ticketsApi.update(id, data)),
     advance: mk(({ toStatus, position }) => ticketsApi.advance(id, toStatus, position), 'Status atualizado!'),
+    publish: mk((payload) => ticketsApi.publish(id, payload), undefined, () => analytics.track(EVENTS.POST_CREATED)),
     summarize: mk(() => ticketsApi.summarize(id)),
     aiAction: mk(() => ticketsApi.aiAction(id), 'IA atualizou o ticket ✨', () => analytics.track(EVENTS.AI_ACTION)),
     generateSubtasks: mk(() => ticketsApi.generateSubtasks(id), 'Checklist gerada com IA ✨', () => analytics.track(EVENTS.AI_ACTION)),
@@ -43,6 +44,7 @@ export function useTicketMutations(id) {
       'Geração iniciada!',
       (_data, payload) => analytics.track(EVENTS.CREATIVE_GENERATED, { kind: payload?.kind || payload?.creative_type, source: 'ticket' }),
     ),
+    removeCreative: mk((creativeId) => ticketsApi.destroyCreative(id, creativeId), 'Criativo removido.'),
     addPost: mk((data) => ticketsApi.createPost(id, data), undefined, () => analytics.track(EVENTS.POST_CREATED)),
     uploadAttachments: mk(({ files, meta }) => attachmentsApi.create(id, files, meta), 'Arquivo(s) enviado(s)!'),
     updateAttachment: mk(({ attachmentId, data }) => attachmentsApi.update(id, attachmentId, data), 'Arquivo atualizado!'),

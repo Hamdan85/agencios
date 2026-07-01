@@ -14,6 +14,7 @@ module Operations
       def call
         user = User.create!(email: @email, password: @password, name: @name)
         workspace = Operations::Workspaces::SetupForUser.call(user: user, name: @workspace_name)
+        AuthMailer.welcome(user: user).deliver_later
         [user, workspace]
       end
     end

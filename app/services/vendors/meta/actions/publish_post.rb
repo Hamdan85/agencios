@@ -187,7 +187,7 @@ module Vendors
         # ---- media resolution (shared) ---------------------------------------
 
         def creative
-          @creative ||= @post.ticket.creatives.order(created_at: :desc).first
+          @creative ||= @post.publishable_creative
         end
 
         # First attached video asset's public URL (Meta fetches the bytes; must be

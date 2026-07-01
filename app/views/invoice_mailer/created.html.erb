@@ -1,0 +1,31 @@
+<% content_for :preheader do %>Nova cobrança de <%= email_brl(@invoice.amount_cents) %> da <%= @workspace.name %>.<% end %>
+<% content_for :eyebrow do %>Cobrança<% end %>
+
+<h1 style="margin:0 0 16px;font-family:'Sora','Inter',Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#18122B;">
+  Nova cobrança
+</h1>
+
+<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#564F6F;">
+  Olá<%= @client.name.present? ? ", #{@client.name}" : "" %>. A <strong><%= @workspace.name %></strong> emitiu uma nova cobrança para você.
+</p>
+
+<table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="margin:8px 0 20px;background-color:#F5F4FB;border-radius:14px;">
+  <tr><td style="padding:18px 20px;">
+    <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
+      <%= email_detail_row("Referência", @invoice.external_reference.to_s) %>
+      <% if @invoice.description.present? %><%= email_detail_row("Descrição", @invoice.description) %><% end %>
+      <% if @invoice.due_date %><%= email_detail_row("Vencimento", email_date(@invoice.due_date)) %><% end %>
+      <tr>
+        <td style="padding:12px 0 0;font-size:15px;font-weight:700;color:#18122B;border-top:1px solid #E8E6F2;">Total</td>
+        <td align="right" style="padding:12px 0 0;font-size:18px;font-weight:800;color:#7C3AED;border-top:1px solid #E8E6F2;"><%= email_brl(@invoice.amount_cents) %></td>
+      </tr>
+    </table>
+  </td></tr>
+</table>
+
+<% if @payment_url.present? %>
+  <%= email_button("Pagar agora", @payment_url) %>
+  <p style="margin:16px 0 0;font-size:13px;line-height:1.5;color:#8B86A3;">Pagamento processado com segurança via Mercado Pago (Pix, boleto ou cartão).</p>
+<% else %>
+  <p style="margin:0;font-size:14px;line-height:1.6;color:#564F6F;">As instruções de pagamento serão enviadas em seguida.</p>
+<% end %>

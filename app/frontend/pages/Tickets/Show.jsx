@@ -140,8 +140,9 @@ export default function Show() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Advance */}
-            {nextStatus && nextMeta && (
+            {/* Advance — hidden on the posting step, where publishing (not a
+                manual move) is what carries the ticket to "No ar". */}
+            {nextStatus && nextMeta && status !== 'scheduled' && (
               <Button
                 onClick={() => mut.advance.mutate({ toStatus: nextStatus })}
                 disabled={mut.advance.isPending}

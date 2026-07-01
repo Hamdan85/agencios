@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Sparkles, FolderOpen } from 'lucide-react'
 import { PRIORITY_META } from '@/lib/constants'
 import {
@@ -23,11 +23,20 @@ const EMPTY = {
 // Ideação column, so creation captures ONLY the context (project, title, brief).
 // Tipo de criativo, canais, prazo e agendamento são definidos depois, em cada
 // etapa do funil (Escopo → Produção → Agendado) — ver FieldGroup.
-export function NewTicketDialog({ open, onOpenChange, create }) {
-  const [form, setForm] = useState(EMPTY)
+//
+// `defaultProjectId` pre-selects the project (e.g. when opened from a project
+// view); the board passes none and the user picks one.
+export function NewTicketDialog({ open, onOpenChange, create, defaultProjectId }) {
+  const initial = () => ({ ...EMPTY, project_id: defaultProjectId || '' })
+  const [form, setForm] = useState(initial)
 
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }))
-  const reset = () => setForm(EMPTY)
+  const reset = () => setForm(initial())
+
+  // Each time the dialog opens within a project, default to that project.
+  useEffect(() => {
+    if (open && defaultProjectId) set('project_id', defaultProjectId)
+  }, [open, defaultProjectId])
 
   const submit = (e) => {
     e.preventDefault()

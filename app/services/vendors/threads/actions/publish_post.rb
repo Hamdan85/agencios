@@ -97,7 +97,7 @@ module Vendors
         # ---- media resolution (mirrors Vendors::Meta::Actions::PublishPost) ----
 
         def creative
-          @creative ||= @post.ticket.creatives.order(created_at: :desc).first
+          @creative ||= @post.publishable_creative
         end
 
         def video_url

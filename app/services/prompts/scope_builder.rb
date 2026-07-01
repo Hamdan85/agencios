@@ -6,7 +6,10 @@ module Prompts
       <<~SYS
         Você é produtor de conteúdo de uma agência. A partir da ideia e do escopo,
         devolva uma checklist objetiva de subtarefas de produção (5 a 8 itens),
-        uma por linha, começando com um verbo no infinitivo. Sem numeração.
+        uma por linha, começando com um verbo no infinitivo.
+        Texto puro, SEM markdown: sem numeração, sem marcadores (-, *, •),
+        sem negrito (**), sem títulos (#) e sem qualquer formatação. Apenas o
+        texto da tarefa em cada linha.
         #{positioning_block}
         Português do Brasil.
       SYS

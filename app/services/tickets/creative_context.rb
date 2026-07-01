@@ -59,6 +59,20 @@ module Tickets
     def script         = @overrides[:script].presence || scoping["script"]
     def caption        = production["caption"]
 
+    URL_RE = %r{https?://\S+}i
+
+    # Reference material the team attached in ideation (+ any override). Free text
+    # is kept; URLs are extracted so generators can fetch/read them and feed the
+    # whole into the content generators.
+    def references
+      vals = Array(@overrides[:references]) + Array(ideation["references"])
+      vals.map { |v| v.to_s.strip }.reject(&:blank?).uniq
+    end
+
+    def reference_urls
+      references.flat_map { |r| r.scan(URL_RE) }.uniq
+    end
+
     def objective
       @overrides[:objective].presence || ideation["objective"]
     end
@@ -110,6 +124,7 @@ module Tickets
         copy_brief: copy_brief, script: script, content_pillar: content_pillar,
         channels: channels.join(", "), summary: summary, caption: caption,
         creative_type: creative_type, aspect: aspect_ratio,
+        references: references.presence&.join("; "),
         width: width, height: height
       }.compact
     end

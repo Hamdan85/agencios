@@ -21,9 +21,20 @@ module Operations
             path: "/cobrancas"
           )
         end
+
+        email_client_receipt
       end
 
       private
+
+      # Send the client a payment receipt (client-facing — not an app user).
+      def email_client_receipt
+        return if @invoice.client&.email.blank?
+
+        InvoiceMailer.paid(invoice: @invoice).deliver_later
+      rescue StandardError => e
+        Rails.logger.warn("[Invoices::NotifyPaid] receipt email failed: #{e.message}")
+      end
 
       def managers
         @invoice.workspace.memberships.where(role: MANAGER_ROLES).includes(:user).map(&:user)

@@ -1,0 +1,8 @@
+Olá, <%= @user.display_name %>!
+
+Não conseguimos concluir a geração do seu <%= @kind_label.downcase %>.
+Nenhuma cobrança de uso foi registrada por esta tentativa.
+<% if @reason.present? %>
+Detalhe: <%= @reason %>
+<% end %>
+Tentar novamente: <%= @url %>

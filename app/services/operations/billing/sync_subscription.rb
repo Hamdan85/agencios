@@ -107,6 +107,7 @@ module Operations
         return :no_subscription unless record
 
         record.update!(status: "canceled", cancel_at: Time.current)
+        notify_owner(workspace, record, :canceled)
         record
       end
 
@@ -117,7 +118,9 @@ module Operations
       end
 
       def on_invoice_payment_failed
-        update_status_from_invoice("past_due")
+        record = update_status_from_invoice("past_due")
+        notify_owner(record.workspace, record, :payment_failed) if record.is_a?(Subscription)
+        record
       end
 
       def update_status_from_invoice(status)
@@ -133,7 +136,19 @@ module Operations
         Rails.logger.info(
           "[Stripe] trial_will_end for subscription=#{read(event_object, :id)}"
         )
+        workspace = resolve_workspace(event_object)
+        notify_owner(workspace, workspace&.subscription, :trial_ending)
         :acknowledged
+      end
+
+      # Email the workspace owner about a billing lifecycle change. Best-effort —
+      # a mail failure must never break webhook reconciliation.
+      def notify_owner(workspace, subscription, kind)
+        return if workspace.nil? || workspace.owner&.email.blank?
+
+        SubscriptionMailer.public_send(kind, workspace: workspace, subscription: subscription).deliver_later
+      rescue StandardError => e
+        Rails.logger.warn("[Stripe] subscription #{kind} email failed: #{e.message}")
       end
 
       # The important meter event: ingested usage with an unknown customer id,

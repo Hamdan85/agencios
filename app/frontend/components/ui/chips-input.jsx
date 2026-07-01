@@ -59,7 +59,7 @@ export function ChipsInput({ value, onChange, placeholder, prefix = '', classNam
         onKeyDown={onKeyDown}
         onBlur={() => add(text)}
         placeholder={chips.length ? '' : placeholder}
-        className="min-w-[6rem] flex-1 bg-transparent px-1 py-0.5 text-sm text-ink outline-none placeholder:text-ink-faint"
+        className="min-w-[6rem] flex-1 border-0 bg-transparent px-1 py-0.5 text-sm text-ink shadow-none outline-none placeholder:text-ink-faint focus:border-0 focus:outline-none focus:ring-0"
       />
     </div>
   )

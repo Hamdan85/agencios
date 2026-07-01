@@ -30,6 +30,7 @@ module Operations
         end
 
         enqueue_summary
+        enqueue_carry_over(from_status)
         fire_side_effects(from_status)
         broadcast(from_status)
 
@@ -85,10 +86,28 @@ module Operations
         Rails.logger.warn("[ChangeStatus] could not enqueue summary: #{e.message}")
       end
 
+      # Stages whose fields benefit from automatic carry-over. `retrospective` is
+      # excluded — it's auto-drafted from metrics by DraftRetrospectiveJob;
+      # `published`/`done` have no editable fields.
+      CARRY_OVER_STATUSES = %w[scoping production scheduled].freeze
+
+      # Forward moves carry the funnel's context into the new stage's blank fields
+      # (deterministic seed + AI fill). Skip on regressions and same-step reorders.
+      def enqueue_carry_over(from_status)
+        return unless step(@to_status) > step(from_status)
+        return unless CARRY_OVER_STATUSES.include?(@to_status)
+
+        CarryOverFieldsJob.perform_later(@ticket.id, @to_status)
+      rescue StandardError => e
+        Rails.logger.warn("[ChangeStatus] could not enqueue carry-over: #{e.message}")
+      end
+
+      # Publishing is no longer a side effect of a board move. The posting step
+      # (Operations::Tickets::Publish) creates the posts and fires publishing;
+      # the ticket reaches "published" only when a post succeeds. Entering
+      # `published` therefore has no publish side effect here (avoids re-posting).
       def fire_side_effects(_from_status)
         case @to_status
-        when "scheduled"     then ensure_posts_for_channels
-        when "published"     then publish_scheduled_posts
         when "retrospective" then draft_retrospective
         when "done"          then spawn_follow_ups
         end
@@ -103,34 +122,6 @@ module Operations
         Operations::Tickets::SpawnFollowUp.call(source: @ticket, recommendation: rec, user: @user)
       rescue StandardError => e
         Rails.logger.warn("[ChangeStatus] spawn_follow_ups failed: #{e.message}")
-      end
-
-      def ensure_posts_for_channels
-        # Validate channels + scheduled_at, then ensure a Post per channel.
-        return if @ticket.channels.blank?
-
-        client = @ticket.project.client
-        @ticket.channels.each do |channel|
-          account = client.social_accounts.find_by(provider: channel)
-          next unless account
-
-          @ticket.posts.find_or_create_by!(social_account_id: account.id) do |post|
-            post.workspace_id = @ticket.workspace_id
-            post.status = :scheduled
-            post.scheduled_at = @ticket.scheduled_at
-            post.caption = @ticket.fields_for("production")["caption"]
-          end
-        end
-      rescue StandardError => e
-        Rails.logger.warn("[ChangeStatus] ensure_posts failed: #{e.message}")
-      end
-
-      def publish_scheduled_posts
-        @ticket.posts.status_scheduled.find_each do |post|
-          PublishPostJob.perform_later(post.id)
-        rescue StandardError => e
-          Rails.logger.warn("[ChangeStatus] enqueue publish failed: #{e.message}")
-        end
       end
 
       def draft_retrospective

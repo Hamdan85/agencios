@@ -1,0 +1,7 @@
+Olá, <%= @recipient.display_name %>!
+
+Não foi possível publicar o post do ticket "<%= @ticket.display_title %>" em <%= @provider %>.
+<% if @reason.present? %>
+Detalhe: <%= @reason %>
+<% end %>
+Revise a conta conectada e o conteúdo, e tente novamente: <%= @ticket_url %>

@@ -52,6 +52,7 @@ export const ticketsApi = {
   update: (id, data) => api.patch(`/tickets/${id}`, { ticket: data }),
   destroy: (id) => api.delete(`/tickets/${id}`),
   advance: (id, toStatus, position) => api.post(`/tickets/${id}/advance`, { to_status: toStatus, position }),
+  publish: (id, payload) => api.post(`/tickets/${id}/publish`, payload),
   reorder: (id, position) => api.patch(`/tickets/${id}/reorder`, { position }),
   summarize: (id) => api.post(`/tickets/${id}/summarize`),
   aiAction: (id) => api.post(`/tickets/${id}/ai_action`),
@@ -71,6 +72,7 @@ export const ticketsApi = {
     return api.post(`/tickets/${id}/notes`, form)
   },
   generateCreative: (id, payload) => api.post(`/tickets/${id}/creatives/generate`, payload),
+  destroyCreative: (id, creativeId) => api.delete(`/tickets/${id}/creatives/${creativeId}`),
   createPost: (id, data) => api.post(`/tickets/${id}/posts`, { post: data }),
 }
 

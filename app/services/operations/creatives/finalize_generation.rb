@@ -164,6 +164,11 @@ module Operations
           body: "Sua geração foi concluída e já está disponível.",
           path: creative&.ticket ? "/tickets/#{creative.ticket_id}" : "/estudio"
         )
+
+        owner = @generation.user
+        return if owner.nil? || owner.email.blank?
+
+        CreativeMailer.ready(generation: @generation, user: owner).deliver_later
       end
 
       # --- payloads ------------------------------------------------------------

@@ -26,8 +26,8 @@ export const STATUS_META = {
   ideation:      { label: 'Ideação',        short: 'Ideação',    color: '#F59E0B', icon: Lightbulb,     hint: 'Brief, objetivo e audiência' },
   scoping:       { label: 'Escopo',         short: 'Escopo',     color: '#0EA5E9', icon: Ruler,        hint: 'Tipo, canais e entregáveis' },
   production:    { label: 'Produção',       short: 'Produção',   color: '#7C3AED', icon: Wand2,        hint: 'Criativo e legenda' },
-  scheduled:     { label: 'Agendado',       short: 'Agendado',   color: '#EC4899', icon: CalendarClock, hint: 'Canais e horário definidos' },
-  published:     { label: 'Postado',        short: 'No ar',      color: '#10B981', icon: Radio,        hint: 'No ar — monitorando' },
+  scheduled:     { label: 'Postagem',       short: 'Postagem',   color: '#EC4899', icon: CalendarClock, hint: 'Escolha o criativo e publique — agora ou agendado' },
+  published:     { label: 'No ar',          short: 'No ar',      color: '#10B981', icon: Radio,        hint: 'No ar — monitorando' },
   retrospective: { label: 'Retrospectiva',  short: 'Retro',      color: '#6366F1', icon: LineChart,    hint: 'Lições aprendidas' },
   done:          { label: 'Concluído',      short: 'Concluído',  color: '#14B8A6', icon: CheckCircle2, hint: 'Arquivado com métricas' },
 }
@@ -96,6 +96,33 @@ export const ATTACHMENT_KIND_META = {
 export const ATTACHMENT_ICON = Paperclip
 
 export const attachmentKindMeta = (key) => ATTACHMENT_KIND_META[key] || ATTACHMENT_KIND_META.file
+
+// Mirrors Publishers::SocialPublisher::SUPPORTED_MEDIA — which media kinds each
+// network can publish. TikTok/YouTube are video-only.
+export const SUPPORTED_MEDIA = {
+  instagram: ['image', 'carousel', 'video'],
+  facebook:  ['image', 'carousel', 'video', 'text'],
+  threads:   ['image', 'carousel', 'video', 'text'],
+  tiktok:    ['video'],
+  youtube:   ['video'],
+  linkedin:  ['image', 'carousel', 'video', 'text'],
+  x:         ['image', 'carousel', 'video', 'text'],
+}
+
+// Mirrors Creative#media_kind: derive the publishable media kind of a creative.
+export const creativeMediaKind = (creative) => {
+  const urls = creative?.asset_urls || []
+  if (urls.some((u) => /\.(mp4|mov|webm|avi)(\?|$)/i.test(u))) return 'video'
+  if (creative?.creative_type === 'carousel' || urls.length > 1) return 'carousel'
+  if (urls.length === 1) return 'image'
+  return 'text'
+}
+
+// Which of the given channels can actually receive this creative's media.
+export const channelsForCreative = (creative, channels = []) => {
+  const kind = creativeMediaKind(creative)
+  return channels.filter((ch) => (SUPPORTED_MEDIA[ch] || []).includes(kind))
+}
 
 export const statusMeta = (key) => STATUS_META[key] || STATUS_META.ideation
 export const channelMeta = (key) => CHANNEL_META[key] || { label: key, color: '#8B86A3', icon: Radio }

@@ -76,7 +76,7 @@ module Vendors
         end
 
         def first_asset
-          creative = @post.ticket.creatives.detect { |c| c.assets.attached? }
+          creative = @post.publishable_creative
           creative&.assets&.first
         end
 

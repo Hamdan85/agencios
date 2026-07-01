@@ -1,0 +1,18 @@
+<% content_for :preheader do %>Você foi convidado para a <%= @workspace.name %> na agencios.<% end %>
+<% content_for :eyebrow do %>Convite<% end %>
+
+<h1 style="margin:0 0 16px;font-family:'Sora','Inter',Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#18122B;">
+  Você foi convidado 🎉
+</h1>
+
+<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#564F6F;">
+  <% if @inviter_name %><strong><%= @inviter_name %></strong> convidou você<% else %>Você foi convidado<% end %>
+  para participar da <strong><%= @workspace.name %></strong> na <strong>agencios</strong>
+  como <strong><%= @role_label %></strong>.
+</p>
+
+<%= email_button("Aceitar convite", @link) %>
+
+<p style="margin:20px 0 0;font-size:13px;line-height:1.5;color:#8B86A3;">
+  Se você não esperava este convite, pode ignorar este e-mail com segurança.
+</p>

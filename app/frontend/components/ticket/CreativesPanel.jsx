@@ -9,7 +9,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose,
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
-import { ImagePlus, Sparkles, GalleryHorizontalEnd, Video, Image as ImageIcon, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
+import { ImagePlus, Sparkles, GalleryHorizontalEnd, Video, Image as ImageIcon, AlertCircle, CheckCircle2, Loader2, Trash2 } from 'lucide-react'
 
 const MediaViewer = lazy(() => import('./MediaViewer'))
 
@@ -54,18 +54,23 @@ function creativeToAttachments(creative) {
 }
 
 // ── Creative card (fixed square ratio, no size shift from title) ───
-function CreativeCard({ creative, onClick }) {
+// Root is a clickable <div> (not a <button>) so the delete control can nest as
+// a real <button> without invalid interactive-element nesting.
+function CreativeCard({ creative, onClick, onDelete, deleting }) {
   const m = creativeMeta(creative?.creative_type)
   const st = CREATIVE_STATUS[creative?.status] || CREATIVE_STATUS.draft
   const StIcon = st.icon
   const thumb = creative?.asset_urls?.[0]
   const generating = creative?.status === 'generating'
   const hasAssets = (creative?.asset_urls?.length || 0) > 0
+  const open = hasAssets ? onClick : undefined
 
   return (
-    <button
-      type="button"
-      onClick={hasAssets ? onClick : undefined}
+    <div
+      role={open ? 'button' : undefined}
+      tabIndex={open ? 0 : undefined}
+      onClick={open}
+      onKeyDown={open ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open() } } : undefined}
       className={cn(
         'group relative w-full overflow-hidden rounded-2xl border border-border bg-surface text-left transition-all lift',
         hasAssets ? 'cursor-pointer hover:border-brand/40' : 'cursor-default',
@@ -98,12 +103,18 @@ function CreativeCard({ creative, onClick }) {
               </Badge>
             </div>
           )}
-          {creative?.source === 'generated' && (
-            <div className="absolute right-2 top-2">
-              <span className="inline-flex items-center gap-1 rounded-full bg-white/85 px-2 py-0.5 text-[10px] font-bold text-brand shadow-sm backdrop-blur">
-                <Sparkles size={10} /> IA
-              </span>
-            </div>
+          {/* Delete — top-right, revealed on hover/focus. Stops propagation so it
+              never triggers the viewer. */}
+          {onDelete && !generating && (
+            <button
+              type="button"
+              aria-label="Excluir criativo"
+              disabled={deleting}
+              onClick={(e) => { e.stopPropagation(); onDelete(creative) }}
+              className="absolute right-2 top-2 z-10 grid size-7 place-items-center rounded-full bg-white/90 text-ink-muted opacity-0 shadow-sm backdrop-blur transition focus:opacity-100 focus:outline-none group-hover:opacity-100 hover:bg-danger hover:text-white disabled:opacity-50"
+            >
+              <Trash2 size={14} />
+            </button>
           )}
           {hasAssets && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/20 group-hover:opacity-100">
@@ -113,21 +124,25 @@ function CreativeCard({ creative, onClick }) {
         </div>
       </div>
 
-      {/* Name row — fixed single line, no caption spill that resizes the card */}
-      <div className="px-3 py-2">
+      {/* Name row — fixed single line, no caption spill that resizes the card.
+          The "IA" marker lives here (inline) so the thumbnail's top-right stays
+          free for the delete control. */}
+      <div className="flex items-center gap-1 px-3 py-2">
+        {creative?.source === 'generated' && <Sparkles size={11} className="shrink-0 text-brand" />}
         <p className="truncate text-xs font-semibold text-ink">
           {creative?.name || m.label}
         </p>
       </div>
-    </button>
+    </div>
   )
 }
 
-export default function CreativesPanel({ creatives = [], onGenerate, generating = false }) {
+export default function CreativesPanel({ creatives = [], onGenerate, generating = false, onDelete, deleting = false }) {
   const [open, setOpen] = useState(false)
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
   const [viewerAttachments, setViewerAttachments] = useState([])
+  const [pendingDelete, setPendingDelete] = useState(null)
   const items = creatives || []
 
   const fire = (item) => {
@@ -175,7 +190,13 @@ export default function CreativesPanel({ creatives = [], onGenerate, generating 
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {items.map((c) => (
-              <CreativeCard key={c.id} creative={c} onClick={() => openViewer(c)} />
+              <CreativeCard
+                key={c.id}
+                creative={c}
+                onClick={() => openViewer(c)}
+                onDelete={onDelete ? setPendingDelete : undefined}
+                deleting={deleting}
+              />
             ))}
           </div>
         )}
@@ -229,6 +250,34 @@ export default function CreativesPanel({ creatives = [], onGenerate, generating 
             <DialogClose asChild>
               <Button variant="ghost" size="sm">Cancelar</Button>
             </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete confirmation */}
+      <Dialog open={!!pendingDelete} onOpenChange={(v) => { if (!v) setPendingDelete(null) }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Trash2 size={18} className="text-danger" /> Excluir criativo
+            </DialogTitle>
+            <DialogDescription>
+              Esta ação não pode ser desfeita. O criativo “{pendingDelete?.name || creativeMeta(pendingDelete?.creative_type).label}” será removido permanentemente.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="ghost" size="sm">Cancelar</Button>
+            </DialogClose>
+            <Button
+              variant="destructive"
+              size="sm"
+              disabled={deleting}
+              onClick={() => { onDelete?.(pendingDelete.id); setPendingDelete(null) }}
+            >
+              {deleting ? <Spinner size={14} className="border-white/30 border-t-white" /> : <Trash2 size={14} />}
+              Excluir
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

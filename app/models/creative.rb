@@ -18,4 +18,19 @@ class Creative < ApplicationRecord
   validates :creative_type, presence: true
 
   def spec = Creatives.spec_for(creative_type)
+
+  # The publishable media kind (image / video / carousel), used to check whether
+  # a network supports this creative before posting. Derived from the actual
+  # attachments first, then the creative_type / slide metadata.
+  def media_kind
+    attached = assets.attached? ? assets : []
+    return "video" if attached.any? { |a| a.content_type.to_s.start_with?("video/") }
+
+    slides = metadata.is_a?(Hash) ? Array(metadata["slides"]) : []
+    image_count = attached.count { |a| a.content_type.to_s.start_with?("image/") }
+    return "carousel" if creative_type.to_s == "carousel" || slides.size > 1 || image_count > 1
+    return "image" if image_count == 1 || attached.any?
+
+    "text"
+  end
 end

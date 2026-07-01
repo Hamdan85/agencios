@@ -46,7 +46,7 @@ const SCHEMAS = {
       { key: 'creative_type', label: 'Tipo de criativo', kind: 'select', icon: Wand2, options: 'creative', hint: 'As opções dependem dos canais escolhidos' },
       { key: 'copy_brief', label: 'Briefing de copy', kind: 'textarea', rows: 3, icon: MessageSquareText, placeholder: 'Direção de mensagem para a legenda…', full: true },
       { key: 'script', label: 'Roteiro', kind: 'textarea', rows: 4, icon: FileText, placeholder: 'Roteiro / storyboard…', full: true },
-      { key: 'deliverables', label: 'Entregáveis', kind: 'lines', icon: ListChecks, placeholder: 'Um entregável por linha…', full: true, hint: 'Um item por linha' },
+      { key: 'deliverables', label: 'Entregáveis', kind: 'lines', icon: ListChecks, placeholder: 'Um entregável por linha…', full: true, hint: 'Pelo menos um entregável (um por linha). Na postagem você escolhe qual vai ao ar.' },
       { key: 'due_date', label: 'Prazo', kind: 'date', icon: CalendarClock },
       { key: 'effort_estimate', label: 'Estimativa de esforço', kind: 'text', icon: Clock, placeholder: 'Ex.: 4h, 2 dias…' },
     ],
@@ -64,8 +64,8 @@ const SCHEMAS = {
   },
   scheduled: {
     icon: CalendarClock,
-    title: 'Agendamento',
-    helper: 'Quando e como o conteúdo vai ao ar em cada canal.',
+    title: 'Postagem',
+    helper: 'Escolha o criativo e publique — imediatamente ou agendado.',
     fields: [
       { key: 'scheduled_at', label: 'Publicar em', kind: 'datetime', icon: CalendarClock, full: true },
       { key: 'first_comment', label: 'Primeiro comentário', kind: 'textarea', rows: 2, icon: MessageCircle, placeholder: 'Comentário fixado no post…', full: true },

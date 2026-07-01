@@ -1,13 +1,93 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR" xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="color-scheme" content="light only">
+    <meta name="supported-color-schemes" content="light only">
+    <title><%= content_for?(:title) ? yield(:title) : "agencios" %></title>
+    <!--[if mso]>
+      <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+    <![endif]-->
     <style>
-      /* Email styles need to be inline */
+      body, table, td, a { -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; }
+      table, td { mso-table-lspace:0pt; mso-table-rspace:0pt; }
+      img { -ms-interpolation-mode:bicubic; border:0; outline:none; text-decoration:none; }
+      body { margin:0; padding:0; width:100% !important; height:100% !important; }
+      a { color:#7C3AED; }
+      @media only screen and (max-width:620px) {
+        .email-card { width:100% !important; border-radius:0 !important; }
+        .email-pad { padding-left:24px !important; padding-right:24px !important; }
+      }
     </style>
   </head>
 
-  <body>
-    <%= yield %>
+  <body style="margin:0; padding:0; background-color:#F5F4FB; font-family:'Inter','Segoe UI',Helvetica,Arial,sans-serif; color:#18122B;">
+    <!-- Preheader: hidden preview text pulled from the template -->
+    <div style="display:none; max-height:0; overflow:hidden; mso-hide:all; font-size:1px; line-height:1px; color:#F5F4FB; opacity:0;">
+      <%= content_for?(:preheader) ? yield(:preheader) : "agencios — o sistema operacional da sua agência." %>
+      &#847;&zwnj;&nbsp;&#8199;&shy;
+    </div>
+
+    <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="background-color:#F5F4FB;">
+      <tr>
+        <td align="center" style="padding:32px 16px;">
+
+          <table role="presentation" class="email-card" width="600" border="0" cellpadding="0" cellspacing="0"
+                 style="width:600px; max-width:600px; background-color:#FFFFFF; border-radius:20px; overflow:hidden; box-shadow:0 8px 30px rgba(24,18,43,0.08);">
+
+            <!-- ── Header: brand gradient + logo + optional eyebrow ── -->
+            <tr>
+              <td style="background:linear-gradient(135deg,#8B5CF6 0%,#5B21B6 100%); background-color:#7C3AED; padding:28px 40px;">
+                <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td align="left" valign="middle">
+                      <img src="<%= logo_url %>" width="36" height="36" alt="agencios"
+                           style="display:inline-block; vertical-align:middle; border-radius:9px;">
+                      <span style="display:inline-block; vertical-align:middle; margin-left:10px; font-family:'Sora','Inter',Helvetica,Arial,sans-serif; font-size:20px; font-weight:800; letter-spacing:-0.02em; color:#FFFFFF;">agencios</span>
+                    </td>
+                    <% if content_for?(:eyebrow) %>
+                      <td align="right" valign="middle">
+                        <span style="display:inline-block; padding:6px 12px; background-color:rgba(255,255,255,0.18); border-radius:999px; font-size:12px; font-weight:600; color:#FFFFFF;"><%= yield(:eyebrow) %></span>
+                      </td>
+                    <% end %>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- ── Body ── -->
+            <tr>
+              <td class="email-pad" style="padding:36px 40px 28px;">
+                <%= yield %>
+              </td>
+            </tr>
+
+            <!-- ── Footer ── -->
+            <tr>
+              <td class="email-pad" style="padding:24px 40px 32px; border-top:1px solid #E8E6F2;">
+                <p style="margin:0 0 6px; font-size:13px; line-height:1.5; color:#8B86A3;">
+                  Enviado por <strong style="color:#564F6F;">agencios</strong> — o sistema operacional da sua agência.
+                </p>
+                <p style="margin:0; font-size:12px; line-height:1.5; color:#B6B1C9;">
+                  Este é um e-mail automático enviado de <a href="mailto:nao-responda@agencios.app" style="color:#8B86A3; text-decoration:underline;">nao-responda@agencios.app</a>. Por favor, não responda a esta mensagem.
+                </p>
+              </td>
+            </tr>
+
+          </table>
+
+          <table role="presentation" width="600" border="0" cellpadding="0" cellspacing="0" style="width:600px; max-width:600px;">
+            <tr>
+              <td align="center" style="padding:16px 24px 0;">
+                <a href="<%= app_url %>" style="font-size:12px; color:#B6B1C9; text-decoration:none;">agencios.app</a>
+              </td>
+            </tr>
+          </table>
+
+        </td>
+      </tr>
+    </table>
   </body>
 </html>

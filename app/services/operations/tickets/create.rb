@@ -46,6 +46,11 @@ module Operations
           body: ticket.title,
           path: "/tickets/#{ticket.id}"
         )
+
+        assignee = ticket.assignee
+        return if assignee.nil? || assignee.email.blank? || assignee.id == @user&.id
+
+        TicketMailer.assigned(ticket: ticket, assignee: assignee, actor: @user).deliver_later
       end
 
       private

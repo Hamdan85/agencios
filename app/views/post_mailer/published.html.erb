@@ -1,0 +1,20 @@
+<% content_for :preheader do %>Seu post foi publicado em <%= @provider %>.<% end %>
+<% content_for :eyebrow do %>Publicação<% end %>
+
+<h1 style="margin:0 0 16px;font-family:'Sora','Inter',Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#18122B;">
+  Post publicado ✅
+</h1>
+
+<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#564F6F;">
+  Olá, <%= @recipient.display_name %>. O post do ticket <strong><%= @ticket.display_title %></strong> foi publicado com sucesso em <strong><%= @provider %></strong>.
+  A partir de agora, as métricas começam a ser monitoradas automaticamente.
+</p>
+
+<% if @post.permalink.present? %>
+  <%= email_button("Ver publicação", @post.permalink) %>
+  <p style="margin:16px 0 0;font-size:14px;line-height:1.6;color:#564F6F;">
+    Acompanhe o desempenho no <a href="<%= @ticket_url %>" style="color:#7C3AED;">ticket</a>.
+  </p>
+<% else %>
+  <%= email_button("Abrir ticket", @ticket_url) %>
+<% end %>

@@ -1,0 +1,8 @@
+Olá, <%= @recipient.display_name %>!
+
+O post do ticket "<%= @ticket.display_title %>" foi publicado com sucesso em <%= @provider %>.
+As métricas começam a ser monitoradas automaticamente.
+<% if @post.permalink.present? %>
+Ver publicação: <%= @post.permalink %>
+<% end %>
+Abrir ticket: <%= @ticket_url %>

@@ -58,6 +58,9 @@ Rails.application.configure do
   # Make template changes take effect immediately.
   config.action_mailer.perform_caching = false
 
+  # Mailer previews (this app uses RSpec, so previews live under spec/).
+  config.action_mailer.preview_paths << Rails.root.join("spec/mailers/previews").to_s
+
   # Set the host used by links generated in mailer templates. Prefer the
   # configured external host (e.g. ngrok) so emailed links resolve remotely.
   config.action_mailer.default_url_options =

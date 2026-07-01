@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -205,19 +206,27 @@ export const useSocialAccounts = (clientId) =>
 export function useSocialAccountMutations(clientId) {
   const qc = useQueryClient()
   const inv = () => qc.invalidateQueries({ queryKey: keys.client(clientId) })
+  const [connecting, setConnecting] = useState(false)
 
-  function openOAuthPopup(url) {
+  // The popup MUST be opened synchronously inside the click handler — browsers
+  // block `window.open()` that isn't tied to a live user gesture, and the
+  // authorize_url fetch resolves a tick later, so opening it in the mutation
+  // callback was being silently blocked (the "nothing happens" bug). We open a
+  // blank popup on click and only point it at the OAuth URL once it arrives.
+  function openBlankPopup() {
     const w = 600
     const h = 700
     const left = Math.round(window.screenX + (window.outerWidth - w) / 2)
     const top = Math.round(window.screenY + (window.outerHeight - h) / 2)
-    const popup = window.open(url, 'oauth_popup', `width=${w},height=${h},left=${left},top=${top},toolbar=no,menubar=no`)
+    return window.open('about:blank', 'oauth_popup', `width=${w},height=${h},left=${left},top=${top},toolbar=no,menubar=no`)
+  }
 
-    // Facebook's OAuth hop can sever the popup's `window.opener` (COOP), so the
-    // popup can't reliably postMessage us or close itself. We listen on
-    // same-origin side channels that survive that — BroadcastChannel + a
-    // localStorage ping — plus the legacy postMessage, and WE close the popup
-    // (the opener keeps the reference). A poll on `popup.closed` is the backstop.
+  // Facebook's OAuth hop can sever the popup's `window.opener` (COOP), so the
+  // popup can't reliably postMessage us or close itself. We listen on
+  // same-origin side channels that survive that — BroadcastChannel + a
+  // localStorage ping — plus the legacy postMessage, and WE close the popup
+  // (the opener keeps the reference). A poll on `popup.closed` is the backstop.
+  function trackOAuthPopup(popup) {
     let done = false
     const bc = 'BroadcastChannel' in window ? new BroadcastChannel('agencios_oauth') : null
 
@@ -263,12 +272,25 @@ export function useSocialAccountMutations(clientId) {
     }, 800)
   }
 
+  function connect(network) {
+    const popup = openBlankPopup()
+    setConnecting(true)
+    socialApi.authorizeUrl(clientId, network)
+      .then((d) => {
+        if (!d?.url) throw new Error('missing authorize url')
+        if (popup) { popup.location.href = d.url; trackOAuthPopup(popup) }
+        else window.open(d.url, '_blank') // popup blocked: best-effort new tab
+      })
+      .catch((err) => {
+        try { popup?.close() } catch { /* cross-origin */ }
+        toast.error(err?.error || 'Não foi possível iniciar a conexão.')
+      })
+      .finally(() => setConnecting(false))
+  }
+
   return {
-    connect: useMutation({
-      mutationFn: (network) => socialApi.authorizeUrl(clientId, network),
-      onSuccess: (d) => { if (d?.url) openOAuthPopup(d.url) },
-      onError: onErr('Não foi possível iniciar a conexão.'),
-    }),
+    connect,
+    connecting,
     disconnect: useMutation({
       mutationFn: (id) => socialApi.destroy(clientId, id),
       onSuccess: () => { inv(); toast.success('Conta desconectada.') },

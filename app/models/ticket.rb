@@ -42,8 +42,8 @@ class Ticket < ApplicationRecord
     "ideation" => "Ideação",
     "scoping" => "Escopo",
     "production" => "Produção",
-    "scheduled" => "Agendado",
-    "published" => "Postado / Monitorando",
+    "scheduled" => "Postagem",
+    "published" => "No ar",
     "retrospective" => "Retrospectiva",
     "done" => "Concluído"
   }.freeze

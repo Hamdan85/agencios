@@ -12,8 +12,7 @@ module Controllers
         user = User.find_by(email: @params[:email].to_s.strip.downcase)
         if user
           token = user.generate_token_for(:password_reset)
-          # In production: PasswordMailer.reset(user, token).deliver_later
-          Rails.logger.info("[PasswordReset] token for #{user.email}: #{token}")
+          AuthMailer.password_reset(user: user, token: token).deliver_later
         end
         { message: "Se o e-mail existir, enviaremos instruções." }
       end

@@ -13,4 +13,15 @@ class Post < ApplicationRecord
   scope :due, -> { status_scheduled.where(scheduled_at: ..Time.current) }
 
   def latest_metric = post_metrics.order(captured_at: :desc).first
+
+  # The creative this post should publish. The team picks it at the posting step
+  # (stored as media["creative_id"]); otherwise fall back to the most recent
+  # creative that actually has assets attached. This is the single source of
+  # truth every vendor's PublishPost reads — never re-derive it ad hoc.
+  def publishable_creative
+    id = media.is_a?(Hash) ? media["creative_id"] : nil
+    (id && ticket.creatives.find_by(id: id)) ||
+      ticket.creatives.order(created_at: :desc).detect { |c| c.assets.attached? } ||
+      ticket.creatives.order(created_at: :desc).first
+  end
 end

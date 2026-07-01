@@ -18,6 +18,11 @@ module Controllers
         token = Token.sign(workspace_id: workspace.id, email: email, role: role)
         link  = "#{SystemConfig.app_host}/convite/#{token}"
 
+        InvitationMailer.invite(
+          email: email, role: role, link: link,
+          workspace: workspace, inviter: Current.user
+        ).deliver_later
+
         { invitation: { email: email, role: role, token: token, link: link } }
       end
     end

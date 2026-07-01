@@ -12,6 +12,9 @@ module Api
       # POST /api/v1/tickets/:id/advance  { to_status, position }
       def advance  = render_ok(Controllers::Tickets::Advance.call(params:))
 
+      # POST /api/v1/tickets/:id/publish  { creative_id, mode, scheduled_at }
+      def publish  = render_ok(Controllers::Tickets::Publish.call(params:))
+
       # PATCH /api/v1/tickets/:id/reorder  { position }
       def reorder  = render_ok(Controllers::Tickets::Reorder.call(params:))
 

@@ -1,0 +1,8 @@
+Olá, <%= @assignee.display_name %>!
+
+<% if @actor_name %><%= @actor_name %> atribuiu<% else %>Foi atribuída<% end %> uma tarefa a você no ticket "<%= @ticket.display_title %>":
+
+✓ <%= @subtask.title %>
+<% if @subtask.due_date %>Prazo: <%= email_date(@subtask.due_date) %>
+<% end %>
+Ver no ticket: <%= @ticket_url %>

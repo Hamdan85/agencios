@@ -1,0 +1,18 @@
+<% content_for :preheader do %>Seu período de teste da agencios termina em breve.<% end %>
+<% content_for :eyebrow do %>Assinatura<% end %>
+
+<h1 style="margin:0 0 16px;font-family:'Sora','Inter',Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#18122B;">
+  Seu teste termina em breve
+</h1>
+
+<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#564F6F;">
+  Olá<%= @owner&.display_name.present? ? ", #{@owner.display_name}" : "" %>. O período de teste da
+  <strong><%= @workspace.name %></strong> na agencios
+  <% if @subscription&.trial_ends_at %>termina em <strong><%= email_date(@subscription.trial_ends_at) %></strong><% else %>está chegando ao fim<% end %>.
+</p>
+
+<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#564F6F;">
+  Para continuar com o plano <strong><%= @plan_label %></strong> sem interrupções, adicione uma forma de pagamento.
+</p>
+
+<%= email_button("Gerenciar assinatura", @billing_url) %>

@@ -141,22 +141,23 @@ module Operations
 
       def copy_slides
         builder = Prompts::CarouselCopy.new(
-          workspace:  @ctx.workspace,
-          client:     @ctx.client,
-          slides:     @requested_slides,
-          topic:      @ctx.topic,
-          objective:  @ctx.objective,
-          copy_brief: @ctx.copy_brief,
-          script:     @ctx.script,
-          channels:   @ctx.channels.join(", "),
-          link_url:   @source_url
+          workspace:      @ctx.workspace,
+          client:         @ctx.client,
+          slides:         @requested_slides,
+          topic:          @ctx.topic,
+          objective:      @ctx.objective,
+          copy_brief:     @ctx.copy_brief,
+          script:         @ctx.script,
+          channels:       @ctx.channels.join(", "),
+          link_url:       @source_url,
+          reference_urls: @ctx.reference_urls
         )
         text = AiAdapter.complete(
           builder,
           max_tokens: COPY_MAX_TOKENS,
           operation:  "carousel_copy",
           subject:    @ticket,
-          web_fetch:  @source_url.present?
+          web_fetch:  @source_url.present? || @ctx.reference_urls.any?
         ).to_s
 
         parse_slides(text) || link_fallback || fallback_slides

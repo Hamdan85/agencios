@@ -1,0 +1,7 @@
+Olá<%= @owner&.display_name.present? ? ", #{@owner.display_name}" : "" %>!
+
+A assinatura <%= @plan_label %> da <%= @workspace.name %> foi cancelada.
+Você ainda pode acessar seus dados, mas os recursos pagos ficam indisponíveis.
+
+Mudou de ideia? Reative a qualquer momento:
+<%= @billing_url %>

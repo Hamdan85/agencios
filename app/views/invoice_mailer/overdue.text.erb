@@ -1,0 +1,11 @@
+Olá<%= @client.name.present? ? ", #{@client.name}" : "" %>!
+
+A cobrança abaixo, emitida pela <%= @workspace.name %>, está em aberto após o vencimento.
+
+Referência: <%= @invoice.external_reference %>
+<% if @invoice.due_date %>Venceu em: <%= email_date(@invoice.due_date) %>
+<% end %>Total: <%= email_brl(@invoice.amount_cents) %>
+<% if @payment_url.present? %>
+Regularizar pagamento: <%= @payment_url %>
+<% end %>
+Se você já pagou, por favor desconsidere este aviso.

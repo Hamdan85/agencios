@@ -48,6 +48,7 @@ module Prompts
     def user_prompt
       [
         link_instruction,
+        reference_instruction,
         present_line("Tema", context[:topic]),
         present_line("Material de apoio", context[:copy_brief]),
         present_line("Roteiro", context[:script]),
@@ -56,6 +57,22 @@ module Prompts
     end
 
     private
+
+    # References the team attached (ideation). UNLIKE the news-hook link, these are
+    # supporting material to actually READ and USE for context, data and direction
+    # — still expressed in the brand's voice and serving the brand's positioning.
+    def reference_instruction
+      urls = Array(context[:reference_urls]).map { |u| u.to_s.strip }.reject(&:blank?).uniq
+      return nil if urls.empty?
+
+      <<~TXT.strip
+        REFERÊNCIAS DE APOIO — leia estes links e use como base de contexto,
+        dados e direção para o conteúdo (eles foram fornecidos pela equipe):
+        #{urls.map { |u| "- #{u}" }.join("\n")}
+        Extraia o que for útil (ângulos, fatos, exemplos) e incorpore ao carrossel
+        SOBRE A MARCA, mantendo a voz e o posicionamento da marca.
+      TXT
+    end
 
     # The link is a HOOK ONLY — never reproduced. Read it for the current-topic
     # angle, then pivot entirely to the brand.

@@ -35,6 +35,11 @@ module Operations
           body: subtask.title,
           path: "/tickets/#{@ticket.id}"
         )
+
+        assignee = subtask.assignee
+        return if assignee.email.blank? || assignee.id == Current.user&.id
+
+        SubtaskMailer.assigned(subtask: subtask, assignee: assignee, actor: Current.user).deliver_later
       end
 
       def next_position

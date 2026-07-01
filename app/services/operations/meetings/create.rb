@@ -15,8 +15,32 @@ module Operations
         meeting.save!
 
         Operations::Meetings::SyncToCalendar.call(meeting)
+        notify_attendees(meeting)
 
         meeting
+      end
+
+      private
+
+      # Email everyone invited — the explicit attendee list plus the linked client.
+      def notify_attendees(meeting)
+        recipients(meeting).each do |email, name|
+          MeetingMailer.invitation(meeting: meeting, recipient_email: email, recipient_name: name).deliver_later
+        end
+      rescue StandardError => e
+        Rails.logger.warn("[Meetings::Create] invitation email failed: #{e.message}")
+      end
+
+      # => { "person@example.com" => "Name", ... } deduped, blank addresses dropped.
+      def recipients(meeting)
+        list = Array(meeting.attendees).filter_map do |a|
+          email = (a["email"] || a[:email]).to_s.strip
+          [email.downcase, (a["name"] || a[:name]).presence] if email.present?
+        end
+        if meeting.client&.email.present?
+          list << [meeting.client.email.strip.downcase, meeting.client.name]
+        end
+        list.to_h
       end
     end
   end

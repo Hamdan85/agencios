@@ -1,10 +1,14 @@
 import { useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { toast } from 'sonner'
 import {
   ArrowLeft, Wallet, CalendarRange, ListChecks, KanbanSquare, Pencil, Building2,
-  FileText, CheckCircle2,
+  FileText, CheckCircle2, Plus,
 } from 'lucide-react'
 import { useProject, useProjectMutations } from '@/hooks/useData'
+import { ticketsApi } from '@/api'
+import analytics, { EVENTS } from '@/lib/analytics'
 import { PageLoader, EmptyState } from '@/components/ui/feedback'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -12,6 +16,7 @@ import { Card } from '@/components/ui/card'
 import { StatusPill, PriorityDot } from '@/components/ui/iconography'
 import { Page } from '@/components/ui/page'
 import { TicketFilters } from '@/components/ticket/TicketFilters'
+import { NewTicketDialog } from '@/components/board/NewTicketDialog'
 import { brl, date, relativeDay } from '@/lib/formatters'
 
 const STATUS = {
@@ -25,9 +30,23 @@ export default function ProjectShow() {
   const { id } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
+  const qc = useQueryClient()
   const [filters, setFilters] = useState({})
+  const [ticketOpen, setTicketOpen] = useState(false)
   const { data, isLoading } = useProject(id, filters)
   const { finalize } = useProjectMutations()
+
+  // Create a ticket pre-scoped to this project; refresh the project's list + board.
+  const create = useMutation({
+    mutationFn: (payload) => ticketsApi.create(payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['projects'] })
+      qc.invalidateQueries({ queryKey: ['board'] })
+      analytics.track(EVENTS.TICKET_CREATED)
+      toast.success('Ticket criado!')
+    },
+    onError: (err) => toast.error(err?.error || 'Erro ao criar ticket.'),
+  })
 
   if (isLoading) return <PageLoader />
 
@@ -114,9 +133,14 @@ export default function ProjectShow() {
       </Card>
 
       {/* Tickets */}
-      <div className="mb-3 flex items-center gap-2">
-        <ListChecks size={18} style={{ color }} />
-        <h2 className="font-display text-lg font-bold text-ink">Tickets</h2>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <ListChecks size={18} style={{ color }} />
+          <h2 className="font-display text-lg font-bold text-ink">Tickets</h2>
+        </div>
+        <Button size="sm" onClick={() => setTicketOpen(true)}>
+          <Plus size={16} /> Novo ticket
+        </Button>
       </div>
 
       <TicketFilters filters={filters} onChange={setFilters} />
@@ -135,8 +159,8 @@ export default function ProjectShow() {
             icon={KanbanSquare}
             color={color}
             title="Sem tickets neste projeto"
-            description="Os tickets deste projeto aparecem no quadro. Crie um para começar a produção."
-            action={<Button asChild><Link to="/quadro"><KanbanSquare size={16} /> Ir para o quadro</Link></Button>}
+            description="Crie o primeiro ticket deste projeto para começar a produção."
+            action={<Button onClick={() => setTicketOpen(true)}><Plus size={16} /> Novo ticket</Button>}
           />
         )
       ) : (
@@ -167,6 +191,13 @@ export default function ProjectShow() {
           })}
         </Card>
       )}
+
+      <NewTicketDialog
+        open={ticketOpen}
+        onOpenChange={setTicketOpen}
+        create={create}
+        defaultProjectId={project.id}
+      />
     </Page>
   )
 }

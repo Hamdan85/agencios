@@ -1,0 +1,5 @@
+Olá<%= @client.name.present? ? ", #{@client.name}" : "" %>!
+
+A cobrança <%= @invoice.external_reference %> no valor de <%= email_brl(@invoice.amount_cents) %>, emitida pela <%= @workspace.name %>, foi cancelada. Nenhum pagamento é necessário.
+
+Em caso de dúvida, fale diretamente com a <%= @workspace.name %>.

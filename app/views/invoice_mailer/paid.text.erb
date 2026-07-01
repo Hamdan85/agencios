@@ -1,0 +1,9 @@
+Olá<%= @client.name.present? ? ", #{@client.name}" : "" %>!
+
+Recebemos seu pagamento. Obrigado por contar com a <%= @workspace.name %>!
+
+Referência: <%= @invoice.external_reference %>
+<% if @invoice.description.present? %>Descrição: <%= @invoice.description %>
+<% end %>Valor pago: <%= email_brl(@invoice.amount_cents) %>
+
+Guarde este e-mail como comprovante.

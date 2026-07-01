@@ -1,0 +1,12 @@
+Olá<%= @recipient_name.present? ? ", #{@recipient_name}" : "" %>!
+
+A <%= @workspace.name %> agendou uma reunião com você.
+
+<%= @meeting.title %>
+Início: <%= email_datetime(@meeting.starts_at) %>
+<% if @meeting.ends_at %>Término: <%= email_datetime(@meeting.ends_at) %>
+<% end %><% if @meet_url.present? %>
+Entrar no Google Meet: <%= @meet_url %>
+<% end %><% if @meeting.notes.present? %>
+Pauta: <%= @meeting.notes %>
+<% end %>

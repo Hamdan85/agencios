@@ -183,7 +183,7 @@ function SocialCard({ provider, account, mutations }) {
   const Icon = meta.icon
   const connected = !!account && account.status === 'connected' && !account.token_expired
   const needsReauth = !!account && (account.status === 'needs_reauth' || account.token_expired)
-  const busy = mutations.connect.isPending || mutations.disconnect.isPending
+  const busy = mutations.connecting || mutations.disconnect.isPending
 
   return (
     <Card className="flex flex-col p-5">
@@ -209,7 +209,7 @@ function SocialCard({ provider, account, mutations }) {
             <Unplug size={15} /> Desconectar
           </Button>
         ) : (
-          <Button variant="solid" size="sm" className="w-full" disabled={busy} onClick={() => mutations.connect.mutate(provider)}>
+          <Button variant="solid" size="sm" className="w-full" disabled={busy} onClick={() => mutations.connect(provider)}>
             {needsReauth ? <><RefreshCw size={15} /> Reconectar</> : <><Link2 size={15} /> Conectar</>}
           </Button>
         )}

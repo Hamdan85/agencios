@@ -32,7 +32,19 @@ module Operations
 
         invoice.projects = workspace.projects.where(id: @project_ids) if @project_ids.any?
 
+        notify_client(invoice)
         invoice
+      end
+
+      private
+
+      # Email the client the new invoice (client-facing — guard a missing address).
+      def notify_client(invoice)
+        return if invoice.client&.email.blank?
+
+        InvoiceMailer.created(invoice: invoice).deliver_later
+      rescue StandardError => e
+        Rails.logger.warn("[Invoices::Create] invoice email failed: #{e.message}")
       end
     end
   end

@@ -3,6 +3,7 @@ import { Layers, MessageSquare } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import AiSummaryCard from './AiSummaryCard'
 import FieldGroup from './FieldGroup'
+import PostingPanel from './PostingPanel'
 import CreativesPanel from './CreativesPanel'
 import AttachmentsPanel from './AttachmentsPanel'
 import MetaCard from './MetaCard'
@@ -34,12 +35,25 @@ export default function TicketBody({
         summarizing={mut.summarize.isPending}
         acting={mut.aiAction.isPending}
       />
-      <FieldGroup ticket={ticket} posts={posts} subtasks={subtasks} onSave={saveFields} saving={mut.update.isPending} />
+      {status === 'scheduled' ? (
+        <PostingPanel
+          ticket={ticket}
+          creatives={creatives}
+          posts={posts}
+          onSave={saveFields}
+          onPublish={(payload) => mut.publish.mutate(payload)}
+          publishing={mut.publish.isPending}
+        />
+      ) : (
+        <FieldGroup ticket={ticket} posts={posts} subtasks={subtasks} onSave={saveFields} saving={mut.update.isPending} />
+      )}
       {(showCreativesInMain || creatives.length > 0) && (
         <CreativesPanel
           creatives={creatives}
           onGenerate={(payload) => mut.generate.mutate(payload)}
           generating={mut.generate.isPending}
+          onDelete={(creativeId) => mut.removeCreative.mutate(creativeId)}
+          deleting={mut.removeCreative.isPending}
         />
       )}
       {/* Files are available in every workflow status. */}

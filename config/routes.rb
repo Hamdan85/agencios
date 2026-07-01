@@ -152,6 +152,7 @@ Rails.application.routes.draw do
         end
         member do
           post  :advance
+          post  :publish
           patch :reorder
           post  :summarize
           post  :ai_action

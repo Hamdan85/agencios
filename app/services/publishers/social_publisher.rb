@@ -30,6 +30,25 @@ module Publishers
       "youtube" => "Vendors::Youtube", "linkedin" => "Vendors::Linkedin", "x" => "Vendors::X",
     }.freeze
 
+    # Media kinds each network can publish (Creative#media_kind). A creative whose
+    # kind isn't supported is never posted to that network — e.g. TikTok / YouTube
+    # are video-only, so an image creative skips them.
+    SUPPORTED_MEDIA = {
+      "instagram" => %w[image carousel video],
+      "facebook"  => %w[image carousel video text],
+      "threads"   => %w[image carousel video text],
+      "tiktok"    => %w[video],
+      "youtube"   => %w[video],
+      "linkedin"  => %w[image carousel video text],
+      "x"         => %w[image carousel video text],
+    }.freeze
+
+    # Whether `provider` can publish a creative of the given media kind.
+    def self.supports?(provider, media_kind)
+      kinds = SUPPORTED_MEDIA[provider.to_s]
+      kinds.nil? || kinds.include?(media_kind.to_s)
+    end
+
     def self.publish(post) = new(post).publish
     def self.sync(post)    = new(post).sync
 
