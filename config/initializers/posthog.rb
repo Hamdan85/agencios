@@ -15,6 +15,13 @@
 # Deferred to after_initialize so the autoloader can resolve Vendors::Posthog.
 Rails.application.config.after_initialize do
   if Vendors::Posthog::Client.enabled?
+    # Quiet the SDK's own INFO chatter (e.g. "No personal API key provided,
+    # disabling local evaluation" — expected: we only CAPTURE events, we don't
+    # do server-side feature-flag local evaluation, which is the only thing a
+    # personal API key unlocks). Real send failures still surface via the
+    # client's `on_error` → Rails.logger.error.
+    PostHog::Logging.logger = Logger.new($stdout).tap { |l| l.level = Logger::WARN }
+
     # Build the client eagerly so its background flush thread is ready, and make
     # sure queued events are flushed on a clean process exit.
     Vendors::Posthog::Client.instance

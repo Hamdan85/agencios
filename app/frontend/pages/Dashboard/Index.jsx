@@ -122,13 +122,12 @@ export default function Dashboard() {
                 const m = statusMeta(status)
                 const Icon = m.icon
                 const count = Number(byStatus[status]) || 0
-                const grow = 1 + (totalFunnel ? count / totalFunnel : 0)
                 return (
                   <Link
                     key={status}
                     to="/quadro"
-                    className="group relative flex min-w-[120px] flex-col justify-between gap-3 overflow-hidden rounded-2xl border border-border p-3.5 transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_30px_-16px_rgba(24,18,43,0.3)] sm:min-w-0"
-                    style={{ flexGrow: grow, flexBasis: 0, background: `${m.color}0D`, borderColor: `${m.color}33` }}
+                    className="group relative flex min-w-[120px] flex-1 flex-col justify-between gap-3 overflow-hidden rounded-2xl border border-border p-3.5 transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_30px_-16px_rgba(24,18,43,0.3)] sm:min-w-0"
+                    style={{ flexBasis: 0, background: `${m.color}0D`, borderColor: `${m.color}33` }}
                   >
                     <div className="flex items-center justify-between">
                       <span className="flex size-8 items-center justify-center rounded-xl" style={{ background: `${m.color}1F`, color: m.color }}>
