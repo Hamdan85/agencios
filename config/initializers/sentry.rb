@@ -12,6 +12,7 @@ if sentry_dsn.present?
   Sentry.init do |config|
     config.dsn = sentry_dsn
     config.breadcrumbs_logger = [ :active_support_logger, :http_logger ]
+    config.enabled_environments = %w[production staging]
     config.send_default_pii   = false
     config.enable_logs        = true
     config.enabled_patches    = [ :logger ]
