@@ -9,7 +9,7 @@
 // Until a destination is loaded its global is absent and that branch is a
 // no-op, so one `analytics.track(...)` call safely reaches whatever is enabled.
 // Paths are already masked by the facade before they get here.
-import { META_EVENTS } from './events'
+import { META_EVENTS, SERVER_OWNED } from './events'
 
 function gtmPush(obj) {
   if (typeof window === 'undefined') return
@@ -30,7 +30,10 @@ export function createProvider() {
     track({ event, props }) {
       const payload = props || {}
       gtmPush({ event, ...payload })
-      window.posthog?.capture?.(event, payload)
+      // Server-owned events are captured in PostHog by the backend (with the same
+      // distinct_id), so skip the PostHog branch here to avoid double-counting —
+      // but still send them to GTM (above) and the Meta Pixel (below).
+      if (!SERVER_OWNED.has(event)) window.posthog?.capture?.(event, payload)
 
       if (window.fbq) {
         const standard = META_EVENTS[event]

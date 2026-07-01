@@ -1,0 +1,32 @@
+[
+  {
+    "event_name": "sign_up",
+    "event_description": "Server-side account creation — the reliable, unblockable copy of the signup conversion (the SPA sends this to GTM + the Meta Pixel only, so PostHog counts it once).",
+    "file": "app/services/controllers/registrations/create.rb"
+  },
+  {
+    "event_name": "login",
+    "event_description": "Server-side successful email/password authentication (the SPA keeps its login event for GTM only, so PostHog is not double-counted).",
+    "file": "app/services/controllers/sessions/create.rb"
+  },
+  {
+    "event_name": "subscription_payment",
+    "event_description": "SaaS revenue — a Stripe subscription invoice was paid with money collected; captured on the paid edge so repeat webhooks don't re-emit.",
+    "file": "app/services/operations/billing/sync_subscription.rb"
+  },
+  {
+    "event_name": "subscription_canceled",
+    "event_description": "Churn — a Stripe subscription was deleted; reliably captured server-side even when the cancel happens in the Stripe portal.",
+    "file": "app/services/operations/billing/sync_subscription.rb"
+  },
+  {
+    "event_name": "credit_pack_purchased",
+    "event_description": "Prepaid credit-pack revenue — a Stripe checkout for a credit pack completed; server-only (the browser never sees the webhook).",
+    "file": "app/services/operations/billing/sync_subscription.rb"
+  },
+  {
+    "event_name": "client_invoice_paid",
+    "event_description": "Agency-side revenue — a client paid a Mercado Pago invoice; captured once on the invoice paid edge (idempotent across webhook + reconciliation sweep).",
+    "file": "app/services/operations/billing/sync_payment_status.rb"
+  }
+]

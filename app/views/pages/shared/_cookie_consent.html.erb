@@ -22,8 +22,11 @@
   gtm_id       = ENV["GTM_CONTAINER_ID"].presence
   ga_id        = ENV["GA_MEASUREMENT_ID"].presence
   pixel_id     = ENV["META_PIXEL_ID"].presence
-  posthog_key  = ENV["POSTHOG_KEY"].presence
-  posthog_host = ENV["POSTHOG_HOST"].presence || "https://us.i.posthog.com"
+  # One project token powers both the SPA (here) and server-side capture
+  # (Vendors::Posthog::Client). VITE_POSTHOG_PROJECT_TOKEN is the canonical name;
+  # POSTHOG_KEY is kept as a legacy fallback.
+  posthog_key  = ENV["VITE_POSTHOG_PROJECT_TOKEN"].presence || ENV["POSTHOG_KEY"].presence
+  posthog_host = ENV["VITE_POSTHOG_HOST"].presence || ENV["POSTHOG_HOST"].presence || "https://us.i.posthog.com"
 %>
 
 <script>
@@ -75,6 +78,41 @@
       gtag('config', CFG.gaId, { anonymize_ip: true });
     }
 
+    // ── PostHog URL masking (mirrors app/frontend/lib/analytics/maskPath.js) ──
+    // Replace id-looking path segments with ':id' so dynamic routes never
+    // explode PostHog path breakdowns or persist a record id on a person.
+    function phMaskPathname(pathname) {
+      if (typeof pathname !== 'string' || !pathname) return pathname;
+      return pathname.split('/').map(function (seg) {
+        if (!seg) return seg;
+        if (/^\d+$/.test(seg)) return ':id';                       // 1, 2, 42
+        if (/^[0-9a-f]{8,}$/i.test(seg)) return ':id';             // hex / uuid
+        if (/[0-9]/.test(seg) && seg.length >= 16) return ':id';   // long mixed ids
+        return seg;
+      }).join('/');
+    }
+    function phMaskUrl(value) {
+      if (typeof value !== 'string' || !value) return value;
+      try { var u = new URL(value); u.pathname = phMaskPathname(u.pathname); return u.toString(); }
+      catch (e) { return phMaskPathname(value.split('?')[0].split('#')[0]); }
+    }
+    function phMaskBag(bag) {
+      if (!bag || typeof bag !== 'object') return;
+      if (bag.$current_url) bag.$current_url = phMaskUrl(bag.$current_url);
+      if (bag.$initial_current_url) bag.$initial_current_url = phMaskUrl(bag.$initial_current_url);
+      if (bag.$pathname) bag.$pathname = phMaskPathname(bag.$pathname);
+      if (bag.$initial_pathname) bag.$initial_pathname = phMaskPathname(bag.$initial_pathname);
+      if (typeof bag.$referrer === 'string' && bag.$referrer.indexOf('http') === 0) bag.$referrer = phMaskUrl(bag.$referrer);
+    }
+    function phBeforeSend(event) {
+      if (event && event.properties) {
+        phMaskBag(event.properties);
+        phMaskBag(event.properties.$set);
+        phMaskBag(event.properties.$set_once);
+      }
+      return event;
+    }
+
     // ── Consent-only tags: PostHog + Meta Pixel (lazy, once) ──────────
     function loadPostHog() {
       if (window.__phLoaded || !CFG.posthogKey) return;
@@ -85,7 +123,15 @@
         person_profiles: 'identified_only',
         capture_pageview: false,    // the analytics facade drives all pageviews
         autocapture: true,
-        persistence: 'localStorage+cookie'
+        persistence: 'localStorage+cookie',
+        // Collapse dynamic id segments out of EVERY event's URL before it is
+        // sent. The manual $pageview is already masked by the JS facade
+        // (maskPath.js), but autocapture / $pageleave / $exception and the
+        // $set_once person props ($initial_current_url) read the RAW browser URL
+        // at send time — without this, /projetos/1 and /projetos/2 would shatter
+        // into distinct paths and a record id would stick to the person forever.
+        // Self-contained (no bundle dependency) so it runs from the first event.
+        before_send: phBeforeSend
       });
     }
 

@@ -35,6 +35,14 @@ export const EVENTS = {
   AI_ACTION: 'ai_action',
 }
 
+// Events PostHog captures SERVER-SIDE (see Vendors::Posthog::Actions::Capture),
+// so the browser must NOT also send them to PostHog or the person's funnel would
+// double-count. They still fan out to GTM + the Meta Pixel from the client (Meta
+// Ads / GA need the browser-side signal); only the PostHog branch is skipped for
+// these. Server capture uses the same distinct_id (user.id), so it lands on the
+// exact same PostHog person — no duplicate paths from mismatched ids.
+export const SERVER_OWNED = new Set([EVENTS.SIGN_UP, EVENTS.LOGIN])
+
 // Funnel events → Meta standard events. Keep this small and intentional; only
 // the events Meta Ads can meaningfully optimise toward belong here.
 export const META_EVENTS = {

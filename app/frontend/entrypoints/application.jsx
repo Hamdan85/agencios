@@ -3,9 +3,29 @@ import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'sonner'
 import App from '@/App'
+import { Button } from '@/components/ui/button'
 import { ConfirmProvider } from '@/components/ui/confirm-dialog'
+import { ErrorScene } from '@/components/errors/ErrorScene'
 import { bootAnalytics } from '@/lib/analytics/boot'
+import { initSentry, Sentry } from '@/lib/sentry'
 import './application.css'
+
+// Top-level crash screen for render errors that escape the router (the router
+// has its own errorElement). Sentry has already captured the exception by the
+// time this renders; reloading re-mounts the app from a clean slate.
+function AppErrorFallback() {
+  return (
+    <ErrorScene
+      code="500"
+      title="Algo deu errado por aqui"
+      description="Já fomos avisados e estamos de olho nisso. Tente recarregar a página."
+      actions={<Button size="lg" onClick={() => window.location.reload()}>Recarregar</Button>}
+    />
+  )
+}
+
+// Boot error monitoring before anything else so early failures are captured.
+initSentry()
 
 // Mark this surface as the SPA and wire the analytics fan-out provider into the
 // consent-gated facade. Page views + identify are then driven by AnalyticsBridge.
@@ -48,7 +68,9 @@ createRoot(document.getElementById('root')).render(
     <QueryClientProvider client={queryClient}>
       <Toaster richColors position="top-right" toastOptions={{ style: { fontFamily: 'var(--font-sans)' } }} />
       <ConfirmProvider>
-        <App />
+        <Sentry.ErrorBoundary fallback={<AppErrorFallback />}>
+          <App />
+        </Sentry.ErrorBoundary>
       </ConfirmProvider>
     </QueryClientProvider>
   </StrictMode>,

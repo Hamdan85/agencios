@@ -99,12 +99,17 @@ module Operations
         workspace = Workspace.find_by(id: read(metadata, :workspace_id))
         return :workspace_not_found unless workspace
 
-        Operations::Credits::Purchase.call(
+        result = Operations::Credits::Purchase.call(
           workspace: workspace,
           amount: read(metadata, :credits).to_i,
           reference: read(session, :id),
           description: "Compra de créditos — pacote #{read(metadata, :pack)}"
         )
+        # Credit-pack revenue — server-only (a Stripe checkout webhook).
+        track_billing('credit_pack_purchased', workspace,
+                      credits: read(metadata, :credits).to_i, pack: read(metadata, :pack),
+                      amount_cents: read(session, :amount_total).to_i, currency: read(session, :currency))
+        result
       end
 
       # Grant (reset) the plan's monthly included-credit allotment, expiring at the
@@ -164,6 +169,9 @@ module Operations
 
         record.update!(status: 'canceled', cancel_at: Time.current)
         notify_owner(workspace, record, :canceled)
+        # Churn — reliably captured server-side even when the cancel happens in
+        # the Stripe portal (the browser never fires it).
+        track_billing('subscription_canceled', workspace, plan: record.plan)
         record
       end
 
@@ -176,7 +184,14 @@ module Operations
         # invoice must not grant credits (that would reopen the trial exploit).
         if record.is_a?(Subscription)
           record.update!(card_on_file: true, trial_used: true)
-          grant_monthly_credits(record) if invoice_charged?
+          if invoice_charged?
+            grant_monthly_credits(record)
+            # SaaS revenue — a server-only event (the browser never sees the
+            # invoice). No client counterpart, so no double-count.
+            track_billing('subscription_payment', record.workspace,
+                          plan: record.plan, amount_cents: read(event_object, :amount_paid).to_i,
+                          currency: read(event_object, :currency))
+          end
         end
         record
       end
@@ -228,6 +243,19 @@ module Operations
           "[Stripe] v1.billing.meter.error_report_triggered: #{event_object.inspect}"
         )
         :alerted
+      end
+
+      # Emit a server-side PostHog revenue/lifecycle event for a workspace,
+      # keyed on its owner (matching the SPA identify) and grouped by workspace.
+      # These are all server-only events with no browser counterpart, so PostHog
+      # never double-counts them.
+      def track_billing(event, workspace, **properties)
+        owner = workspace&.owner
+        return unless owner
+
+        Vendors::Posthog::Actions::Capture.call(
+          user: owner, event: event, properties: properties, groups: { workspace: workspace.id }
+        )
       end
 
       # ── Helpers ───────────────────────────────────────────────────────────

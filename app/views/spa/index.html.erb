@@ -21,6 +21,18 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400..800&family=Inter:opsz,wght@14..32,300..700&family=Space+Grotesk:wght@400..700&display=swap" />
 
+    <%# Frontend error monitoring config (public browser DSN, safe to expose).
+        Read from ENV so it can differ per environment; Sentry stays inert when
+        SENTRY_FRONTEND_DSN is unset (e.g. local dev). %>
+    <% if (sentry_dsn = ENV["SENTRY_FRONTEND_DSN"].presence) %>
+      <script>
+        window.__AGENCIOS_SENTRY = {
+          dsn: <%= raw sentry_dsn.to_json %>,
+          environment: <%= raw Rails.env.to_s.to_json %>
+        }
+      </script>
+    <% end %>
+
     <%= vite_react_refresh_tag %>
     <%= vite_client_tag %>
     <%= vite_javascript_tag "application.jsx" %>

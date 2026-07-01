@@ -15,6 +15,9 @@ module Controllers
         user = User.find_by(email: @email.to_s.strip.downcase)
         return unless user&.authenticate(@password.to_s)
 
+        # PostHog owns `login` server-side; the SPA keeps it for GTM only, so the
+        # event is never double-counted. Same distinct_id → one person.
+        Vendors::Posthog::Actions::Capture.call(user: user, event: 'login', properties: { method: 'password' })
         user
       end
     end

@@ -122,7 +122,7 @@ export default function Dashboard() {
                 const m = statusMeta(status)
                 const Icon = m.icon
                 const count = Number(byStatus[status]) || 0
-                const grow = Math.max(count, totalFunnel === 0 ? 1 : 0.18)
+                const grow = 1 + (totalFunnel ? count / totalFunnel : 0)
                 return (
                   <Link
                     key={status}

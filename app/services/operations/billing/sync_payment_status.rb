@@ -81,6 +81,23 @@ module Operations
 
         invoice.update!(status: :paid)
         Operations::Invoices::NotifyPaid.call(invoice: invoice)
+        track_client_invoice_paid(invoice)
+      end
+
+      # Agency-side revenue: a client paid an invoice via Mercado Pago. Captured
+      # once on the paid edge (the `status_paid?` guard above makes it idempotent
+      # across repeat webhooks + the reconciliation sweep). Keyed on the workspace
+      # owner + grouped by workspace, matching the SPA identify. Server-only — the
+      # browser never sees the payment, so PostHog never double-counts it.
+      def track_client_invoice_paid(invoice)
+        owner = invoice.workspace&.owner
+        return unless owner
+
+        Vendors::Posthog::Actions::Capture.call(
+          user: owner, event: 'client_invoice_paid',
+          properties: { amount_cents: invoice.amount_cents, currency: invoice.currency },
+          groups: { workspace: invoice.workspace_id }
+        )
       end
 
       def charge_scope

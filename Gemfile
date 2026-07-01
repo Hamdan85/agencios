@@ -49,6 +49,14 @@ gem 'google-apis-calendar_v3'
 gem 'google-apis-meet_v2'
 gem 'googleauth'
 
+# Error monitoring
+gem 'sentry-ruby'
+gem 'sentry-rails'
+
+# Product analytics — server-side PostHog capture (complements the client-side
+# analytics facade in app/frontend/lib/analytics). See config/initializers/posthog.rb.
+gem 'posthog-ruby', require: 'posthog'
+
 # Serialization
 gem 'active_model_serializers'
 

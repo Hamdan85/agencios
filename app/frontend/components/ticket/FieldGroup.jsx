@@ -114,17 +114,17 @@ const arrayToLines = (arr) => (Array.isArray(arr) ? arr.join('\n') : arr || '')
 // ── Read-only stat tiles for a post's metrics ────────────────────────────
 function MetricTiles({ metrics }) {
   return (
-    <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+    <div className="grid grid-cols-3 gap-2">
       {METRIC_TILES.map((t) => {
         const Icon = t.icon
         const value = metrics?.[t.key]
         return (
-          <div key={t.key} className="rounded-xl border border-border bg-surface-muted/60 p-2.5 text-center">
-            <Icon size={15} strokeWidth={2.3} className="mx-auto" style={{ color: t.color }} />
-            <p className="mt-1 font-display text-base font-extrabold text-ink">
+          <div key={t.key} className="flex flex-col items-center justify-center gap-1 rounded-xl border border-border bg-surface-muted/60 p-3 text-center">
+            <Icon size={15} strokeWidth={2.3} style={{ color: t.color }} />
+            <p className="font-display text-lg font-extrabold leading-none text-ink">
               {value != null ? Number(value).toLocaleString('pt-BR') : '—'}
             </p>
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-muted">{t.label}</p>
+            <p className="text-[10px] font-semibold uppercase leading-tight tracking-wide text-ink-muted">{t.label}</p>
           </div>
         )
       })}
