@@ -9,6 +9,13 @@ module Api
     class StrategyMessagesController < BaseController
       include ActionController::Live
 
+      # Plan generation (plan_ready? + build_plan) runs SYNC for 100–230s while the
+      # stream sits silent. The app is fronted by Cloudflare, which severs any
+      # proxied connection idle for ~100s — killing the SSE mid-turn and surfacing
+      # a spurious "Ocorreu um erro" in the UI. A comment ping on this interval
+      # keeps bytes flowing so the connection survives the silent gap.
+      HEARTBEAT_INTERVAL = 15 # seconds
+
       # POST /api/v1/strategy_sessions/:strategy_session_id/messages
       def create
         session = Current.workspace.strategy_sessions.find(params[:strategy_session_id])
@@ -17,6 +24,8 @@ module Api
         response.headers['Content-Type']      = 'text/event-stream'
         response.headers['Cache-Control']     = 'no-cache'
         response.headers['X-Accel-Buffering'] = 'no' # let nginx pass chunks through unbuffered
+
+        start_heartbeat
 
         result = Operations::Strategy::Converse.call(
           session: session,
@@ -38,13 +47,35 @@ module Api
         Rails.logger.error("[StrategyMessages] #{e.class}: #{e.message}")
         write_sse('error', message: 'Erro ao processar a mensagem.')
       ensure
+        stop_heartbeat
         response.stream.close
       end
 
       private
 
+      # Background pinger that writes an SSE comment every HEARTBEAT_INTERVAL so the
+      # connection never idles past Cloudflare's cutoff during synchronous AI calls.
+      # Shares @stream_mutex with write_sse so a ping never splits a real frame.
+      def start_heartbeat
+        @stream_mutex = Mutex.new
+        @heartbeat = Thread.new do
+          loop do
+            sleep HEARTBEAT_INTERVAL
+            @stream_mutex.synchronize { response.stream.write(": ping\n\n") }
+          end
+        rescue IOError, ActionController::Live::ClientDisconnected
+          # Client went away — let the request unwind normally.
+        end
+      end
+
+      def stop_heartbeat
+        @heartbeat&.kill
+      end
+
       def write_sse(event, data)
-        response.stream.write("event: #{event}\ndata: #{data.to_json}\n\n")
+        (@stream_mutex ||= Mutex.new).synchronize do
+          response.stream.write("event: #{event}\ndata: #{data.to_json}\n\n")
+        end
       end
     end
   end

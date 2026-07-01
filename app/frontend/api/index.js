@@ -291,6 +291,7 @@ export const strategyApi = {
         const rawBlock = buffer.slice(0, sep)
         buffer = buffer.slice(sep + 2)
         if (!rawBlock.trim()) continue
+        if (rawBlock.startsWith(':')) continue // keep-alive comment (heartbeat) — ignore
         const { event, data } = parseBlock(rawBlock)
         let payload = {}
         try { payload = data ? JSON.parse(data) : {} } catch { payload = {} }
