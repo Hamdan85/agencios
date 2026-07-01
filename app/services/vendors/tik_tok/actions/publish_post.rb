@@ -138,23 +138,33 @@ module Vendors
           asset = creative&.assets&.first
           return nil if asset.blank?
 
-          Rails.application.routes.url_helpers.rails_blob_url(asset, host: SystemConfig.app_host)
+          blob_url(asset)
         end
 
-        # Carousel image URLs from creative.metadata.slides, else attached image assets.
+        # Carousel image URLs from creative.metadata.slides, falling back to
+        # attached image assets when the slides don't carry a url (e.g. older
+        # metadata format) — the attached assets are always the source of truth.
         def photo_urls
-          @photo_urls ||= begin
-            slides = creative&.metadata&.dig('slides')
-            if slides.present?
-              Array(slides).filter_map { |s| s.is_a?(Hash) ? s['url'] : s }
-            else
-              Array(creative&.assets).filter_map do |asset|
-                next unless asset.content_type.to_s.start_with?('image/')
+          @photo_urls ||= metadata_photo_urls.presence || asset_photo_urls
+        end
 
-                Rails.application.routes.url_helpers.rails_blob_url(asset, host: SystemConfig.app_host)
-              end
-            end
+        def metadata_photo_urls
+          slides = creative&.metadata&.dig('slides')
+          return [] if slides.blank?
+
+          Array(slides).filter_map { |s| s.is_a?(Hash) ? s['url'] : s }
+        end
+
+        def asset_photo_urls
+          Array(creative&.assets).filter_map do |asset|
+            next unless asset.content_type.to_s.start_with?('image/')
+
+            blob_url(asset)
           end
+        end
+
+        def blob_url(asset)
+          Rails.application.routes.url_helpers.rails_blob_url(asset, host: SystemConfig.app_host)
         end
       end
     end

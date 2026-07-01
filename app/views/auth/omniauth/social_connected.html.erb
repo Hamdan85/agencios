@@ -28,11 +28,11 @@
     (function () {
       var payload = {
         type: "oauth_connected",
-        clientId: <%= @client_id.to_json %>,
-        network:  <%= @connected.to_json %>,
-        error:    <%= @error.presence.to_json %>
+        clientId: <%== @client_id.to_json %>,
+        network:  <%== @connected.to_json %>,
+        error:    <%== @error.presence.to_json %>
       };
-      var link = <%= @link.presence.to_json %>;
+      var link = <%== @link.presence.to_json %>;
 
       // Facebook serves Cross-Origin-Opener-Policy during the OAuth hop, which
       // can permanently sever `window.opener` (and block window.close()) even

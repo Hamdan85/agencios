@@ -19,7 +19,7 @@
     (function () {
       var payload = {
         type:  "calendar_connected",
-        error: <%= error.presence.to_json %>
+        error: <%== error.presence.to_json %>
       };
 
       if (window.opener && !window.opener.closed) {

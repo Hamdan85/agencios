@@ -210,19 +210,25 @@ module Vendors
           @video_url = asset ? blob_url(asset) : nil
         end
 
-        # Carousel/gallery image URLs from creative.metadata.slides, else image assets.
+        # Carousel/gallery image URLs from creative.metadata.slides, falling back to
+        # attached image assets when the slides don't carry a url (e.g. older
+        # metadata format) — the attached assets are always the source of truth.
         def image_urls
-          @image_urls ||= begin
-            slides = creative&.metadata&.dig('slides')
-            if slides.present?
-              Array(slides).filter_map { |s| s.is_a?(Hash) ? s['url'] : s }
-            else
-              Array(creative&.assets).filter_map do |asset|
-                next unless asset.content_type.to_s.start_with?('image/')
+          @image_urls ||= metadata_image_urls.presence || asset_image_urls
+        end
 
-                blob_url(asset)
-              end
-            end
+        def metadata_image_urls
+          slides = creative&.metadata&.dig('slides')
+          return [] if slides.blank?
+
+          Array(slides).filter_map { |s| s.is_a?(Hash) ? s['url'] : s }
+        end
+
+        def asset_image_urls
+          Array(creative&.assets).filter_map do |asset|
+            next unless asset.content_type.to_s.start_with?('image/')
+
+            blob_url(asset)
           end
         end
 

@@ -45,8 +45,9 @@ module Operations
           provider: PROVIDER
         )
 
-        render_and_attach(slides)
-        @creative.update!(status: :ready, metadata: { slides: slides_metadata(slides) })
+        blobs = render_and_attach(slides)
+        slides_meta = slides_metadata(slides, blobs)
+        @creative.update!(status: :ready, metadata: { slides: slides_meta })
 
         generation = workspace.generations.create!(
           user: Current.user,
@@ -56,7 +57,7 @@ module Operations
           provider: PROVIDER,
           cost_cents: COST_CENTS,
           params: @params,
-          result: { slides: slides_metadata(slides) }
+          result: { slides: slides_meta }
         )
 
         meter!(generation)
@@ -237,12 +238,14 @@ module Operations
         end
 
         pngs = Vendors::Render::Html.batch(htmls: htmls, width: width, height: height)
-        pngs.each_with_index do |png, i|
-          @creative.assets.attach(
+        pngs.each_with_index.map do |png, i|
+          blob = ActiveStorage::Blob.create_and_upload!(
             io: StringIO.new(png),
             filename: "slide-#{i + 1}.png",
             content_type: 'image/png'
           )
+          @creative.assets.attach(blob)
+          blob
         end
       end
 
@@ -330,10 +333,17 @@ module Operations
 
       # --- bookkeeping ---------------------------------------------------------
 
-      def slides_metadata(slides)
+      # `url` is the publicly reachable HTTPS blob URL each network vendor's
+      # PublishPost reads to build the carousel — must stay in sync with the
+      # asset actually attached for this slide (instagram.md §9 / facebook.md §9).
+      def slides_metadata(slides, blobs)
         slides.each_with_index.map do |slide, i|
-          { index: i + 1, role: slide['role'], headline: slide['headline'] }
+          { index: i + 1, role: slide['role'], headline: slide['headline'], url: blob_url(blobs[i]) }
         end
+      end
+
+      def blob_url(blob)
+        Rails.application.routes.url_helpers.rails_blob_url(blob, host: SystemConfig.app_host)
       end
 
       def log_banana_image

@@ -80,7 +80,7 @@
 
   <script>
     (function () {
-      var token = <%= @data[:token].to_json %>;
+      var token = <%== @data[:token].to_json %>;
 
       function markConnected(network) {
         var btn = document.querySelector('.net[data-network="' + network + '"]');
