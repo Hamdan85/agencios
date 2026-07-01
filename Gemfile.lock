@@ -546,6 +546,7 @@ GEM
     snaky_hash (2.0.6)
       hashie (>= 0.1.0, < 6)
       version_gem (>= 1.1.8, < 3)
+    stackprof (0.2.28)
     stripe (19.3.0)
       bigdecimal
       logger
@@ -644,6 +645,7 @@ DEPENDENCIES
   sentry-ruby
   sidekiq (~> 8.0)
   sidekiq-cron
+  stackprof
   stripe
   thruster
   tzinfo-data
@@ -847,6 +849,7 @@ CHECKSUMS
   sidekiq-cron (2.4.0) sha256=25595c5aee0c16d13a89466e5108af047fa4cfbf388199b39e1a600ca39472d4
   signet (0.22.0) sha256=b76d495ccb07ad35dbc89f3e920665a9d8ed717141955034005d7843dcfe4780
   snaky_hash (2.0.6) sha256=3663cae48cdef582b517025cf8a39d8789996eaf0b4ed89e2f0624836505654a
+  stackprof (0.2.28) sha256=4ec2ace02f386012b40ca20ef80c030ad711831f59511da12e83b34efb0f9a04
   stripe (19.3.0) sha256=fcc356a2a552f8b0402dac78dfc439b6deaa77ad0203e80959558130e47e74bf
   thor (1.5.0) sha256=e3a9e55fe857e44859ce104a84675ab6e8cd59c650a49106a05f55f136425e73
   thruster (0.1.22) sha256=f34fb82bd3e31570ae8f8b930e484f9e1db7b080cbc993d49090b161879c3e05

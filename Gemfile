@@ -52,6 +52,8 @@ gem 'googleauth'
 # Error monitoring
 gem 'sentry-ruby'
 gem 'sentry-rails'
+# Sampling call-stack profiler — powers Sentry's Profiling (config.profiles_sample_rate).
+gem 'stackprof'
 
 # Product analytics — server-side PostHog capture (complements the client-side
 # analytics facade in app/frontend/lib/analytics). See config/initializers/posthog.rb.
