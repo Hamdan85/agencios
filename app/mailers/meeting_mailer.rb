@@ -9,6 +9,7 @@ class MeetingMailer < ApplicationMailer
     @meeting = meeting
     @recipient_name = recipient_name
     @workspace = meeting.workspace
+    @brand_workspace = @workspace
     @meet_url = meeting.meet_url
     mail(to: recipient_email, subject: "Reunião agendada: #{meeting.title} — #{email_datetime(meeting.starts_at)}")
   end

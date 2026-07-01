@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_01_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_01_200000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -75,6 +75,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_01_120000) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "admin_audit_logs", force: :cascade do |t|
+    t.string "action", null: false
+    t.datetime "created_at", null: false
+    t.string "ip_address"
+    t.jsonb "metadata", default: {}, null: false
+    t.bigint "staff_user_id"
+    t.bigint "target_id"
+    t.string "target_type"
+    t.datetime "updated_at", null: false
+    t.index ["action", "created_at"], name: "index_admin_audit_logs_on_action_and_created_at"
+    t.index ["staff_user_id"], name: "index_admin_audit_logs_on_staff_user_id"
+    t.index ["target_type", "target_id"], name: "index_admin_audit_logs_on_target_type_and_target_id"
   end
 
   create_table "ai_usage_logs", force: :cascade do |t|
@@ -182,6 +196,38 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_01_120000) do
     t.index ["ticket_id"], name: "index_creatives_on_ticket_id"
     t.index ["workspace_id", "status"], name: "index_creatives_on_workspace_id_and_status"
     t.index ["workspace_id"], name: "index_creatives_on_workspace_id"
+  end
+
+  create_table "credit_transactions", force: :cascade do |t|
+    t.integer "amount", null: false
+    t.integer "balance_after", default: 0, null: false
+    t.string "bucket", default: "purchased", null: false
+    t.datetime "created_at", null: false
+    t.string "description"
+    t.datetime "expires_at"
+    t.bigint "generation_id"
+    t.integer "granted_delta", default: 0, null: false
+    t.string "kind", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.integer "purchased_delta", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.bigint "workspace_id", null: false
+    t.index ["generation_id"], name: "index_credit_transactions_on_generation_id"
+    t.index ["kind", "created_at"], name: "index_credit_transactions_on_kind_and_created_at"
+    t.index ["user_id"], name: "index_credit_transactions_on_user_id"
+    t.index ["workspace_id", "created_at"], name: "index_credit_transactions_on_workspace_id_and_created_at"
+    t.index ["workspace_id"], name: "index_credit_transactions_on_workspace_id"
+  end
+
+  create_table "credit_wallets", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "granted_balance", default: 0, null: false
+    t.datetime "granted_expires_at"
+    t.integer "purchased_balance", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["workspace_id"], name: "index_credit_wallets_on_workspace_id", unique: true
   end
 
   create_table "generations", force: :cascade do |t|
@@ -378,6 +424,54 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_01_120000) do
     t.index ["workspace_id"], name: "index_posts_on_workspace_id"
   end
 
+  create_table "pricing_configs", force: :cascade do |t|
+    t.integer "annual_discount_percent", default: 15, null: false
+    t.integer "carousel_credits", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.integer "credit_unit_cents", default: 100, null: false
+    t.integer "image_credits", default: 1, null: false
+    t.integer "margin_multiplier", default: 5, null: false
+    t.integer "trial_days", default: 7, null: false
+    t.datetime "updated_at", null: false
+    t.decimal "usd_brl", precision: 8, scale: 4, default: "5.4", null: false
+    t.integer "video_photoreal_credits_per_15s", default: 30, null: false
+    t.integer "video_standard_credits_per_15s", default: 8, null: false
+  end
+
+  create_table "pricing_packs", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.integer "credits", default: 0, null: false
+    t.string "key", null: false
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.integer "price_cents", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["key"], name: "index_pricing_packs_on_key", unique: true
+  end
+
+  create_table "pricing_plans", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.integer "annual_price_cents", default: 0, null: false
+    t.integer "clients", default: 1, null: false
+    t.datetime "created_at", null: false
+    t.jsonb "features", default: [], null: false
+    t.integer "included_credits", default: 0, null: false
+    t.string "key", null: false
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.integer "price_cents", default: 0, null: false
+    t.integer "seats", default: 1, null: false
+    t.string "stripe_annual_lookup_key"
+    t.string "stripe_annual_price_id"
+    t.string "stripe_lookup_key"
+    t.string "stripe_price_id"
+    t.string "stripe_product_id"
+    t.datetime "updated_at", null: false
+    t.integer "usd_cents", default: 0, null: false
+    t.index ["key"], name: "index_pricing_plans_on_key", unique: true
+  end
+
   create_table "project_reports", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.jsonb "data", default: {}, null: false
@@ -404,7 +498,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_01_120000) do
     t.date "ends_on"
     t.string "name", null: false
     t.date "starts_on"
-    t.integer "status", default: 0, null: false
+    t.integer "status", default: 4, null: false
     t.datetime "updated_at", null: false
     t.bigint "workspace_id", null: false
     t.index ["client_id"], name: "index_projects_on_client_id"
@@ -486,16 +580,34 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_01_120000) do
     t.index ["workspace_id"], name: "index_social_accounts_on_workspace_id"
   end
 
+  create_table "strategy_sessions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.jsonb "messages", default: [], null: false
+    t.bigint "project_id", null: false
+    t.jsonb "proposed_plan", default: {}, null: false
+    t.string "status", default: "active", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.bigint "workspace_id", null: false
+    t.index ["project_id", "status"], name: "index_strategy_sessions_on_project_id_and_status"
+    t.index ["project_id"], name: "index_strategy_sessions_on_project_id"
+    t.index ["user_id"], name: "index_strategy_sessions_on_user_id"
+    t.index ["workspace_id", "created_at"], name: "index_strategy_sessions_on_workspace_id_and_created_at"
+  end
+
   create_table "subscriptions", force: :cascade do |t|
     t.datetime "cancel_at"
+    t.boolean "card_on_file", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "current_period_end"
+    t.string "interval", default: "month", null: false
     t.integer "plan", default: 0, null: false
     t.integer "seats", default: 1, null: false
     t.string "status", default: "trialing"
     t.string "stripe_customer_id"
     t.string "stripe_subscription_id"
     t.datetime "trial_ends_at"
+    t.boolean "trial_used", default: false, null: false
     t.datetime "updated_at", null: false
     t.bigint "workspace_id", null: false
     t.index ["workspace_id"], name: "index_subscriptions_on_workspace_id", unique: true
@@ -506,6 +618,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_01_120000) do
     t.datetime "created_at", null: false
     t.boolean "done", default: false, null: false
     t.date "due_date"
+    t.decimal "estimate_hours", precision: 5, scale: 2
     t.integer "position", default: 0, null: false
     t.bigint "ticket_id", null: false
     t.string "title", null: false
@@ -551,6 +664,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_01_120000) do
     t.datetime "created_at", null: false
     t.bigint "created_by_id"
     t.string "creative_type"
+    t.string "creative_types", default: [], null: false, array: true
     t.date "due_date"
     t.jsonb "fields", default: {}, null: false
     t.integer "position", default: 0, null: false
@@ -559,12 +673,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_01_120000) do
     t.datetime "published_at"
     t.datetime "scheduled_at"
     t.integer "status", default: 0, null: false
+    t.bigint "strategy_session_id"
     t.string "title"
     t.datetime "updated_at", null: false
     t.bigint "workspace_id", null: false
     t.index ["assignee_id"], name: "index_tickets_on_assignee_id"
     t.index ["created_by_id"], name: "index_tickets_on_created_by_id"
     t.index ["project_id"], name: "index_tickets_on_project_id"
+    t.index ["strategy_session_id"], name: "index_tickets_on_strategy_session_id"
     t.index ["workspace_id", "scheduled_at"], name: "index_tickets_on_workspace_id_and_scheduled_at"
     t.index ["workspace_id", "status", "position"], name: "index_tickets_on_workspace_id_and_status_and_position"
     t.index ["workspace_id"], name: "index_tickets_on_workspace_id"
@@ -594,8 +710,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_01_120000) do
     t.text "brand_voice"
     t.datetime "created_at", null: false
     t.string "default_handle"
+    t.boolean "godfathered", default: false, null: false
     t.string "locale", default: "pt-BR", null: false
     t.string "name", null: false
+    t.boolean "over_seat_limit", default: false, null: false
     t.string "slug", null: false
     t.string "timezone", default: "America/Sao_Paulo", null: false
     t.datetime "updated_at", null: false
@@ -606,6 +724,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_01_120000) do
   add_foreign_key "account_metrics", "workspaces"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "admin_audit_logs", "users", column: "staff_user_id"
   add_foreign_key "ai_usage_logs", "users"
   add_foreign_key "ai_usage_logs", "workspaces"
   add_foreign_key "attachments", "notes", on_delete: :nullify
@@ -619,6 +738,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_01_120000) do
   add_foreign_key "creatives", "creatives", column: "parent_id"
   add_foreign_key "creatives", "tickets"
   add_foreign_key "creatives", "workspaces"
+  add_foreign_key "credit_transactions", "generations"
+  add_foreign_key "credit_transactions", "users"
+  add_foreign_key "credit_transactions", "workspaces"
+  add_foreign_key "credit_wallets", "workspaces"
   add_foreign_key "generations", "creatives"
   add_foreign_key "generations", "users"
   add_foreign_key "generations", "workspaces"
@@ -652,6 +775,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_01_120000) do
   add_foreign_key "settings", "workspaces"
   add_foreign_key "social_accounts", "clients"
   add_foreign_key "social_accounts", "workspaces"
+  add_foreign_key "strategy_sessions", "projects"
+  add_foreign_key "strategy_sessions", "users"
+  add_foreign_key "strategy_sessions", "workspaces"
   add_foreign_key "subscriptions", "workspaces"
   add_foreign_key "subtasks", "tickets"
   add_foreign_key "subtasks", "users", column: "assignee_id"
@@ -663,6 +789,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_01_120000) do
   add_foreign_key "ticket_status_logs", "users"
   add_foreign_key "ticket_status_logs", "workspaces"
   add_foreign_key "tickets", "projects"
+  add_foreign_key "tickets", "strategy_sessions", on_delete: :nullify
   add_foreign_key "tickets", "users", column: "assignee_id"
   add_foreign_key "tickets", "users", column: "created_by_id"
   add_foreign_key "tickets", "workspaces"

@@ -14,6 +14,7 @@ import {
 } from '@/hooks/useData'
 import { PageHeader } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
+import { useConfirm } from '@/components/ui/confirm-dialog'
 import { Input, Textarea } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
@@ -379,8 +380,12 @@ function ConnectionsTab() {
   const revoke = useRevokeConnection()
   const { data: connector, isLoading: loadingConnector } = useMcpConnector()
   const rotate = useRotateMcpConnector()
+  const confirm = useConfirm()
+  const navigate = useNavigate()
   const [copied, setCopied] = useState(false)
   const [revealed, setRevealed] = useState(false)
+  // Agência+ feature — Solo gets an upgrade hook instead of the URL.
+  const locked = connector && connector.enabled === false
   const url = connector?.url || ''
   // Mask the token in the displayed URL until revealed (it's a credential).
   const masked = url.replace(/\/mcp\/c\/.+$/, '/mcp/c/••••••••••••')
@@ -392,8 +397,14 @@ function ConnectionsTab() {
     setTimeout(() => setCopied(false), 1500)
   }
 
-  const onRotate = () => {
-    if (window.confirm('Gerar uma nova URL invalida a atual no Claude. Continuar?')) rotate.mutate()
+  const onRotate = async () => {
+    const ok = await confirm({
+      title: 'Gerar nova URL?',
+      description: 'A URL atual deixa de funcionar no Claude. Você precisará reconectar o conector com a nova URL.',
+      confirmLabel: 'Gerar nova URL',
+      destructive: true,
+    })
+    if (ok) rotate.mutate()
   }
 
   return (
@@ -407,35 +418,53 @@ function ConnectionsTab() {
               conector personalizado</strong>. A URL já contém sua credencial — não precisa de login nem OAuth.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2.5">
-            <Label>URL do conector</Label>
-            <div className="flex flex-wrap items-center gap-2">
-              <Input
-                readOnly
-                value={loadingConnector ? 'Carregando…' : (revealed ? url : masked)}
-                className="min-w-0 flex-1 font-mono text-sm"
-                onFocus={(e) => e.target.select()}
-              />
-              <Button type="button" variant="outline" onClick={() => setRevealed((v) => !v)}>
-                {revealed ? 'Ocultar' : 'Revelar'}
+          {locked ? (
+            <CardContent className="space-y-3">
+              <div className="flex items-start gap-3 rounded-xl border border-brand/30 bg-brand-soft/40 p-4">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand/15 text-brand"><Sparkles size={18} /></span>
+                <div>
+                  <p className="text-sm font-semibold text-ink">Disponível nos planos Agência e Enterprise</p>
+                  <p className="mt-0.5 text-sm text-ink-muted">
+                    Conecte o agencios ao Claude e opere seus workspaces por linguagem natural.
+                    Faça upgrade para desbloquear o conector.
+                  </p>
+                </div>
+              </div>
+              <Button type="button" onClick={() => navigate('/assinatura')}>
+                <Sparkles size={16} /> Fazer upgrade
               </Button>
-              <Button type="button" variant="outline" onClick={copy} disabled={!url}>
-                {copied ? <Check size={16} /> : <Copy size={16} />} {copied ? 'Copiado' : 'Copiar'}
-              </Button>
-            </div>
-            <div className="flex items-center justify-between gap-2 pt-1">
+            </CardContent>
+          ) : (
+            <CardContent className="space-y-2.5">
+              <Label>URL do conector</Label>
+              <div className="flex flex-wrap items-center gap-2">
+                <Input
+                  readOnly
+                  value={loadingConnector ? 'Carregando…' : (revealed ? url : masked)}
+                  className="min-w-0 flex-1 font-mono text-sm"
+                  onFocus={(e) => e.target.select()}
+                />
+                <Button type="button" variant="outline" onClick={() => setRevealed((v) => !v)}>
+                  {revealed ? 'Ocultar' : 'Revelar'}
+                </Button>
+                <Button type="button" variant="outline" onClick={copy} disabled={!url}>
+                  {copied ? <Check size={16} /> : <Copy size={16} />} {copied ? 'Copiado' : 'Copiar'}
+                </Button>
+              </div>
+              <div className="flex items-center justify-between gap-2 pt-1">
+                <p className="text-xs text-ink-faint">
+                  A URL é um segredo: quem a tiver opera seus workspaces com as suas permissões.
+                </p>
+                <Button type="button" variant="ghost" size="sm" className="shrink-0 text-ink-muted" onClick={onRotate} disabled={rotate.isPending}>
+                  <RefreshCw size={14} /> Gerar nova URL
+                </Button>
+              </div>
               <p className="text-xs text-ink-faint">
-                A URL é um segredo: quem a tiver opera seus workspaces com as suas permissões.
+                No Claude: <strong className="text-ink-muted">Configurações → Conectores → Adicionar conector
+                personalizado</strong> e cole a URL. Não pede login.
               </p>
-              <Button type="button" variant="ghost" size="sm" className="shrink-0 text-ink-muted" onClick={onRotate} disabled={rotate.isPending}>
-                <RefreshCw size={14} /> Gerar nova URL
-              </Button>
-            </div>
-            <p className="text-xs text-ink-faint">
-              No Claude: <strong className="text-ink-muted">Configurações → Conectores → Adicionar conector
-              personalizado</strong> e cole a URL. Não pede login.
-            </p>
-          </CardContent>
+            </CardContent>
+          )}
         </Card>
 
         <Card>

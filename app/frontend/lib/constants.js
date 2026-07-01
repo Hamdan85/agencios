@@ -10,10 +10,11 @@ import {
   Sparkles, Video, LayoutTemplate,
   FileText, FileSpreadsheet, Presentation, FileArchive, File as FileIcon, Paperclip,
 } from 'lucide-react'
+import { InstagramIcon } from './brand-icons.jsx'
 
 // lucide v1 removed brand icons (trademark) — channel identity is carried by
 // the vivid colors below; icons are recognizable generics.
-const Instagram = Camera
+const Instagram = InstagramIcon
 const Facebook = AtSign
 const Youtube = PlaySquare
 const Linkedin = Briefcase
@@ -122,6 +123,44 @@ export const creativeMediaKind = (creative) => {
 export const channelsForCreative = (creative, channels = []) => {
   const kind = creativeMediaKind(creative)
   return channels.filter((ch) => (SUPPORTED_MEDIA[ch] || []).includes(kind))
+}
+
+// Mirrors Ticket::COVER_TYPES — image creative types that ride a video post as
+// its cover/thumbnail rather than posting standalone.
+export const COVER_TYPES = ['thumbnail', 'cover']
+export const isCoverType = (type) => COVER_TYPES.includes(type)
+
+// Mirrors Publishers::SocialPublisher::THUMBNAIL_CAPABLE — networks where a still
+// image can be attached to a video post as its cover/thumbnail.
+export const THUMBNAIL_CAPABLE = ['instagram', 'youtube']
+
+// Mirror of Operations::Tickets::Publish#plan_channel: given the selected
+// creatives (one per scoped type) and the ticket's channels, resolve what will
+// actually post on each channel — dropping unsupported media and pairing a cover
+// image onto the video post where the network supports it. Returns one entry per
+// channel: { channel, posts: [{ creative, cover }], skipped: [creative] }.
+export const resolvePostRouting = (creatives, channels = []) => {
+  const list = (Array.isArray(creatives) ? creatives : []).filter(Boolean)
+  return (Array.isArray(channels) ? channels : []).map((channel) => {
+    const supported = SUPPORTED_MEDIA[channel] || []
+    const hasVideo = list.some((c) => creativeMediaKind(c) === 'video' && supported.includes('video'))
+    const cover = list.find((c) => isCoverType(c.creative_type))
+    const attachCover = !!cover && hasVideo && THUMBNAIL_CAPABLE.includes(channel)
+
+    const posts = []
+    const skipped = []
+    list.forEach((c) => {
+      if (isCoverType(c.creative_type)) return
+      const kind = creativeMediaKind(c)
+      if (supported.includes(kind)) posts.push({ creative: c, cover: attachCover && kind === 'video' ? cover : null })
+      else skipped.push(c)
+    })
+    if (cover && !attachCover) {
+      if (supported.includes(creativeMediaKind(cover))) posts.push({ creative: cover, cover: null })
+      else skipped.push(cover)
+    }
+    return { channel, posts, skipped }
+  })
 }
 
 export const statusMeta = (key) => STATUS_META[key] || STATUS_META.ideation

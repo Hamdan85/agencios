@@ -37,15 +37,29 @@
           <table role="presentation" class="email-card" width="600" border="0" cellpadding="0" cellspacing="0"
                  style="width:600px; max-width:600px; background-color:#FFFFFF; border-radius:20px; overflow:hidden; box-shadow:0 8px 30px rgba(24,18,43,0.08);">
 
-            <!-- ── Header: brand gradient + logo + optional eyebrow ── -->
+            <!-- ── Header: brand gradient + logo + optional eyebrow ──
+                 Client-facing mail sets @brand_workspace so the client sees
+                 their own agency here instead of agencios (still the one
+                 actually sending it — see the footer). ── -->
             <tr>
-              <td style="background:linear-gradient(135deg,#8B5CF6 0%,#5B21B6 100%); background-color:#7C3AED; padding:28px 40px;">
+              <td style="background:<%= @brand_workspace ? agency_gradient(@brand_workspace) : 'linear-gradient(135deg,#8B5CF6 0%,#5B21B6 100%)' %>; background-color:<%= @brand_workspace ? (@brand_workspace.brand_primary_color.presence || '#7C3AED') : '#7C3AED' %>; padding:28px 40px;">
                 <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
                   <tr>
                     <td align="left" valign="middle">
-                      <img src="<%= logo_url %>" width="36" height="36" alt="agencios"
-                           style="display:inline-block; vertical-align:middle; border-radius:9px;">
-                      <span style="display:inline-block; vertical-align:middle; margin-left:10px; font-family:'Sora','Inter',Helvetica,Arial,sans-serif; font-size:20px; font-weight:800; letter-spacing:-0.02em; color:#FFFFFF;">agencios</span>
+                      <% if @brand_workspace %>
+                        <% agency_logo = agency_logo_url(@brand_workspace) %>
+                        <% if agency_logo %>
+                          <img src="<%= agency_logo %>" width="36" height="36" alt="<%= @brand_workspace.name %>"
+                               style="display:inline-block; vertical-align:middle; border-radius:9px; background-color:#FFFFFF; object-fit:cover;">
+                        <% else %>
+                          <span style="display:inline-block; vertical-align:middle; width:36px; height:36px; line-height:36px; text-align:center; border-radius:9px; background-color:rgba(255,255,255,0.22); font-family:'Sora','Inter',Helvetica,Arial,sans-serif; font-size:16px; font-weight:800; color:#FFFFFF;"><%= agency_initial(@brand_workspace) %></span>
+                        <% end %>
+                        <span style="display:inline-block; vertical-align:middle; margin-left:10px; font-family:'Sora','Inter',Helvetica,Arial,sans-serif; font-size:20px; font-weight:800; letter-spacing:-0.02em; color:#FFFFFF;"><%= @brand_workspace.name %></span>
+                      <% else %>
+                        <img src="<%= logo_url %>" width="36" height="36" alt="agencios"
+                             style="display:inline-block; vertical-align:middle; border-radius:9px;">
+                        <span style="display:inline-block; vertical-align:middle; margin-left:10px; font-family:'Sora','Inter',Helvetica,Arial,sans-serif; font-size:20px; font-weight:800; letter-spacing:-0.02em; color:#FFFFFF;">agencios</span>
+                      <% end %>
                     </td>
                     <% if content_for?(:eyebrow) %>
                       <td align="right" valign="middle">
@@ -67,9 +81,15 @@
             <!-- ── Footer ── -->
             <tr>
               <td class="email-pad" style="padding:24px 40px 32px; border-top:1px solid #E8E6F2;">
-                <p style="margin:0 0 6px; font-size:13px; line-height:1.5; color:#8B86A3;">
-                  Enviado por <strong style="color:#564F6F;">agencios</strong> — o sistema operacional da sua agência.
-                </p>
+                <% if @brand_workspace %>
+                  <p style="margin:0 0 6px; font-size:13px; line-height:1.5; color:#8B86A3;">
+                    Enviado por <strong style="color:#564F6F;"><%= @brand_workspace.name %></strong> via agencios, a plataforma operacional da sua agência.
+                  </p>
+                <% else %>
+                  <p style="margin:0 0 6px; font-size:13px; line-height:1.5; color:#8B86A3;">
+                    Enviado por <strong style="color:#564F6F;">agencios</strong> — o sistema operacional da sua agência.
+                  </p>
+                <% end %>
                 <p style="margin:0; font-size:12px; line-height:1.5; color:#B6B1C9;">
                   Este é um e-mail automático enviado de <a href="mailto:nao-responda@agencios.app" style="color:#8B86A3; text-decoration:underline;">nao-responda@agencios.app</a>. Por favor, não responda a esta mensagem.
                 </p>

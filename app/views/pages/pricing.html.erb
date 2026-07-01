@@ -1,5 +1,5 @@
 <% content_for :title, "Preços — agencios" %>
-<% content_for :description, "Planos que crescem com a sua agência: Solo, Agência e Enterprise. 14 dias grátis, sem cartão. Geração de criativos cobrada por uso, com transparência." %>
+<% content_for :description, "Planos que crescem com a sua agência: Solo, Agência e Enterprise. #{@trial_days} dias de teste (com cartão). Vídeos e imagens por créditos pré-pagos; carrosséis e legendas com IA inclusos." %>
 
 <%# ── Hero ──────────────────────────────────────────────────────── %>
 <section class="relative overflow-hidden bg-shell-gradient">
@@ -12,14 +12,28 @@
       Preço que cresce <span class="text-gradient-brand">com a agência.</span>
     </h1>
     <p class="mx-auto mt-5 max-w-xl text-lg text-white/70">
-      Comece grátis e escale quando precisar. Sem surpresa: a geração de criativos é cobrada por uso,
-      transparente na fatura.
+      <%= @trial_days %> dias de teste em qualquer plano — com cartão. Vídeos e imagens usam créditos
+      pré-pagos; carrosséis e legendas com IA são inclusos.
     </p>
   </div>
 </section>
 
 <%# ── Plans ─────────────────────────────────────────────────────── %>
-<section class="mx-auto -mt-16 max-w-6xl px-5 sm:px-8">
+<section class="mx-auto -mt-16 max-w-6xl px-5 sm:px-8" data-pricing data-interval="month">
+  <%# Billing interval toggle (Mensal / Anual) — driven by marketing.js %>
+  <% if @annual_discount_percent.to_i.positive? %>
+    <div class="relative z-10 mb-8 flex justify-center">
+      <div class="inline-flex items-center gap-1 rounded-full border border-border bg-surface p-1 shadow-sm" role="tablist" aria-label="Ciclo de cobrança">
+        <button type="button" role="tab" data-pricing-interval="month" aria-selected="true"
+                class="inline-flex items-center rounded-full px-5 py-2 text-sm font-semibold transition">Mensal</button>
+        <button type="button" role="tab" data-pricing-interval="year" aria-selected="false"
+                class="inline-flex items-center gap-1.5 rounded-full px-5 py-2 text-sm font-semibold transition">
+          Anual
+          <span class="rounded-full bg-emerald/12 px-1.5 py-0.5 text-[10px] font-bold leading-none text-emerald">-<%= @annual_discount_percent %>%</span>
+        </button>
+      </div>
+    </div>
+  <% end %>
   <div class="grid gap-6 md:grid-cols-3">
     <% @plans.each do |p| %>
       <div class="<%= p[:highlight] ? 'relative rounded-3xl border-2 border-brand bg-surface p-7 shadow-2xl reveal' : 'rounded-3xl border border-border bg-surface p-7 shadow-lg reveal' %>">
@@ -28,7 +42,16 @@
         <% end %>
         <h2 class="font-display text-xl font-extrabold text-ink"><%= p[:name] %></h2>
         <p class="mt-1 text-sm text-ink-muted"><%= p[:tagline] %></p>
-        <p class="mt-5 font-display text-4xl font-extrabold text-ink"><%= brl_short(p[:price_cents]) %><span class="text-base font-semibold text-ink-muted">/mês</span></p>
+        <%# Monthly price (default) and annual monthly-equivalent, toggled via [data-price-*] %>
+        <p class="mt-5 font-display text-4xl font-extrabold text-ink">
+          <span data-price-month><%= brl_short(p[:price_cents]) %></span>
+          <span data-price-year hidden><%= brl_short(p[:annual_monthly_equivalent_cents]) %></span><span class="text-base font-semibold text-ink-muted">/mês</span>
+        </p>
+        <% if @annual_discount_percent.to_i.positive? %>
+          <p class="mt-1 h-4 text-xs font-semibold text-emerald" data-price-year-caption hidden>
+            <%= brl_short(p[:annual_price_cents]) %>/ano · economize <%= @annual_discount_percent %>%
+          </p>
+        <% end %>
         <p class="mt-1 text-xs font-semibold uppercase tracking-wider text-ink-muted"><%= plan_seats_label(p[:seats]) %></p>
         <%= link_to p[:cta], "/cadastro",
               class: "mt-6 inline-flex h-11 w-full items-center justify-center rounded-xl text-sm font-semibold transition " +
@@ -44,22 +67,23 @@
       </div>
     <% end %>
   </div>
-  <p class="mt-6 text-center text-sm text-ink-muted">Todos os planos incluem 14 dias grátis · sem cartão de crédito · cancele quando quiser.</p>
+  <p class="mt-6 text-center text-sm text-ink-muted">Todos os planos incluem <%= @trial_days %> dias de teste · cartão obrigatório para iniciar · cancele quando quiser.</p>
 </section>
 
-<%# ── Usage-based metering explainer ────────────────────────────── %>
+<%# ── Credit economy explainer ──────────────────────────────────── %>
 <section class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24">
   <div class="overflow-hidden rounded-3xl border border-border bg-surface reveal">
     <div class="grid lg:grid-cols-2">
       <div class="p-8 sm:p-10">
-        <span class="inline-flex items-center gap-2 rounded-full bg-brand-soft px-3 py-1.5 text-xs font-bold text-brand"><%= icon "zap", size: 13 %> Cobrança por uso</span>
-        <h2 class="mt-4 font-display text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">Você só paga pelo que gera</h2>
-        <p class="mt-3 text-ink-muted">A assinatura cobre a plataforma e os assentos. A geração de carrosséis e vídeos é medida por uso — cada peça aparece de forma transparente na sua fatura.</p>
+        <span class="inline-flex items-center gap-2 rounded-full bg-brand-soft px-3 py-1.5 text-xs font-bold text-brand"><%= icon "zap", size: 13 %> Créditos pré-pagos</span>
+        <h2 class="mt-4 font-display text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">Vídeo e imagem por créditos</h2>
+        <p class="mt-3 text-ink-muted">A assinatura cobre a plataforma, os assentos e uma cota mensal de créditos. Vídeos e imagens consomem créditos da sua carteira; carrosséis e legendas com IA são inclusos. <strong class="text-ink">1 crédito = R$ 1.</strong></p>
         <ul class="mt-6 space-y-3">
           <% [
-            ["image", "#7C3AED", "Carrosséis", "Cobrados por geração."],
-            ["video", "#EC4899", "Vídeos UGC", "Cobrados por geração."],
-            ["sparkles", "#10B981", "Imagens", "Geradas sem cobrança por uso."],
+            ["palette", "#7C3AED", "Carrosséis", "Inclusos — não gastam créditos."],
+            ["sparkles", "#10B981", "Legendas com IA", "Inclusas — não gastam créditos."],
+            ["image", "#0EA5E9", "Imagens", "#{@credit_costs[:image]} crédito por imagem."],
+            ["video", "#EC4899", "Vídeos UGC", "A partir de #{@credit_costs[:video_standard_15s]} créditos por 15s."],
           ].each do |ic, cc, title, desc| %>
             <li class="flex items-center gap-3">
               <span class="flex size-10 items-center justify-center rounded-xl" style="background: <%= soft_bg(cc) %>; color: <%= cc %>;"><%= icon ic, size: 20, stroke: 2.2 %></span>
@@ -71,22 +95,17 @@
           <% end %>
         </ul>
       </div>
-      <div class="flex items-center justify-center bg-shell-gradient p-8 sm:p-10">
-        <div class="w-full max-w-sm rounded-2xl bg-surface/95 p-5 shadow-2xl backdrop-blur">
-          <div class="flex items-center justify-between border-b border-border pb-3">
-            <span class="font-display text-sm font-bold text-ink">Sua fatura</span>
-            <span class="rounded-full bg-surface-muted px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-ink-muted">exemplo</span>
-          </div>
-          <div class="mt-3 space-y-2.5 text-sm">
-            <div class="flex items-center justify-between"><span class="text-ink-secondary">Plano Agência</span><span class="font-semibold text-ink">R$ 299,00</span></div>
-            <div class="flex items-center justify-between"><span class="text-ink-secondary">42 carrosséis</span><span class="font-semibold text-ink">R$ 84,00</span></div>
-            <div class="flex items-center justify-between"><span class="text-ink-secondary">11 vídeos UGC</span><span class="font-semibold text-ink">R$ 132,00</span></div>
-            <div class="flex items-center justify-between text-ink-muted"><span>Imagens</span><span>—</span></div>
-          </div>
-          <div class="mt-3 flex items-center justify-between border-t border-border pt-3">
-            <span class="font-display font-bold text-ink">Total</span>
-            <span class="font-display text-lg font-extrabold text-brand">R$ 515,00</span>
-          </div>
+      <div class="bg-shell-gradient p-8 sm:p-10">
+        <p class="text-xs font-bold uppercase tracking-[0.16em] text-white/50">Pacotes de créditos</p>
+        <p class="mt-1 text-sm text-white/70">Precisou de mais? Compre créditos quando quiser — eles não expiram por 12 meses.</p>
+        <div class="mt-5 grid grid-cols-2 gap-3">
+          <% @credit_packs.each do |pack| %>
+            <div class="rounded-2xl bg-surface/95 p-4 shadow-lg backdrop-blur">
+              <p class="font-display text-sm font-bold text-ink"><%= pack[:name] %></p>
+              <p class="mt-1 font-display text-2xl font-extrabold text-ink"><%= pack[:credits] %><span class="ml-1 text-xs font-semibold text-ink-muted">créditos</span></p>
+              <p class="mt-0.5 text-sm text-ink-muted"><%= brl_short(pack[:price_cents]) %></p>
+            </div>
+          <% end %>
         </div>
       </div>
     </div>

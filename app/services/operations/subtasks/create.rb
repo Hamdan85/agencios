@@ -3,12 +3,13 @@
 module Operations
   module Subtasks
     class Create < Operations::Base
-      def initialize(ticket:, title:, assignee_id: nil, due_date: nil, position: nil)
+      def initialize(ticket:, title:, assignee_id: nil, due_date: nil, position: nil, estimate_hours: nil)
         @ticket = ticket
         @title = title
         @assignee_id = assignee_id
         @due_date = due_date
         @position = position
+        @estimate_hours = estimate_hours
       end
 
       def call
@@ -18,6 +19,7 @@ module Operations
           title: @title,
           assignee_id: @assignee_id,
           due_date: @due_date,
+          estimate_hours: @estimate_hours,
           position: @position || next_position
         )
         notify_assignee(subtask)

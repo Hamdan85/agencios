@@ -3,8 +3,8 @@
 module Controllers
   module Tickets
     # POST /tickets/:id/publish — the posting step action. Body:
-    # { creative_id, mode: "immediate"|"scheduled", scheduled_at }. Builds the
-    # posts and fires publishing; the ticket reaches "No ar" only on success.
+    # { creative_ids: [...], mode: "immediate"|"scheduled", scheduled_at }. Builds
+    # the posts and fires publishing; the ticket reaches "No ar" only on success.
     class Publish < Base
       def initialize(params:)
         @params = params
@@ -16,6 +16,7 @@ module Controllers
         Operations::Tickets::Publish.call(
           ticket: ticket,
           user: user,
+          creative_ids: @params[:creative_ids],
           creative_id: @params[:creative_id],
           mode: @params[:mode] || "immediate",
           scheduled_at: @params[:scheduled_at]

@@ -25,9 +25,11 @@ const SHEET_SIDES = {
   bottom: 'ag-sheet-panel-bottom inset-x-0 bottom-0 max-h-[88dvh] w-full rounded-t-3xl border-t bg-surface shadow-[0_-24px_60px_-24px_rgba(17,10,36,0.45)]',
 }
 
-const SheetContent = React.forwardRef(({ className, children, side = 'right', ...props }, ref) => (
+// `overlay={false}` drops the dimming backdrop so a non-modal drawer (e.g. the
+// strategy planner) leaves the page behind visible + interactive.
+const SheetContent = React.forwardRef(({ className, children, side = 'right', overlay = true, ...props }, ref) => (
   <SheetPortal>
-    <SheetOverlay />
+    {overlay && <SheetOverlay />}
     <DialogPrimitive.Content
       ref={ref}
       className={cn(

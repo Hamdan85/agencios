@@ -8,6 +8,7 @@ module Controllers
       end
 
       def call
+        require_seat_compliance!
         ticket = Operations::Tickets::Create.call(workspace: workspace, user: user, params: ticket_params)
         SummarizeTicketJob.perform_later(ticket.id, ticket.status)
         { ticket: serialize(ticket, TicketSerializer) }

@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import {
   dashboardApi, calendarApi, tasksApi, ticketsApi, clientsApi, projectsApi, reportsApi, studioApi,
   generationsApi, creativesApi, socialApi, meetingsApi, invoicesApi, settingsApi, billingApi,
-  workspaceApi, subtasksApi, connectionsApi, connectorApi,
+  creditsApi, pricingApi, workspaceApi, subtasksApi, connectionsApi, connectorApi,
 } from '@/api'
 import { keys } from '@/api/queryKeys'
 import { useCurrentUser } from '@/hooks/useAuth'
@@ -83,11 +83,29 @@ export function useTicketArchiveMutations() {
   const inv = () => {
     qc.invalidateQueries({ queryKey: ['tickets'] })
     qc.invalidateQueries({ queryKey: ['board'] })
+    qc.invalidateQueries({ queryKey: ['projects'] })
   }
   return {
     archive: useMutation({ mutationFn: ticketsApi.archive, onSuccess: () => { inv(); toast.success('Ticket arquivado.') }, onError: onErr('Erro ao arquivar.') }),
     unarchive: useMutation({ mutationFn: ticketsApi.unarchive, onSuccess: () => { inv(); toast.success('Ticket restaurado.') }, onError: onErr('Erro ao restaurar.') }),
   }
+}
+
+// Permanently delete a set of tickets (hard delete). Refreshes every surface a
+// ticket can appear on — the global list, the board, and project detail.
+export function useTicketBulkDelete() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (ids) => ticketsApi.bulkDestroy(ids),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ['tickets'] })
+      qc.invalidateQueries({ queryKey: ['board'] })
+      qc.invalidateQueries({ queryKey: ['projects'] })
+      const n = data?.deleted_count ?? 0
+      toast.success(n === 1 ? 'Ticket excluído.' : `${n} tickets excluídos.`)
+    },
+    onError: onErr('Erro ao excluir os tickets.'),
+  })
 }
 
 // ── Clients ────────────────────────────────────────────────────
@@ -122,7 +140,10 @@ export function useProjectMutations() {
   return {
     create: useMutation({ mutationFn: projectsApi.create, onSuccess: () => { inv(); analytics.track(EVENTS.PROJECT_CREATED); toast.success('Projeto criado!') }, onError: onErr('Erro ao criar projeto.') }),
     update: useMutation({ mutationFn: ({ id, data }) => projectsApi.update(id, data), onSuccess: inv, onError: onErr('Erro.') }),
+    start: useMutation({ mutationFn: projectsApi.start, onSuccess: () => { inv(); toast.success('Projeto iniciado!') }, onError: onErr('Erro ao iniciar o projeto.') }),
     finalize: useMutation({ mutationFn: projectsApi.finalize, onSuccess: () => { inv(); toast.success('Projeto finalizado! Gerando o relatório…') }, onError: onErr('Erro ao finalizar o projeto.') }),
+    sendScope: useMutation({ mutationFn: ({ id, recipients }) => projectsApi.sendScope(id, recipients), onSuccess: () => toast.success('Escopo enviado ao cliente!'), onError: onErr('Erro ao enviar o escopo.') }),
+    destroy: useMutation({ mutationFn: projectsApi.destroy, onSuccess: () => { inv(); toast.success('Projeto excluído.') }, onError: onErr('Erro ao excluir o projeto.') }),
   }
 }
 
@@ -330,6 +351,7 @@ export function useInvoiceMutations() {
     cancel: useMutation({ mutationFn: invoicesApi.cancel, onSuccess: inv, onError: onErr('Erro.') }),
     markPaid: useMutation({ mutationFn: invoicesApi.markPaid, onSuccess: () => { inv(); toast.success('Cobrança marcada como paga.') }, onError: onErr('Erro.') }),
     paymentLink: useMutation({ mutationFn: invoicesApi.paymentLink, onSuccess: () => { inv(); toast.success('Link de pagamento gerado!') }, onError: onErr('Erro ao gerar link.') }),
+    sendPaymentLink: useMutation({ mutationFn: invoicesApi.sendPaymentLink, onSuccess: () => { inv(); toast.success('Link de pagamento enviado ao cliente!') }, onError: onErr('Erro ao enviar o link.') }),
   }
 }
 
@@ -399,11 +421,71 @@ export function useBillingMutations() {
   const qc = useQueryClient()
   const inv = () => { qc.invalidateQueries({ queryKey: keys.billing() }); qc.invalidateQueries({ queryKey: keys.me() }) }
   return {
-    changePlan: useMutation({ mutationFn: billingApi.changePlan, onSuccess: (_data, plan) => { inv(); analytics.track(EVENTS.SUBSCRIBE, { plan }); toast.success('Plano atualizado!') }, onError: onErr('Erro.') }),
-    cancel: useMutation({ mutationFn: billingApi.cancel, onSuccess: inv, onError: onErr('Erro.') }),
-    reactivate: useMutation({ mutationFn: billingApi.reactivate, onSuccess: inv, onError: onErr('Erro.') }),
+    // Start Stripe Checkout for a workspace with no active subscription (or to
+    // subscribe from the paywall). Accepts either a bare plan key or
+    // `{ plan, interval }` (interval: 'month' | 'year', default 'month').
+    // Redirects the browser to the returned url.
+    checkout: useMutation({
+      mutationFn: (arg) => {
+        const { plan, interval } = typeof arg === 'string' ? { plan: arg } : (arg || {})
+        return billingApi.checkout(plan, interval || 'month')
+      },
+      onSuccess: (data, arg) => {
+        const plan = typeof arg === 'string' ? arg : arg?.plan
+        analytics.track(EVENTS.SUBSCRIBE, { plan })
+        if (data?.url) window.location.href = data.url
+      },
+      onError: onErr('Erro ao iniciar o checkout.'),
+    }),
+    // change_plan returns EITHER { checkout_url } (redirect — new subscriber) OR
+    // { subscription } (existing subscriber swapped the plan). Handle both.
+    // Accepts a bare plan key or `{ plan, interval }`.
+    changePlan: useMutation({
+      mutationFn: (arg) => {
+        const { plan, interval } = typeof arg === 'string' ? { plan: arg } : (arg || {})
+        return billingApi.changePlan(plan, interval || 'month')
+      },
+      onSuccess: (data, arg) => {
+        const plan = typeof arg === 'string' ? arg : arg?.plan
+        analytics.track(EVENTS.SUBSCRIBE, { plan })
+        if (data?.checkout_url) { window.location.href = data.checkout_url; return }
+        inv()
+        toast.success('Plano atualizado!')
+      },
+      onError: onErr('Erro.'),
+    }),
+    cancel: useMutation({ mutationFn: billingApi.cancel, onSuccess: () => { inv(); toast.success('Assinatura cancelada ao fim do período.') }, onError: onErr('Erro.') }),
+    reactivate: useMutation({ mutationFn: billingApi.reactivate, onSuccess: () => { inv(); toast.success('Assinatura reativada!') }, onError: onErr('Erro.') }),
+    // Opens the Stripe customer portal when the backend returns a url (payment
+    // method / invoices). No-op if the portal isn't configured yet.
+    portal: useMutation({
+      mutationFn: billingApi.portal,
+      onSuccess: (data) => {
+        if (data?.url) window.location.href = data.url
+        else toast.info('Portal de pagamento indisponível no momento.')
+      },
+      onError: onErr('Erro ao abrir o portal.'),
+    }),
   }
 }
+
+// ── Credits (prepaid wallet for video/image generation) ────────
+export const useCredits = () => useQuery({ queryKey: keys.credits(), queryFn: creditsApi.get })
+
+export function useCreditsMutations() {
+  return {
+    // Buy a credit pack via Stripe Checkout — redirects to the returned url.
+    checkout: useMutation({
+      mutationFn: creditsApi.checkout,
+      onSuccess: (data) => { if (data?.url) window.location.href = data.url },
+      onError: onErr('Erro ao iniciar a compra de créditos.'),
+    }),
+  }
+}
+
+// ── Public pricing catalog (drives the paywall plan picker) ────
+export const usePricing = () =>
+  useQuery({ queryKey: keys.pricing(), queryFn: pricingApi.get, staleTime: 10 * 60_000 })
 
 // ── Workspace / members ────────────────────────────────────────
 export const useWorkspaceMembers = () =>

@@ -1,6 +1,7 @@
 <%= yield %>
 
 —
-agencios — o sistema operacional da sua agência.
-E-mail automático enviado de nao-responda@agencios.app. Não responda a esta mensagem.
+<% if @brand_workspace %>Enviado por <%= @brand_workspace.name %> via agencios, a plataforma operacional da sua agência.
+<% else %>agencios — o sistema operacional da sua agência.
+<% end %>E-mail automático enviado de nao-responda@agencios.app. Não responda a esta mensagem.
 <%= app_url %>

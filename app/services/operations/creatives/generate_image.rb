@@ -33,10 +33,36 @@ module Operations
           metadata:      { prompt: prompt, aspect_ratio: aspect }
         )
 
-        result = Vendors::Google::Banana::Actions::GenerateImage.call(
-          prompt:       prompt,
-          aspect_ratio: aspect
+        generation = workspace.generations.create!(
+          user:       Current.user,
+          creative:   creative,
+          kind:       :image,
+          status:     :processing,
+          provider:   PROVIDER,
+          cost_cents: 0, # not Stripe-metered; real vendor cost is in AiUsageLog
+          params:     { prompt: prompt, aspect_ratio: aspect },
+          result:     {}
         )
+
+        # Charge prepaid credits BEFORE spending vendor $ — raises
+        # InsufficientCredits (→ 402) if the wallet can't cover it.
+        Operations::Credits::Debit.call(
+          workspace:  workspace,
+          amount:     Pricing.credits_for(kind: :image),
+          generation: generation
+        )
+
+        begin
+          result = Vendors::Google::Banana::Actions::GenerateImage.call(
+            prompt:       prompt,
+            aspect_ratio: aspect
+          )
+        rescue StandardError
+          Operations::Credits::Refund.call(generation: generation)
+          generation.update!(status: :failed)
+          creative.update!(status: :failed)
+          raise
+        end
 
         creative.assets.attach(
           io:           StringIO.new(result[:bytes]),
@@ -44,17 +70,7 @@ module Operations
           content_type: result[:content_type]
         )
         creative.update!(status: :ready)
-
-        generation = workspace.generations.create!(
-          user:       Current.user,
-          creative:   creative,
-          kind:       :image,
-          status:     :completed,
-          provider:   PROVIDER,
-          cost_cents: 0, # not Stripe-metered; real vendor cost is in AiUsageLog
-          params:     { prompt: prompt, aspect_ratio: aspect },
-          result:     {}
-        )
+        generation.update!(status: :completed)
 
         log_ai_cost(generation)
         broadcast(event: "generation_done", id: generation.id, kind: "image")

@@ -135,9 +135,24 @@ module Tickets
         copy_brief.present? ? "Escopo: #{copy_brief}" : nil,
         content_pillar.present? ? "Pilar: #{content_pillar}" : nil,
         spec[:prompt_scaffold],
-        brand_descriptor
+        brand_descriptor,
+        TEXT_RENDERING_DIRECTIVE
       ].compact.join(". ")
     end
+
+    # Image models (Imagen/Banana) routinely hallucinate garbled, misspelled, or
+    # nonsensical lettering. Force a binary choice: only render text that is real,
+    # correctly spelled, and meaningful (in Brazilian Portuguese unless the copy
+    # clearly calls for another language) — otherwise render NO text at all.
+    # Overlaid headlines/CTAs are composited later, so a clean, text-free image is
+    # always preferable to fake typography.
+    TEXT_RENDERING_DIRECTIVE =
+      "Regra de texto: qualquer palavra ou letra visível na imagem DEVE ser " \
+      "real, ortograficamente correta e fazer sentido (em português do Brasil, " \
+      "salvo se a copy pedir outro idioma). Se não for possível garantir texto " \
+      "legível e correto, NÃO escreva absolutamente nenhum texto — prefira uma " \
+      "imagem totalmente sem texto a letras falsas, embaralhadas ou sem sentido. " \
+      "Nunca invente logotipos, marcas d'água ou caracteres decorativos ilegíveis."
 
     def brand_descriptor
       bits = []

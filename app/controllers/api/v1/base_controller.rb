@@ -14,6 +14,16 @@ module Api
       include Pundit::Authorization
       include Authentication
 
+      # Total paywall: once authenticated + tenant resolved, block every endpoint
+      # for a workspace that isn't billing-active (no free tier). Auth, identity,
+      # billing, and workspace-switching controllers opt out via `skip_billing_gate`
+      # so the user can always see their status, pay, or switch to a paid workspace.
+      before_action :require_active_billing
+
+      def self.skip_billing_gate(**opts)
+        skip_before_action :require_active_billing, **opts
+      end
+
       rescue_from ActionController::InvalidAuthenticityToken, with: :invalid_csrf
       rescue_from ActiveRecord::RecordNotFound,            with: :not_found
       rescue_from ActiveRecord::RecordInvalid,             with: :unprocessable
@@ -22,6 +32,7 @@ module Api
       rescue_from Operations::Errors::Forbidden,           with: :forbidden
       rescue_from Operations::Errors::SeatLimitReached,    with: :payment_required
       rescue_from Operations::Errors::BillingRequired,     with: :payment_required
+      rescue_from Operations::Errors::InsufficientCredits, with: :insufficient_credits
       rescue_from Operations::Errors::InvalidTransition,   with: :unprocessable
       rescue_from Operations::Errors::Invalid,             with: :unprocessable
 
@@ -45,6 +56,26 @@ module Api
       def unprocessable(error) = render_error(error.message)
       def forbidden(error)    = render json: { error: error.message, code: "forbidden" }, status: :forbidden
       def payment_required(error) = render json: { error: error.message, code: "billing_required" }, status: :payment_required
+
+      def insufficient_credits(error)
+        render json: {
+          error: error.message, code: "insufficient_credits",
+          required: error.required, available: error.available
+        }, status: :payment_required
+      end
+
+      # Enforced on every authenticated endpoint except the allowlisted ones.
+      # No active subscription / trial-with-card / godfathered ⇒ 402.
+      def require_active_billing
+        return if performed?
+        return if Current.workspace.nil?          # unauthenticated flows resolve no tenant
+        return if Current.workspace.billing_active?
+
+        render json: {
+          error: "Assinatura necessária para acessar o workspace.",
+          code: "billing_required"
+        }, status: :payment_required
+      end
 
       def current_user       = Current.user
       def current_workspace  = Current.workspace

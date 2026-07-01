@@ -45,12 +45,11 @@ class PollHeygenVideoJob < ApplicationJob
   private
 
   def mark_failed(generation, reason)
-    generation.update!(status: :failed, failure_reason: reason.to_s.presence)
-    generation.creative&.update!(status: :failed)
+    # Refunds held credits + marks the generation/creative failed + broadcasts.
+    Operations::Creatives::FailGeneration.call(generation: generation, reason: reason.to_s.presence)
 
     if generation.creative&.ticket
       Broadcaster.ticket(generation.creative.ticket, "creative_failed", creative_id: generation.creative.id)
     end
-    Broadcaster.generations(generation.workspace_id, "generation_failed", id: generation.id, kind: generation.kind)
   end
 end

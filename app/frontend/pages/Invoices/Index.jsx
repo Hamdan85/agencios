@@ -1,31 +1,28 @@
 import { useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import {
   Receipt, Plus, MoreHorizontal, Ban, Copy, Check, Wallet, Link2, CheckCircle2,
-  CircleDollarSign, AlertTriangle, FileText, ExternalLink, Hash,
+  CircleDollarSign, AlertTriangle, FileText, ExternalLink, Hash, Send,
 } from 'lucide-react'
-import { useInvoices, useInvoiceMutations } from '@/hooks/useData'
-import { projectsApi } from '@/api'
+import { useInvoices, useInvoiceMutations, useSettings } from '@/hooks/useData'
 import { PageHeader, StatCard } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
-import { Input, Textarea } from '@/components/ui/input'
+import { useConfirm } from '@/components/ui/confirm-dialog'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { PageLoader, EmptyState } from '@/components/ui/feedback'
 import { Page } from '@/components/ui/page'
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog'
-import { ClientSelect } from '@/components/ui/entity-select'
-import { DatePicker } from '@/components/ui/date-picker'
+import { InvoiceFormDialog } from '@/components/billing/InvoiceFormDialog'
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
 } from '@/components/ui/dropdown-menu'
 import {
   Tabs, TabsList, TabsTrigger,
 } from '@/components/ui/tabs'
-import { brl, date, relativeDay, maskCurrency, centsFromMasked } from '@/lib/formatters'
+import { brl, date, relativeDay } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 
 const STATUS_META = {
@@ -46,124 +43,8 @@ const FILTERS = [
   { value: 'canceled', label: 'Canceladas' },
 ]
 
-// ── Create dialog ──────────────────────────────────────────────
-const EMPTY_FORM = { client_id: '', amount: '', description: '', due_date: '', project_ids: [] }
-
-function InvoiceFormDialog({ open, onOpenChange, mutation }) {
-  const [form, setForm] = useState(EMPTY_FORM)
-  const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }))
-
-  // Projects are scoped to the selected client (fetched on demand) rather than
-  // loading every project across the workspace and filtering client-side.
-  const projectsQuery = useQuery({
-    queryKey: ['projects', 'invoice-picker', form.client_id],
-    queryFn: () => projectsApi.list({ client_id: form.client_id, per: 100 }),
-    enabled: !!form.client_id,
-    select: (d) => d.projects,
-  })
-  const clientProjects = projectsQuery.data || []
-
-  const toggleProject = (id) => setForm((f) => {
-    const has = f.project_ids.includes(id)
-    return { ...f, project_ids: has ? f.project_ids.filter((x) => x !== id) : [...f.project_ids, id] }
-  })
-
-  const submit = (e) => {
-    e.preventDefault()
-    if (!form.client_id || centsFromMasked(form.amount) <= 0) return
-    const payload = {
-      client_id: form.client_id,
-      amount_cents: centsFromMasked(form.amount),
-      description: form.description,
-      due_date: form.due_date || null,
-      project_ids: form.project_ids,
-    }
-    mutation.mutate(payload, { onSuccess: () => { setForm(EMPTY_FORM); onOpenChange(false) } })
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) setForm(EMPTY_FORM) }}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="mb-1 flex size-11 items-center justify-center rounded-2xl" style={{ background: '#F9731616', color: '#F97316' }}>
-            <Receipt size={22} strokeWidth={2.2} />
-          </div>
-          <DialogTitle>Nova cobrança</DialogTitle>
-          <DialogDescription>Registre uma cobrança para um cliente. Depois você pode gerar um link de pagamento ou marcá-la como paga.</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={submit} className="space-y-3.5">
-          <div className="space-y-1.5">
-            <Label>Cliente</Label>
-            <ClientSelect
-              variant="field"
-              value={form.client_id}
-              onChange={(v) => setForm((f) => ({ ...f, client_id: v || '', project_ids: [] }))}
-              placeholder="Selecione o cliente"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="iv-amount">Valor</Label>
-              <div className="relative">
-                <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-medium text-ink-muted">R$</span>
-                <Input
-                  id="iv-amount"
-                  inputMode="decimal"
-                  required
-                  value={form.amount}
-                  onChange={(e) => set('amount')(maskCurrency(e.target.value))}
-                  placeholder="0,00"
-                  className="pl-9"
-                />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="iv-due">Vencimento</Label>
-              <DatePicker id="iv-due" value={form.due_date} onChange={set('due_date')} placeholder="Selecione o vencimento" />
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="iv-desc">Descrição</Label>
-            <Textarea id="iv-desc" value={form.description} onChange={(e) => set('description')(e.target.value)} placeholder="Serviços prestados…" />
-          </div>
-          {form.client_id && clientProjects.length > 0 && (
-            <div className="space-y-1.5">
-              <Label>Projetos (opcional)</Label>
-              <div className="flex flex-wrap gap-2">
-                {clientProjects.map((p) => {
-                  const active = form.project_ids.includes(p.id)
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => toggleProject(p.id)}
-                      className={cn(
-                        'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition-colors',
-                        active ? 'border-transparent text-white' : 'border-border bg-surface-muted text-ink-secondary hover:border-brand/40',
-                      )}
-                      style={active ? { background: p.color || '#7C3AED' } : undefined}
-                    >
-                      {active && <Check size={13} />} {p.name}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <DialogClose asChild><Button type="button" variant="ghost">Cancelar</Button></DialogClose>
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? 'Registrando…' : 'Registrar cobrança'}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
 // ── Payment link dialog ────────────────────────────────────────
-function PaymentLinkDialog({ invoice, open, onOpenChange }) {
+function PaymentLinkDialog({ invoice, open, onOpenChange, onSendPaymentLink, sending }) {
   const [copied, setCopied] = useState(false)
   const charge = invoice?.charge
   const link = charge?.payment_link
@@ -202,15 +83,22 @@ function PaymentLinkDialog({ invoice, open, onOpenChange }) {
                 </div>
               </div>
 
-              <Button onClick={copy} variant={copied ? 'solid' : 'outline'} className="w-full">
-                {copied ? <><Check size={16} /> Copiado!</> : <><Copy size={16} /> Copiar link</>}
-              </Button>
+              <div className="flex w-full gap-2">
+                <Button onClick={copy} variant={copied ? 'solid' : 'outline'} className="flex-1">
+                  {copied ? <><Check size={16} /> Copiado!</> : <><Copy size={16} /> Copiar link</>}
+                </Button>
+                {onSendPaymentLink && (
+                  <Button onClick={() => onSendPaymentLink(invoice)} disabled={sending} className="flex-1">
+                    <Send size={16} /> {sending ? 'Enviando…' : 'Enviar ao cliente'}
+                  </Button>
+                )}
+              </div>
 
               <a href={link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:underline">
                 Abrir página de pagamento <ExternalLink size={14} />
               </a>
 
-              <p className="text-center text-xs text-ink-muted">Envie este link ao cliente — a baixa é automática após o pagamento.</p>
+              <p className="text-center text-xs text-ink-muted">Ou envie o link acima ao cliente — a baixa é automática após o pagamento.</p>
             </>
           ) : (
             <p className="rounded-xl bg-surface-muted px-4 py-6 text-center text-sm text-ink-muted">
@@ -224,7 +112,7 @@ function PaymentLinkDialog({ invoice, open, onOpenChange }) {
 }
 
 // ── Invoice row ────────────────────────────────────────────────
-function InvoiceRow({ invoice, onMarkPaid, onCancel, onGenerateLink, onShowLink, generating }) {
+function InvoiceRow({ invoice, onMarkPaid, onCancel, onGenerateLink, onShowLink, onSendPaymentLink, generating, sending, paymentLinksAvailable }) {
   const m = statusMeta(invoice.status)
   const rel = relativeDay(invoice.due_date)
   const canAct = !['paid', 'canceled'].includes(invoice.status)
@@ -289,6 +177,11 @@ function InvoiceRow({ invoice, onMarkPaid, onCancel, onGenerateLink, onShowLink,
             ) : (
               <DropdownMenuItem onSelect={() => onGenerateLink(invoice)}><Link2 /> Gerar link de pagamento</DropdownMenuItem>
             ))}
+            {canAct && paymentLinksAvailable && (
+              <DropdownMenuItem disabled={sending} onSelect={() => onSendPaymentLink(invoice)}>
+                <Send /> {sending ? 'Enviando…' : 'Enviar link de pagamento'}
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem
               disabled={!canAct}
               onSelect={() => canAct && onCancel(invoice)}
@@ -305,7 +198,10 @@ function InvoiceRow({ invoice, onMarkPaid, onCancel, onGenerateLink, onShowLink,
 
 export default function InvoicesIndex() {
   const { data: invoices, isLoading } = useInvoices()
-  const { create, cancel, markPaid, paymentLink } = useInvoiceMutations()
+  const { cancel, markPaid, paymentLink, sendPaymentLink } = useInvoiceMutations()
+  const { data: settings } = useSettings()
+  const paymentLinksAvailable = !!settings?.setting?.payment_links_available
+  const confirm = useConfirm()
   const [createOpen, setCreateOpen] = useState(false)
   const [linkInvoiceId, setLinkInvoiceId] = useState(null)
   const [filter, setFilter] = useState('all')
@@ -330,10 +226,30 @@ export default function InvoicesIndex() {
   const linkInvoice = list.find((i) => i.id === linkInvoiceId) || null
   const generatingId = paymentLink.isPending ? paymentLink.variables : null
 
-  const onMarkPaid = (inv) => { if (window.confirm('Marcar esta cobrança como paga?')) markPaid.mutate(inv.id) }
-  const onCancel = (inv) => { if (window.confirm('Cancelar esta cobrança?')) cancel.mutate(inv.id) }
+  const onMarkPaid = async (inv) => {
+    const ok = await confirm({
+      title: 'Marcar como paga?',
+      description: 'Confirme o recebimento manual desta cobrança. O status muda para paga.',
+      confirmLabel: 'Marcar como paga',
+      icon: CheckCircle2,
+      tone: '#10B981',
+    })
+    if (ok) markPaid.mutate(inv.id)
+  }
+  const onCancel = async (inv) => {
+    const ok = await confirm({
+      title: 'Cancelar cobrança?',
+      description: 'A cobrança será cancelada e não poderá mais ser paga pelo cliente.',
+      confirmLabel: 'Cancelar cobrança',
+      cancelLabel: 'Voltar',
+      destructive: true,
+    })
+    if (ok) cancel.mutate(inv.id)
+  }
   const onGenerateLink = (inv) => paymentLink.mutate(inv.id, { onSuccess: () => setLinkInvoiceId(inv.id) })
   const onShowLink = (inv) => setLinkInvoiceId(inv.id)
+  const onSendPaymentLink = (inv) => sendPaymentLink.mutate(inv.id)
+  const sendingId = sendPaymentLink.isPending ? sendPaymentLink.variables : null
 
   if (isLoading) return <PageLoader />
 
@@ -380,7 +296,10 @@ export default function InvoicesIndex() {
               onCancel={onCancel}
               onGenerateLink={onGenerateLink}
               onShowLink={onShowLink}
+              onSendPaymentLink={onSendPaymentLink}
               generating={generatingId === inv.id}
+              sending={sendingId === inv.id}
+              paymentLinksAvailable={paymentLinksAvailable}
             />
           ))}
         </Card>
@@ -389,12 +308,13 @@ export default function InvoicesIndex() {
       <InvoiceFormDialog
         open={createOpen}
         onOpenChange={setCreateOpen}
-        mutation={create}
       />
       <PaymentLinkDialog
         invoice={linkInvoice}
         open={linkInvoiceId != null}
         onOpenChange={(v) => { if (!v) setLinkInvoiceId(null) }}
+        onSendPaymentLink={paymentLinksAvailable ? onSendPaymentLink : null}
+        sending={linkInvoice && sendingId === linkInvoice.id}
       />
     </Page>
   )

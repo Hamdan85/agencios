@@ -6,6 +6,7 @@ import { PERSONAL_NAV, NAV_ITEMS, FOOTER_NAV } from './navItems'
 import { useLogout } from '@/hooks/useAuth'
 import { useWorkspaceMutations } from '@/hooks/useData'
 import CreateWorkspaceDialog from '@/components/workspace/CreateWorkspaceDialog'
+import CreditsBadge from './CreditsBadge'
 import { Avatar } from '@/components/ui/avatar'
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
@@ -102,6 +103,10 @@ export default function Sidebar({ me, onNavigate }) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <div className="mt-2 shrink-0">
+            <CreditsBadge onNavigate={onNavigate} />
+          </div>
 
           <div className="mt-1 min-h-0 flex-1 space-y-0.5 overflow-y-auto no-scrollbar">
             <SectionLabel>Operação</SectionLabel>

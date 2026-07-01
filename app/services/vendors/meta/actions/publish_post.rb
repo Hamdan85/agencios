@@ -75,7 +75,7 @@ module Vendors
 
         def build_reel_container
           creation_id = CreateReelsContainer.call(
-            social_account: @social_account, video_url:, caption: @post.caption
+            social_account: @social_account, video_url:, caption: @post.caption, cover_url:
           ).fetch("id")
           poll_ig_container!(creation_id)
           creation_id
@@ -188,6 +188,17 @@ module Vendors
 
         def creative
           @creative ||= @post.publishable_creative
+        end
+
+        # An optional still image the team paired with this video at the posting
+        # step (thumbnail/cover creative type) → the Reel's cover_url. Nil for
+        # non-video posts, in which case CreateReelsContainer simply omits it.
+        def cover_url
+          return @cover_url if defined?(@cover_url)
+
+          cover = @post.cover_creative
+          asset = Array(cover&.assets).find { |a| a.content_type.to_s.start_with?("image/") } || cover&.assets&.first
+          @cover_url = asset ? blob_url(asset) : nil
         end
 
         # First attached video asset's public URL (Meta fetches the bytes; must be

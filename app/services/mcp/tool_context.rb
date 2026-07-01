@@ -19,6 +19,10 @@ module Mcp
 
     class NotAMember < StandardError; end
 
+    # The connector is an Agência+ feature; Solo workspaces can't be operated
+    # over MCP.
+    class PlanRequired < StandardError; end
+
     module_function
 
     # Workspace-scoped tools.
@@ -28,6 +32,10 @@ module Mcp
       workspace  = resolve_workspace(user, workspace_ref)
       membership = user.membership_for(workspace)
       raise NotAMember, "You are not a member of '#{workspace_ref}'." if membership.nil?
+      unless workspace.mcp_enabled?
+        raise PlanRequired, "O conector do Claude está disponível nos planos Agência e Enterprise. " \
+                            "Faça upgrade do workspace '#{workspace.slug}' para usá-lo."
+      end
 
       with_current(actor: user, workspace: workspace, membership: membership) { yield }
     end

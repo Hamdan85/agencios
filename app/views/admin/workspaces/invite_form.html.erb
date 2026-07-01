@@ -1,0 +1,27 @@
+<% self.page_title = "Convidar membro — #{resource.name}" %>
+
+<div class="panel">
+  <h3>Convidar membro para <%= resource.name %></h3>
+  <div class="panel_contents">
+    <%= form_tag invite_admin_workspace_path(resource), method: :post do %>
+      <div class="form-inputs">
+        <fieldset class="inputs">
+          <ol>
+            <li class="input">
+              <%= label_tag :email, "E-mail" %>
+              <%= email_field_tag :email, nil, required: true, placeholder: "pessoa@exemplo.com" %>
+            </li>
+            <li class="input">
+              <%= label_tag :role, "Papel" %>
+              <%= select_tag :role, options_for_select(@roles.map { |r| [r.humanize, r] }, "member") %>
+            </li>
+          </ol>
+        </fieldset>
+      </div>
+      <div class="actions">
+        <%= submit_tag "Enviar convite", class: "button" %>
+        <%= link_to "Cancelar", admin_workspace_path(resource), class: "button" %>
+      </div>
+    <% end %>
+  </div>
+</div>

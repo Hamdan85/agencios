@@ -21,6 +21,7 @@ module Operations
           scheduled_at: @params[:scheduled_at],
           channels: Array(@params[:channels]).compact_blank,
           creative_type: @params[:creative_type],
+          strategy_session_id: @params[:strategy_session_id],
           status: :ideation,
           position: next_position
         )

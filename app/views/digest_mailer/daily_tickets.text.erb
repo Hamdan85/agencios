@@ -1,0 +1,20 @@
+Olá<%= @user.display_name.present? ? ", #{@user.display_name}" : "" %>!
+
+Seus tickets de hoje — <%= email_date(@date) %>
+
+<% if @tickets_by_workspace.blank? %>
+Nenhum ticket vencendo ou atrasado hoje.
+<% else %>
+<% @tickets_by_workspace.each do |ws, tickets| %>
+<% if @tickets_by_workspace.size > 1 %>
+<%= ws.name %>
+<% end %>
+<% tickets.each do |ticket| %>
+<% overdue = (ticket.due_date || ticket.scheduled_at&.to_date)&.past? %>
+- <%= ticket.display_title %> (<%= status_label(ticket.status) %>) — <%= overdue ? "Atrasado" : "Vence hoje" %>: <%= email_date(ticket.due_date || ticket.scheduled_at) %>
+  <%= app_url("/tickets/#{ticket.id}") %>
+<% end %>
+<% end %>
+<% end %>
+
+Abrir o quadro: <%= app_url("/quadro") %>

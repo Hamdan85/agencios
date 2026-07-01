@@ -47,6 +47,7 @@ export const boardApi = {
 
 export const ticketsApi = {
   list: (params) => api.get('/tickets', { params }),
+  ids: (params) => api.get('/tickets/ids', { params }),
   get: (id) => api.get(`/tickets/${id}`),
   create: (data) => api.post('/tickets', { ticket: data }),
   update: (id, data) => api.patch(`/tickets/${id}`, { ticket: data }),
@@ -60,6 +61,7 @@ export const ticketsApi = {
   archive: (id) => api.post(`/tickets/${id}/archive`),
   unarchive: (id) => api.post(`/tickets/${id}/unarchive`),
   clearColumn: (status) => api.post('/tickets/clear_column', { status }),
+  bulkDestroy: (ids) => api.post('/tickets/bulk_destroy', { ticket_ids: ids }),
   createSubtask: (id, data) => api.post(`/tickets/${id}/subtasks`, { subtask: data }),
   // A comment carries optional @mentions (user ids) and file attachments, so it
   // is always sent as multipart FormData (the axios client strips the JSON
@@ -132,8 +134,12 @@ export const projectsApi = {
   create: (data) => api.post('/projects', { project: data }),
   update: (id, data) => api.patch(`/projects/${id}`, { project: data }),
   destroy: (id) => api.delete(`/projects/${id}`),
+  // Starts a draft project (→ `active`).
+  start: (id) => api.post(`/projects/${id}/start`),
   // Finalizes a project (→ `completed`) and kicks off its audit report.
   finalize: (id) => api.post(`/projects/${id}/finalize`),
+  // Emails a read-only content-scope summary to the given addresses.
+  sendScope: (id, recipients) => api.post(`/projects/${id}/send_scope`, { recipients }),
 }
 
 // End-of-run project audit reports (the finalize deck).
@@ -183,6 +189,7 @@ export const invoicesApi = {
   cancel: (id) => api.post(`/invoices/${id}/cancel`),
   markPaid: (id) => api.post(`/invoices/${id}/mark_paid`),
   paymentLink: (id) => api.post(`/invoices/${id}/payment_link`),
+  sendPaymentLink: (id) => api.post(`/invoices/${id}/send_payment_link`),
 }
 
 export const settingsApi = {
@@ -201,9 +208,83 @@ export const settingsApi = {
 
 export const billingApi = {
   get: () => api.get('/billing'),
-  changePlan: (plan) => api.post('/billing/change_plan', { plan }),
+  changePlan: (plan, interval = 'month') => api.post('/billing/change_plan', { plan, interval }),
   cancel: () => api.post('/billing/cancel'),
   reactivate: () => api.post('/billing/reactivate'),
-  checkout: (plan) => api.post('/billing/checkout_session', { plan }),
+  checkout: (plan, interval = 'month') => api.post('/billing/checkout_session', { plan, interval }),
   portal: () => api.post('/billing/portal'),
+}
+
+// Prepaid credit wallet (video/image generation) + top-up checkout.
+export const creditsApi = {
+  get: () => api.get('/credits'),
+  checkout: (pack) => api.post('/credits/checkout', { pack }),
+}
+
+// Public pricing catalog (unauthenticated): plans, packs, credit costs, trial.
+export const pricingApi = {
+  get: () => api.get('/pricing'),
+}
+
+// AI content-strategy planning: a chat that turns a monthly cadence into
+// scheduled tickets. The chat turn STREAMS over SSE, so `streamMessage` uses a
+// raw fetch + ReadableStream reader instead of axios (which buffers the body).
+export const strategyApi = {
+  show: (projectId) => api.get(`/projects/${projectId}/strategy_session`),
+  start: (projectId) => api.post(`/projects/${projectId}/strategy_session`),
+  apply: (sessionId) => api.post(`/strategy_sessions/${sessionId}/apply`),
+  discard: (sessionId) => api.post(`/strategy_sessions/${sessionId}/discard`),
+
+  // Send one message and stream the agent's reply. Calls `onDelta(text)` for
+  // each text chunk, `onProposal(plan)` when a plan is proposed, and resolves
+  // with `{ status }` on `done`. Rejects on an `error` SSE event.
+  async streamMessage(sessionId, content, { onDelta, onProposal, onGenerating, signal } = {}) {
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content
+    const res = await fetch(`/api/v1/strategy_sessions/${sessionId}/messages`, {
+      method: 'POST',
+      credentials: 'include',
+      signal,
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf || '' },
+      body: JSON.stringify({ content }),
+    })
+    if (!res.ok || !res.body) throw new Error(`stream failed (${res.status})`)
+
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+    let done = { status: null }
+
+    // Parse one `\n\n`-delimited SSE block into { event, data }.
+    const parseBlock = (block) => {
+      let event = 'message'
+      let data = ''
+      block.split('\n').forEach((line) => {
+        if (line.startsWith('event:')) event = line.slice(6).trim()
+        else if (line.startsWith('data:')) data += line.slice(5).trim()
+      })
+      return { event, data }
+    }
+
+    for (;;) {
+      const { value, done: streamDone } = await reader.read()
+      if (streamDone) break
+      buffer += decoder.decode(value, { stream: true })
+      let sep
+      while ((sep = buffer.indexOf('\n\n')) !== -1) {
+        const rawBlock = buffer.slice(0, sep)
+        buffer = buffer.slice(sep + 2)
+        if (!rawBlock.trim()) continue
+        const { event, data } = parseBlock(rawBlock)
+        let payload = {}
+        try { payload = data ? JSON.parse(data) : {} } catch { payload = {} }
+
+        if (event === 'delta') onDelta?.(payload.text || '')
+        else if (event === 'generating') onGenerating?.()
+        else if (event === 'proposal') onProposal?.(payload.plan)
+        else if (event === 'done') done = { status: payload.status }
+        else if (event === 'error') throw new Error(payload.message || 'Erro no chat de estratégia.')
+      }
+    }
+    return done
+  },
 }

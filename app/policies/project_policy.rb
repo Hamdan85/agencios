@@ -2,9 +2,11 @@
 
 # Managers+ manage projects; members read; guests may only read.
 class ProjectPolicy < ApplicationPolicy
-  def index?   = membership.present?
-  def show?    = same_workspace?
-  def create?  = manager?
-  def update?  = manager?
-  def destroy? = manager?
+  def index?      = membership.present?
+  def show?       = same_workspace?
+  def create?     = manager?
+  def update?     = manager?
+  def start?      = manager?
+  def send_scope? = manager?
+  def destroy?    = manager?
 end

@@ -19,6 +19,9 @@ module Api
 
       # POST /api/v1/invoices/:id/payment_link
       def payment_link = render_ok(Controllers::Invoices::GeneratePaymentLink.call(params:))
+
+      # POST /api/v1/invoices/:id/send_payment_link
+      def send_payment_link = render_ok(Controllers::Invoices::SendPaymentLink.call(params:))
     end
   end
 end

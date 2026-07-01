@@ -20,7 +20,7 @@
       <% end %>
       <%= link_to "Como funciona", how_it_works_path, class: "inline-flex h-12 items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 text-base font-semibold text-white transition hover:bg-white/10" %>
     </div>
-    <p class="mt-4 text-xs text-white/40">14 dias grátis · sem cartão · cancele quando quiser</p>
+    <p class="mt-4 text-xs text-white/40"><%= @trial_days %> dias de teste · cartão obrigatório · cancele quando quiser</p>
 
     <%= render "pages/shared/board_preview", funnel: @funnel %>
   </div>
@@ -164,6 +164,9 @@
           <h3 class="font-display text-xl font-extrabold text-ink"><%= p[:name] %></h3>
           <p class="mt-1 text-sm text-ink-muted"><%= plan_seats_label(p[:seats]) %></p>
           <p class="mt-4 font-display text-4xl font-extrabold text-ink"><%= brl_short(p[:price_cents]) %><span class="text-base font-semibold text-ink-muted">/mês</span></p>
+          <% if @annual_discount_percent.to_i.positive? %>
+            <p class="mt-1 text-xs font-semibold text-emerald">ou <%= brl_short(p[:annual_monthly_equivalent_cents]) %>/mês no anual · -<%= @annual_discount_percent %>%</p>
+          <% end %>
           <ul class="mt-6 space-y-2.5">
             <% p[:features].first(5).each do |feat| %>
               <li class="flex items-center gap-2 text-sm text-ink-secondary">

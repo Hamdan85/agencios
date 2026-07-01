@@ -45,12 +45,41 @@ module Controllers
     end
 
     # Gate actions that consume paid resources (creative generation) behind an
-    # active subscription / trial. New workspaces start trialing, so this only
-    # blocks once the trial lapses or billing goes inactive. Maps to HTTP 402.
+    # active subscription / trial-with-card / godfathered workspace. Maps to
+    # HTTP 402.
     def require_billing!
       return if workspace&.billing_active?
 
       raise Operations::Errors::BillingRequired
+    end
+
+    # Gate work-creating actions once seat usage exceeds the plan's limit — e.g. a
+    # downgrade applied outside the app (Stripe dashboard) left the workspace with
+    # more active members than the new plan allows. Existing members keep access
+    # to everything else; only new tickets/projects are blocked until the owner
+    # removes members or upgrades. Maps to HTTP 402.
+    def require_seat_compliance!
+      return unless workspace&.over_seat_limit?
+
+      raise Operations::Errors::SeatLimitReached,
+            "O workspace tem mais membros do que o plano atual permite. " \
+              "Remova membros ou faça upgrade para continuar criando tickets e projetos."
+    end
+
+    # Preflight prepaid-credit check for a metered generation (video/image).
+    # Fails fast with 402 before any Creative/Generation row or vendor call, so
+    # we don't orphan records. Godfathered workspaces never need credits.
+    # (The authoritative atomic debit still happens inside the generation op.)
+    def require_credits!(kind:, seconds: nil, engine: nil)
+      return if workspace&.godfathered?
+
+      needed = Pricing.credits_for(kind: kind, seconds: seconds, engine: engine)
+      return if needed <= 0
+
+      available = workspace&.credits_available.to_i
+      return if available >= needed
+
+      raise Operations::Errors::InsufficientCredits.new(required: needed, available: available)
     end
 
     # --- Serialization ------------------------------------------------------

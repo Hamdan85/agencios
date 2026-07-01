@@ -9,6 +9,7 @@ module Controllers
 
       def call
         authorize!(Project, :create?)
+        require_seat_compliance!
         project = Operations::Projects::Create.call(project_params)
         { project: serialize(project, ProjectSerializer) }
       end

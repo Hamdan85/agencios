@@ -8,10 +8,13 @@ class Project < ApplicationRecord
   has_many :invoice_projects, dependent: :destroy
   has_many :invoices, through: :invoice_projects
   has_many :reports, class_name: "ProjectReport", dependent: :destroy
+  has_many :strategy_sessions, dependent: :destroy
 
-  # `completed` is the explicit "finalized" state that triggers the audit report
-  # (see Operations::Projects::Finalize); `archived` stays plain hide-from-view.
-  enum :status, { active: 0, paused: 1, archived: 2, completed: 3 }, prefix: true
+  # Lifecycle: a project is born `draft` (planning), is explicitly started into
+  # `active` (Operations::Projects::Start), and ends `completed` — the finalized
+  # state that triggers the audit report (Operations::Projects::Finalize).
+  # `paused` / `archived` are plain side states.
+  enum :status, { active: 0, paused: 1, archived: 2, completed: 3, draft: 4 }, prefix: true
 
   validates :name, presence: true
 

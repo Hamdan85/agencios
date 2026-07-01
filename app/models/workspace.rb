@@ -13,8 +13,11 @@ class Workspace < ApplicationRecord
   has_many :creatives, dependent: :destroy
   has_many :posts, dependent: :destroy
   has_many :generations, dependent: :destroy
+  has_many :strategy_sessions, dependent: :destroy
   has_one  :setting, dependent: :destroy
   has_one  :subscription, dependent: :destroy
+  has_one  :credit_wallet, dependent: :destroy
+  has_many :credit_transactions, dependent: :destroy
 
   has_one_attached :logo
   has_one_attached :default_creator_avatar
@@ -27,11 +30,60 @@ class Workspace < ApplicationRecord
   def seat_count = memberships.count
   def plan = subscription&.plan&.to_sym || :solo
   def trialing? = subscription&.trialing? || false
-  def billing_active? = subscription&.access_granted? || false
+
+  # The billing gate. Godfathered (founding) workspaces bypass it entirely and
+  # always have access. Otherwise access follows the subscription.
+  def billing_active? = godfathered? || subscription&.access_granted? || false
 
   def owner_membership = memberships.find_by(role: :owner)
   def owner = owner_membership&.user
 
-  def seat_limit = subscription&.seat_limit || Subscription::SEAT_LIMITS["solo"]
+  # Godfathered workspaces have unlimited seats; otherwise the plan's limit.
+  def seat_limit
+    return Float::INFINITY if godfathered?
+
+    subscription&.seat_limit || Pricing.seat_limit_for(:solo)
+  end
+
   def within_seat_limit? = seat_count < seat_limit
+
+  # Recomputes the `over_seat_limit` flag from the current membership count vs.
+  # the plan's seat limit. Called after a subscription sync (e.g. a downgrade
+  # applied outside the app, via the Stripe dashboard). Never removes members —
+  # it only flags the workspace so writes are gated until the owner reconciles.
+  def sync_seat_compliance!
+    update!(over_seat_limit: seat_count > seat_limit)
+  end
+
+  def client_limit
+    return Float::INFINITY if godfathered?
+
+    Pricing.client_limit_for(plan)
+  end
+
+  def within_client_limit? = clients.count < client_limit
+
+  # Spendable prepaid credits (0 when godfathered — they never debit).
+  def credits_available = credit_wallet&.available || 0
+
+  # ── Plan-gated features ──────────────────────────────────────────────
+  # Plan tier ordering (matches the Subscription#plan enum).
+  PLAN_RANK = { "solo" => 0, "agencia" => 1, "enterprise" => 2 }.freeze
+
+  def plan_rank = PLAN_RANK.fetch(plan.to_s, 0)
+
+  def plan_at_least?(tier) = plan_rank >= PLAN_RANK.fetch(tier.to_s, 999)
+
+  # The Claude/MCP connector is an Agência+ feature (Solo sees an upgrade hook).
+  # Godfathered workspaces get everything.
+  def mcp_enabled? = godfathered? || plan_at_least?(:agencia)
+
+  def self.ransackable_attributes(_auth = nil)
+    %w[id name slug godfathered over_seat_limit timezone locale created_at updated_at]
+  end
+
+  def self.ransackable_associations(_auth = nil)
+    %w[memberships users subscription setting credit_wallet clients projects
+       generations invoices social_accounts]
+  end
 end

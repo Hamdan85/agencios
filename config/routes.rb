@@ -4,6 +4,12 @@ require "sidekiq/web"
 
 Rails.application.routes.draw do
   ActiveAdmin.routes(self)
+
+  # ── Platform-staff impersonation (support) ─────────────────────────
+  post  "/admin/impersonate/:user_id", to: "admin/impersonations#create", as: :admin_impersonate
+  match "/admin/stop-impersonation",   to: "admin/impersonations#destroy",
+        via: %i[get delete], as: :admin_stop_impersonation
+
   get "up" => "rails/health#show", as: :rails_health_check
 
   # ── PWA ────────────────────────────────────────────────────────────
@@ -135,12 +141,27 @@ Rails.application.routes.draw do
         end
       end
       resources :projects do
-        member { post :finalize }
+        member do
+          post :start
+          post :finalize
+          post :send_scope
+        end
         # End-of-run audit reports (the finalize deck). Listed under a project;
         # a single report is fetched by its own id (the deck page).
         resources :reports, only: %i[index]
+        # AI content-strategy planning session (the chat that fans out into tickets).
+        resource :strategy_session, only: %i[show create], controller: "strategy_sessions"
       end
       resources :reports, only: %i[show]
+
+      # Strategy planning: apply/discard the proposed plan, and the SSE chat turn.
+      resources :strategy_sessions, only: [] do
+        member do
+          post :apply
+          post :discard
+        end
+        resources :messages, only: %i[create], controller: "strategy_messages"
+      end
 
       # Board, tickets & funnel
       get "board", to: "board#index"
@@ -148,7 +169,9 @@ Rails.application.routes.draw do
       get "tasks", to: "tasks#index"
       resources :tickets do
         collection do
+          get  :ids
           post :clear_column
+          post :bulk_destroy
         end
         member do
           post  :advance
@@ -188,6 +211,7 @@ Rails.application.routes.draw do
           post :cancel
           post :mark_paid
           post :payment_link
+          post :send_payment_link
         end
       end
 
@@ -204,6 +228,15 @@ Rails.application.routes.draw do
         post :cancel
         post :reactivate
       end
+
+      # Prepaid credit wallet (video/image generation) + top-up checkout.
+      resource :credits, only: %i[show], controller: "credits" do
+        post :checkout
+      end
+
+      # Public pricing catalog (plans, packs, credit costs, trial) — drives the
+      # dynamic landing page + signup.
+      get "pricing", to: "pricing#show"
 
       get "dashboard", to: "dashboard#index"
 

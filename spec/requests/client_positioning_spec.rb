@@ -9,6 +9,7 @@ RSpec.describe "Client positioning API", type: :request do
       email: "pos@agencios.app", password: "secret123", name: "Pos", workspace_name: "Pos Agency"
     )
     Current.reset
+    activate_billing(@workspace)
     post "/api/v1/session", params: { email: "pos@agencios.app", password: "secret123" }, as: :json
     expect(response).to have_http_status(:ok)
   end

@@ -3,12 +3,13 @@
 # Full ticket detail (the contextual ticket view).
 class TicketSerializer < ActiveModel::Serializer
   attributes :id, :title, :display_title, :status, :priority, :position,
-             :due_date, :scheduled_at, :published_at, :channels, :creative_type,
+             :due_date, :scheduled_at, :published_at, :channels, :creative_type, :creative_types,
              :ai_summaries, :fields, :workflow_step, :next_status,
              :project, :assignee, :created_by, :allowed_field_keys, :created_at,
-             :archived, :archived_at, :relations, :connected_channels
+             :archived, :archived_at, :relations, :connected_channels, :overdue
 
   def display_title = object.display_title
+  def overdue = object.overdue?
   def due_date = object.due_date&.iso8601
   def scheduled_at = object.scheduled_at&.iso8601
   def published_at = object.published_at&.iso8601

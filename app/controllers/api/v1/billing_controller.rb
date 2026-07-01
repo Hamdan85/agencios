@@ -3,6 +3,9 @@
 module Api
   module V1
     class BillingController < BaseController
+      # The whole point of the paywall is to route the user here to pay.
+      skip_billing_gate
+
       def show = render_ok(Controllers::Billing::Show.call)
 
       # POST /api/v1/billing/checkout_session

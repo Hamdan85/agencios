@@ -162,7 +162,7 @@ export default function Board() {
   if (isLoading) return <PageLoader />
 
   return (
-    <Page wide className="flex min-h-0 flex-1 flex-col animate-rise">
+    <Page wide flush className="flex min-h-0 flex-1 flex-col animate-rise">
       <PageHeader
         className="shrink-0"
         eyebrow="Produção"
@@ -201,8 +201,8 @@ export default function Board() {
           onDragCancel={onDragCancel}
         >
           <ScrollShadow
-            className="-mx-1 min-h-0 flex-1"
-            viewportClassName="scrollbar-subtle flex items-stretch gap-3.5 overflow-x-auto overflow-y-hidden px-1 pb-2 pt-0.5"
+            className="-mx-4 min-h-0 flex-1 sm:-mx-6"
+            viewportClassName="scrollbar-subtle flex items-stretch gap-3.5 overflow-x-auto overflow-y-hidden px-2 pb-2 pt-0.5 scroll-px-2 snap-x snap-mandatory sm:snap-none"
           >
             {WORKFLOW.map((status) => (
               <BoardColumn

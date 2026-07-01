@@ -1,0 +1,33 @@
+# frozen_string_literal: true
+
+module Operations
+  module Creatives
+    # Marks a generation (and its creative) failed and refunds any credits held
+    # for it. Idempotent — a generation already terminal is left untouched (and
+    # Refund itself is idempotent). Used by the HeyGen webhook + poll safety net.
+    class FailGeneration < Operations::Base
+      def initialize(generation:, reason: nil)
+        @generation = generation
+        @reason     = reason.to_s
+      end
+
+      def call
+        return @generation if @generation.status_completed? || @generation.status_failed?
+
+        Operations::Credits::Refund.call(generation: @generation, description: "Estorno — geração falhou")
+
+        @generation.update!(status: :failed, failure_reason: @reason)
+        @generation.creative&.update!(status: :failed)
+
+        Broadcaster.generations(
+          @generation.workspace_id, "generation_failed",
+          id: @generation.id, kind: @generation.kind, reason: @reason
+        )
+        @generation
+      rescue NameError
+        # Broadcaster not loaded in some contexts — the state change still stands.
+        @generation
+      end
+    end
+  end
+end

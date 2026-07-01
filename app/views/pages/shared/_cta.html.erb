@@ -14,6 +14,6 @@
       <% end %>
       <%= link_to "Ver planos", pricing_path, class: "inline-flex h-12 items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 text-base font-semibold text-white transition hover:bg-white/10" %>
     </div>
-    <p class="mt-4 text-xs text-white/40">14 dias grátis · sem cartão · cancele quando quiser</p>
+    <p class="mt-4 text-xs text-white/40"><%= Pricing.trial_days %> dias de teste · cartão obrigatório · cancele quando quiser</p>
   </div>
 </section>

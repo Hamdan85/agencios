@@ -7,6 +7,7 @@ import {
 import { useClients, useClientMutations } from '@/hooks/useData'
 import { PageHeader } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
+import { useConfirm } from '@/components/ui/confirm-dialog'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Avatar } from '@/components/ui/avatar'
@@ -122,10 +123,18 @@ export default function ClientsIndex() {
     })
   }, [list, search, statusFilter])
 
+  const confirm = useConfirm()
   const openCreate = () => { setEditing(null); setDialogOpen(true) }
   const onEdit = (client) => { setEditing(client); setDialogOpen(true) }
-  const onArchive = (client) => {
-    if (window.confirm(`Arquivar ${client.name}?`)) archive.mutate(client.id)
+  const onArchive = async (client) => {
+    const ok = await confirm({
+      title: `Arquivar ${client.name}?`,
+      description: 'O cliente sai da lista ativa. Você pode reativá-lo depois pelo filtro de arquivados.',
+      confirmLabel: 'Arquivar',
+      icon: Archive,
+      tone: '#F59E0B',
+    })
+    if (ok) archive.mutate(client.id)
   }
 
   if (isLoading) return <PageLoader />

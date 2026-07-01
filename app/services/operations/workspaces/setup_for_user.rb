@@ -3,11 +3,11 @@
 module Operations
   module Workspaces
     # Bootstraps a brand-new workspace for a user: makes them the owner, creates
-    # the singleton Setting + a trialing Subscription. This is the canonical
-    # workspace creator (the aggregate root + its owned singletons).
+    # the singleton Setting, an empty credit wallet, and a Subscription in the
+    # `incomplete` state (NO access — there is no free tier). The real trial only
+    # starts once the owner completes Stripe Checkout (card-required), which the
+    # webhook flips to `trialing` with a card on file.
     class SetupForUser < Operations::Base
-      TRIAL_LENGTH = 14.days
-
       def initialize(user:, name: nil)
         @user = user
         @name = name
@@ -23,12 +23,13 @@ module Operations
         Membership.create!(workspace: workspace, user: @user, role: :owner)
         Setting.create!(workspace: workspace)
         Subscription.create!(
-          workspace:     workspace,
-          plan:          :solo,
-          status:        "trialing",
-          seats:         1,
-          trial_ends_at: TRIAL_LENGTH.from_now
+          workspace:    workspace,
+          plan:         :solo,
+          status:       "incomplete", # awaiting payment — no access until checkout
+          seats:        1,
+          card_on_file: false
         )
+        Operations::Credits::EnsureWallet.call(workspace: workspace)
 
         workspace
       end

@@ -110,6 +110,7 @@ module Mcp
       when Mcp::ForbiddenScope,
            Mcp::ToolContext::WorkspaceNotFound,
            Mcp::ToolContext::NotAMember,
+           Mcp::ToolContext::PlanRequired,
            Operations::Errors::Forbidden,
            Operations::Errors::Invalid,
            Operations::Errors::InvalidTransition,

@@ -1,0 +1,36 @@
+<% content_for :preheader do %>Escopo de conteúdo do projeto <%= @project.name %> — <%= pluralize(@tickets.size, "item") %>.<% end %>
+<% content_for :eyebrow do %>Escopo<% end %>
+
+<h1 style="margin:0 0 16px;font-family:'Sora','Inter',Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#18122B;">
+  Escopo de conteúdo
+</h1>
+
+<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#564F6F;">
+  Olá<%= @client&.name.present? ? ", #{@client.name}" : "" %>. Segue o panorama do conteúdo planejado para
+  <strong><%= @project.name %></strong>.
+</p>
+
+<% if @tickets.any? %>
+  <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="margin:8px 0 20px;background-color:#F5F4FB;border-radius:14px;">
+    <tr><td style="padding:6px 20px;">
+      <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
+        <% @tickets.each do |ticket| %>
+          <tr>
+            <td style="padding:12px 0;border-top:1px solid #E8E6F2;">
+              <p style="margin:0 0 4px;font-size:14px;font-weight:700;color:#18122B;"><%= ticket.display_title %></p>
+              <p style="margin:0;font-size:13px;color:#8B86A3;">
+                <%= ticket.creative_types_list.map { |t| creative_type_label(t) }.join(" · ").presence || "—" %>
+                &nbsp;·&nbsp;<%= status_label(ticket.status) %>
+                &nbsp;·&nbsp;<%= ticket.scheduled_at ? email_date(ticket.scheduled_at) : "Data a definir" %>
+              </p>
+            </td>
+          </tr>
+        <% end %>
+      </table>
+    </td></tr>
+  </table>
+<% else %>
+  <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#564F6F;">Nenhum ticket criado neste projeto ainda.</p>
+<% end %>
+
+<p style="margin:0;font-size:13px;line-height:1.5;color:#8B86A3;">Datas sujeitas a ajustes durante a produção.</p>

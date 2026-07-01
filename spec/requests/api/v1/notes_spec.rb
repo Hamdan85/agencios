@@ -11,6 +11,7 @@ RSpec.describe "Api::V1::Notes", type: :request do
       email: "owner@agencios.app", password: "secret123", name: "Owner", workspace_name: "Talk Agency"
     )
     Current.reset
+    activate_billing(@workspace)
     @member = User.create!(email: "mate@agencios.app", password: "secret123", name: "Mate Member")
     @workspace.memberships.create!(user: @member, role: :member)
     @outsider = User.create!(email: "out@agencios.app", password: "secret123", name: "Outsider")

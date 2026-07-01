@@ -25,10 +25,19 @@ module Operations
 
       private
 
-      # A few field values are also first-class ticket columns.
+      # A few field values are also first-class ticket columns. `creative_types` is
+      # the multi-select source; `creative_type` mirrors its first entry so board
+      # chips / filters (which read the single column) keep working.
       def mirrored_columns(clean)
         cols = {}
-        cols[:creative_type] = clean["creative_type"] if clean.key?("creative_type")
+        if clean.key?("creative_types")
+          types = Array(clean["creative_types"]).map(&:to_s).compact_blank
+          cols[:creative_types] = types
+          cols[:creative_type] = types.first
+        elsif clean.key?("creative_type")
+          cols[:creative_type] = clean["creative_type"]
+          cols[:creative_types] = Array(clean["creative_type"]).map(&:to_s).compact_blank
+        end
         cols[:channels] = Array(clean["channels"]).compact_blank if clean.key?("channels")
         cols[:scheduled_at] = clean["scheduled_at"] if clean.key?("scheduled_at")
         cols[:due_date] = clean["due_date"] if clean.key?("due_date")

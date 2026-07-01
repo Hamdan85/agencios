@@ -11,6 +11,8 @@ RSpec.describe "MCP server endpoint", type: :request do
       email: "srv@agencios.app", password: "secret123", name: "Srv", workspace_name: "Srv Agency"
     )
     Current.reset
+    # The Claude connector is an Agência+ feature (Mcp::ToolContext gate).
+    workspace.subscription.update!(plan: :agencia, status: "active")
     client = workspace.clients.create!(name: "ACME")
     project = workspace.projects.create!(client: client, name: "Camp", color: "#7C3AED")
     { user: user, workspace: workspace, project: project }

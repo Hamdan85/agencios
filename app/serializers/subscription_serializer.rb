@@ -2,7 +2,7 @@
 
 class SubscriptionSerializer < ActiveModel::Serializer
   attributes :id, :plan, :status, :seats, :trialing, :trial_ends_at,
-             :current_period_end, :cancel_at, :access_granted, :seat_limit
+             :current_period_end, :cancel_at, :access_granted, :seat_limit, :interval
 
   def trialing = object.trialing?
   def access_granted = object.access_granted?

@@ -241,6 +241,9 @@ function TaskRow({ task, overdue, showWorkspace, onOpenTicket, onToggle }) {
             <CalendarClock size={11} strokeWidth={2.6} />
             {!done && due ? due.text : shortDt(task.due_date)}
           </span>
+          {task.estimate_hours != null && (
+            <span className="text-[10.5px] font-semibold text-ink-muted">{task.estimate_hours}h</span>
+          )}
         </div>
       )}
     </div>

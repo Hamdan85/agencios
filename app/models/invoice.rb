@@ -10,5 +10,13 @@ class Invoice < ApplicationRecord
 
   enum :status, { draft: 0, open: 1, paid: 2, overdue: 3, canceled: 4 }, prefix: true
 
+  def self.ransackable_attributes(_auth = nil)
+    %w[id workspace_id client_id status amount_cents currency due_date created_at updated_at]
+  end
+
+  def self.ransackable_associations(_auth = nil)
+    %w[workspace client projects charges]
+  end
+
   def latest_charge = charges.order(created_at: :desc).first
 end

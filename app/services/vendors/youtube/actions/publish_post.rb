@@ -36,10 +36,32 @@ module Vendors
             notify_subscribers: true
           )
 
+          set_cover_thumbnail(video_id)
           { external_post_id: video_id, permalink: "https://youtube.com/watch?v=#{video_id}" }
         end
 
         private
+
+        # A still image the team paired with this video at the posting step
+        # (thumbnail/cover creative type) → the video's custom thumbnail. Best
+        # effort: a thumbnail failure (e.g. channel not phone-verified) must not
+        # fail an already-uploaded video.
+        def set_cover_thumbnail(video_id)
+          asset = cover_asset
+          return if asset.blank?
+
+          Vendors::Youtube::Actions::SetThumbnail.call(
+            social_account: @social_account, video_id: video_id,
+            image_bytes: asset.download, content_type: asset.content_type.presence || "image/jpeg"
+          )
+        rescue Vendors::Base::Error => e
+          Rails.logger.warn("[Youtube::PublishPost] set thumbnail failed: #{e.message}")
+        end
+
+        def cover_asset
+          cover = @post.cover_creative
+          Array(cover&.assets).find { |a| a.content_type.to_s.start_with?("image/") } || cover&.assets&.first
+        end
 
         def metadata
           {

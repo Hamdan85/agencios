@@ -43,7 +43,7 @@ const SCHEMAS = {
     helper: 'Defina o tipo de criativo, os canais e o que será entregue.',
     fields: [
       { key: 'channels', label: 'Canais', kind: 'channels', icon: Radio, full: true, hint: 'Onde este conteúdo vai ao ar' },
-      { key: 'creative_type', label: 'Tipo de criativo', kind: 'select', icon: Wand2, options: 'creative', hint: 'As opções dependem dos canais escolhidos' },
+      { key: 'creative_types', label: 'Tipos de criativo', kind: 'creativeTypes', icon: Wand2, full: true, hint: 'Habilitados pelos canais escolhidos — os demais ficam desativados' },
       { key: 'copy_brief', label: 'Briefing de copy', kind: 'textarea', rows: 3, icon: MessageSquareText, placeholder: 'Direção de mensagem para a legenda…', full: true },
       { key: 'script', label: 'Roteiro', kind: 'textarea', rows: 4, icon: FileText, placeholder: 'Roteiro / storyboard…', full: true },
       { key: 'deliverables', label: 'Entregáveis', kind: 'lines', icon: ListChecks, placeholder: 'Um entregável por linha…', full: true, hint: 'Pelo menos um entregável (um por linha). Na postagem você escolhe qual vai ao ar.' },
@@ -108,15 +108,6 @@ const METRIC_TILES = [
 
 const linesToArray = (str) => String(str || '').split('\n').map((s) => s.trim()).filter(Boolean)
 const arrayToLines = (arr) => (Array.isArray(arr) ? arr.join('\n') : arr || '')
-
-// Creative-type options narrowed to the chosen channels — a reel only fits
-// Instagram/TikTok/YouTube, etc. The currently-selected value is always kept
-// visible even if the channels changed after it was picked.
-const creativeTypeOptions = (channels, current) => {
-  const keys = creativeTypesForChannels(channels)
-  const withCurrent = current && !keys.includes(current) ? [current, ...keys] : keys
-  return withCurrent.map((key) => ({ value: key, label: CREATIVE_TYPE_META[key]?.label || key }))
-}
 
 // ── Read-only stat tiles for a post's metrics ────────────────────────────
 function MetricTiles({ metrics }) {
@@ -213,7 +204,7 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
       const a = draft[f.key]
       const b = serverValues[f.key]
       if (f.kind === 'lines') return arrayToLines(a) !== arrayToLines(b)
-      if (f.kind === 'channels' || f.kind === 'chips') return JSON.stringify(a || []) !== JSON.stringify(b || [])
+      if (f.kind === 'channels' || f.kind === 'chips' || f.kind === 'creativeTypes') return JSON.stringify(a || []) !== JSON.stringify(b || [])
       return (a ?? '') !== (b ?? '')
     })
   }, [draft, serverValues, schema])
@@ -249,6 +240,20 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
   const setAndPersist = (key, value) =>
     setDraft((d) => {
       const next = { ...d, [key]: value }
+      onSave?.(toPayload(next))
+      return next
+    })
+
+  // Toggle a channel and prune any scoped creative type the new channel set no
+  // longer supports (a creative type is only valid while a chosen channel fits
+  // it), persisting both in one write.
+  const toggleChannel = (ch) =>
+    setDraft((d) => {
+      const list = Array.isArray(d.channels) ? d.channels : []
+      const channels = list.includes(ch) ? list.filter((c) => c !== ch) : [...list, ch]
+      const valid = creativeTypesForChannels(channels)
+      const creative_types = (Array.isArray(d.creative_types) ? d.creative_types : []).filter((t) => valid.includes(t))
+      const next = { ...d, channels, creative_types }
       onSave?.(toPayload(next))
       return next
     })
@@ -349,12 +354,7 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
         )
         break
       case 'select': {
-        const opts =
-          f.options === 'creative'
-            ? creativeTypeOptions(draft.channels, value)
-            : f.options === 'approval'
-              ? APPROVAL_OPTIONS
-              : REPEAT_OPTIONS
+        const opts = f.options === 'approval' ? APPROVAL_OPTIONS : REPEAT_OPTIONS
         control = (
           <Select value={value || ''} onValueChange={(v) => setAndPersist(f.key, v)}>
             <SelectTrigger>
@@ -416,11 +416,7 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
                 <button
                   key={ch}
                   type="button"
-                  onClick={() => {
-                    const list = Array.isArray(value) ? value : []
-                    const nextList = list.includes(ch) ? list.filter((c) => c !== ch) : [...list, ch]
-                    setAndPersist(f.key, nextList)
-                  }}
+                  onClick={() => toggleChannel(ch)}
                   className={cn(
                     'inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-semibold transition-all',
                     active ? 'border-transparent text-white shadow-sm' : 'border-border bg-surface text-ink-secondary hover:border-brand/40',
@@ -428,6 +424,54 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
                   style={active ? { background: meta.color } : undefined}
                 >
                   <Ch size={14} strokeWidth={2.3} />
+                  {meta.label}
+                </button>
+              )
+            })}
+          </div>
+        )
+        break
+      }
+      case 'creativeTypes': {
+        const chosenChannels = Array.isArray(draft.channels) ? draft.channels : []
+        const valid = creativeTypesForChannels(chosenChannels)
+        const noChannels = chosenChannels.length === 0
+        const selected = Array.isArray(value) ? value : []
+        control = (
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(CREATIVE_TYPE_META).map(([key, meta]) => {
+              const Ct = meta.icon
+              const active = selected.includes(key)
+              // Enabled only when a chosen channel supports the type. With no
+              // channel picked yet everything is disabled — choose channels first.
+              const enabled = !noChannels && valid.includes(key)
+
+              if (!enabled && !active) {
+                return (
+                  <span
+                    key={key}
+                    title={noChannels ? 'Escolha os canais primeiro' : 'Indisponível para os canais escolhidos'}
+                    className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-xl border border-dashed border-border px-3 py-1.5 text-sm font-semibold text-ink-faint opacity-60"
+                  >
+                    <Ct size={14} strokeWidth={2.3} />
+                    {meta.label}
+                  </span>
+                )
+              }
+
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setAndPersist(f.key, active ? selected.filter((t) => t !== key) : [...selected, key])}
+                  aria-pressed={active}
+                  className={cn(
+                    'inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-semibold transition-all',
+                    active ? 'border-transparent text-white shadow-sm' : 'border-border bg-surface text-ink-secondary hover:border-brand/40',
+                  )}
+                  style={active ? { background: meta.color } : undefined}
+                >
+                  <Ct size={14} strokeWidth={2.3} />
                   {meta.label}
                 </button>
               )

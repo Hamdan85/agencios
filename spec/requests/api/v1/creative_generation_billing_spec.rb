@@ -43,7 +43,8 @@ RSpec.describe "Api::V1 creative generation billing gate", type: :request do
     expect(JSON.parse(response.body)["code"]).to eq("billing_required")
   end
 
-  it "blocks guests with 403 before reaching the billing gate" do
+  it "blocks guests with 403 before reaching the credit gate" do
+    activate_billing(@workspace) # past the total paywall so the guest gate is reached
     guest = User.create!(email: "guest@agencios.app", password: "secret123", name: "Guest")
     @workspace.memberships.create!(user: guest, role: :guest)
     login("guest@agencios.app")
@@ -51,5 +52,15 @@ RSpec.describe "Api::V1 creative generation billing gate", type: :request do
     generate
 
     expect(response).to have_http_status(:forbidden)
+  end
+
+  it "blocks image generation with 402 insufficient_credits when the wallet is empty" do
+    activate_billing(@workspace) # billing is fine, but there are no credits
+    login
+
+    generate(kind: "image")
+
+    expect(response).to have_http_status(:payment_required)
+    expect(JSON.parse(response.body)["code"]).to eq("insufficient_credits")
   end
 end

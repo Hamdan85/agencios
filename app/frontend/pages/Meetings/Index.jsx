@@ -6,6 +6,7 @@ import {
 import { useMeetings, useMeetingMutations } from '@/hooks/useData'
 import { PageHeader } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
+import { useConfirm } from '@/components/ui/confirm-dialog'
 import { Input, Textarea } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
@@ -224,9 +225,19 @@ export default function MeetingsIndex() {
     }
   }, [list])
 
+  const confirm = useConfirm()
   const openCreate = () => { setEditing(null); setOpen(true) }
   const onEdit = (m) => { setEditing(m); setOpen(true) }
-  const onCancel = (m) => { if (window.confirm(`Cancelar "${m.title}"?`)) destroy.mutate(m.id) }
+  const onCancel = async (m) => {
+    const ok = await confirm({
+      title: `Cancelar "${m.title}"?`,
+      description: 'A reunião será removida da agenda e do Google Calendar.',
+      confirmLabel: 'Cancelar reunião',
+      cancelLabel: 'Voltar',
+      destructive: true,
+    })
+    if (ok) destroy.mutate(m.id)
+  }
 
   return (
     <Page>

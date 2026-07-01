@@ -4,6 +4,10 @@ module Api
   module V1
     class TicketsController < BaseController
       def index    = render_ok(Controllers::Tickets::Index.call(params:))
+
+      # GET /api/v1/tickets/ids — every ticket id matching the current filters
+      # (unpaginated), so "select all" can span beyond the loaded pages.
+      def ids      = render_ok(Controllers::Tickets::Ids.call(params:))
       def show     = render_ok(Controllers::Tickets::Show.call(params:))
       def create   = render_created(Controllers::Tickets::Create.call(params:))
       def update   = render_ok(Controllers::Tickets::Update.call(params:))
@@ -35,6 +39,10 @@ module Api
 
       # POST /api/v1/tickets/clear_column  { status } — bulk-archive a column.
       def clear_column = render_ok(Controllers::Tickets::ClearColumn.call(params:))
+
+      # POST /api/v1/tickets/bulk_destroy  { ticket_ids: [...] } — permanently
+      # delete the selected tickets (hard delete, not archive).
+      def bulk_destroy = render_ok(Controllers::Tickets::BulkDestroy.call(params:))
     end
   end
 end

@@ -56,6 +56,29 @@ onReady(() => {
     })
   })
 
+  // ── Pricing interval toggle (Mensal / Anual) ──────────────────────
+  const pricing = document.querySelector('[data-pricing]')
+  if (pricing) {
+    const buttons = pricing.querySelectorAll('[data-pricing-interval]')
+    const setInterval = (interval) => {
+      pricing.setAttribute('data-interval', interval)
+      const annual = interval === 'year'
+      buttons.forEach((b) => {
+        const on = b.getAttribute('data-pricing-interval') === interval
+        b.setAttribute('aria-selected', on ? 'true' : 'false')
+        b.classList.toggle('bg-brand', on)
+        b.classList.toggle('text-white', on)
+        b.classList.toggle('shadow-sm', on)
+        b.classList.toggle('text-ink-secondary', !on)
+      })
+      pricing.querySelectorAll('[data-price-month]').forEach((el) => { el.hidden = annual })
+      pricing.querySelectorAll('[data-price-year]').forEach((el) => { el.hidden = !annual })
+      pricing.querySelectorAll('[data-price-year-caption]').forEach((el) => { el.hidden = !annual })
+    }
+    buttons.forEach((b) => b.addEventListener('click', () => setInterval(b.getAttribute('data-pricing-interval'))))
+    setInterval('month')
+  }
+
   // ── Reveal on scroll ──────────────────────────────────────────────
   const reveals = document.querySelectorAll('.reveal')
   if ('IntersectionObserver' in window && reveals.length) {

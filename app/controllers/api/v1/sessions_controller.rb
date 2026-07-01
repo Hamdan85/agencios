@@ -4,6 +4,8 @@ module Api
   module V1
     class SessionsController < BaseController
       allow_unauthenticated_access only: %i[create]
+      # Login/logout must always work, regardless of billing state.
+      skip_billing_gate
 
       def create
         authenticated = Controllers::Sessions::Create.call(email: params[:email], password: params[:password])

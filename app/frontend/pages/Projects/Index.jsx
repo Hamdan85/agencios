@@ -27,18 +27,20 @@ import { cn } from '@/lib/utils'
 const PALETTE = ['#7C3AED', '#EC4899', '#0EA5E9', '#10B981', '#F59E0B', '#6366F1', '#F43F5E', '#14B8A6']
 
 const STATUS_OPTIONS = [
+  { value: 'draft', label: 'Rascunho', variant: 'muted' },
   { value: 'active', label: 'Ativo', variant: 'success' },
   { value: 'paused', label: 'Pausado', variant: 'warning' },
   { value: 'archived', label: 'Arquivado', variant: 'muted' },
+  { value: 'completed', label: 'Finalizado', variant: 'soft' },
 ]
-const statusMeta = (s) => STATUS_OPTIONS.find((o) => o.value === s) || STATUS_OPTIONS[0]
+const statusMeta = (s) => STATUS_OPTIONS.find((o) => o.value === s) || STATUS_OPTIONS[1]
 
 const EMPTY_FORM = {
   client_id: '', name: '', description: '', color: PALETTE[0],
-  status: 'active', starts_on: '', ends_on: '', budget: '',
+  status: 'draft', starts_on: '', ends_on: '', budget: '',
 }
 
-function ProjectFormDialog({ open, onOpenChange, mutation }) {
+function ProjectFormDialog({ open, onOpenChange, mutation, onCreated }) {
   const [form, setForm] = useState(EMPTY_FORM)
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }))
 
@@ -55,7 +57,9 @@ function ProjectFormDialog({ open, onOpenChange, mutation }) {
       ends_on: form.ends_on || null,
       budget_cents: form.budget ? centsFromMasked(form.budget) : null,
     }
-    mutation.mutate(payload, { onSuccess: () => { setForm(EMPTY_FORM); onOpenChange(false) } })
+    mutation.mutate(payload, {
+      onSuccess: (d) => { setForm(EMPTY_FORM); onOpenChange(false); onCreated?.(d?.project) },
+    })
   }
 
   return (
@@ -193,6 +197,7 @@ function ProjectCard({ project }) {
 }
 
 export default function ProjectsIndex() {
+  const navigate = useNavigate()
   const { data: projects, isLoading } = useProjects()
   const { create } = useProjectMutations()
   const [open, setOpen] = useState(false)
@@ -273,7 +278,12 @@ export default function ProjectsIndex() {
         </div>
       )}
 
-      <ProjectFormDialog open={open} onOpenChange={setOpen} mutation={create} />
+      <ProjectFormDialog
+        open={open}
+        onOpenChange={setOpen}
+        mutation={create}
+        onCreated={(project) => { if (project?.id) navigate(`/projetos/${project.id}?planejar=1`) }}
+      />
     </Page>
   )
 }

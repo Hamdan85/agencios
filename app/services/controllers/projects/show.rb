@@ -12,7 +12,7 @@ module Controllers
         authorize!(project, :show?)
         {
           project: serialize(project, ProjectSerializer),
-          tickets: serialize_collection(filtered_tickets(project), TicketCardSerializer)
+          tickets: serialize_collection(filtered_tickets(project), TicketRowSerializer)
         }
       end
 
@@ -22,7 +22,7 @@ module Controllers
       # (status, assignee, channel, creative type). Project/client filters are
       # implicit on a single-project page, so they are intentionally absent.
       def filtered_tickets(project)
-        scope = project.tickets.active.includes(:project, :assignee, :subtasks, :creatives)
+        scope = project.tickets.active.includes(:assignee, :subtasks, :creatives, project: :client)
         scope = scope.where(status: @params[:status]) if @params[:status].present?
         scope = scope.where(assignee_id: @params[:assignee_id]) if @params[:assignee_id].present?
         scope = scope.where(creative_type: @params[:creative_type]) if @params[:creative_type].present?

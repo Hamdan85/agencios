@@ -1,17 +1,37 @@
 import { useEffect, useState } from 'react'
-import { Outlet } from 'react-router-dom'
-import { Menu } from 'lucide-react'
+import { Link, Outlet, useLocation } from 'react-router-dom'
+import { AlertTriangle, Menu } from 'lucide-react'
 import Sidebar from './Sidebar'
 import AppBanners from './AppBanners'
+import Paywall from '@/pages/Billing/Paywall'
 import { BrandMark } from '@/components/brand/BrandMark'
 import { useCurrentUser } from '@/hooks/useAuth'
 import { useBoardChannel } from '@/hooks/useRealtime'
 import { cn } from '@/lib/utils'
 
+// Routes that stay reachable even when the workspace is not billing-active, so
+// the user can always pay, tweak settings, or leave. Everything else is blocked
+// behind the Paywall.
+const PAYWALL_ALLOWED = ['/assinatura', '/configuracoes']
+
 export default function Layout() {
   const { data: me } = useCurrentUser()
+  const location = useLocation()
   const [drawer, setDrawer] = useState(false)
   useBoardChannel(me?.workspace?.id)
+
+  // The "total paywall": when the workspace has no active billing, block the
+  // routed content behind the Paywall screen — unless the current route is an
+  // explicitly-allowed one (billing / settings). `me` may still be loading, in
+  // which case we let the normal shell render (ProtectedRoute already gated it).
+  const blocked = me?.workspace && me.workspace.billing_active === false
+    && !PAYWALL_ALLOWED.some((p) => location.pathname.startsWith(p))
+
+  // The board manages its own scrolling internally (each column scrolls itself),
+  // so it never needs <main>'s scrollbar — reserving a gutter for one anyway
+  // (via `scrollbarGutter: stable`) leaves a permanent unused strip on the right,
+  // which is only visible now that Board renders with a flush (zero-gutter) Page.
+  const isBoard = location.pathname.startsWith('/quadro')
 
   // Close the drawer whenever we cross into desktop so it can't get stuck open.
   useEffect(() => {
@@ -54,6 +74,10 @@ export default function Layout() {
     }
   }, [])
 
+  // Total paywall — replaces the whole app shell (no sidebar) until billing is
+  // active. The allowed routes above fall through to the normal shell below.
+  if (blocked) return <Paywall />
+
   return (
     // h-dvh (dynamic viewport) so the layout fits the *visible* height on mobile
     // — content never sits behind the browser's bottom button bar.
@@ -83,6 +107,22 @@ export default function Layout() {
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col">
+        {/* Seat overage banner — a downgrade left more active members than the
+            plan allows. Members keep access; only new tickets/projects are
+            blocked (backend-enforced) until the owner reconciles seats. */}
+        {me?.workspace?.over_seat_limit && (
+          <div className="flex flex-wrap items-center justify-center gap-2 border-b border-danger/30 bg-danger/8 px-4 py-2 text-center text-sm font-medium text-danger">
+            <AlertTriangle size={16} className="shrink-0" />
+            <span>
+              Este workspace tem mais membros do que o plano atual permite — novos tickets e
+              projetos estão bloqueados.
+            </span>
+            {me.workspace.role === 'owner' && (
+              <Link to="/assinatura" className="font-semibold underline">Gerenciar plano</Link>
+            )}
+          </div>
+        )}
+
         {/* Mobile topbar */}
         <header className="flex h-14 items-center justify-between border-b border-border bg-surface/80 px-4 backdrop-blur lg:hidden">
           <button
@@ -102,7 +142,13 @@ export default function Layout() {
         {/* Full-bleed shell — each page wraps its content in <Page>, which owns
             the width + padding (default "respiro", or `wide` for column-dense
             screens like the board / calendar). */}
-        <main className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain" style={{ scrollbarGutter: 'stable' }}>
+        <main
+          className={cn(
+            'flex min-h-0 flex-1 flex-col overscroll-contain',
+            isBoard ? 'overflow-hidden' : 'overflow-y-auto',
+          )}
+          style={isBoard ? undefined : { scrollbarGutter: 'stable' }}
+        >
           <Outlet />
         </main>
       </div>

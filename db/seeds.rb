@@ -8,6 +8,11 @@
 #   Login:  demo@agencios.app  /  demo1234
 # ─────────────────────────────────────────────────────────────────────
 
+# Pricing catalog (plans, packs, credit-economy config) — idempotent, additive.
+# The commercial source of truth; safe to run in every environment.
+Pricing.seed_defaults!
+puts "💳 Pricing catalog: #{PricingPlan.count} plans · #{PricingPack.count} packs"
+
 puts "🌱 Resetting demo data…"
 [Attachment, McpCallLog, PushSubscription, PostMetric, Post, Generation, Creative,
  Subtask, Note, TicketStatusLog, TicketRelation, Ticket, InvoiceProject, Charge,

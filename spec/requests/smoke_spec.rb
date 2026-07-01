@@ -9,6 +9,7 @@ RSpec.describe "End-to-end smoke", type: :request do
       email: "smoke@agencios.app", password: "secret123", name: "Smoke", workspace_name: "Smoke Agency"
     )
     Current.reset
+    activate_billing(@workspace)
     @client = nil
     @workspace.clients.create!(name: "ACME").tap do |c|
       @project = @workspace.projects.create!(client: c, name: "Camp", color: "#7C3AED")

@@ -5,12 +5,21 @@ module Operations
     # scoping action — turn the scope into a subtask checklist, creating real
     # Subtasks via their own operation.
     class BuildScope < Operations::Base
+      # Free-text fields, per status group, that give the model something to
+      # plan from. If every one is blank there is nothing to build a checklist
+      # out of and we bail out before spending a Claude call.
+      CONTEXT_FIELDS = {
+        "ideation" => %w[brief objective format_hypothesis],
+        "scoping" => %w[copy_brief script deliverables]
+      }.freeze
+
       def initialize(ticket:)
         @ticket = ticket
       end
 
       def call
         fields = @ticket.fields_for("scoping")
+        ensure_context!
         builder = Prompts::ScopeBuilder.new(
           workspace: @ticket.workspace, client: @ticket.project.client,
           creative_type: fields["creative_type"] || @ticket.creative_type,
@@ -32,6 +41,19 @@ module Operations
       end
 
       private
+
+      # Signals the frontend to show a floating snackbar instead of generating
+      # empty subtasks when the ticket carries no brief/scope to work from.
+      def ensure_context!
+        present = CONTEXT_FIELDS.any? do |status, keys|
+          f = @ticket.fields_for(status)
+          keys.any? { |k| f[k].to_s.strip.present? }
+        end
+        return if present
+
+        raise Operations::Errors::Invalid,
+              "Sem contexto para gerar as subtarefas. Preencha o brief ou o escopo do ticket primeiro."
+      end
 
       # The model is asked for one plain task per line, but it occasionally wraps
       # items in markdown (bullets, numbering, **bold**, headings, code fences).

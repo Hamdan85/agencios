@@ -12,4 +12,13 @@ class Generation < ApplicationRecord
 
   def metered? = metered_at.present?
   def billable? = kind_carousel? || kind_video?
+
+  def self.ransackable_attributes(_auth = nil)
+    %w[id workspace_id user_id creative_id kind status provider external_id
+       cost_cents metered_at failure_reason created_at updated_at]
+  end
+
+  def self.ransackable_associations(_auth = nil)
+    %w[workspace user creative]
+  end
 end

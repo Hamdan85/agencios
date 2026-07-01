@@ -1,0 +1,11 @@
+Olá<%= @client.name.present? ? ", #{@client.name}" : "" %>!
+
+Segue o link para pagar sua cobrança com a <%= @workspace.name %>.
+
+Referência: <%= @invoice.external_reference %>
+<% if @invoice.description.present? %>Descrição: <%= @invoice.description %>
+<% end %><% if @invoice.due_date %>Vencimento: <%= email_date(@invoice.due_date) %>
+<% end %>Total: <%= email_brl(@invoice.amount_cents) %>
+
+Pagar agora: <%= @payment_url %>
+(Mercado Pago — Pix, boleto ou cartão)

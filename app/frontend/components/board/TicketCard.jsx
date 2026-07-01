@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import { CheckSquare, ImageIcon, CalendarClock } from 'lucide-react'
+import { CheckSquare, ImageIcon, CalendarClock, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { relativeDay } from '@/lib/formatters'
 import { CreativeTypeChip, ChannelIcons, PriorityDot } from '@/components/ui/iconography'
@@ -101,7 +101,13 @@ export function TicketCard({ ticket, dragging = false, overlay = false, onOpen }
       {/* footer */}
       <div className="flex items-center justify-between gap-2 pl-1.5 pt-0.5">
         <div className="flex items-center gap-1.5">
-          {due && (
+          {ticket.overdue && (
+            <span className="inline-flex items-center gap-1 rounded-md bg-danger/12 px-1.5 py-0.5 text-[10.5px] font-bold text-danger">
+              <AlertTriangle size={11} strokeWidth={2.4} />
+              Atrasado
+            </span>
+          )}
+          {due && !ticket.overdue && (
             <span className={cn('inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10.5px] font-bold', toneClass[due.tone] || toneClass.muted)}>
               <CalendarClock size={11} strokeWidth={2.4} />
               {due.text}

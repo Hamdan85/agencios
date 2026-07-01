@@ -53,7 +53,7 @@ module Operations
           result: @generation.result.merge(result_payload(url))
         )
 
-        meter!
+        reconcile_credits!
         log_ai_cost!(cost_cents)
         broadcast!(creative)
 
@@ -108,6 +108,37 @@ module Operations
         (@metadata[:engine] || @generation.params["engine"] || "avatar").to_s
       end
 
+      # --- credits -------------------------------------------------------------
+
+      # True-up the up-front credit hold (a 30s standard-avatar estimate) to the
+      # real duration + engine now that the render is done. Refunds the difference
+      # if the video came out shorter, charges the difference (best-effort) if
+      # longer/photoreal. Images/carousels were charged exactly — nothing to do.
+      def reconcile_credits!
+        return unless @generation.kind == "video"
+
+        actual = Pricing.credits_for(kind: :video, seconds: video_seconds, engine: engine)
+        debit = @generation.workspace.credit_transactions
+                           .debits.where(generation_id: @generation.id).order(:created_at).last
+        return unless debit
+
+        charged = -debit.amount
+        delta = charged - actual # >0 ⇒ refund overcharge, <0 ⇒ charge more
+        return if delta.zero?
+
+        Operations::Credits::Adjust.call(
+          workspace:  @generation.workspace,
+          amount:     delta,
+          generation: @generation,
+          description: "Ajuste de créditos do vídeo (#{video_seconds.round}s)"
+        )
+      end
+
+      def video_seconds
+        (@duration || @generation.result["duration"] || @generation.params["duration"] ||
+          Pricing::DEFAULT_VIDEO_SECONDS).to_f
+      end
+
       # --- billing -------------------------------------------------------------
 
       # Record the internal AI vendor cost (HeyGen, per-second) in the unified
@@ -130,15 +161,10 @@ module Operations
         )
       end
 
-      # Meter billable kinds (carousel/video). RecordUsage is owned by the Stripe
-      # builder; if it isn't loaded yet, skip silently (NameError).
-      def meter!
-        return unless @generation.billable?
-
-        Operations::Billing::RecordUsage.call(@generation)
-      rescue NameError
-        Rails.logger.info("[FinalizeGeneration] RecordUsage undefined — skipping meter for generation #{@generation.id}.")
-      end
+      # NOTE: post-paid Stripe usage metering was removed in favour of the prepaid
+      # credit wallet (Operations::Credits::*). Generation is now charged in
+      # credits at request time (debited in the generation op, reconciled here in
+      # `reconcile_credits!`), so there is no Stripe meter event to emit.
 
       # --- broadcasts ----------------------------------------------------------
 

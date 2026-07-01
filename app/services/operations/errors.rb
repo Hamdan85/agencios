@@ -21,6 +21,17 @@ module Operations
       end
     end
 
+    # Not enough prepaid credits for a video/image generation.
+    class InsufficientCredits < Error
+      attr_reader :required, :available
+
+      def initialize(required: nil, available: nil)
+        @required = required
+        @available = available
+        super("Créditos insuficientes para esta geração.")
+      end
+    end
+
     # An invalid ticket status transition was requested.
     class InvalidTransition < Error; end
 

@@ -19,6 +19,14 @@ class Membership < ApplicationRecord
   def can_manage? = at_least?(:manager)
   def can_admin?  = at_least?(:admin)
 
+  def self.ransackable_attributes(_auth = nil)
+    %w[id workspace_id user_id role created_at updated_at]
+  end
+
+  def self.ransackable_associations(_auth = nil)
+    %w[workspace user]
+  end
+
   private
 
   def single_owner_per_workspace

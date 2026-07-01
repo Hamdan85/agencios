@@ -12,6 +12,9 @@ module Controllers
       def call
         deny_guests!
         require_billing!
+        # Video + image consume prepaid credits (carousels are included). Fail
+        # fast with 402 before creating any records.
+        require_credits!(kind: @params[:kind])
         ticket = workspace.tickets.find(@params[:ticket_id])
         { generation: serialize(run(ticket), GenerationSerializer) }
       end
@@ -28,12 +31,14 @@ module Controllers
         when "video"
           Operations::Creatives::GenerateUgcVideo.call(
             ticket: ticket, script: gen_params[:script],
-            avatar: gen_params[:avatar], voice: gen_params[:voice]
+            avatar: gen_params[:avatar], voice: gen_params[:voice],
+            creative_type: @params[:type].presence
           )
         when "image"
           Operations::Creatives::GenerateImage.call(
             ticket: ticket, prompt: gen_params[:prompt],
-            ref_images: gen_params.fetch(:ref_images, [])
+            ref_images: gen_params.fetch(:ref_images, []),
+            creative_type: @params[:type].presence
           )
         else
           raise Operations::Errors::Invalid, "Tipo de geração desconhecido: #{@params[:kind]}"

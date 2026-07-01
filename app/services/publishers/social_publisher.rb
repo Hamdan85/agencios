@@ -43,10 +43,20 @@ module Publishers
       "x"         => %w[image carousel video text],
     }.freeze
 
+    # Providers where a still image can ride a video post as its cover/thumbnail
+    # (Instagram Reels cover_url; YouTube thumbnails.set). On every other network a
+    # cover image is just a normal image post. See Operations::Tickets::Publish.
+    THUMBNAIL_CAPABLE = %w[instagram youtube].freeze
+
     # Whether `provider` can publish a creative of the given media kind.
     def self.supports?(provider, media_kind)
       kinds = SUPPORTED_MEDIA[provider.to_s]
       kinds.nil? || kinds.include?(media_kind.to_s)
+    end
+
+    # Whether a still cover image can be attached to a video post on `provider`.
+    def self.thumbnail_capable?(provider)
+      THUMBNAIL_CAPABLE.include?(provider.to_s)
     end
 
     def self.publish(post) = new(post).publish

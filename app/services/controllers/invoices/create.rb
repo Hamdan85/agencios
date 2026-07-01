@@ -14,7 +14,8 @@ module Controllers
           amount_cents: create_params[:amount_cents],
           description:  create_params[:description],
           due_date:     create_params[:due_date],
-          project_ids:  create_params[:project_ids] || []
+          project_ids:  create_params[:project_ids] || [],
+          send_payment_link: create_params[:send_payment_link] || false
         )
         { invoice: serialize(invoice, InvoiceSerializer) }
       end
@@ -23,7 +24,7 @@ module Controllers
 
       def create_params
         @create_params ||= @params.require(:invoice).permit(
-          :client_id, :amount_cents, :description, :due_date,
+          :client_id, :amount_cents, :description, :due_date, :send_payment_link,
           project_ids: []
         )
       end

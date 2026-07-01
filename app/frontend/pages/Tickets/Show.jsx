@@ -14,7 +14,7 @@ import {
 import StatusStepper from '@/components/ticket/StatusStepper'
 import TicketBody from '@/components/ticket/TicketBody'
 import {
-  ArrowLeft, ArrowRight, ChevronDown, Building2, Ghost, Folder, Layers,
+  ArrowLeft, ArrowRight, ChevronDown, Building2, Ghost, Folder, Layers, AlertTriangle,
 } from 'lucide-react'
 
 export default function Show() {
@@ -102,6 +102,11 @@ export default function Show() {
                 )
               )}
               <StatusPill status={status} size="sm" />
+              {ticket.overdue && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-danger/12 px-2 py-0.5 text-[11px] font-bold text-danger">
+                  <AlertTriangle size={12} strokeWidth={2.4} /> Atrasado
+                </span>
+              )}
             </div>
             <h1 className="font-display text-[22px] font-extrabold leading-tight tracking-tight text-ink sm:text-[30px]">
               {ticket.display_title || ticket.title}

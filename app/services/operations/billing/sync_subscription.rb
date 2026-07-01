@@ -61,17 +61,64 @@ module Operations
         data.respond_to?(:object) ? data.object : data["object"]
       end
 
-      # checkout.session.completed carries the session; fetch the just-created
-      # subscription it points at (expanding items), then upsert from that.
+      # checkout.session.completed carries the session. A credit-pack purchase
+      # (mode=payment) tops up the wallet; a subscription checkout upserts the
+      # subscription and records that a card is now on file (card-required trial).
       def on_checkout_completed
         session = event_object
+        return on_credit_pack_purchased(session) if credit_pack_session?(session)
+
         subscription_id = read(session, :subscription)
         return :no_subscription if subscription_id.blank?
 
         subscription = @client.retrieve_subscription(
           subscription_id, expand: ["items.data.price"]
         )
-        upsert_from_subscription(subscription)
+        record = upsert_from_subscription(subscription)
+        if record.is_a?(Subscription)
+          # Checkout collected a card ⇒ trial valid; and the trial is now consumed
+          # so it won't be granted again on a future checkout.
+          record.update!(card_on_file: true, trial_used: true)
+          # Grant the monthly credits ONLY when the checkout charged immediately
+          # (no-trial purchase). During a trial the subscription is `trialing` and
+          # gets NO credits — otherwise a user could spend them and cancel before
+          # paying. Trial conversions are granted later, on the first paid invoice.
+          grant_monthly_credits(record) unless record.trialing?
+        end
+        record
+      end
+
+      def credit_pack_session?(session)
+        metadata = read(session, :metadata)
+        metadata && read(metadata, :purpose).to_s == "credit_pack"
+      end
+
+      # Apply a purchased credit pack to the wallet. Idempotent on the session id.
+      def on_credit_pack_purchased(session)
+        metadata = read(session, :metadata)
+        workspace = Workspace.find_by(id: read(metadata, :workspace_id))
+        return :workspace_not_found unless workspace
+
+        Operations::Credits::Purchase.call(
+          workspace:  workspace,
+          amount:     read(metadata, :credits).to_i,
+          reference:  read(session, :id),
+          description: "Compra de créditos — pacote #{read(metadata, :pack)}"
+        )
+      end
+
+      # Grant (reset) the plan's monthly included-credit allotment, expiring at the
+      # period end. Called on checkout + each paid renewal.
+      def grant_monthly_credits(subscription)
+        amount = Pricing.included_credits_for(subscription.plan)
+        return if amount <= 0
+
+        Operations::Credits::Grant.call(
+          workspace:  subscription.workspace,
+          amount:     amount,
+          expires_at: subscription.current_period_end || 1.month.from_now,
+          description: "Créditos mensais do plano #{subscription.plan}"
+        )
       end
 
       # Upsert the local row from a Stripe subscription object.
@@ -82,6 +129,11 @@ module Operations
         record = workspace.subscription || workspace.build_subscription
         record.assign_attributes(attributes_from(stripe_sub))
         record.save!
+        # Catches a downgrade applied outside the app (e.g. the Stripe dashboard)
+        # that leaves more active members than the new plan allows. Never removes
+        # members — just flags the workspace so writes are gated (see
+        # Controllers::Base#require_seat_compliance!) until the owner reconciles.
+        workspace.sync_seat_compliance!
         record
       end
 
@@ -95,7 +147,11 @@ module Operations
           seats: licensed ? (read(licensed, :quantity) || 1) : 1,
           current_period_end: epoch(read(stripe_sub, :current_period_end)),
           trial_ends_at: epoch(read(stripe_sub, :trial_end)),
-          cancel_at: cancel_at_for(stripe_sub)
+          interval: interval_from(licensed) || "month",
+          cancel_at: cancel_at_for(stripe_sub),
+          # Only ever upgrade to true (nil is compacted out) so a later event
+          # without an expanded payment method can't clear a known card.
+          card_on_file: (read(stripe_sub, :default_payment_method).present? || nil)
         }.compact
       end
 
@@ -114,7 +170,20 @@ module Operations
       # invoice.paid / invoice.payment_failed reference the subscription on the
       # invoice. Recent API versions nest it under parent.subscription_details.
       def on_invoice_paid
-        update_status_from_invoice("active")
+        record = update_status_from_invoice("active")
+        # A paid invoice = a valid card + a fresh billing period ⇒ refill credits,
+        # but ONLY when money actually changed hands (amount_paid > 0). A R$0 trial
+        # invoice must not grant credits (that would reopen the trial exploit).
+        if record.is_a?(Subscription)
+          record.update!(card_on_file: true, trial_used: true)
+          grant_monthly_credits(record) if invoice_charged?
+        end
+        record
+      end
+
+      # Whether the paid invoice actually collected money (not a R$0 trial invoice).
+      def invoice_charged?
+        read(event_object, :amount_paid).to_i.positive?
       end
 
       def on_invoice_payment_failed
@@ -200,8 +269,7 @@ module Operations
       # carries a quantity. Metered items have usage_type=metered.
       def licensed_item(stripe_sub)
         items_data(stripe_sub).find do |item|
-          price = read(item, :price)
-          plan_for_price_id(read(price, :id)).present?
+          detect_plan(read(item, :price)).present?
         end
       end
 
@@ -215,15 +283,42 @@ module Operations
       def plan_for(licensed_item)
         return nil unless licensed_item
 
-        price = read(licensed_item, :price)
-        plan_for_price_id(read(price, :id))
+        detect_plan(read(licensed_item, :price))
       end
 
-      # Reverse the credential price ids back to a plan key.
-      def plan_for_price_id(price_id)
-        return nil if price_id.blank?
+      # The billing cycle ("month"/"year") from the licensed item's price.
+      def interval_from(licensed_item)
+        return nil unless licensed_item
 
-        price_to_plan[price_id]
+        price = read(licensed_item, :price)
+        recurring = price && read(price, :recurring)
+        recurring && read(recurring, :interval)
+      end
+
+      # Map a Stripe price object back to a plan key. Order matters for
+      # grandfathering: the PRODUCT is stable across price changes, then the exact
+      # price id, then the lookup_key, then the legacy credential map.
+      def detect_plan(price)
+        return nil unless price
+
+        product = read(price, :product)
+        product = read(product, :id) if product.respond_to?(:id) # expanded object
+        by_product = PricingPlan.find_by(stripe_product_id: product) if product.present?
+        return by_product.key if by_product
+
+        price_id = read(price, :id)
+        if price_id.present?
+          by_price = PricingPlan.where("stripe_price_id = :id OR stripe_annual_price_id = :id", id: price_id).first
+          return by_price.key if by_price
+        end
+
+        lookup = read(price, :lookup_key)
+        if lookup.present?
+          by_lookup = PricingPlan.where("stripe_lookup_key = :lk OR stripe_annual_lookup_key = :lk", lk: lookup).first
+          return by_lookup.key if by_lookup
+        end
+
+        price_to_plan[price_id] # legacy credential fallback
       end
 
       def price_to_plan

@@ -9,6 +9,7 @@ RSpec.describe "Api::V1::Attachments", type: :request do
       email: "files@agencios.app", password: "secret123", name: "Files", workspace_name: "Files Agency"
     )
     Current.reset
+    activate_billing(@workspace)
     client = @workspace.clients.create!(name: "ACME")
     @project = @workspace.projects.create!(client: client, name: "Camp", color: "#7C3AED")
     @ticket = Operations::Tickets::Create.call(

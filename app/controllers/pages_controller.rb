@@ -12,10 +12,12 @@ class PagesController < ApplicationController
   before_action :load_catalog
 
   def home
-    @funnel   = FUNNEL
-    @features = FEATURES
-    @steps    = STEPS
-    @plans    = marketing_plans
+    @funnel                   = FUNNEL
+    @features                 = FEATURES
+    @steps                    = STEPS
+    @plans                    = marketing_plans
+    @trial_days               = Pricing.trial_days
+    @annual_discount_percent  = Pricing.annual_discount_percent
   end
 
   def how_it_works
@@ -35,8 +37,12 @@ class PagesController < ApplicationController
   end
 
   def pricing
-    @plans = marketing_plans
-    @faqs  = FAQS
+    @plans                   = marketing_plans
+    @faqs                    = FAQS
+    @trial_days              = Pricing.trial_days
+    @annual_discount_percent = Pricing.annual_discount_percent
+    @credit_packs            = Pricing.credit_packs
+    @credit_costs            = Pricing.public_catalog[:credit_costs]
   end
 
   # Legal pages — the "last updated" date shown on both.
@@ -58,13 +64,17 @@ class PagesController < ApplicationController
   end
 
   # Build the pricing cards from the CANONICAL plan catalog
-  # (`Controllers::Billing::Plans::ALL` — the same source the real Stripe
-  # billing flow uses). Prices, seats and features come from there; only the
-  # marketing presentation (tagline / highlight / CTA) is layered on here, so
-  # a price change in billing flows through to this page automatically.
+  # (`Controllers::Billing::Plans` → the DB-backed `Pricing`, the same source the
+  # real Stripe billing flow uses). Prices, seats and features come from there;
+  # only the marketing presentation (tagline / highlight / CTA) is layered on
+  # here, so an admin price change flows through to this page automatically.
   def marketing_plans
-    Controllers::Billing::Plans::ALL.map do |plan|
-      plan.merge(PLAN_PRESENTATION.fetch(plan[:key], DEFAULT_PRESENTATION))
+    Controllers::Billing::Plans.all.map do |plan|
+      annual = Pricing.annual_price_cents_for(plan[:key])
+      plan.merge(
+        annual_price_cents: annual,
+        annual_monthly_equivalent_cents: (annual / 12.0).round,
+      ).merge(PLAN_PRESENTATION.fetch(plan[:key], DEFAULT_PRESENTATION))
     end
   end
 
@@ -114,11 +124,15 @@ class PagesController < ApplicationController
   ].freeze
 
   # ── Pricing FAQ ─────────────────────────────────────────────────────
+  # Trial length is interpolated from the single pricing source (Pricing) so it
+  # stays in sync with billing without a copy change here.
   FAQS = [
-    { q: "Preciso de cartão de crédito para começar?",
-      a: "Não. Você tem 14 dias grátis, sem cartão, e cancela quando quiser." },
-    { q: "Como funciona a cobrança por geração?",
-      a: "A geração de carrosséis e vídeos é cobrada por uso, de forma transparente na sua fatura. A geração de imagens não é cobrada por uso." },
+    { q: "Como funciona o período de teste?",
+      a: "Você tem #{Pricing.trial_days} dias de teste em qualquer plano. É preciso cadastrar um cartão para começar — só cobramos ao fim do teste, e você pode cancelar antes quando quiser." },
+    { q: "O que são os créditos?",
+      a: "A geração de vídeos e imagens consome créditos pré-pagos da sua carteira. Cada plano já inclui uma cota mensal de créditos, e você pode comprar mais a qualquer momento. 1 crédito = R$ 1. Carrosséis e legendas com IA são inclusos, sem gastar créditos." },
+    { q: "Existe plano gratuito?",
+      a: "Não há plano gratuito permanente — todo workspace começa com #{Pricing.trial_days} dias de teste (com cartão). Depois disso, é necessário um plano ativo para usar o app." },
     { q: "Posso gerenciar mais de uma agência?",
       a: "Sim. Você pode ter vários workspaces — cada agência fica isolada, com seu próprio time, clientes e dados." },
     { q: "Quais redes sociais são suportadas?",
@@ -150,12 +164,12 @@ class PagesController < ApplicationController
       headline: "Um estúdio de criação com IA dentro da sua operação.",
       subhead: "Carrosséis, vídeos UGC e imagens gerados com a identidade da marca, o @handle e o avatar do criador. Da ideia ao arquivo final sem trocar de ferramenta.",
       points: [
-        { icon: "image",    title: "Carrosséis virais",  desc: "Geração com padrões de viralização: identidade da marca, @handle, avatar do criador e imagens de apoio." },
+        { icon: "image",    title: "Carrosséis virais",  desc: "Geração com padrões de viralização: identidade da marca, @handle, avatar do criador e imagens de apoio — inclusos, sem gastar créditos." },
         { icon: "video",    title: "Vídeos UGC",         desc: "Vídeos com avatar e voz realistas via HeyGen e HyperFrames, renderizados de forma assíncrona." },
         { icon: "palette",  title: "Identidade aplicada", desc: "Cores, logo, tom de voz e avatar padrão da marca aplicados automaticamente em cada peça." },
         { icon: "sparkles", title: "Legendas por rede",  desc: "Variações de legenda com as regras de tamanho e hashtags específicas de cada rede social." },
       ],
-      highlights: ["Carrossel, vídeo e imagem", "Identidade da marca aplicada", "Renderização assíncrona", "Cobrança transparente por uso"],
+      highlights: ["Carrossel, vídeo e imagem", "Identidade da marca aplicada", "Renderização assíncrona", "Vídeo e imagem por créditos"],
     },
     {
       slug: "inteligencia", name: "Inteligência artificial", eyebrow: "Claude em cada etapa", color: "#F59E0B", icon: "sparkles",

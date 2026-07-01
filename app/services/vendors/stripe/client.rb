@@ -64,8 +64,54 @@ module Vendors
         with_error_mapping { ::Stripe::BillingPortal::Session.create(params) }
       end
 
+      # ── Customers ─────────────────────────────────────────────────────────
+
+      def create_customer(name:, email: nil, metadata: {})
+        with_error_mapping do
+          ::Stripe::Customer.create({ name: name, email: email, metadata: metadata }.compact)
+        end
+      end
+
+      # ── Provisioning (create Products + Prices) ───────────────────────────
+
+      def create_product(name:, metadata: {})
+        with_error_mapping { ::Stripe::Product.create(name: name, metadata: metadata) }
+      end
+
+      # Archive a Price (Prices are immutable — a price change creates a new one
+      # and deactivates the old so it drops out of the Dashboard/checkout).
+      def deactivate_price(price_id)
+        with_error_mapping { ::Stripe::Price.update(price_id, { active: false }) }
+      end
+
+      # A recurring monthly Price tagged with a stable `lookup_key`.
+      # `transfer_lookup_key: true` moves the key off any existing Price so
+      # re-provisioning after a price change points the key at the new amount.
+      def create_price(product:, unit_amount:, lookup_key:, currency: "brl", interval: "month")
+        with_error_mapping do
+          ::Stripe::Price.create(
+            product: product,
+            currency: currency,
+            unit_amount: unit_amount,
+            recurring: { interval: interval },
+            lookup_key: lookup_key,
+            transfer_lookup_key: true
+          )
+        end
+      end
+
       def retrieve_subscription(subscription_id, params = {})
         with_error_mapping { ::Stripe::Subscription.retrieve({ id: subscription_id }.merge(params)) }
+      end
+
+      # Resolve the current active Price for a stable `lookup_key`. This is how we
+      # avoid hard-coding price ids: tag each plan Price with a lookup_key in the
+      # Dashboard, and a price change (new Price with the key transferred) flows
+      # through here with no deploy. Returns the Stripe::Price (nil if none).
+      def price_by_lookup_key(lookup_key)
+        with_error_mapping do
+          ::Stripe::Price.list(lookup_keys: [lookup_key], active: true, expand: ["data.product"]).data.first
+        end
       end
 
       def update_subscription_item(item_id, params)

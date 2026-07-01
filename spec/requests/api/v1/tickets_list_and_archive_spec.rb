@@ -11,6 +11,8 @@ RSpec.describe "Tickets list, search & archive", type: :request do
       email: "owner@agencios.app", password: "secret123", name: "Owner", workspace_name: "Agency"
     )
     Current.reset
+    # The workspace sits behind the total paywall until billing is active.
+    activate_billing(@workspace)
     @client = @workspace.clients.create!(name: "ACME Corp")
     @project = @workspace.projects.create!(client: @client, name: "Launch", color: "#7C3AED")
 
@@ -108,6 +110,70 @@ RSpec.describe "Tickets list, search & archive", type: :request do
 
       post "/api/v1/tickets/clear_column", params: { status: "done" }, as: :json
       expect(response).to have_http_status(:forbidden)
+    end
+  end
+
+  describe "GET /api/v1/tickets/ids (select-all)" do
+    it "returns every matching id across the whole result set (unpaginated)" do
+      login
+      get "/api/v1/tickets/ids"
+      expect(response).to have_http_status(:ok)
+      expect(json["ids"]).to contain_exactly(@reel.id, @carousel.id)
+    end
+
+    it "honors the same filters as the list (e.g. q search + project join)" do
+      login
+      get "/api/v1/tickets/ids", params: { q: "carrossel" }
+      expect(json["ids"]).to contain_exactly(@carousel.id)
+    end
+
+    it "scopes ids to the requested view (archived)" do
+      login
+      Operations::Tickets::Archive.call(@reel, user: @user, archived: true)
+      get "/api/v1/tickets/ids", params: { view: "archived" }
+      expect(json["ids"]).to contain_exactly(@reel.id)
+    end
+  end
+
+  describe "bulk destroy" do
+    it "permanently deletes the selected tickets for a manager" do
+      login
+      post "/api/v1/tickets/bulk_destroy",
+           params: { ticket_ids: [@reel.id, @carousel.id] }, as: :json
+      expect(response).to have_http_status(:ok)
+      expect(json["deleted_count"]).to eq(2)
+      expect(Ticket.where(id: [@reel.id, @carousel.id])).to be_empty
+    end
+
+    it "ignores ids from another workspace (tenant-scoped)" do
+      other_user, other_ws = Operations::Users::Register.call(
+        email: "rival@agencios.app", password: "secret123", name: "Rival", workspace_name: "Rival Agency"
+      )
+      Current.reset
+      other_client = other_ws.clients.create!(name: "Other")
+      other_project = other_ws.projects.create!(client: other_client, name: "Other", color: "#000000")
+      foreign = Operations::Tickets::Create.call(
+        workspace: other_ws, user: other_user,
+        params: { project_id: other_project.id, title: "Não me exclua", creative_type: "reel", channels: %w[instagram] }
+      )
+
+      login
+      post "/api/v1/tickets/bulk_destroy",
+           params: { ticket_ids: [@reel.id, foreign.id] }, as: :json
+      expect(response).to have_http_status(:ok)
+      expect(json["deleted_count"]).to eq(1)
+      expect(Ticket.exists?(@reel.id)).to be(false)
+      expect(Ticket.exists?(foreign.id)).to be(true)
+    end
+
+    it "forbids a non-manager from bulk-deleting" do
+      member = User.create!(email: "member@agencios.app", password: "secret123", name: "Member")
+      Membership.create!(workspace: @workspace, user: member, role: :member)
+      login("member@agencios.app")
+
+      post "/api/v1/tickets/bulk_destroy", params: { ticket_ids: [@reel.id] }, as: :json
+      expect(response).to have_http_status(:forbidden)
+      expect(Ticket.exists?(@reel.id)).to be(true)
     end
   end
 

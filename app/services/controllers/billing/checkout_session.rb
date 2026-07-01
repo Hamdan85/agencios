@@ -13,6 +13,7 @@ module Controllers
         session = Vendors::Stripe::Actions::CreateCheckoutSession.call(
           workspace: workspace,
           plan: @params[:plan].presence || workspace.plan.to_s,
+          interval: @params[:interval].presence || "month",
           success_url: "#{SystemConfig.app_host}/assinatura?checkout=success",
           cancel_url: "#{SystemConfig.app_host}/assinatura?checkout=cancelled"
         )

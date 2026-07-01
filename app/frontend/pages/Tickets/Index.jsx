@@ -1,113 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Rows3, Archive, Ghost, Trash2 } from 'lucide-react'
 import {
-  Rows3, Archive, ArchiveRestore, MoreVertical, Ghost, CalendarClock,
-} from 'lucide-react'
-import {
-  WORKFLOW, STATUS_META, CHANNEL_META, CREATIVE_TYPE_META, PRIORITY_META, statusMeta,
+  WORKFLOW, STATUS_META, CHANNEL_META, CREATIVE_TYPE_META, PRIORITY_META,
 } from '@/lib/constants'
-import { useTicketsList, useTicketArchiveMutations } from '@/hooks/useData'
+import { toast } from 'sonner'
+import { ticketsApi } from '@/api'
+import { useTicketsList, useTicketArchiveMutations, useTicketBulkDelete } from '@/hooks/useData'
 import { useCurrentUser } from '@/hooks/useAuth'
+import { useSelection } from '@/hooks/useSelection'
 import { canManage } from '@/lib/roles'
-import { relativeDay } from '@/lib/formatters'
-import { cn } from '@/lib/utils'
 import { PageHeader } from '@/components/ui/page-header'
 import { Spinner, EmptyState } from '@/components/ui/feedback'
 import { FilterBar } from '@/components/ui/filter-bar'
+import { SelectionBar } from '@/components/ui/selection-bar'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { Button } from '@/components/ui/button'
 import { Page } from '@/components/ui/page'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
-} from '@/components/ui/dropdown-menu'
-import {
-  StatusPill, StatusDot, CreativeTypeChip, ChannelIcons, PriorityDot,
-} from '@/components/ui/iconography'
-import { Avatar } from '@/components/ui/avatar'
+import TicketRow from '@/components/ticket/TicketRow'
 import TicketDrawer from '@/components/ticket/TicketDrawer'
 
 const BRAND = '#06B6D4'
-
-// A single ticket row. Clicking the body opens the side drawer; the trailing
-// menu archives / restores (managers only).
-function TicketRow({ ticket, onOpen, manager, onArchive, onUnarchive, busy }) {
-  const project = ticket.project
-  const accent = project?.color || statusMeta(ticket.status).color
-  const due = relativeDay(ticket.due_date)
-  const tone = { danger: 'bg-danger/12 text-danger', warning: 'bg-amber/15 text-[#B45309]', muted: 'bg-surface-muted text-ink-muted' }
-
-  return (
-    <div className={cn(
-      'group flex items-center gap-3 rounded-xl border border-border bg-surface px-3.5 py-2.5 transition-all',
-      'hover:border-brand/40 hover:shadow-[0_10px_24px_-18px_rgba(24,18,43,0.32)]',
-      ticket.archived && 'opacity-75',
-    )}>
-      <span className="hidden sm:block"><StatusDot status={ticket.status} size={9} /></span>
-
-      <button onClick={() => onOpen(ticket.id)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
-        <span className="min-w-0 flex-1">
-          <span className="flex items-center gap-2">
-            <span className="truncate font-display text-[15px] font-semibold text-ink">{ticket.display_title}</span>
-            {ticket.archived && (
-              <span className="shrink-0 rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ink-muted">
-                Arquivado
-              </span>
-            )}
-          </span>
-          <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] font-medium text-ink-muted">
-            {project && (
-              <span className="inline-flex items-center gap-1 truncate" style={{ color: accent }}>
-                <span className="size-1.5 rounded-full" style={{ background: accent }} />
-                <span className="truncate">{project.name}</span>
-              </span>
-            )}
-            {ticket.client?.name && <span className="truncate">· {ticket.client.name}</span>}
-          </span>
-        </span>
-      </button>
-
-      <div className="hidden items-center gap-1.5 md:flex">
-        {ticket.creative_type && <CreativeTypeChip type={ticket.creative_type} />}
-        {ticket.channels?.length > 0 && <ChannelIcons channels={ticket.channels} size={12} max={4} />}
-      </div>
-
-      {due && (
-        <span className={cn('hidden items-center gap-1 rounded-md px-1.5 py-0.5 text-[10.5px] font-bold lg:inline-flex', tone[due.tone] || tone.muted)}>
-          <CalendarClock size={11} strokeWidth={2.4} /> {due.text}
-        </span>
-      )}
-
-      <span className="hidden xl:block"><StatusPill status={ticket.status} size="sm" /></span>
-      <PriorityDot priority={ticket.priority} />
-      {ticket.assignee
-        ? <Avatar name={ticket.assignee.name} src={ticket.assignee.avatar_url} size={26} />
-        : <span className="size-[26px] shrink-0 rounded-full border border-dashed border-border" />}
-
-      {manager && (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              aria-label="Ações do ticket"
-              className="flex size-7 shrink-0 items-center justify-center rounded-md text-ink-muted transition hover:bg-surface-muted hover:text-ink focus:outline-none"
-            >
-              <MoreVertical size={16} />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="min-w-44">
-            {ticket.archived ? (
-              <DropdownMenuItem onClick={() => onUnarchive(ticket.id)} disabled={busy}>
-                <ArchiveRestore size={15} /> Restaurar
-              </DropdownMenuItem>
-            ) : (
-              <DropdownMenuItem onClick={() => onArchive(ticket.id)} disabled={busy}>
-                <Archive size={15} /> Arquivar
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
-    </div>
-  )
-}
 
 export default function TicketsList() {
   const [filters, setFilters] = useState({ view: 'active' })
@@ -116,6 +29,9 @@ export default function TicketsList() {
   const { data: me } = useCurrentUser()
   const manager = canManage(me?.membership?.role)
   const { archive, unarchive } = useTicketArchiveMutations()
+  const bulkDelete = useTicketBulkDelete()
+  const selection = useSelection()
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   const query = useTicketsList(filters)
   const { data, isLoading, isError, hasNextPage, isFetchingNextPage, fetchNextPage, isFetching } = query
@@ -124,6 +40,28 @@ export default function TicketsList() {
   const total = data?.pages?.[0]?.meta?.total ?? 0
 
   const set = (key) => (value) => setFilters((f) => ({ ...f, [key]: value }))
+
+  // Reset the selection whenever the visible set changes (filters / tab / search)
+  // so a bulk delete never hits tickets scrolled out of view.
+  const { clear: clearSelection } = selection
+  useEffect(() => { clearSelection() }, [JSON.stringify(filters), clearSelection])
+
+  const confirmDelete = () => {
+    bulkDelete.mutate(selection.list, {
+      onSuccess: () => { selection.clear(); setConfirmOpen(false) },
+    })
+  }
+
+  // Select-all spans the WHOLE filtered result set (not just loaded pages): fetch
+  // every matching id from the server for the current filters.
+  const selectAll = async () => {
+    try {
+      const { ids } = await ticketsApi.ids(filters)
+      selection.set(ids)
+    } catch {
+      toast.error('Não foi possível selecionar todos os tickets.')
+    }
+  }
 
   // Infinite scroll.
   const sentinelRef = useRef(null)
@@ -181,17 +119,31 @@ export default function TicketsList() {
             <TabsTrigger value="all">Todos</TabsTrigger>
           </TabsList>
         </Tabs>
-        <FilterBar
-          search
-          searchValue={filters.q || ''}
-          onSearch={(v) => setFilters((f) => ({ ...f, q: v }))}
-          searchPlaceholder="Buscar por título…"
-          filters={filterSpec}
-          values={filters}
-          onChange={(key, value) => set(key)(value)}
-          onClear={clearFilters}
-          className="mb-0"
-        />
+        {selection.count > 0 ? (
+          <SelectionBar
+            className="mb-0"
+            count={selection.count}
+            total={total}
+            onSelectAll={selectAll}
+            onClear={selection.clear}
+          >
+            <Button variant="destructive" size="sm" className="gap-1.5" onClick={() => setConfirmOpen(true)}>
+              <Trash2 size={15} /> Excluir
+            </Button>
+          </SelectionBar>
+        ) : (
+          <FilterBar
+            search
+            searchValue={filters.q || ''}
+            onSearch={(v) => setFilters((f) => ({ ...f, q: v }))}
+            searchPlaceholder="Buscar por título…"
+            filters={filterSpec}
+            values={filters}
+            onChange={(key, value) => set(key)(value)}
+            onClear={clearFilters}
+            className="mb-0"
+          />
+        )}
       </div>
 
       {/* ── List ── */}
@@ -218,6 +170,8 @@ export default function TicketsList() {
                 ticket={t}
                 manager={manager}
                 busy={archive.isPending || unarchive.isPending}
+                selected={selection.has(t.id)}
+                onToggleSelect={selection.toggle}
                 onOpen={setDrawerId}
                 onArchive={(id) => archive.mutate(id)}
                 onUnarchive={(id) => unarchive.mutate(id)}
@@ -237,6 +191,18 @@ export default function TicketsList() {
         ticketId={drawerId}
         open={!!drawerId}
         onOpenChange={(o) => { if (!o) setDrawerId(null) }}
+      />
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        icon={Trash2}
+        destructive
+        title={selection.count === 1 ? 'Excluir ticket?' : `Excluir ${selection.count} tickets?`}
+        description="Esta ação é permanente e não pode ser desfeita. Os tickets e todo o seu conteúdo (subtarefas, criativos, posts) serão removidos."
+        confirmLabel="Excluir"
+        loading={bulkDelete.isPending}
+        onConfirm={confirmDelete}
       />
     </Page>
   )

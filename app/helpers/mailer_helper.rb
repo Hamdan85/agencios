@@ -44,6 +44,34 @@ module MailerHelper
     app_url("/icon-192.png")
   end
 
+  # ── Agency branding (client-facing emails) ──────────────────────────────
+  # Client-facing mail (invoices, meeting invites, the project scope summary)
+  # sets @brand_workspace so the layout renders WITH the agency's own name,
+  # logo and colors instead of agencios' — the client is hearing from their
+  # agency, even though agencios is the one sending it. Internal/product mail
+  # (welcome, billing, assignment notifications) leaves it unset and keeps the
+  # plain agencios header.
+  def agency_logo_url(workspace)
+    return nil unless workspace&.logo&.attached?
+
+    Rails.application.routes.url_helpers.rails_blob_url(workspace.logo, host: SystemConfig.app_host)
+  rescue StandardError
+    nil
+  end
+
+  # The header gradient, built from the agency's own two brand colors —
+  # same 135° treatment as agencios' own header, just re-tinted.
+  def agency_gradient(workspace)
+    primary = workspace.brand_primary_color.presence || BRAND[:violet]
+    secondary = workspace.brand_secondary_color.presence || BRAND[:violet_deep]
+    "linear-gradient(135deg,#{primary} 0%,#{secondary} 100%)"
+  end
+
+  # Single-letter fallback mark when the agency has no logo uploaded.
+  def agency_initial(workspace)
+    workspace.name.to_s.strip[0]&.upcase || "A"
+  end
+
   # Bulletproof (table-based) call-to-action button. Renders solid violet by
   # default; pass `color:` for a contextual variant (e.g. danger/success).
   def email_button(label, url, color: BRAND[:violet])

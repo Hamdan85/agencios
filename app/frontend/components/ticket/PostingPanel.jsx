@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Spinner, EmptyState } from '@/components/ui/feedback'
 import { DateTimePicker } from '@/components/ui/date-picker'
 import { ChannelIcons } from '@/components/ui/iconography'
-import { creativeMeta, channelMeta, channelsForCreative, creativeMediaKind } from '@/lib/constants'
+import { creativeMeta, channelMeta, creativeMediaKind, resolvePostRouting, isCoverType } from '@/lib/constants'
 import { dt } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 import {
@@ -23,39 +23,65 @@ const POST_STATUS = {
   failed:     { label: 'Falhou',     variant: 'danger',  icon: AlertCircle },
 }
 
-// The "Postagem" step: pick ONE creative, choose immediate vs scheduled, and
-// publish. The ticket only reaches "No ar" when a post actually succeeds.
+// The "Postagem" step: pick ONE creative per scoped type, choose immediate vs
+// scheduled, and publish. On publish, each creative routes to the channels that
+// support its media; a cover/thumbnail image rides the video where supported.
+// The ticket only reaches "No ar" when a post actually succeeds.
 export default function PostingPanel({ ticket, creatives = [], posts = [], onSave, onPublish, publishing = false, color = '#EC4899' }) {
   const fields = ticket?.fields?.scheduled || {}
   const channels = Array.isArray(ticket?.channels) ? ticket.channels : []
   const ready = creatives.filter((c) => c?.status === 'ready' && (c?.asset_urls?.length || 0) > 0)
 
-  const [creativeId, setCreativeId] = useState('')
+  // The types scoped in Escopo (mirrored column → scoping field bag), plus any
+  // extra type that already has a ready creative so nothing is hidden.
+  const displayTypes = useMemo(() => {
+    const scoped = Array.isArray(ticket?.creative_types) && ticket.creative_types.length
+      ? ticket.creative_types
+      : (Array.isArray(ticket?.fields?.scoping?.creative_types) ? ticket.fields.scoping.creative_types : [])
+    const readyTypes = ready.map((c) => c.creative_type)
+    return [...new Set([...scoped, ...readyTypes])].filter(Boolean)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ticket?.id, JSON.stringify(ticket?.creative_types), ready.length])
+
+  const [selectedByType, setSelectedByType] = useState({})
   const [mode, setMode] = useState(fields.post_mode || 'immediate')
   const [scheduledAt, setScheduledAt] = useState(fields.scheduled_at ? String(fields.scheduled_at).slice(0, 16) : '')
   const [firstComment, setFirstComment] = useState(fields.first_comment || '')
   const [linkInBio, setLinkInBio] = useState(fields.link_in_bio || '')
 
-  // Default the selection to the saved one, else the only ready creative.
+  // Default each type's selection to the saved one, else the only ready creative
+  // of that type.
   useEffect(() => {
-    const saved = fields.creative_id ? String(fields.creative_id) : ''
-    if (saved && ready.some((c) => String(c.id) === saved)) setCreativeId(saved)
-    else if (ready.length === 1) setCreativeId(String(ready[0].id))
+    const savedIds = Array.isArray(fields.creative_ids)
+      ? fields.creative_ids.map(String)
+      : (fields.creative_id ? [String(fields.creative_id)] : [])
+    const next = {}
+    displayTypes.forEach((t) => {
+      const group = ready.filter((c) => c.creative_type === t)
+      const saved = group.find((c) => savedIds.includes(String(c.id)))
+      if (saved) next[t] = String(saved.id)
+      else if (group.length === 1) next[t] = String(group[0].id)
+    })
+    setSelectedByType(next)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ticket?.id, ready.length])
+  }, [ticket?.id, ready.length, displayTypes.length])
 
-  const selected = ready.find((c) => String(c.id) === String(creativeId))
-  const supported = useMemo(() => (selected ? channelsForCreative(selected, channels) : []), [selected, channels])
-  const skipped = channels.filter((ch) => !supported.includes(ch))
+  const selectedCreatives = useMemo(
+    () => displayTypes.map((t) => ready.find((c) => String(c.id) === selectedByType[t])).filter(Boolean),
+    [displayTypes, ready, selectedByType],
+  )
+  const routing = useMemo(() => resolvePostRouting(selectedCreatives, channels), [selectedCreatives, channels])
+  const anyPost = routing.some((r) => r.posts.length > 0)
 
   const saveField = (key, value) => onSave?.({ [key]: value })
+  const toggle = (type, id) => setSelectedByType((prev) => ({ ...prev, [type]: prev[type] === id ? undefined : id }))
 
-  const canPublish = !!selected && supported.length > 0 && (mode === 'immediate' || !!scheduledAt) && !publishing
+  const canPublish = selectedCreatives.length > 0 && anyPost && (mode === 'immediate' || !!scheduledAt) && !publishing
 
   const handlePublish = () => {
     if (!canPublish) return
     onPublish?.({
-      creative_id: selected.id,
+      creative_ids: selectedCreatives.map((c) => c.id),
       mode,
       scheduled_at: mode === 'scheduled' ? scheduledAt : undefined,
     })
@@ -69,77 +95,101 @@ export default function PostingPanel({ ticket, creatives = [], posts = [], onSav
         </div>
         <div>
           <h3 className="font-display text-base font-bold text-ink">Postagem</h3>
-          <p className="text-xs text-ink-muted">Escolha o criativo e publique — agora ou agendado.</p>
+          <p className="text-xs text-ink-muted">Escolha um criativo por tipo e publique — agora ou agendado.</p>
         </div>
       </div>
 
       <div className="space-y-5 p-5">
-        {/* 1 — choose the creative */}
-        <div className="space-y-2">
-          <Label className="flex items-center gap-1.5"><ImagePlus size={13} style={{ color }} /> Criativo a postar</Label>
-          {ready.length === 0 ? (
+        {/* 1 — choose one creative per scoped type */}
+        <div className="space-y-4">
+          <Label className="flex items-center gap-1.5"><ImagePlus size={13} style={{ color }} /> Criativos a postar</Label>
+          {displayTypes.length === 0 ? (
             <EmptyState
               icon={ImagePlus}
-              title="Nenhum criativo pronto"
-              description="Volte à Produção e gere ou anexe um criativo antes de postar."
+              title="Nenhum tipo definido"
+              description="Volte ao Escopo e escolha os tipos de criativo deste ticket."
               color={color}
             />
           ) : (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {ready.map((c) => {
-                const m = creativeMeta(c.creative_type)
-                const active = String(c.id) === String(creativeId)
-                const thumb = c.asset_urls?.[0]
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => setCreativeId(String(c.id))}
-                    aria-pressed={active}
-                    className={cn(
-                      'group relative overflow-hidden rounded-xl border-2 text-left transition-all',
-                      active ? 'border-brand ring-2 ring-brand/20' : 'border-border hover:border-brand/40',
-                    )}
-                  >
-                    <div className="relative w-full" style={{ paddingBottom: '100%' }}>
-                      <div className="absolute inset-0 overflow-hidden" style={{ background: `${m.color}10` }}>
-                        {thumb ? (
-                          <img src={thumb} alt={m.label} className="size-full object-cover" />
-                        ) : (
-                          <div className="flex size-full items-center justify-center"><m.icon size={24} style={{ color: m.color }} /></div>
-                        )}
-                        {active && (
-                          <div className="absolute right-1.5 top-1.5 grid size-5 place-items-center rounded-full bg-brand text-white shadow">
-                            <CheckCircle2 size={13} />
-                          </div>
-                        )}
-                        <span className="absolute bottom-1.5 left-1.5 rounded-full bg-white/85 px-2 py-0.5 text-[10px] font-bold text-ink shadow-sm backdrop-blur">
-                          {MEDIA_LABEL[creativeMediaKind(c)] || m.label}
-                        </span>
-                      </div>
+            displayTypes.map((type) => {
+              const tm = creativeMeta(type)
+              const group = ready.filter((c) => c.creative_type === type)
+              const TmIcon = tm.icon
+              return (
+                <div key={type} className="space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="inline-flex items-center gap-1.5 rounded-lg px-2 py-0.5 text-xs font-bold" style={{ background: `${tm.color}18`, color: tm.color }}>
+                      <TmIcon size={12} strokeWidth={2.4} /> {tm.label}
+                    </span>
+                    {isCoverType(type) && <span className="text-[11px] text-ink-faint">— vira capa do vídeo, ou post se não houver vídeo</span>}
+                  </div>
+                  {group.length === 0 ? (
+                    <p className="rounded-xl border border-dashed border-border px-3.5 py-2.5 text-xs text-ink-faint">
+                      Nenhum {tm.label.toLowerCase()} pronto — gere ou anexe um na Produção.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                      {group.map((c) => {
+                        const active = selectedByType[type] === String(c.id)
+                        const thumb = c.asset_urls?.[0]
+                        return (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => toggle(type, String(c.id))}
+                            aria-pressed={active}
+                            className={cn(
+                              'group relative overflow-hidden rounded-xl border-2 text-left transition-all',
+                              active ? 'border-brand ring-2 ring-brand/20' : 'border-border hover:border-brand/40',
+                            )}
+                          >
+                            <div className="relative w-full" style={{ paddingBottom: '100%' }}>
+                              <div className="absolute inset-0 overflow-hidden" style={{ background: `${tm.color}10` }}>
+                                {thumb ? (
+                                  <img src={thumb} alt={tm.label} className="size-full object-cover" />
+                                ) : (
+                                  <div className="flex size-full items-center justify-center"><TmIcon size={24} style={{ color: tm.color }} /></div>
+                                )}
+                                {active && (
+                                  <div className="absolute right-1.5 top-1.5 grid size-5 place-items-center rounded-full bg-brand text-white shadow">
+                                    <CheckCircle2 size={13} />
+                                  </div>
+                                )}
+                                <span className="absolute bottom-1.5 left-1.5 rounded-full bg-white/85 px-2 py-0.5 text-[10px] font-bold text-ink shadow-sm backdrop-blur">
+                                  {MEDIA_LABEL[creativeMediaKind(c)] || tm.label}
+                                </span>
+                              </div>
+                            </div>
+                          </button>
+                        )
+                      })}
                     </div>
-                  </button>
-                )
-              })}
-            </div>
+                  )}
+                </div>
+              )
+            })
           )}
         </div>
 
-        {/* channel support for the selected creative */}
-        {selected && (
-          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-surface-muted/50 px-3.5 py-2.5">
-            <Radio size={14} className="text-ink-muted" />
-            {supported.length > 0 ? (
-              <>
-                <span className="text-xs font-semibold text-ink-secondary">Vai ao ar em:</span>
-                <ChannelIcons channels={supported} />
-              </>
-            ) : (
-              <span className="text-xs font-semibold text-danger">Nenhum canal selecionado suporta {MEDIA_LABEL[creativeMediaKind(selected)]}.</span>
-            )}
-            {skipped.length > 0 && supported.length > 0 && (
-              <span className="ml-auto text-[11px] text-ink-faint">Ignorados (sem suporte): {skipped.map((c) => channelMeta(c).label).join(', ')}</span>
-            )}
+        {/* per-channel routing preview: what actually goes where */}
+        {selectedCreatives.length > 0 && (
+          <div className="space-y-1.5 rounded-xl border border-border bg-surface-muted/50 p-3.5">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-ink-secondary">
+              <Radio size={13} className="text-ink-muted" /> O que vai para cada canal
+            </div>
+            {routing.map(({ channel, posts: chPosts }) => (
+              <div key={channel} className="flex items-center gap-2 text-xs">
+                <ChannelIcons channels={[channel]} />
+                <span className="font-semibold text-ink-secondary">{channelMeta(channel).label}</span>
+                {chPosts.length === 0 ? (
+                  <span className="text-danger">nenhum criativo compatível</span>
+                ) : (
+                  <span className="text-ink-muted">
+                    {chPosts.map((p) => `${MEDIA_LABEL[creativeMediaKind(p.creative)] || 'post'}${p.cover ? ' + capa' : ''}`).join(', ')}
+                  </span>
+                )}
+              </div>
+            ))}
           </div>
         )}
 

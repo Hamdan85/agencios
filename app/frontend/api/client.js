@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { toast } from 'sonner'
 
 function getCsrfToken() {
   return document.querySelector('meta[name="csrf-token"]')?.content
@@ -27,11 +28,29 @@ api.interceptors.response.use(
   (res) => res.data,
   (err) => {
     const status = err.response?.status
+    const data = err.response?.data
     const path = window.location.pathname
     if (status === 401 && !path.startsWith('/login') && !path.startsWith('/cadastro') && path !== '/') {
       window.location.href = '/login'
     }
-    return Promise.reject(err.response?.data ?? { error: err.message })
+    // Billing / credit gates. A 402 means either the workspace lost access
+    // (paywall) or a single generation was blocked for lack of credits.
+    if (status === 402) {
+      if (data?.code === 'billing_required') {
+        // The workspace is no longer billing-active — refresh `/me` so the
+        // paywall guard (which reads workspace.billing_active) takes over.
+        window.__queryClient?.invalidateQueries({ queryKey: ['me'] })
+      } else if (data?.code === 'insufficient_credits') {
+        toast.error('Créditos insuficientes', {
+          description: 'Compre créditos para continuar gerando vídeos e imagens.',
+          action: {
+            label: 'Comprar créditos',
+            onClick: () => { window.location.href = '/assinatura' },
+          },
+        })
+      }
+    }
+    return Promise.reject(data ?? { error: err.message })
   },
 )
 

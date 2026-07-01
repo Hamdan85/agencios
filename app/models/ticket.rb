@@ -8,6 +8,10 @@ class Ticket < ApplicationRecord
   belongs_to :project
   belongs_to :assignee, class_name: "User", optional: true
   belongs_to :created_by, class_name: "User", optional: true
+  # The strategy-planner session that created this ticket, when it came from an
+  # applied content plan (nil for hand-made tickets). Lets a re-apply of an
+  # edited plan rewrite its batch from scratch.
+  belongs_to :strategy_session, optional: true
 
   has_many :subtasks, dependent: :destroy
   has_many :creatives, dependent: :destroy
@@ -37,6 +41,10 @@ class Ticket < ApplicationRecord
   WORKFLOW = %i[ideation scoping production scheduled published retrospective done].freeze
   CHANNELS = %w[instagram facebook tiktok youtube linkedin x].freeze
 
+  # Image creative types that ride a video post as its cover/thumbnail rather than
+  # posting standalone (see Operations::Tickets::Publish). Mirrored on the frontend.
+  COVER_TYPES = %w[thumbnail cover].freeze
+
   # User-facing PT-BR labels (used in system note copy + frontend label map).
   STATUS_LABELS = {
     "ideation" => "Ideação",
@@ -54,9 +62,28 @@ class Ticket < ApplicationRecord
   scope :active, -> { where(archived_at: nil) }
   scope :archived, -> { where.not(archived_at: nil) }
 
+  # Due today or earlier — falls back to `scheduled_at`'s date when no
+  # `due_date` is set. Feeds the daily ticket digest (Operations::Digests).
+  scope :due_or_overdue, lambda {
+    where(
+      "(due_date IS NOT NULL AND due_date <= :today) OR " \
+      "(due_date IS NULL AND scheduled_at IS NOT NULL AND scheduled_at::date <= :today)",
+      today: Date.current
+    )
+  }
+
   def archived? = archived_at.present?
 
   def workflow_step = WORKFLOW.index(status.to_sym)
+
+  # Derived "atrasado" state (never a workflow status): the post's expected date
+  # has passed and the ticket has not reached `published` yet. Computed at read
+  # time and serialized as `overdue` — the board/ticket header render the badge.
+  def overdue?
+    return false if scheduled_at.blank? || archived?
+
+    scheduled_at.past? && (workflow_step.nil? || workflow_step < WORKFLOW.index(:published))
+  end
 
   def next_status
     idx = workflow_step
@@ -76,5 +103,14 @@ class Ticket < ApplicationRecord
   # Status-namespaced structured field bag (see Tickets::Fields).
   def fields_for(some_status)
     fields[some_status.to_s] || {}
+  end
+
+  # The creative types scoped for this ticket. Source of truth is the scoping
+  # field bag; the top-level column mirrors it (and the legacy single column) so
+  # board chips / filters keep working.
+  def creative_types_list
+    list = Array(fields_for("scoping")["creative_types"]).map(&:to_s).compact_blank
+    list = Array(creative_types).map(&:to_s).compact_blank if list.blank?
+    list.presence || Array(creative_type).map(&:to_s).compact_blank
   end
 end

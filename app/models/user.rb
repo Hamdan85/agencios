@@ -92,4 +92,15 @@ class User < ApplicationRecord
   def billing_active?(workspace)
     workspace&.subscription&.access_granted? || false
   end
+
+  # ── ActiveAdmin (LGPD: never expose secrets) ─────────────────────────
+  # Deliberately omits password_digest and every encrypted/token column so they
+  # can't be searched or surfaced in the admin panel.
+  def self.ransackable_attributes(_auth = nil)
+    %w[id email name staff confirmed_at created_at updated_at]
+  end
+
+  def self.ransackable_associations(_auth = nil)
+    %w[memberships workspaces]
+  end
 end

@@ -3,9 +3,12 @@
 # A subtask enriched with its ticket/project context for the My Tasks screen.
 class MyTaskSerializer < ActiveModel::Serializer
   attributes :id, :title, :done, :due_date, :ticket_id, :ticket_title,
-             :project_name, :project_color, :workspace_id, :workspace_name, :created_at
+             :project_name, :project_color, :workspace_id, :workspace_name,
+             :estimate_hours, :overdue, :created_at
 
   def due_date = object.due_date&.iso8601
+  def estimate_hours = object.estimate_hours&.to_f
+  def overdue = object.overdue?
   def created_at = object.created_at.iso8601
   def ticket_title = object.ticket&.display_title
   def project_name = object.ticket&.project&.name

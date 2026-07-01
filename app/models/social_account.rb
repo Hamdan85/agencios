@@ -29,4 +29,15 @@ class SocialAccount < ApplicationRecord
   def token_expired?
     token_expires_at.present? && token_expires_at.past?
   end
+
+  # LGPD: token/secret columns are intentionally excluded so they can't be
+  # searched or surfaced in the admin panel.
+  def self.ransackable_attributes(_auth = nil)
+    %w[id workspace_id client_id provider username display_name status
+       connection_type token_expires_at last_synced_at revoked_at created_at updated_at]
+  end
+
+  def self.ransackable_associations(_auth = nil)
+    %w[workspace client posts]
+  end
 end

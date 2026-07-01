@@ -9,4 +9,10 @@ class Subtask < ApplicationRecord
 
   scope :open, -> { where(done: false) }
   scope :ordered, -> { order(:position, :created_at) }
+
+  # Derived "atrasado" state: still open and its back-scheduled due_date passed.
+  # Serialized as `overdue`; the checklist and My Tasks render the badge.
+  def overdue?
+    !done && due_date.present? && due_date.past?
+  end
 end

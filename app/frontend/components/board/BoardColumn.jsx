@@ -41,7 +41,7 @@ export function BoardColumn({ status, label, tickets = [], onOpenTicket, onClear
   })
 
   return (
-    <div className="flex h-full w-[290px] shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_1px_2px_rgba(24,18,43,0.04),0_12px_30px_-20px_rgba(24,18,43,0.22)]">
+    <div className="flex h-full w-[calc(100vw-5rem)] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_1px_2px_rgba(24,18,43,0.04),0_12px_30px_-20px_rgba(24,18,43,0.22)] sm:w-[290px] sm:snap-align-none">
       {/* top accent bar */}
       <div className="h-1.5 shrink-0" style={{ background: m.color }} />
 

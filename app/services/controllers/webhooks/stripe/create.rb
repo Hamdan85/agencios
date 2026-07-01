@@ -13,6 +13,13 @@ module Controllers
 
         def call
           event = Vendors::Stripe::Webhook.verify(@payload, @signature)
+
+          # Price/product changes in the Dashboard refresh the cached display
+          # amounts (Stripe stays the source of truth for the charged amount).
+          if event.type.to_s.start_with?("price.", "product.")
+            return Vendors::Stripe::Actions::SyncPlanPrices.call
+          end
+
           Operations::Billing::SyncSubscription.call(event)
         end
       end

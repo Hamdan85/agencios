@@ -19,6 +19,16 @@ module Vendors
 
       attr_reader :workspace
 
+      # Whether the platform-level token is configured — the single-tenant
+      # default every workspace rides on unless it's connected its own account.
+      # Lets the frontend show "send payment link" affordances without a
+      # per-workspace OAuth connection (see Setting#mercadopago_connected? for
+      # that narrower, marketplace-only check).
+      def self.platform_configured?
+        Rails.application.credentials.dig(:mercado_pago, :access_token).present? ||
+          ENV["MERCADO_PAGO_ACCESS_TOKEN"].present?
+      end
+
       # Pass a workspace to prefer its connected OAuth token (marketplace), or an
       # explicit access_token (e.g. the OAuth token-exchange step itself, which
       # authenticates with client_id/client_secret rather than a Bearer token).

@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'sonner'
 import App from '@/App'
+import { ConfirmProvider } from '@/components/ui/confirm-dialog'
 import { bootAnalytics } from '@/lib/analytics/boot'
 import './application.css'
 
@@ -38,11 +39,17 @@ const queryClient = new QueryClient({
   },
 })
 
+// Expose the query client to the axios layer so the global 402 handler can
+// invalidate `/me` (triggering the paywall guard) from outside React.
+window.__queryClient = queryClient
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <Toaster richColors position="top-right" toastOptions={{ style: { fontFamily: 'var(--font-sans)' } }} />
-      <App />
+      <ConfirmProvider>
+        <App />
+      </ConfirmProvider>
     </QueryClientProvider>
   </StrictMode>,
 )
