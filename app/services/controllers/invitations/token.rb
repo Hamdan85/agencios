@@ -4,7 +4,7 @@ module Controllers
   module Invitations
     # Signing/verification for the table-free invite tokens.
     module Token
-      VERIFIER = "agencios:invitations"
+      VERIFIER = 'agencios:invitations'
 
       module_function
 

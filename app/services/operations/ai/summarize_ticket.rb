@@ -16,13 +16,13 @@ module Operations
           ticket: @ticket, status: @status
         )
         summary = AiAdapter.complete(
-          builder, max_tokens: 400, operation: "summarize_ticket", subject: @ticket
+          builder, max_tokens: 400, operation: 'summarize_ticket', subject: @ticket
         ).to_s.strip
 
         summaries = @ticket.ai_summaries.merge(@status => summary)
         @ticket.update!(ai_summaries: summaries)
 
-        Broadcaster.ticket(@ticket, "summary_ready", status: @status, summary: summary)
+        Broadcaster.ticket(@ticket, 'summary_ready', status: @status, summary: summary)
         summary
       end
     end

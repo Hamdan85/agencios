@@ -12,12 +12,12 @@ module Controllers
       def call
         ticket = find_ticket
         {
-          ticket:      serialize(ticket, TicketSerializer),
-          subtasks:    serialize_collection(ticket.subtasks.ordered, SubtaskSerializer),
-          creatives:   serialize_collection(ticket.creatives, CreativeSerializer),
+          ticket: serialize(ticket, TicketSerializer),
+          subtasks: serialize_collection(ticket.subtasks.ordered, SubtaskSerializer),
+          creatives: serialize_collection(ticket.creatives, CreativeSerializer),
           attachments: serialize_collection(ticket.attachments.ordered, AttachmentSerializer),
-          posts:       serialize_collection(ticket.posts, PostSerializer),
-          notes:       serialize_collection(ticket.notes.chronological, NoteSerializer, member_names: member_names)
+          posts: serialize_collection(ticket.posts, PostSerializer),
+          notes: serialize_collection(ticket.notes.chronological, NoteSerializer, member_names: member_names)
         }
       end
 

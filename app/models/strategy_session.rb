@@ -17,18 +17,18 @@ class StrategySession < ApplicationRecord
   # Stored as a string column (active | proposed | applied | discarded); keep the
   # enum backed by strings so the DB stays human-readable.
   enum :status, {
-    active: "active", proposed: "proposed", applied: "applied", discarded: "discarded"
-  }, prefix: true, default: "active"
+    active: 'active', proposed: 'proposed', applied: 'applied', discarded: 'discarded'
+  }, prefix: true, default: 'active'
 
   scope :recent, -> { order(created_at: :desc) }
 
   # Append a chat turn to the transcript. `ts` is an ISO timestamp so the
   # frontend can render ordering without a separate messages table.
   def push_message(role:, content:)
-    self.messages = Array(messages) + [{ "role" => role.to_s, "content" => content.to_s, "ts" => Time.current.iso8601 }]
+    self.messages = Array(messages) + [{ 'role' => role.to_s, 'content' => content.to_s, 'ts' => Time.current.iso8601 }]
   end
 
   def proposed_plan?
-    proposed_plan.present? && Array(proposed_plan["tickets"]).any?
+    proposed_plan.present? && Array(proposed_plan['tickets']).any?
   end
 end

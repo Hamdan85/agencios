@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "securerandom"
-require "digest"
-require "base64"
+require 'securerandom'
+require 'digest'
+require 'base64'
 
 module Vendors
   module X
@@ -29,13 +29,13 @@ module Vendors
         def call
           client = Vendors::X::Client.new
           query = URI.encode_www_form(
-            response_type: "code",
+            response_type: 'code',
             client_id: client.client_id,
             redirect_uri: @redirect_uri,
-            scope: @scopes.join(" "),
+            scope: @scopes.join(' '),
             state: @state,
             code_challenge: code_challenge,
-            code_challenge_method: "S256"
+            code_challenge_method: 'S256'
           )
 
           {

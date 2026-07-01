@@ -21,31 +21,31 @@ module Vendors
 
         def call
           tweet_id = @post.external_post_id.presence
-          return unavailable("missing_tweet_id") if tweet_id.blank?
+          return unavailable('missing_tweet_id') if tweet_id.blank?
 
           data = Vendors::X::Actions::FetchMetrics.call(
             social_account: @social_account, tweet_id: tweet_id
           )
-          metrics = data["public_metrics"] || {}
+          metrics = data['public_metrics'] || {}
           map_metrics(metrics, raw: data)
         rescue Vendors::Base::AuthenticationError => e
           # Free tier (write-only) / insufficient read access.
-          unavailable("read_not_available_on_tier", detail: e.message)
+          unavailable('read_not_available_on_tier', detail: e.message)
         rescue Vendors::Base::RateLimitError => e
-          unavailable("rate_limited", detail: e.message)
+          unavailable('rate_limited', detail: e.message)
         end
 
         private
 
         def map_metrics(metrics, raw:)
           {
-            reach: metrics["impression_count"].to_i,
-            views: metrics["impression_count"].to_i,
-            likes: metrics["like_count"].to_i,
-            comments: metrics["reply_count"].to_i,
+            reach: metrics['impression_count'].to_i,
+            views: metrics['impression_count'].to_i,
+            likes: metrics['like_count'].to_i,
+            comments: metrics['reply_count'].to_i,
             # X "shares" = retweets + quotes.
-            shares: metrics["retweet_count"].to_i + metrics["quote_count"].to_i,
-            saves: metrics["bookmark_count"].to_i,
+            shares: metrics['retweet_count'].to_i + metrics['quote_count'].to_i,
+            saves: metrics['bookmark_count'].to_i,
             raw: raw
           }
         end
@@ -53,7 +53,7 @@ module Vendors
         def unavailable(reason, detail: nil)
           {
             reach: 0, views: 0, likes: 0, comments: 0, shares: 0, saves: 0,
-            raw: { "unavailable" => reason, "detail" => detail }.compact
+            raw: { 'unavailable' => reason, 'detail' => detail }.compact
           }
         end
       end

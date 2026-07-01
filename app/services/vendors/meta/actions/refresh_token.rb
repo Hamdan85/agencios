@@ -25,9 +25,9 @@ module Vendors
           )
 
           {
-            user_access_token: result["access_token"],
+            user_access_token: result['access_token'],
             refresh_token: nil,
-            token_expires_at: expiry_from(result["expires_in"])
+            token_expires_at: expiry_from(result['expires_in'])
           }
         end
 

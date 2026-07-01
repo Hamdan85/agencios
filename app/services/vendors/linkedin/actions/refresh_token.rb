@@ -19,18 +19,18 @@ module Vendors
         def call
           client = Vendors::Linkedin::Client.new(social_account: @social_account)
           body = client.token_request(
-            grant_type: "refresh_token",
+            grant_type: 'refresh_token',
             refresh_token: @social_account.refresh_token,
             client_id: client.client_id,
             client_secret: client.client_secret
           )
 
           {
-            user_access_token: body["access_token"],
+            user_access_token: body['access_token'],
             # A refresh keeps the original refresh-token TTL; LinkedIn may or may
             # not return a new refresh_token — fall back to the existing one.
-            refresh_token: body["refresh_token"] || @social_account.refresh_token,
-            token_expires_at: token_expires_at(body["expires_in"])
+            refresh_token: body['refresh_token'] || @social_account.refresh_token,
+            token_expires_at: token_expires_at(body['expires_in'])
           }
         end
 

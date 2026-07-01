@@ -20,7 +20,7 @@ module Controllers
 
       def run(ticket)
         case ticket.status
-        when "published", "done"
+        when 'published', 'done'
           Operations::Ai::SummarizeTicket.call(ticket: ticket, status: ticket.status)
         else
           Operations::Ai::FillFields.call(ticket: ticket)

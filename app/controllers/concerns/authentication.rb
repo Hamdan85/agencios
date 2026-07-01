@@ -28,7 +28,7 @@ module Authentication
     return if performed?
     return if Current.membership&.can_manage?
 
-    render json: { error: "Acesso restrito a gestores do workspace.", code: "manager_required" },
+    render json: { error: 'Acesso restrito a gestores do workspace.', code: 'manager_required' },
            status: :forbidden
   end
 
@@ -76,16 +76,16 @@ module Authentication
   end
 
   def request_authentication
-    render json: { error: "Unauthorized" }, status: :unauthorized
+    render json: { error: 'Unauthorized' }, status: :unauthorized
   end
 
   def start_new_session_for(user)
     user.sessions.create!(
-      token:          Session.generate_token,
+      token: Session.generate_token,
       last_active_at: Time.current,
-      expires_at:     Session::IDLE_TTL.from_now,
-      user_agent:     request.user_agent,
-      ip_address:     request.remote_ip
+      expires_at: Session::IDLE_TTL.from_now,
+      user_agent: request.user_agent,
+      ip_address: request.remote_ip
     ).tap do |session|
       Current.session = session
       cookies.signed.permanent[:session_id] = session_cookie_options(session.token)
@@ -94,10 +94,10 @@ module Authentication
 
   def session_cookie_options(token)
     {
-      value:     token,
-      httponly:  true,
+      value: token,
+      httponly: true,
       same_site: :lax,
-      secure:    !Rails.env.local?
+      secure: !Rails.env.local?
     }
   end
 

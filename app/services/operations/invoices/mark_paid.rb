@@ -14,7 +14,7 @@ module Operations
       def call
         was_paid = @invoice.status_paid?
         @invoice.update!(status: :paid)
-        @invoice.latest_charge&.update!(status: "approved")
+        @invoice.latest_charge&.update!(status: 'approved')
         Operations::Invoices::NotifyPaid.call(invoice: @invoice) unless was_paid
         @invoice
       end

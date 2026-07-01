@@ -14,13 +14,13 @@ module Operations
       def call
         return @generation if @generation.status_completed? || @generation.status_failed?
 
-        Operations::Credits::Refund.call(generation: @generation, description: "Estorno — geração falhou")
+        Operations::Credits::Refund.call(generation: @generation, description: 'Estorno — geração falhou')
 
         @generation.update!(status: :failed, failure_reason: @reason)
         @generation.creative&.update!(status: :failed)
 
         Broadcaster.generations(
-          @generation.workspace_id, "generation_failed",
+          @generation.workspace_id, 'generation_failed',
           id: @generation.id, kind: @generation.kind, reason: @reason
         )
         @generation

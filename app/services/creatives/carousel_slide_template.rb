@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "cgi"
+require 'cgi'
 
 module Creatives
   # Renders one branded carousel slide as a self-contained HTML document for the
@@ -51,13 +51,13 @@ module Creatives
               </header>
 
               <main class="body">
-                #{cta? ? '<div class="kicker">' + esc('Próximo passo') + '</div>' : ''}
+                #{cta? ? "<div class=\"kicker\">#{esc('Próximo passo')}</div>" : ''}
                 <h1 class="headline">#{esc(@slide['headline'])}</h1>
                 #{body_html}
               </main>
 
               <footer class="bottom">
-                #{cta? ? '<span class="swipe">' + esc('Salve e compartilhe') + '</span>' : '<span class="swipe">' + esc('Arraste →') + '</span>'}
+                #{cta? ? "<span class=\"swipe\">#{esc('Salve e compartilhe')}</span>" : "<span class=\"swipe\">#{esc('Arraste →')}</span>"}
                 #{logo_html}
               </footer>
             </div>
@@ -68,13 +68,13 @@ module Creatives
 
     private
 
-    def role  = @slide["role"].to_s
-    def cta?  = role == "cta" || @index == @total
-    def hook? = role == "hook" || @index == 1
+    def role  = @slide['role'].to_s
+    def cta?  = role == 'cta' || @index == @total
+    def hook? = role == 'hook' || @index == 1
     def image? = @image_uri.present?
 
     def body_html
-      return "" if @slide["body"].to_s.strip.blank?
+      return '' if @slide['body'].to_s.strip.blank?
 
       %(<p class="text">#{esc(@slide['body'])}</p>)
     end
@@ -88,17 +88,17 @@ module Creatives
     end
 
     def handle_html
-      return "" if @handle.blank?
+      return '' if @handle.blank?
 
       %(<span class="handle">@#{esc(@handle.to_s.sub(/\A@/, ''))}</span>)
     end
 
     def initials
-      @brand_name.to_s.split(/\s+/).reject(&:empty?).first(2).map { |w| w[0] }.join.upcase.presence || "•"
+      @brand_name.to_s.split(/\s+/).reject(&:empty?).first(2).map { |w| w[0] }.join.upcase.presence || '•'
     end
 
     def logo_html
-      return "" if @logo_uri.blank?
+      return '' if @logo_uri.blank?
 
       %(<img class="logo" src="#{@logo_uri}" alt="">)
     end
@@ -108,7 +108,11 @@ module Creatives
     end
 
     def css
-      hl_size = hook? ? 92 : (cta? ? 84 : 72)
+      hl_size = if hook?
+                  92
+                else
+                  (cta? ? 84 : 72)
+                end
       <<~CSS
         * { margin:0; padding:0; box-sizing:border-box; }
         html,body { width:#{@width}px; height:#{@height}px; }
@@ -168,7 +172,7 @@ module Creatives
         v = c + (255 * pct / 100.0)
         v.clamp(0, 255).round
       end
-      format("#%02x%02x%02x", *adj)
+      format('#%02x%02x%02x', *adj)
     end
   end
 end

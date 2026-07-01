@@ -13,7 +13,7 @@ module Mcp
     class WorkspaceNotFound < StandardError
       def initialize(ref)
         super("Workspace '#{ref}' was not found among your workspaces. " \
-              "Call list_workspaces to see the slugs you can use.")
+              'Call list_workspaces to see the slugs you can use.')
       end
     end
 
@@ -26,25 +26,25 @@ module Mcp
     module_function
 
     # Workspace-scoped tools.
-    def for(user:, workspace_ref:)
-      raise ArgumentError, "user is required" if user.nil?
+    def for(user:, workspace_ref:, &block)
+      raise ArgumentError, 'user is required' if user.nil?
 
       workspace  = resolve_workspace(user, workspace_ref)
       membership = user.membership_for(workspace)
       raise NotAMember, "You are not a member of '#{workspace_ref}'." if membership.nil?
       unless workspace.mcp_enabled?
-        raise PlanRequired, "O conector do Claude está disponível nos planos Agência e Enterprise. " \
+        raise PlanRequired, 'O conector do Claude está disponível nos planos Agência e Enterprise. ' \
                             "Faça upgrade do workspace '#{workspace.slug}' para usá-lo."
       end
 
-      with_current(actor: user, workspace: workspace, membership: membership) { yield }
+      with_current(actor: user, workspace: workspace, membership: membership, &block)
     end
 
     # Account-level tools (list_workspaces, me) — no workspace/membership.
-    def for_user(user:)
-      raise ArgumentError, "user is required" if user.nil?
+    def for_user(user:, &block)
+      raise ArgumentError, 'user is required' if user.nil?
 
-      with_current(actor: user) { yield }
+      with_current(actor: user, &block)
     end
 
     def resolve_workspace(user, ref)

@@ -28,11 +28,11 @@ module Vendors
         def call
           client = Vendors::Linkedin::Client.new
           query = URI.encode_www_form(
-            response_type: "code",
+            response_type: 'code',
             client_id: client.client_id,
             redirect_uri: @redirect_uri,
             state: @state,
-            scope: @scopes.join(" ")
+            scope: @scopes.join(' ')
           )
           "#{Vendors::Linkedin::Client::OAUTH_HOST}/oauth/v2/authorization?#{query}"
         end

@@ -23,7 +23,7 @@ module Vendors
 
         def self.call(...) = new(...).call
 
-        def initialize(social_account:, bytes:, metadata:, content_type: "video/*",
+        def initialize(social_account:, bytes:, metadata:, content_type: 'video/*',
                        chunk_size: nil, notify_subscribers: true)
           @social_account = social_account
           @bytes = bytes
@@ -40,10 +40,10 @@ module Vendors
             content_type: @content_type,
             notify_subscribers: @notify_subscribers
           )
-          raise Vendors::Base::Error, "YouTube did not return a resumable session URI" if session_uri.blank?
+          raise Vendors::Base::Error, 'YouTube did not return a resumable session URI' if session_uri.blank?
 
           video = chunked? ? upload_chunked(session_uri) : upload_whole(session_uri)
-          video["id"] || raise(Vendors::Base::Error, "YouTube upload returned no video id")
+          video['id'] || raise(Vendors::Base::Error, 'YouTube upload returned no video id')
         end
 
         private

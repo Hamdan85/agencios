@@ -4,7 +4,7 @@ module Webhooks
   class StripeController < BaseController
     def create
       Controllers::Webhooks::Stripe::Create.call(
-        payload: request.raw_post, signature: request.headers["Stripe-Signature"]
+        payload: request.raw_post, signature: request.headers['Stripe-Signature']
       )
       head :ok
     rescue StandardError => e

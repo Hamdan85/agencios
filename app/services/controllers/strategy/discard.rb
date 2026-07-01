@@ -14,7 +14,7 @@ module Controllers
         session = workspace.strategy_sessions.find(@params[:id])
         authorize!(session.project, :update?)
 
-        session.update!(status: "discarded")
+        session.update!(status: 'discarded')
         { strategy_session: serialize(session, StrategySessionSerializer) }
       end
     end

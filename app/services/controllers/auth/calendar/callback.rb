@@ -16,18 +16,18 @@ module Controllers
         end
 
         def call
-          data      = verify_state!
-          raise Operations::Errors::Invalid, "code missing" if @code.blank?
+          data = verify_state!
+          raise Operations::Errors::Invalid, 'code missing' if @code.blank?
 
-          workspace = Workspace.find(data["workspace_id"])
+          workspace = Workspace.find(data['workspace_id'])
           token     = Vendors::Google::Actions::ExchangeCode.call(
             code: @code, redirect_uri: Calendar.redirect_uri
           )
 
           setting = workspace.setting || Setting.create!(workspace: workspace)
           setting.update!(
-            google_access_token:          token["access_token"],
-            google_refresh_token:         token["refresh_token"].presence || setting.google_refresh_token,
+            google_access_token: token['access_token'],
+            google_refresh_token: token['refresh_token'].presence || setting.google_refresh_token,
             google_calendar_connected_at: Time.current
           )
         end
@@ -38,7 +38,7 @@ module Controllers
           Rails.application.message_verifier(Calendar::STATE_PURPOSE).verify(@state.to_s)
         rescue ActiveSupport::MessageVerifier::InvalidSignature,
                ActiveSupport::MessageEncryptor::InvalidMessage
-          raise Operations::Errors::Invalid, "State inválido ou expirado."
+          raise Operations::Errors::Invalid, 'State inválido ou expirado.'
         end
       end
     end

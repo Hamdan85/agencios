@@ -22,8 +22,8 @@ module Vendors
         end
 
         def call
-          body = client.user_info(fields: @fields.join(","))
-          body.dig("data", "user") || {}
+          body = client.user_info(fields: @fields.join(','))
+          body.dig('data', 'user') || {}
         end
 
         private

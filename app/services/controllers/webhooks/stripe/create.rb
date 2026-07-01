@@ -16,9 +16,7 @@ module Controllers
 
           # Price/product changes in the Dashboard refresh the cached display
           # amounts (Stripe stays the source of truth for the charged amount).
-          if event.type.to_s.start_with?("price.", "product.")
-            return Vendors::Stripe::Actions::SyncPlanPrices.call
-          end
+          return Vendors::Stripe::Actions::SyncPlanPrices.call if event.type.to_s.start_with?('price.', 'product.')
 
           Operations::Billing::SyncSubscription.call(event)
         end

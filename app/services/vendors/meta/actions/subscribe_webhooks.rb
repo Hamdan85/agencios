@@ -9,7 +9,7 @@ module Vendors
       class SubscribeWebhooks
         def self.call(...) = new(...).call
 
-        DEFAULT_FIELDS = "comments,mentions"
+        DEFAULT_FIELDS = 'comments,mentions'
 
         def initialize(social_account:, subscribed_fields: DEFAULT_FIELDS, client: nil)
           @social_account = social_account

@@ -18,9 +18,9 @@ module Vendors
       def self.from_body(error, status: nil, body: nil)
         if error.is_a?(Hash)
           new(
-            error["message"] || error["code"] || "HeyGen error",
+            error['message'] || error['code'] || 'HeyGen error',
             status: status, body: body,
-            code: error["code"], param: error["param"]
+            code: error['code'], param: error['param']
           )
         else
           new(error.to_s, status: status, body: body)

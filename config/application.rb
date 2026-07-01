@@ -1,17 +1,19 @@
-require_relative "boot"
+# frozen_string_literal: true
 
-require "rails"
+require_relative 'boot'
+
+require 'rails'
 # Pick the frameworks you want:
-require "active_model/railtie"
-require "active_job/railtie"
-require "active_record/railtie"
-require "active_storage/engine"
-require "action_controller/railtie"
-require "action_mailer/railtie"
-require "action_mailbox/engine"
-require "action_text/engine"
-require "action_view/railtie"
-require "action_cable/engine"
+require 'active_model/railtie'
+require 'active_job/railtie'
+require 'active_record/railtie'
+require 'active_storage/engine'
+require 'action_controller/railtie'
+require 'action_mailer/railtie'
+require 'action_mailbox/engine'
+require 'action_text/engine'
+require 'action_view/railtie'
+require 'action_cable/engine'
 # require "rails/test_unit/railtie"
 
 # Require the gems listed in Gemfile, including any gems
@@ -41,18 +43,18 @@ module Agencios
 
     config.generators do |g|
       g.test_framework :rspec, fixtures: false
-      g.factory_bot dir: "spec/factories"
+      g.factory_bot dir: 'spec/factories'
     end
 
     # The agency platform operates in Brazil by default.
-    config.time_zone = "America/Sao_Paulo"
+    config.time_zone = 'America/Sao_Paulo'
     config.active_record.default_timezone = :utc
 
     # Rack::Attack rate limiting.
     config.middleware.use Rack::Attack
 
     # Auto-load the service layer namespaces (Controllers::, Operations::, …).
-    config.autoload_paths << Rails.root.join("app/services")
-    config.eager_load_paths << Rails.root.join("app/services")
+    config.autoload_paths << Rails.root.join('app/services')
+    config.eager_load_paths << Rails.root.join('app/services')
   end
 end

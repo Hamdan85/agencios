@@ -21,12 +21,12 @@ module Vendors
             access_token: @access_token, social_account: @social_account
           ).userinfo
 
-          sub = body["sub"]
+          sub = body['sub']
           {
             member_id: sub,
             member_urn: "urn:li:person:#{sub}",
-            member_name: body["name"],
-            member_email: body["email"]
+            member_name: body['name'],
+            member_email: body['email']
           }
         end
       end

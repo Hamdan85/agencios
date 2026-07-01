@@ -20,7 +20,7 @@ module Vendors
 
         def call
           @client.create_checkout_session(
-            mode: "payment",
+            mode: 'payment',
             customer: existing_customer_id,
             client_reference_id: @workspace.id.to_s,
             success_url: @success_url,
@@ -28,7 +28,7 @@ module Vendors
             line_items: [{
               quantity: 1,
               price_data: {
-                currency: "brl",
+                currency: 'brl',
                 unit_amount: @pack[:price_cents],
                 product_data: { name: "Créditos agencios — pacote #{@pack[:name]} (#{@pack[:credits]} créditos)" }
               }
@@ -45,7 +45,7 @@ module Vendors
         def purchase_metadata
           {
             workspace_id: @workspace.id.to_s,
-            purpose: "credit_pack",
+            purpose: 'credit_pack',
             pack: @pack[:key].to_s,
             credits: @pack[:credits].to_s
           }

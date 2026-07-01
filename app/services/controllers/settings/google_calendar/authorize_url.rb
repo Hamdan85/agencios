@@ -10,7 +10,7 @@ module Controllers
         def call
           { url: Vendors::Google::Actions::CalendarAuthorizeUrl.call(
             redirect_uri: Auth::Calendar.redirect_uri,
-            state:        signed_state
+            state: signed_state
           ) }
         end
 

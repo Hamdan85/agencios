@@ -11,7 +11,7 @@ module Vendors
       class UploadImage
         def self.call(...) = new(...).call
 
-        def initialize(social_account:, owner_urn:, bytes:, content_type: "image/jpeg")
+        def initialize(social_account:, owner_urn:, bytes:, content_type: 'image/jpeg')
           @social_account = social_account
           @owner_urn = owner_urn
           @bytes = bytes
@@ -23,13 +23,13 @@ module Vendors
           client = Vendors::Linkedin::Client.new(social_account: @social_account)
 
           init = client.rest_post(
-            "/rest/images?action=initializeUpload",
-            { "initializeUploadRequest" => { "owner" => @owner_urn } }
+            '/rest/images?action=initializeUpload',
+            { 'initializeUploadRequest' => { 'owner' => @owner_urn } }
           )
-          value = init.fetch("value")
-          image_urn = value.fetch("image")
+          value = init.fetch('value')
+          image_urn = value.fetch('image')
 
-          client.upload_binary(value.fetch("uploadUrl"), @bytes, content_type: @content_type)
+          client.upload_binary(value.fetch('uploadUrl'), @bytes, content_type: @content_type)
 
           image_urn
         end

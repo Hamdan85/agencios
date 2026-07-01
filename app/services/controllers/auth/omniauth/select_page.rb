@@ -16,10 +16,10 @@ module Controllers
 
         def call
           payload = Rails.cache.read(cache_key(@nonce))
-          raise Operations::Errors::Invalid, "expired" unless payload
+          raise Operations::Errors::Invalid, 'expired' unless payload
 
-          page = payload[:pages].find { |p| p["id"] == @page_id }
-          raise Operations::Errors::Invalid, "page" unless page
+          page = payload[:pages].find { |p| p['id'] == @page_id }
+          raise Operations::Errors::Invalid, 'page' unless page
 
           client = Client.find(payload[:client_id])
           network = payload[:network].to_s

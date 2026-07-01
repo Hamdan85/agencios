@@ -27,7 +27,7 @@ class CreateAiUsageLogs < ActiveRecord::Migration[8.1]
       t.integer :cache_read_input_tokens, null: false, default: 0
 
       # Unit usage (image count / video seconds). `unit_kind` discriminates.
-      t.string  :unit_kind              # token | image | second
+      t.string  :unit_kind # token | image | second
       t.decimal :units, precision: 12, scale: 3, null: false, default: 0
 
       # Cost stamped at log time (fractional cents, like adv-os) for cheap

@@ -14,7 +14,7 @@ module Controllers
           token = user.generate_token_for(:password_reset)
           AuthMailer.password_reset(user: user, token: token).deliver_later
         end
-        { message: "Se o e-mail existir, enviaremos instruções." }
+        { message: 'Se o e-mail existir, enviaremos instruções.' }
       end
     end
   end

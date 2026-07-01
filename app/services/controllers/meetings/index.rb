@@ -14,7 +14,7 @@ module Controllers
         meetings = meetings.where(client_id: @params[:client_id]) if @params[:client_id].present?
         if @params[:q].present?
           like = "%#{escape_like(@params[:q])}%"
-          meetings = meetings.where("meetings.title ILIKE :q OR meetings.notes ILIKE :q", q: like)
+          meetings = meetings.where('meetings.title ILIKE :q OR meetings.notes ILIKE :q', q: like)
         end
         { meetings: serialize_collection(meetings, MeetingSerializer) }
       end

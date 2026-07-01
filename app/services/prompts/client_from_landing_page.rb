@@ -53,21 +53,21 @@ module Prompts
 
     def user_prompt
       d = context[:digest] || {}
-      socials = (d[:socials] || {}).map { |network, link| "#{network}: #{link}" }.join("\n").presence || "—"
+      socials = (d[:socials] || {}).map { |network, link| "#{network}: #{link}" }.join("\n").presence || '—'
 
       <<~TXT
         URL: #{d[:url]}
-        Título: #{d[:title].presence || "—"}
-        Descrição: #{d[:description].presence || "—"}
-        Nome do site: #{d[:site_name].presence || "—"}
-        Cor do tema (meta): #{d[:theme_color].presence || "—"}
-        E-mails encontrados: #{Array(d[:emails]).join(", ").presence || "—"}
-        Telefones encontrados: #{Array(d[:phones]).join(", ").presence || "—"}
+        Título: #{d[:title].presence || '—'}
+        Descrição: #{d[:description].presence || '—'}
+        Nome do site: #{d[:site_name].presence || '—'}
+        Cor do tema (meta): #{d[:theme_color].presence || '—'}
+        E-mails encontrados: #{Array(d[:emails]).join(', ').presence || '—'}
+        Telefones encontrados: #{Array(d[:phones]).join(', ').presence || '—'}
         Redes sociais encontradas:
         #{socials}
 
         Texto visível da página:
-        #{d[:text].presence || "—"}
+        #{d[:text].presence || '—'}
       TXT
     end
   end

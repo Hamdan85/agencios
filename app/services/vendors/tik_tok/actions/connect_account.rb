@@ -31,20 +31,20 @@ module Vendors
           )
 
           # Fetch identity with the freshly-minted access token (no persisted account yet).
-          user = fetch_user(token["access_token"])
+          user = fetch_user(token['access_token'])
 
           {
             provider: :tiktok,
-            external_user_id: token["open_id"],
-            union_id: user["union_id"],
-            username: user["username"],
-            display_name: user["display_name"],
-            avatar_url: user["avatar_url"],
-            user_access_token: token["access_token"],
-            refresh_token: token["refresh_token"],
-            token_expires_at: expires_at(token["expires_in"]),
-            refresh_token_expires_at: expires_at(token["refresh_expires_in"]),
-            scopes: scopes_from(token["scope"]),
+            external_user_id: token['open_id'],
+            union_id: user['union_id'],
+            username: user['username'],
+            display_name: user['display_name'],
+            avatar_url: user['avatar_url'],
+            user_access_token: token['access_token'],
+            refresh_token: token['refresh_token'],
+            token_expires_at: expires_at(token['expires_in']),
+            refresh_token_expires_at: expires_at(token['refresh_expires_in']),
+            scopes: scopes_from(token['scope']),
             status: :connected
           }
         end
@@ -54,8 +54,8 @@ module Vendors
         def fetch_user(access_token)
           body = Vendors::TikTok::Client
                  .new(access_token: access_token)
-                 .user_info(fields: Vendors::TikTok::Actions::FetchUserInfo::DEFAULT_FIELDS.join(","))
-          body.dig("data", "user") || {}
+                 .user_info(fields: Vendors::TikTok::Actions::FetchUserInfo::DEFAULT_FIELDS.join(','))
+          body.dig('data', 'user') || {}
         rescue Vendors::Base::Error
           # Profile/stats fields may be unscoped pre-audit — degrade to id-only identity.
           {}
@@ -66,7 +66,7 @@ module Vendors
         end
 
         def scopes_from(scope)
-          scope.to_s.split(",").map(&:strip).reject(&:empty?)
+          scope.to_s.split(',').map(&:strip).reject(&:empty?)
         end
       end
     end

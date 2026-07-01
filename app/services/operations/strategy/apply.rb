@@ -13,17 +13,17 @@ module Operations
       end
 
       def call
-        raise Operations::Errors::Invalid, "Nenhum plano proposto para aplicar." unless @session.proposed_plan?
+        raise Operations::Errors::Invalid, 'Nenhum plano proposto para aplicar.' unless @session.proposed_plan?
 
         # A plan is applied as a full rewrite: the proposed plan is always the
         # COMPLETE plan, so re-applying an edited one drops the previous batch and
         # recreates it (rather than duplicating). Hand-made tickets are untouched.
         discard_previous_batch!
 
-        tickets = Array(@session.proposed_plan["tickets"]).map { |spec| build_ticket(spec) }
+        tickets = Array(@session.proposed_plan['tickets']).map { |spec| build_ticket(spec) }
 
-        @session.update!(status: "applied")
-        Broadcaster.board(@session.workspace.id, "strategy_applied",
+        @session.update!(status: 'applied')
+        Broadcaster.board(@session.workspace.id, 'strategy_applied',
                           project_id: @session.project_id, count: tickets.size)
         tickets
       end
@@ -47,8 +47,8 @@ module Operations
       def build_ticket(spec)
         # Never post in the past — if the planner scheduled a date already gone,
         # nudge it to today so the ticket (and its runway) stay sane.
-        scheduled_at = parse_time(spec["scheduled_at"])
-        scheduled_at = Time.current if scheduled_at && scheduled_at.past?
+        scheduled_at = parse_time(spec['scheduled_at'])
+        scheduled_at = Time.current if scheduled_at&.past?
         post_date = scheduled_at&.to_date
 
         # The ticket is born in IDEAÇÃO with its ideation content, plus the strategy
@@ -58,22 +58,22 @@ module Operations
           user: @user,
           params: {
             project_id: @session.project_id,
-            title: spec["title"],
-            priority: spec["priority"].presence || "medium",
-            creative_type: spec["creative_type"],
-            channels: Array(spec["channels"]),
+            title: spec['title'],
+            priority: spec['priority'].presence || 'medium',
+            creative_type: spec['creative_type'],
+            channels: Array(spec['channels']),
             scheduled_at: scheduled_at,
             strategy_session_id: @session.id,
             fields: ideation_fields(spec)
           }
         )
 
-        Array(spec["subtasks"]).each do |sub|
+        Array(spec['subtasks']).each do |sub|
           Operations::Subtasks::Create.call(
             ticket: ticket,
-            title: sub["title"],
-            due_date: subtask_due(post_date, sub["lead_offset_days"]),
-            estimate_hours: sub["estimate_hours"]
+            title: sub['title'],
+            due_date: subtask_due(post_date, sub['lead_offset_days']),
+            estimate_hours: sub['estimate_hours']
           )
         end
 

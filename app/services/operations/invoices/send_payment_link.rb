@@ -13,7 +13,7 @@ module Operations
       end
 
       def call
-        raise Operations::Errors::Invalid, "Cliente sem e-mail cadastrado." if @invoice.client&.email.blank?
+        raise Operations::Errors::Invalid, 'Cliente sem e-mail cadastrado.' if @invoice.client&.email.blank?
 
         charge = existing_open_charge || Operations::Billing::GeneratePaymentLink.call(invoice: @invoice)
         InvoiceMailer.payment_link(invoice: @invoice, payment_url: charge.payment_link).deliver_later

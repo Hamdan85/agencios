@@ -1,4 +1,6 @@
-require "active_support/core_ext/integer/time"
+# frozen_string_literal: true
+
+require 'active_support/core_ext/integer/time'
 
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
@@ -6,7 +8,7 @@ Rails.application.configure do
   # External host (e.g. an ngrok tunnel) the app is reachable at, read from
   # APP_HOST. Used to authorize the host, scope Action Cable origins, and build
   # absolute links in dev. Falls back to plain localhost when unset.
-  app_host_url = ENV["APP_HOST"].present? ? URI.parse(ENV["APP_HOST"]) : nil
+  app_host_url = ENV['APP_HOST'].present? ? URI.parse(ENV['APP_HOST']) : nil
 
   # Allow requests for the configured external host alongside the localhost
   # defaults, plus any ngrok tunnel for convenience.
@@ -38,10 +40,10 @@ Rails.application.configure do
 
   # Enable/disable Action Controller caching. By default Action Controller caching is disabled.
   # Run rails dev:cache to toggle Action Controller caching.
-  if Rails.root.join("tmp/caching-dev.txt").exist?
+  if Rails.root.join('tmp/caching-dev.txt').exist?
     config.action_controller.perform_caching = true
     config.action_controller.enable_fragment_cache_logging = true
-    config.public_file_server.headers = { "cache-control" => "public, max-age=#{2.days.to_i}" }
+    config.public_file_server.headers = { 'cache-control' => "public, max-age=#{2.days.to_i}" }
   else
     config.action_controller.perform_caching = false
   end
@@ -59,23 +61,23 @@ Rails.application.configure do
   # the `mailcatcher` binary) instead of a real SMTP server — every email sent
   # in dev shows up at http://localhost:1080 rather than disappearing.
   config.action_mailer.delivery_method = :smtp
-  config.action_mailer.smtp_settings = { address: "localhost", port: 1025 }
+  config.action_mailer.smtp_settings = { address: 'localhost', port: 1025 }
 
   # Make template changes take effect immediately.
   config.action_mailer.perform_caching = false
 
   # Mailer previews (this app uses RSpec, so previews live under spec/).
-  config.action_mailer.preview_paths << Rails.root.join("spec/mailers/previews").to_s
+  config.action_mailer.preview_paths << Rails.root.join('spec/mailers/previews').to_s
 
   # Set the host used by links generated in mailer templates. Prefer the
   # configured external host (e.g. ngrok) so emailed links resolve remotely.
   config.action_mailer.default_url_options =
     if app_host_url
       { host: app_host_url.host, protocol: app_host_url.scheme }.tap do |opts|
-        opts[:port] = app_host_url.port if app_host_url.port && ![ 80, 443 ].include?(app_host_url.port)
+        opts[:port] = app_host_url.port if app_host_url.port && ![80, 443].include?(app_host_url.port)
       end
     else
-      { host: "localhost", port: 3000 }
+      { host: 'localhost', port: 3000 }
     end
 
   # Print deprecation notices to the Rails logger.

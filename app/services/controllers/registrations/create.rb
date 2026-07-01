@@ -11,9 +11,9 @@ module Controllers
 
       def call
         user, _workspace = Operations::Users::Register.call(
-          email:          @params.require(:email),
-          password:       @params.require(:password),
-          name:           @params[:name],
+          email: @params.require(:email),
+          password: @params.require(:password),
+          name: @params[:name],
           workspace_name: @params[:workspace_name]
         )
         user

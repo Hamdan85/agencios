@@ -10,7 +10,7 @@ module Controllers
       def call
         ticket = workspace.tickets.find(@params[:ticket_id])
         ticket.posts.find(@params[:id]).destroy!
-        { message: "Publicação removida." }
+        { message: 'Publicação removida.' }
       end
     end
   end

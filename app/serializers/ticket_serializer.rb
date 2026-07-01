@@ -39,7 +39,7 @@ class TicketSerializer < ActiveModel::Serializer
 
   # Typed links to other tickets, both directions, flattened for the UI.
   INCOMING_LABEL = {
-    "iteration_of" => "Iterado em", "repetition_of" => "Repetido em", "related_to" => "Relacionado a"
+    'iteration_of' => 'Iterado em', 'repetition_of' => 'Repetido em', 'related_to' => 'Relacionado a'
   }.freeze
 
   def relations
@@ -47,7 +47,8 @@ class TicketSerializer < ActiveModel::Serializer
       { ticket_id: r.related_ticket_id, title: r.related_ticket.display_title, label: r.kind_label, kind: r.kind }
     end
     incoming = object.inverse_ticket_relations.includes(:ticket).map do |r|
-      { ticket_id: r.ticket_id, title: r.ticket.display_title, label: INCOMING_LABEL.fetch(r.kind, r.kind), kind: r.kind }
+      { ticket_id: r.ticket_id, title: r.ticket.display_title, label: INCOMING_LABEL.fetch(r.kind, r.kind),
+        kind: r.kind }
     end
     outgoing + incoming
   end

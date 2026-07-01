@@ -20,7 +20,7 @@ module Vendors
           body = Vendors::TikTok::Client
                  .new(access_token: @social_account.user_access_token)
                  .query_creator_info
-          body["data"] || {}
+          body['data'] || {}
         end
       end
     end

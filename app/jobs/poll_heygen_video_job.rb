@@ -48,8 +48,8 @@ class PollHeygenVideoJob < ApplicationJob
     # Refunds held credits + marks the generation/creative failed + broadcasts.
     Operations::Creatives::FailGeneration.call(generation: generation, reason: reason.to_s.presence)
 
-    if generation.creative&.ticket
-      Broadcaster.ticket(generation.creative.ticket, "creative_failed", creative_id: generation.creative.id)
-    end
+    return unless generation.creative&.ticket
+
+    Broadcaster.ticket(generation.creative.ticket, 'creative_failed', creative_id: generation.creative.id)
   end
 end

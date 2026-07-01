@@ -6,9 +6,12 @@ class User < ApplicationRecord
   has_many :memberships, dependent: :destroy
   has_many :workspaces, through: :memberships
   has_many :sessions, dependent: :destroy
-  has_many :assigned_tickets, class_name: "Ticket", foreign_key: :assignee_id, dependent: :nullify, inverse_of: :assignee
-  has_many :created_tickets, class_name: "Ticket", foreign_key: :created_by_id, dependent: :nullify, inverse_of: :created_by
-  has_many :assigned_subtasks, class_name: "Subtask", foreign_key: :assignee_id, dependent: :nullify, inverse_of: :assignee
+  has_many :assigned_tickets, class_name: 'Ticket', foreign_key: :assignee_id, dependent: :nullify,
+                              inverse_of: :assignee
+  has_many :created_tickets, class_name: 'Ticket', foreign_key: :created_by_id, dependent: :nullify,
+                             inverse_of: :created_by
+  has_many :assigned_subtasks, class_name: 'Subtask', foreign_key: :assignee_id, dependent: :nullify,
+                               inverse_of: :assignee
   has_many :generations, dependent: :nullify
   has_many :push_subscriptions, dependent: :destroy
 
@@ -33,6 +36,7 @@ class User < ApplicationRecord
 
   def membership_for(workspace)
     return nil unless workspace
+
     memberships.find_by(workspace_id: workspace.id)
   end
 
@@ -42,6 +46,7 @@ class User < ApplicationRecord
 
   def member_of?(workspace)
     return false unless workspace
+
     memberships.exists?(workspace_id: workspace.id)
   end
 
@@ -63,7 +68,7 @@ class User < ApplicationRecord
 
   # ── Display / integration state ──────────────────────────────────
   def display_name
-    name.presence || email.to_s.split("@").first
+    name.presence || email.to_s.split('@').first
   end
 
   def staff? = staff

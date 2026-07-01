@@ -8,7 +8,7 @@ module Operations
     # no registered subscriptions (so we don't enqueue dead jobs). Failures are
     # swallowed — a notification must never break the operation that fired it.
     class Notify < Operations::Base
-      def initialize(user:, title:, body:, path: "/painel", actor: nil)
+      def initialize(user:, title:, body:, path: '/painel', actor: nil)
         @user = user
         @title = title
         @body = body

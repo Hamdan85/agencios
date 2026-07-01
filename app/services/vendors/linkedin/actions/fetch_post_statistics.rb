@@ -23,8 +23,8 @@ module Vendors
             org_urn: @org_urn,
             shares: [@share_urn]
           )
-          element = Array(body["elements"]).first
-          element&.dig("totalShareStatistics") || {}
+          element = Array(body['elements']).first
+          element&.dig('totalShareStatistics') || {}
         end
       end
     end

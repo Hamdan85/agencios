@@ -22,7 +22,7 @@ module Operations
         return { filled: [] } if keys.empty?
 
         text = AiAdapter.complete(
-          build_prompt, max_tokens: 1300, operation: "fill_fields", subject: @ticket
+          build_prompt, max_tokens: 1300, operation: 'fill_fields', subject: @ticket
         ).to_s
         data = parse_json(text)
         return { filled: [] } if data.blank?
@@ -60,7 +60,7 @@ module Operations
 
           fields = @ticket.fields_for(status.to_s)
           pairs = fields.filter_map do |key, value|
-            value = Array(value).reject(&:blank?).join("; ") if value.is_a?(Array)
+            value = Array(value).reject(&:blank?).join('; ') if value.is_a?(Array)
             next if value.blank?
 
             "  - #{key}: #{value}"
@@ -86,11 +86,11 @@ module Operations
         values.each_with_object({}) do |(key, value), out|
           out[key] =
             case key
-            when "deliverables", "wins", "improvements"
+            when 'deliverables', 'wins', 'improvements'
               Array(value).map { |v| v.to_s.strip }.reject(&:blank?)
-            when "hashtags"
-              Array(value).map { |v| v.to_s.sub(/\A#/, "").strip }.reject(&:blank?)
-            when "repeat_recommendation"
+            when 'hashtags'
+              Array(value).map { |v| v.to_s.sub(/\A#/, '').strip }.reject(&:blank?)
+            when 'repeat_recommendation'
               %w[repeat iterate retire].include?(value.to_s) ? value.to_s : nil
             else
               value.is_a?(Array) ? value.join("\n") : value

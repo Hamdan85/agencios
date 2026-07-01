@@ -15,13 +15,13 @@ module Operations
 
       def call
         case @kind
-        when "carousel"
+        when 'carousel'
           Operations::Creatives::GenerateViralCarousel.call(
             ticket: ticket,
             slides: @params[:slides],
             params: @params
           )
-        when "video"
+        when 'video'
           Operations::Creatives::GenerateUgcVideo.call(
             ticket: ticket,
             script: @params[:script],
@@ -29,7 +29,7 @@ module Operations
             voice: @params[:voice],
             client_id: @params[:client_id]
           )
-        when "image"
+        when 'image'
           Operations::Creatives::GenerateImage.call(
             ticket: ticket,
             prompt: @params[:prompt],

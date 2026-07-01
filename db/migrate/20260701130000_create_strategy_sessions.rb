@@ -12,7 +12,7 @@ class CreateStrategySessions < ActiveRecord::Migration[8.1]
       t.references :project, null: false, foreign_key: true
       t.references :user, null: true, foreign_key: true
 
-      t.string :status, null: false, default: "active" # active | proposed | applied | discarded
+      t.string :status, null: false, default: 'active' # active | proposed | applied | discarded
       t.jsonb  :messages, null: false, default: []      # [{ role, content, ts }]
       t.jsonb  :proposed_plan, null: false, default: {} # latest structured plan from the tool call
 

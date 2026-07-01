@@ -27,7 +27,7 @@ module Operations
       end
 
       def call
-        raise Operations::Errors::Invalid, "Mensagem vazia." if @content.blank?
+        raise Operations::Errors::Invalid, 'Mensagem vazia.' if @content.blank?
 
         @session.push_message(role: :user, content: @content)
         @session.save!
@@ -59,25 +59,25 @@ module Operations
       # blank-content turns (the API rejects empty content).
       def api_messages
         Array(@session.messages).filter_map do |m|
-          content = m["content"].to_s
+          content = m['content'].to_s
           next if content.blank?
 
-          { role: m["role"], content: content }
+          { role: m['role'], content: content }
         end
       end
 
       def persist_turn(result)
         proposal = extract_proposal(result)
         assistant_text = result.text.presence ||
-                         (proposal ? "Proposta de plano atualizada." : nil) ||
+                         (proposal ? 'Proposta de plano atualizada.' : nil) ||
                          # No text and no usable plan (e.g. a tool call truncated by
                          # the token limit) — never leave a silent, dead turn.
-                         "Não consegui finalizar o plano agora. Pode me dar um retorno rápido (período ou cadência) para eu propor?"
+                         'Não consegui finalizar o plano agora. Pode me dar um retorno rápido (período ou cadência) para eu propor?'
 
         @session.push_message(role: :assistant, content: assistant_text) if assistant_text.present?
         if proposal
           @session.proposed_plan = proposal
-          @session.status = "proposed"
+          @session.status = 'proposed'
         end
         @session.save!
 
@@ -88,7 +88,7 @@ module Operations
       def extract_proposal(result)
         tool = tool_named(result, Prompts::StrategyPlanner::TOOL_NAME)
         input = tool && tool[:input]
-        return nil unless input.is_a?(Hash) && Array(input["tickets"]).any?
+        return nil unless input.is_a?(Hash) && Array(input['tickets']).any?
 
         input
       end
@@ -111,7 +111,7 @@ module Operations
       def log_usage(result)
         Operations::Ai::LogUsage.call(
           provider: AiUsageLog::PROVIDER_ANTHROPIC,
-          operation: "strategy_planner",
+          operation: 'strategy_planner',
           model: result.model,
           usage: result.usage,
           subject: @session.project,

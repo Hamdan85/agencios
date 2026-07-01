@@ -8,7 +8,7 @@ class NoteMailer < ApplicationMailer
     @note = note
     @recipient = recipient
     @ticket = note.ticket
-    @author_name = note.user&.display_name || "Alguém"
+    @author_name = note.user&.display_name || 'Alguém'
     @ticket_url = "#{SystemConfig.app_host}/tickets/#{@ticket.id}"
 
     mail(

@@ -14,6 +14,6 @@ class CreateTicketRelations < ActiveRecord::Migration[8.1]
     end
 
     add_index :ticket_relations, %i[ticket_id related_ticket_id kind], unique: true,
-              name: "index_ticket_relations_unique"
+                                                                       name: 'index_ticket_relations_unique'
   end
 end

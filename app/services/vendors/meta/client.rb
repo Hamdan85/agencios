@@ -13,17 +13,17 @@ module Vendors
     class Client < Vendors::Base
       # Pin the Graph API version (instagram.md/facebook.md §0). Overridable via
       # the meta.graph_version credential without a code change.
-      DEFAULT_GRAPH_VERSION = "v25.0"
+      DEFAULT_GRAPH_VERSION = 'v25.0'
 
-      GRAPH_HOST  = "https://graph.facebook.com"
+      GRAPH_HOST = 'https://graph.facebook.com'
       # Graph host for Instagram-Login accounts (no Facebook Page): the same
       # publishing/insights endpoints, served under graph.instagram.com with the
       # IG user token (instagram-login.md §6).
-      IG_GRAPH_HOST = "https://graph.instagram.com"
+      IG_GRAPH_HOST = 'https://graph.instagram.com'
       # Host the user is redirected to for the OAuth authorize dialog.
-      DIALOG_HOST = "https://www.facebook.com"
+      DIALOG_HOST = 'https://www.facebook.com'
       # Resumable upload host for IG Reels raw bytes + FB Reels binary.
-      RUPLOAD_HOST = "https://rupload.facebook.com"
+      RUPLOAD_HOST = 'https://rupload.facebook.com'
 
       attr_reader :access_token, :graph_version
 
@@ -38,11 +38,11 @@ module Vendors
       end
 
       def app_id
-        require_credential!(credential(:meta, :app_id, env: "META_APP_ID"), "meta.app_id")
+        require_credential!(credential(:meta, :app_id, env: 'META_APP_ID'), 'meta.app_id')
       end
 
       def app_secret
-        require_credential!(credential(:meta, :app_secret, env: "META_APP_SECRET"), "meta.app_secret")
+        require_credential!(credential(:meta, :app_secret, env: 'META_APP_SECRET'), 'meta.app_secret')
       end
 
       # Optional "Facebook Login for Business" configuration id. When set, the
@@ -50,11 +50,11 @@ module Vendors
       # dashboard-created configuration). Absent → fall back to the scope-based
       # classic dialog. See docs/integrations/meta.md §4.
       def fb_login_config_id
-        credential(:meta, :fb_login_config_id, env: "META_FB_LOGIN_CONFIG_ID")
+        credential(:meta, :fb_login_config_id, env: 'META_FB_LOGIN_CONFIG_ID')
       end
 
       def webhook_verify_token
-        credential(:meta, :webhook_verify_token, env: "META_WEBHOOK_VERIFY_TOKEN")
+        credential(:meta, :webhook_verify_token, env: 'META_WEBHOOK_VERIFY_TOKEN')
       end
 
       # Base for all versioned Graph calls, e.g. https://graph.facebook.com/v25.0
@@ -79,7 +79,7 @@ module Vendors
       def post(path, params: {}, token: access_token)
         params = { access_token: token }.merge(params.compact) if token && !params.key?(:access_token)
         handle(form_connection.post(join(path)) do |req|
-          req.headers["Content-Type"] = "application/x-www-form-urlencoded"
+          req.headers['Content-Type'] = 'application/x-www-form-urlencoded'
           req.body = URI.encode_www_form(params)
         end)
       end
@@ -88,7 +88,7 @@ module Vendors
       # Headers carry the OAuth token + offset/file_size per the docs.
       def rupload(path, body:, headers:, token: access_token)
         handle(raw_connection(RUPLOAD_HOST).post(path) do |req|
-          req.headers["Authorization"] = "OAuth #{token}"
+          req.headers['Authorization'] = "OAuth #{token}"
           headers.each { |k, v| req.headers[k.to_s] = v.to_s }
           req.body = body
         end)
@@ -142,7 +142,7 @@ module Vendors
       end
 
       def join(path)
-        path.to_s.start_with?("/") ? path.to_s[1..] : path.to_s
+        path.to_s.start_with?('/') ? path.to_s[1..] : path.to_s
       end
     end
   end

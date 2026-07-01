@@ -9,11 +9,11 @@ module Controllers
 
       def call
         user = User.find_by_token_for(:password_reset, @params[:token])
-        raise Operations::Errors::Invalid, "Token inválido ou expirado." unless user
+        raise Operations::Errors::Invalid, 'Token inválido ou expirado.' unless user
 
         user.update!(password: @params.require(:password))
         AuthMailer.password_changed(user: user).deliver_later
-        { message: "Senha redefinida." }
+        { message: 'Senha redefinida.' }
       end
     end
   end

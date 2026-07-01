@@ -18,10 +18,10 @@ module Controllers
       def call
         require_owner!
         plan_meta = Plans.find(@params[:plan])
-        raise Operations::Errors::Invalid, "Plano inválido." unless plan_meta
+        raise Operations::Errors::Invalid, 'Plano inválido.' unless plan_meta
         raise Operations::Errors::SeatLimitReached, seat_overage_message(plan_meta) if seat_overage?(plan_meta)
 
-        interval = @params[:interval].presence || "month"
+        interval = @params[:interval].presence || 'month'
         subscription = workspace.subscription
         if subscription&.stripe_subscription_id.present?
           update_via_stripe(subscription, plan_meta, interval)

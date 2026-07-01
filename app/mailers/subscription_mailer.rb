@@ -3,24 +3,24 @@
 # SaaS-billing emails (agencios charging the workspace via Stripe). These go to
 # the workspace owner.
 class SubscriptionMailer < ApplicationMailer
-  PLAN_LABELS = { "solo" => "Solo", "agencia" => "Agência", "enterprise" => "Enterprise" }.freeze
+  PLAN_LABELS = { 'solo' => 'Solo', 'agencia' => 'Agência', 'enterprise' => 'Enterprise' }.freeze
 
   # Trial is about to end (customer.subscription.trial_will_end).
   def trial_ending(workspace:, subscription:)
     assign(workspace, subscription)
-    mail(to: @owner.email, subject: "Seu teste da agencios termina em breve")
+    mail(to: @owner.email, subject: 'Seu teste da agencios termina em breve')
   end
 
   # A charge failed (invoice.payment_failed → past_due).
   def payment_failed(workspace:, subscription:)
     assign(workspace, subscription)
-    mail(to: @owner.email, subject: "Falha no pagamento da sua assinatura agencios")
+    mail(to: @owner.email, subject: 'Falha no pagamento da sua assinatura agencios')
   end
 
   # Subscription was canceled (customer.subscription.deleted).
   def canceled(workspace:, subscription:)
     assign(workspace, subscription)
-    mail(to: @owner.email, subject: "Sua assinatura agencios foi cancelada")
+    mail(to: @owner.email, subject: 'Sua assinatura agencios foi cancelada')
   end
 
   private

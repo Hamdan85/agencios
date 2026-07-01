@@ -16,7 +16,7 @@ module Operations
           status: :active,
           starts_on: @project.starts_on || Date.current
         )
-        Broadcaster.board(@project.workspace_id, "project_started", project_id: @project.id)
+        Broadcaster.board(@project.workspace_id, 'project_started', project_id: @project.id)
         @project
       end
     end

@@ -16,7 +16,7 @@ module Controllers
       def call
         unless user.can_create_workspace?
           raise Operations::Errors::Forbidden,
-                "Você atingiu o limite de workspaces que pode criar."
+                'Você atingiu o limite de workspaces que pode criar.'
         end
 
         workspace = Operations::Workspaces::SetupForUser.call(user: user, name: workspace_name)

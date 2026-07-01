@@ -51,32 +51,32 @@ module Vendors
             end
 
           media = PublishMedia.call(social_account: @social_account, creation_id:)
-          media_id = media["id"]
+          media_id = media['id']
           { external_post_id: media_id, permalink: ig_permalink(media_id) }
         end
 
         def build_single_image_container
           url = image_urls.first
-          raise Vendors::Base::Error, "Nenhuma mídia para publicar no Instagram." if url.blank?
+          raise Vendors::Base::Error, 'Nenhuma mídia para publicar no Instagram.' if url.blank?
 
           CreateMediaContainer.call(
             social_account: @social_account, image_url: url, caption: @post.caption
-          ).fetch("id")
+          ).fetch('id')
         end
 
         def build_carousel_container
           child_ids = image_urls.first(10).map do |url|
-            CreateCarouselItem.call(social_account: @social_account, image_url: url).fetch("id")
+            CreateCarouselItem.call(social_account: @social_account, image_url: url).fetch('id')
           end
           CreateCarouselContainer.call(
             social_account: @social_account, child_ids:, caption: @post.caption
-          ).fetch("id")
+          ).fetch('id')
         end
 
         def build_reel_container
           creation_id = CreateReelsContainer.call(
             social_account: @social_account, video_url:, caption: @post.caption, cover_url:
-          ).fetch("id")
+          ).fetch('id')
           poll_ig_container!(creation_id)
           creation_id
         end
@@ -85,21 +85,21 @@ module Vendors
         def poll_ig_container!(creation_id)
           POLL_ATTEMPTS.times do
             status = GetContainerStatus.call(social_account: @social_account, creation_id:)
-            code = status["status_code"]
+            code = status['status_code']
             return if %w[FINISHED PUBLISHED].include?(code)
             raise Vendors::Base::Error, "Container do Reel falhou: #{code}" if %w[ERROR EXPIRED].include?(code)
 
             sleep(POLL_INTERVAL)
           end
-          raise Vendors::Base::Error, "Tempo esgotado aguardando o processamento do Reel."
+          raise Vendors::Base::Error, 'Tempo esgotado aguardando o processamento do Reel.'
         end
 
         def ig_permalink(media_id)
           return nil if media_id.blank?
 
           media = Vendors::Meta::Client.new(@social_account)
-                                       .get("/#{media_id}", params: { fields: "permalink" })
-          media["permalink"]
+                                       .get("/#{media_id}", params: { fields: 'permalink' })
+          media['permalink']
         rescue Vendors::Base::Error
           nil
         end
@@ -120,34 +120,34 @@ module Vendors
 
         def publish_facebook_text
           result = CreateFeedPost.call(
-            social_account: @social_account, message: @post.caption, link: @post.media["link"]
+            social_account: @social_account, message: @post.caption, link: @post.media['link']
           )
-          fb_result(result["id"])
+          fb_result(result['id'])
         end
 
         def publish_facebook_photo
           result = CreatePagePhoto.call(
             social_account: @social_account, url: image_urls.first, caption: @post.caption
           )
-          fb_result(result["post_id"] || result["id"])
+          fb_result(result['post_id'] || result['id'])
         end
 
         def publish_facebook_gallery
           media_fbids = image_urls.first(10).map do |url|
             CreatePagePhoto.call(
               social_account: @social_account, url:, published: false
-            ).fetch("id")
+            ).fetch('id')
           end
-          attached = media_fbids.map { |id| { "media_fbid" => id } }
+          attached = media_fbids.map { |id| { 'media_fbid' => id } }
           result = CreateFeedPost.call(
             social_account: @social_account, message: @post.caption, attached_media: attached
           )
-          fb_result(result["id"])
+          fb_result(result['id'])
         end
 
         def publish_facebook_reel
           started = StartReelUpload.call(social_account: @social_account)
-          video_id = started.fetch("video_id")
+          video_id = started.fetch('video_id')
 
           # Have Meta pull the public URL rather than streaming bytes ourselves.
           UploadReelBinary.call(
@@ -155,7 +155,7 @@ module Vendors
           )
           poll_fb_video!(video_id)
           FinishReel.call(
-            social_account: @social_account, video_id:, description: @post.caption, video_state: "PUBLISHED"
+            social_account: @social_account, video_id:, description: @post.caption, video_state: 'PUBLISHED'
           )
           fb_result(video_id)
         end
@@ -164,14 +164,14 @@ module Vendors
         def poll_fb_video!(video_id)
           POLL_ATTEMPTS.times do
             status = GetVideoStatus.call(social_account: @social_account, video_id:)
-            phase = status.dig("status", "processing_phase", "status") ||
-                    status.dig("status", "video_status")
+            phase = status.dig('status', 'processing_phase', 'status') ||
+                    status.dig('status', 'video_status')
             return if %w[complete ready].include?(phase.to_s)
-            raise Vendors::Base::Error, "Processamento do vídeo do Facebook falhou." if phase.to_s == "error"
+            raise Vendors::Base::Error, 'Processamento do vídeo do Facebook falhou.' if phase.to_s == 'error'
 
             sleep(POLL_INTERVAL)
           end
-          raise Vendors::Base::Error, "Tempo esgotado aguardando o processamento do vídeo do Facebook."
+          raise Vendors::Base::Error, 'Tempo esgotado aguardando o processamento do vídeo do Facebook.'
         end
 
         def fb_result(post_or_video_id)
@@ -197,7 +197,7 @@ module Vendors
           return @cover_url if defined?(@cover_url)
 
           cover = @post.cover_creative
-          asset = Array(cover&.assets).find { |a| a.content_type.to_s.start_with?("image/") } || cover&.assets&.first
+          asset = Array(cover&.assets).find { |a| a.content_type.to_s.start_with?('image/') } || cover&.assets&.first
           @cover_url = asset ? blob_url(asset) : nil
         end
 
@@ -206,19 +206,19 @@ module Vendors
         def video_url
           return @video_url if defined?(@video_url)
 
-          asset = Array(creative&.assets).find { |a| a.content_type.to_s.start_with?("video/") }
+          asset = Array(creative&.assets).find { |a| a.content_type.to_s.start_with?('video/') }
           @video_url = asset ? blob_url(asset) : nil
         end
 
         # Carousel/gallery image URLs from creative.metadata.slides, else image assets.
         def image_urls
           @image_urls ||= begin
-            slides = creative&.metadata&.dig("slides")
+            slides = creative&.metadata&.dig('slides')
             if slides.present?
-              Array(slides).filter_map { |s| s.is_a?(Hash) ? s["url"] : s }
+              Array(slides).filter_map { |s| s.is_a?(Hash) ? s['url'] : s }
             else
               Array(creative&.assets).filter_map do |asset|
-                next unless asset.content_type.to_s.start_with?("image/")
+                next unless asset.content_type.to_s.start_with?('image/')
 
                 blob_url(asset)
               end

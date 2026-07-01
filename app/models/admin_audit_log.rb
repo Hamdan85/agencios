@@ -4,7 +4,7 @@
 # toggle, manual credit grant/comp). Written from the ActiveAdmin layer via
 # `.record`. Read-only in the panel.
 class AdminAuditLog < ApplicationRecord
-  belongs_to :staff_user, class_name: "User", optional: true
+  belongs_to :staff_user, class_name: 'User', optional: true
   belongs_to :target, polymorphic: true, optional: true
 
   scope :recent_first, -> { order(created_at: :desc) }

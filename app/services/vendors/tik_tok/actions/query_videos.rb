@@ -18,8 +18,8 @@ module Vendors
         def call
           body = Vendors::TikTok::Client
                  .new(access_token: @social_account.user_access_token)
-                 .video_query(fields: @fields.join(","), video_ids: @video_ids)
-          body["data"] || {}
+                 .video_query(fields: @fields.join(','), video_ids: @video_ids)
+          body['data'] || {}
         end
       end
     end

@@ -20,7 +20,7 @@ module Vendors
           params = { is_carousel_item: true }
           if @video_url
             params[:video_url] = @video_url
-            params[:media_type] = "VIDEO"
+            params[:media_type] = 'VIDEO'
           else
             params[:image_url] = @image_url
           end

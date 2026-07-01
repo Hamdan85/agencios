@@ -15,7 +15,7 @@ module Controllers
 
         # Prefer a PROPOSED session (a plan awaiting a decision) over a newer
         # active one, so a pending plan always surfaces after a reload.
-        sessions = project.strategy_sessions.where.not(status: "discarded")
+        sessions = project.strategy_sessions.where.not(status: 'discarded')
         session = sessions.status_proposed.recent.first || sessions.recent.first
         { strategy_session: session && serialize(session, StrategySessionSerializer) }
       end

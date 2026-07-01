@@ -24,7 +24,7 @@ module Vendors
           token = Vendors::X::Actions::ExchangeCode.call(
             code: @code, redirect_uri: @redirect_uri, code_verifier: @code_verifier
           )
-          access_token = token["access_token"]
+          access_token = token['access_token']
 
           identity = Vendors::X::Actions::FetchUser.call(access_token: access_token)
 
@@ -33,9 +33,9 @@ module Vendors
             external_user_id: identity[:id],
             username: identity[:username],
             user_access_token: access_token,
-            refresh_token: token["refresh_token"],
-            token_expires_at: expires_at(token["expires_in"]),
-            scopes: scopes_array(token["scope"])
+            refresh_token: token['refresh_token'],
+            token_expires_at: expires_at(token['expires_in']),
+            scopes: scopes_array(token['scope'])
           }
         end
 

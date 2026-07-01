@@ -19,8 +19,8 @@ module Vendors
         def call
           client = Vendors::Linkedin::Client.new(social_account: @social_account)
           client.rest_get(
-            "/rest/organizationalEntityFollowerStatistics",
-            q: "organizationalEntity", organizationalEntity: @org_urn
+            '/rest/organizationalEntityFollowerStatistics',
+            q: 'organizationalEntity', organizationalEntity: @org_urn
           )
         end
       end

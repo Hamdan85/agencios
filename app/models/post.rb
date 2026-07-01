@@ -28,7 +28,7 @@ class Post < ApplicationRecord
   # creative that actually has assets attached. This is the single source of
   # truth every vendor's PublishPost reads — never re-derive it ad hoc.
   def publishable_creative
-    id = media.is_a?(Hash) ? media["creative_id"] : nil
+    id = media.is_a?(Hash) ? media['creative_id'] : nil
     (id && ticket.creatives.find_by(id: id)) ||
       ticket.creatives.order(created_at: :desc).detect { |c| c.assets.attached? } ||
       ticket.creatives.order(created_at: :desc).first
@@ -38,7 +38,7 @@ class Post < ApplicationRecord
   # Set at the posting step (media["cover_creative_id"]) only for thumbnail-capable
   # networks; nil for image/carousel posts. Vendors read this to set the cover.
   def cover_creative
-    id = media.is_a?(Hash) ? media["cover_creative_id"] : nil
+    id = media.is_a?(Hash) ? media['cover_creative_id'] : nil
     id && ticket.creatives.find_by(id: id)
   end
 end

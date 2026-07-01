@@ -18,7 +18,7 @@ module Controllers
 
       # When `scope=all_workspaces`, the calendar spans every workspace the user
       # belongs to (the "Meu calendário" view); otherwise it is the active tenant.
-      def all_workspaces? = @params[:scope] == "all_workspaces"
+      def all_workspaces? = @params[:scope] == 'all_workspaces'
 
       def workspace_ids
         @workspace_ids ||= all_workspaces? ? user.workspace_ids : [workspace.id]
@@ -45,8 +45,8 @@ module Controllers
       def post_event(post)
         {
           id: "post-#{post.id}",
-          type: "post",
-          title: post.ticket&.display_title || "Publicação",
+          type: 'post',
+          title: post.ticket&.display_title || 'Publicação',
           start: post.scheduled_at&.iso8601,
           status: post.status,
           provider: post.social_account&.provider,
@@ -60,13 +60,13 @@ module Controllers
       def meeting_event(meeting)
         {
           id: "meeting-#{meeting.id}",
-          type: "meeting",
+          type: 'meeting',
           title: meeting.title,
           start: meeting.starts_at&.iso8601,
           end: meeting.ends_at&.iso8601,
           meet_url: meeting.meet_url,
           client_name: meeting.client&.name,
-          color: "#22C55E",
+          color: '#22C55E',
           workspace_id: meeting.workspace_id,
           workspace_name: meeting.workspace&.name
         }

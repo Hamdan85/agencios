@@ -27,7 +27,7 @@ class TicketCardSerializer < ActiveModel::Serializer
   end
 
   def subtasks_count = object.subtasks.size
-  def subtasks_done  = object.subtasks.count { |s| s.done }
+  def subtasks_done  = object.subtasks.count(&:done)
   def creatives_count = object.creatives.size
 
   private

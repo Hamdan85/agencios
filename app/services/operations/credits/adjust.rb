@@ -31,7 +31,7 @@ module Operations
             from_granted   = [take, wallet.granted_balance].min
             from_purchased = take - from_granted
             wallet.update!(
-              granted_balance:   wallet.granted_balance - from_granted,
+              granted_balance: wallet.granted_balance - from_granted,
               purchased_balance: wallet.purchased_balance - from_purchased
             )
             record(wallet, granted: -from_granted, purchased: -from_purchased)
@@ -43,16 +43,16 @@ module Operations
       private
 
       def record(wallet, granted:, purchased:)
-        bucket = if granted != 0 && purchased != 0 then "mixed"
-                 elsif granted != 0 then "granted"
-                 else "purchased"
+        bucket = if granted != 0 && purchased != 0 then 'mixed'
+                 elsif granted != 0 then 'granted'
+                 else 'purchased'
                  end
         @workspace.credit_transactions.create!(
           generation: @generation, user: @generation&.user,
-          kind: "adjustment", bucket: bucket,
+          kind: 'adjustment', bucket: bucket,
           amount: granted + purchased, granted_delta: granted, purchased_delta: purchased,
           balance_after: wallet.granted_balance + wallet.purchased_balance,
-          description: @description || "Ajuste de créditos"
+          description: @description || 'Ajuste de créditos'
         )
       end
     end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "rails_helper"
+require 'rails_helper'
 
 # Carousel generations are one of the two usage-based billing meters
 # (SPECIFICATION.md §9). On completion they must emit a Stripe meter event
@@ -9,14 +9,14 @@ require "rails_helper"
 RSpec.describe Operations::Creatives::GenerateViralCarousel do
   include ActiveJob::TestHelper
 
-  let(:user) { User.create!(email: "gen@agencios.app", password: "secret123", name: "Gen") }
-  let(:workspace) { Operations::Workspaces::SetupForUser.call(user: user, name: "Studio Co") }
-  let(:client) { workspace.clients.create!(name: "ACME") }
-  let(:project) { workspace.projects.create!(client: client, name: "Camp", color: "#7C3AED") }
+  let(:user) { User.create!(email: 'gen@agencios.app', password: 'secret123', name: 'Gen') }
+  let(:workspace) { Operations::Workspaces::SetupForUser.call(user: user, name: 'Studio Co') }
+  let(:client) { workspace.clients.create!(name: 'ACME') }
+  let(:project) { workspace.projects.create!(client: client, name: 'Camp', color: '#7C3AED') }
   let(:ticket) do
     Operations::Tickets::Create.call(
       workspace: workspace, user: user,
-      params: { project_id: project.id, title: "Carrossel", creative_type: "carousel", channels: %w[instagram] }
+      params: { project_id: project.id, title: 'Carrossel', creative_type: 'carousel', channels: %w[instagram] }
     )
   end
 
@@ -27,32 +27,32 @@ RSpec.describe Operations::Creatives::GenerateViralCarousel do
 
     # Deterministic, image-free copy (no Pexels/Banana slots needed).
     slides_json = [
-      { role: "hook",  headline: "Gancho", body: "a", image: false, image_query: "" },
-      { role: "value", headline: "Valor",  body: "b", image: false, image_query: "" },
-      { role: "cta",   headline: "CTA",    body: "c", image: false, image_query: "" }
+      { role: 'hook',  headline: 'Gancho', body: 'a', image: false, image_query: '' },
+      { role: 'value', headline: 'Valor',  body: 'b', image: false, image_query: '' },
+      { role: 'cta',   headline: 'CTA',    body: 'c', image: false, image_query: '' }
     ].to_json
     allow(AiAdapter).to receive(:complete).and_return(slides_json)
 
     # Stub the headless renderer so no Chromium is launched.
-    allow(Vendors::Render::Html).to receive(:batch) { |htmls:, **_| htmls.map { "PNGBYTES" } }
+    allow(Vendors::Render::Html).to receive(:batch) { |htmls:, **_| htmls.map { 'PNGBYTES' } }
   end
 
   after { Current.reset }
 
-  it "meters a completed carousel to Stripe when the workspace has a customer" do
-    workspace.subscription.update!(status: "active", stripe_customer_id: "cus_test")
+  it 'meters a completed carousel to Stripe when the workspace has a customer' do
+    workspace.subscription.update!(status: 'active', stripe_customer_id: 'cus_test')
     allow(Vendors::Stripe::Actions::ReportMeterEvent).to receive(:call).and_return(true)
 
     generation = described_class.call(ticket: ticket, slides: 3)
 
-    expect(generation.kind).to eq("carousel")
-    expect(generation.status).to eq("completed")
+    expect(generation.kind).to eq('carousel')
+    expect(generation.status).to eq('completed')
     expect(generation.metered_at).to be_present
     expect(generation.creative.assets.count).to eq(3)
     expect(Vendors::Stripe::Actions::ReportMeterEvent).to have_received(:call).once
   end
 
-  it "skips metering when the workspace has no Stripe customer yet" do
+  it 'skips metering when the workspace has no Stripe customer yet' do
     allow(Vendors::Stripe::Actions::ReportMeterEvent).to receive(:call)
 
     generation = described_class.call(ticket: ticket, slides: 2)

@@ -16,7 +16,7 @@ module Vendors
         end
 
         def call
-          @client.get("/#{@video_id}", params: { fields: "status" })
+          @client.get("/#{@video_id}", params: { fields: 'status' })
         end
       end
     end

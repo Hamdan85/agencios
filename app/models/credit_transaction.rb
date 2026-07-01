@@ -16,7 +16,7 @@ class CreditTransaction < ApplicationRecord
   validates :bucket, inclusion: { in: BUCKETS }
 
   scope :recent_first, -> { order(created_at: :desc) }
-  scope :debits, -> { where(kind: "debit") }
+  scope :debits, -> { where(kind: 'debit') }
 
   def self.ransackable_attributes(_auth = nil)
     %w[id workspace_id generation_id user_id kind bucket amount granted_delta

@@ -11,7 +11,7 @@ module Operations
 
       def call
         @ticket.update!(position: @position)
-        Broadcaster.board(@ticket.workspace_id, "card_moved",
+        Broadcaster.board(@ticket.workspace_id, 'card_moved',
                           ticket_id: @ticket.id, to: @ticket.status, position: @position)
         @ticket
       end

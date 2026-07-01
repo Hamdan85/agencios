@@ -35,13 +35,17 @@ module Tickets
     def height = spec[:height]
     def dimensions = [width, height].compact
 
-    def aspect_ratio = spec[:aspect].presence || "1:1"
+    def aspect_ratio = spec[:aspect].presence || '1:1'
 
     def banana_aspect_ratio
       supported = Vendors::Google::Banana::Client::SUPPORTED_ASPECT_RATIOS
       return aspect_ratio if supported.include?(aspect_ratio)
 
-      portrait? ? "3:4" : (landscape? ? "4:3" : "1:1")
+      if portrait?
+        '3:4'
+      else
+        (landscape? ? '4:3' : '1:1')
+      end
     end
 
     def portrait?  = width && height && height > width
@@ -49,15 +53,15 @@ module Tickets
 
     # --- scope (funnel fields) + overrides ------------------------------------
 
-    def ideation   = ticket&.fields_for("ideation") || {}
-    def scoping    = ticket&.fields_for("scoping") || {}
-    def production = ticket&.fields_for("production") || {}
+    def ideation   = ticket&.fields_for('ideation') || {}
+    def scoping    = ticket&.fields_for('scoping') || {}
+    def production = ticket&.fields_for('production') || {}
 
-    def brief          = ideation["brief"]
-    def persona        = ideation["target_persona"]
-    def content_pillar = ideation["content_pillar"]
-    def script         = @overrides[:script].presence || scoping["script"]
-    def caption        = production["caption"]
+    def brief          = ideation['brief']
+    def persona        = ideation['target_persona']
+    def content_pillar = ideation['content_pillar']
+    def script         = @overrides[:script].presence || scoping['script']
+    def caption        = production['caption']
 
     URL_RE = %r{https?://\S+}i
 
@@ -65,7 +69,7 @@ module Tickets
     # is kept; URLs are extracted so generators can fetch/read them and feed the
     # whole into the content generators.
     def references
-      vals = Array(@overrides[:references]) + Array(ideation["references"])
+      vals = Array(@overrides[:references]) + Array(ideation['references'])
       vals.map { |v| v.to_s.strip }.reject(&:blank?).uniq
     end
 
@@ -74,27 +78,29 @@ module Tickets
     end
 
     def objective
-      @overrides[:objective].presence || ideation["objective"]
+      @overrides[:objective].presence || ideation['objective']
     end
 
     # The message/source material: an explicit text/url-extracted source wins,
     # then the scoping copy brief.
     def copy_brief
-      @overrides[:source_text].presence || @overrides[:text].presence || scoping["copy_brief"]
+      @overrides[:source_text].presence || @overrides[:text].presence || scoping['copy_brief']
     end
 
     def channels
-      vals = Array(scoping["channels"]).reject(&:blank?)
+      vals = Array(scoping['channels']).reject(&:blank?)
       vals.presence || Array(ticket&.channels).reject(&:blank?)
     end
 
-    def summary = ticket && ticket.summary_for(ticket.status)
+    def summary = ticket&.summary_for(ticket.status)
 
     # A SHORT one-line subject for prompts/headlines — never the full source body
     # (the body lives in copy_brief). Falls back to the first sentence of the
     # source, then the ticket title.
     def topic
-      explicit = [@overrides[:topic], @overrides[:idea], @overrides[:prompt]].map { |v| v.to_s.strip.presence }.compact.first
+      explicit = [@overrides[:topic], @overrides[:idea], @overrides[:prompt]].map do |v|
+        v.to_s.strip.presence
+      end.compact.first
       base = explicit || objective.presence || first_sentence(copy_brief) || brief.presence || ticket&.display_title
       base.to_s.strip[0, 160]
     end
@@ -108,10 +114,10 @@ module Tickets
     # --- brand identity (client → workspace fallback) -------------------------
 
     def brand_name      = client&.name.presence || workspace&.name
-    def brand_voice     = (client&.brand_voice).presence || workspace&.brand_voice.presence || "tom profissional, próximo e criativo"
-    def brand_handle    = (client&.default_handle).presence || workspace&.default_handle.presence
-    def brand_primary   = (client&.brand_primary_color).presence || workspace&.brand_primary_color.presence || "#7C3AED"
-    def brand_secondary = (client&.brand_secondary_color).presence || workspace&.brand_secondary_color.presence || "#F59E0B"
+    def brand_voice     = client&.brand_voice.presence || workspace&.brand_voice.presence || 'tom profissional, próximo e criativo'
+    def brand_handle    = client&.default_handle.presence || workspace&.default_handle.presence
+    def brand_primary   = client&.brand_primary_color.presence || workspace&.brand_primary_color.presence || '#7C3AED'
+    def brand_secondary = client&.brand_secondary_color.presence || workspace&.brand_secondary_color.presence || '#F59E0B'
 
     def logo   = attachment(:logo)
     def avatar = attachment(:default_creator_avatar)
@@ -122,9 +128,9 @@ module Tickets
       {
         topic: topic, objective: objective, brief: brief, persona: persona,
         copy_brief: copy_brief, script: script, content_pillar: content_pillar,
-        channels: channels.join(", "), summary: summary, caption: caption,
+        channels: channels.join(', '), summary: summary, caption: caption,
         creative_type: creative_type, aspect: aspect_ratio,
-        references: references.presence&.join("; "),
+        references: references.presence&.join('; '),
         width: width, height: height
       }.compact
     end
@@ -137,7 +143,7 @@ module Tickets
         spec[:prompt_scaffold],
         brand_descriptor,
         TEXT_RENDERING_DIRECTIVE
-      ].compact.join(". ")
+      ].compact.join('. ')
     end
 
     # Image models (Imagen/Banana) routinely hallucinate garbled, misspelled, or
@@ -147,20 +153,20 @@ module Tickets
     # Overlaid headlines/CTAs are composited later, so a clean, text-free image is
     # always preferable to fake typography.
     TEXT_RENDERING_DIRECTIVE =
-      "Regra de texto: qualquer palavra ou letra visível na imagem DEVE ser " \
-      "real, ortograficamente correta e fazer sentido (em português do Brasil, " \
-      "salvo se a copy pedir outro idioma). Se não for possível garantir texto " \
-      "legível e correto, NÃO escreva absolutamente nenhum texto — prefira uma " \
-      "imagem totalmente sem texto a letras falsas, embaralhadas ou sem sentido. " \
+      'Regra de texto: qualquer palavra ou letra visível na imagem DEVE ser ' \
+      'real, ortograficamente correta e fazer sentido (em português do Brasil, ' \
+      'salvo se a copy pedir outro idioma). Se não for possível garantir texto ' \
+      'legível e correto, NÃO escreva absolutamente nenhum texto — prefira uma ' \
+      'imagem totalmente sem texto a letras falsas, embaralhadas ou sem sentido. ' \
       "Nunca invente logotipos, marcas d'água ou caracteres decorativos ilegíveis."
 
     def brand_descriptor
       bits = []
       bits << "Marca: #{brand_name}" if brand_name.present?
       bits << "tom #{brand_voice}" if brand_voice.present?
-      colors = [brand_primary, brand_secondary].compact.join(" e ")
+      colors = [brand_primary, brand_secondary].compact.join(' e ')
       bits << "paleta #{colors}" if colors.present?
-      bits.join(", ")
+      bits.join(', ')
     end
 
     private

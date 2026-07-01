@@ -42,9 +42,9 @@ module Vendors
               product: product, unit_amount: spec[:amount], lookup_key: spec[:lookup_key], interval: spec[:interval]
             )
             plan.update!(
-              spec[:id_col]     => price.id,
+              spec[:id_col] => price.id,
               spec[:lookup_col] => spec[:lookup_key],
-              spec[:cents_col]  => spec[:amount]
+              spec[:cents_col] => spec[:amount]
             )
             archive_old(old_id, price.id)
             { interval: spec[:interval], price_id: price.id, amount_cents: spec[:amount] }
@@ -55,9 +55,9 @@ module Vendors
 
         def intervals(plan)
           [
-            { interval: "month", lookup_key: plan.stripe_lookup_key.presence || "#{plan.key}_monthly",
+            { interval: 'month', lookup_key: plan.stripe_lookup_key.presence || "#{plan.key}_monthly",
               amount: plan.price_cents, id_col: :stripe_price_id, cents_col: :price_cents, lookup_col: :stripe_lookup_key },
-            { interval: "year", lookup_key: plan.stripe_annual_lookup_key.presence || "#{plan.key}_yearly",
+            { interval: 'year', lookup_key: plan.stripe_annual_lookup_key.presence || "#{plan.key}_yearly",
               amount: Pricing.annual_price_cents_for(plan.key),
               id_col: :stripe_annual_price_id, cents_col: :annual_price_cents, lookup_col: :stripe_annual_lookup_key }
           ]

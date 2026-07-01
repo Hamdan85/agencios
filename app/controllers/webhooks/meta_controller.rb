@@ -8,7 +8,7 @@ module Webhooks
       return verify_subscription if request.get?
 
       status = Controllers::Webhooks::Meta::Receive.call(
-        signature: request.headers["X-Hub-Signature-256"], payload: request.raw_post
+        signature: request.headers['X-Hub-Signature-256'], payload: request.raw_post
       )
       head status
     rescue StandardError => e

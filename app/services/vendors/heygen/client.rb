@@ -13,29 +13,29 @@ module Vendors
     # The app-level API key comes from credentials (`heygen.api_key`) with an
     # ENV fallback (`HEYGEN_API_KEY`). See docs/integrations/heygen.md.
     class Client < Vendors::Base
-      BASE_URL = "https://api.heygen.com"
+      BASE_URL = 'https://api.heygen.com'
 
       def initialize(api_key: nil)
-        @api_key = api_key || credential(:heygen, :api_key, env: "HEYGEN_API_KEY")
+        @api_key = api_key || credential(:heygen, :api_key, env: 'HEYGEN_API_KEY')
       end
 
       def get(path, params = {})
-        require_credential!(@api_key, "heygen.api_key")
+        require_credential!(@api_key, 'heygen.api_key')
         handle(connection.get(path, params))
       end
 
       def post(path, body = {})
-        require_credential!(@api_key, "heygen.api_key")
+        require_credential!(@api_key, 'heygen.api_key')
         handle(connection.post(path, body))
       end
 
       def patch(path, body = {})
-        require_credential!(@api_key, "heygen.api_key")
+        require_credential!(@api_key, 'heygen.api_key')
         handle(connection.patch(path, body))
       end
 
       def delete(path)
-        require_credential!(@api_key, "heygen.api_key")
+        require_credential!(@api_key, 'heygen.api_key')
         handle(connection.delete(path))
       end
 
@@ -45,8 +45,8 @@ module Vendors
         @connection ||= build_connection(
           BASE_URL,
           headers: {
-            "X-Api-Key" => @api_key.to_s,
-            "Accept" => "application/json"
+            'X-Api-Key' => @api_key.to_s,
+            'Accept' => 'application/json'
           }
         )
       end
@@ -57,9 +57,10 @@ module Vendors
       # we additionally raise on a 200 body that still carries an `error`.
       def handle(response)
         body = super(response)
-        if body.is_a?(Hash) && body["error"].present?
-          raise Vendors::Heygen::Error.from_body(body["error"], status: response.status, body: body)
+        if body.is_a?(Hash) && body['error'].present?
+          raise Vendors::Heygen::Error.from_body(body['error'], status: response.status, body: body)
         end
+
         body
       end
     end

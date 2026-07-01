@@ -9,13 +9,13 @@ module Auth
       Controllers::Auth::Calendar::Callback.call(
         code: params[:code], state: params[:state]
       )
-      render "auth/calendar/connected", layout: false, locals: { error: nil }
+      render 'auth/calendar/connected', layout: false, locals: { error: nil }
     rescue Operations::Errors::Invalid => e
       Rails.logger.warn("[Auth::Calendar] #{e.message}")
-      render "auth/calendar/connected", layout: false, locals: { error: "state" }
+      render 'auth/calendar/connected', layout: false, locals: { error: 'state' }
     rescue StandardError => e
       Rails.logger.warn("[Auth::Calendar] #{e.class}: #{e.message}")
-      render "auth/calendar/connected", layout: false, locals: { error: "calendar" }
+      render 'auth/calendar/connected', layout: false, locals: { error: 'calendar' }
     end
   end
 end

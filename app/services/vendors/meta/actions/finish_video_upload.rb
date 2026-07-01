@@ -20,7 +20,7 @@ module Vendors
           @client.post(
             "/#{@social_account.page_id}/videos",
             params: {
-              upload_phase: "finish",
+              upload_phase: 'finish',
               upload_session_id: @upload_session_id,
               title: @title,
               description: @description

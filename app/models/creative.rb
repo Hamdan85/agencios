@@ -6,9 +6,9 @@ class Creative < ApplicationRecord
   belongs_to :workspace
   belongs_to :ticket, optional: true
   belongs_to :client, optional: true
-  belongs_to :parent, class_name: "Creative", optional: true
+  belongs_to :parent, class_name: 'Creative', optional: true
 
-  has_many :versions, class_name: "Creative", foreign_key: :parent_id, dependent: :nullify, inverse_of: :parent
+  has_many :versions, class_name: 'Creative', foreign_key: :parent_id, dependent: :nullify, inverse_of: :parent
   has_one  :generation, dependent: :nullify
   has_many_attached :assets
 
@@ -24,13 +24,13 @@ class Creative < ApplicationRecord
   # attachments first, then the creative_type / slide metadata.
   def media_kind
     attached = assets.attached? ? assets : []
-    return "video" if attached.any? { |a| a.content_type.to_s.start_with?("video/") }
+    return 'video' if attached.any? { |a| a.content_type.to_s.start_with?('video/') }
 
-    slides = metadata.is_a?(Hash) ? Array(metadata["slides"]) : []
-    image_count = attached.count { |a| a.content_type.to_s.start_with?("image/") }
-    return "carousel" if creative_type.to_s == "carousel" || slides.size > 1 || image_count > 1
-    return "image" if image_count == 1 || attached.any?
+    slides = metadata.is_a?(Hash) ? Array(metadata['slides']) : []
+    image_count = attached.count { |a| a.content_type.to_s.start_with?('image/') }
+    return 'carousel' if creative_type.to_s == 'carousel' || slides.size > 1 || image_count > 1
+    return 'image' if image_count == 1 || attached.any?
 
-    "text"
+    'text'
   end
 end

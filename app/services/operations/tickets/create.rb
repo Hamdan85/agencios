@@ -34,8 +34,8 @@ module Operations
         end
 
         Operations::Notes::Create.call(ticket: ticket, user: nil, kind: :system,
-                                       body: "Ticket criado por #{@user&.display_name || "sistema"}.")
-        Broadcaster.board(@workspace.id, "ticket_created", ticket_id: ticket.id, status: ticket.status)
+                                       body: "Ticket criado por #{@user&.display_name || 'sistema'}.")
+        Broadcaster.board(@workspace.id, 'ticket_created', ticket_id: ticket.id, status: ticket.status)
         notify_assignee(ticket)
         ticket
       end
@@ -43,7 +43,7 @@ module Operations
       def notify_assignee(ticket)
         Operations::Push::Notify.call(
           user: ticket.assignee, actor: @user,
-          title: "Novo ticket atribuído a você",
+          title: 'Novo ticket atribuído a você',
           body: ticket.title,
           path: "/tickets/#{ticket.id}"
         )

@@ -15,7 +15,7 @@ module Controllers
 
         def call
           data = MetaSignedRequest.parse(@signed_request, MetaSignedRequest.secret_for(@provider))
-          user_id = data && data["user_id"]
+          user_id = data && data['user_id']
           return 0 if user_id.blank?
 
           Operations::Social::Deauthorize.call(providers: [@provider], external_user_id: user_id)

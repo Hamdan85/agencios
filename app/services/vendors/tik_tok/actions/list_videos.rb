@@ -25,8 +25,8 @@ module Vendors
         end
 
         def call
-          body = client.video_list(fields: @fields.join(","), max_count: @max_count, cursor: @cursor)
-          body["data"] || {}
+          body = client.video_list(fields: @fields.join(','), max_count: @max_count, cursor: @cursor)
+          body['data'] || {}
         end
 
         private

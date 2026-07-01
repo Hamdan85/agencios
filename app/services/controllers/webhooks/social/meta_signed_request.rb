@@ -11,9 +11,9 @@ module Controllers
         module_function
 
         SECRET_KEYS = {
-          "facebook"  => [:app_secret, "META_APP_SECRET"],
-          "instagram" => [:instagram_app_secret, "INSTAGRAM_APP_SECRET"],
-          "threads"   => [:threads_app_secret, "THREADS_APP_SECRET"]
+          'facebook' => [:app_secret, 'META_APP_SECRET'],
+          'instagram' => [:instagram_app_secret, 'INSTAGRAM_APP_SECRET'],
+          'threads' => [:threads_app_secret, 'THREADS_APP_SECRET']
         }.freeze
 
         def secret_for(provider)
@@ -28,10 +28,10 @@ module Controllers
         def parse(signed_request, secret)
           return nil if secret.blank?
 
-          encoded_sig, payload = signed_request.to_s.split(".", 2)
+          encoded_sig, payload = signed_request.to_s.split('.', 2)
           return nil if encoded_sig.blank? || payload.blank?
 
-          expected = OpenSSL::HMAC.digest("SHA256", secret.to_s, payload)
+          expected = OpenSSL::HMAC.digest('SHA256', secret.to_s, payload)
           provided = base64_url_decode(encoded_sig)
           return nil unless ActiveSupport::SecurityUtils.secure_compare(expected, provided)
 
@@ -41,8 +41,8 @@ module Controllers
         end
 
         def base64_url_decode(str)
-          padded = str.to_s.tr("-_", "+/")
-          padded += "=" * ((4 - (padded.length % 4)) % 4)
+          padded = str.to_s.tr('-_', '+/')
+          padded += '=' * ((4 - (padded.length % 4)) % 4)
           Base64.decode64(padded)
         end
       end

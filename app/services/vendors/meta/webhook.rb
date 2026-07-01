@@ -18,8 +18,8 @@ module Vendors
     module Webhook
       module_function
 
-      SIGNATURE_HEADER = "X-Hub-Signature-256"
-      SIGNATURE_PREFIX = "sha256="
+      SIGNATURE_HEADER = 'X-Hub-Signature-256'
+      SIGNATURE_PREFIX = 'sha256='
 
       # Constant-time verify of the X-Hub-Signature-256 header against the raw
       # body. `signature` is the full header value ("sha256=<hex>"). `secret`
@@ -29,7 +29,7 @@ module Vendors
         return false if payload.nil? || signature.blank? || secret.blank?
 
         provided = signature.to_s.delete_prefix(SIGNATURE_PREFIX)
-        expected = OpenSSL::HMAC.hexdigest("SHA256", secret.to_s, payload.to_s)
+        expected = OpenSSL::HMAC.hexdigest('SHA256', secret.to_s, payload.to_s)
         ActiveSupport::SecurityUtils.secure_compare(expected, provided)
       rescue StandardError
         false
@@ -39,7 +39,7 @@ module Vendors
       # mode is "subscribe" and the verify token matches; otherwise nil.
       def verify_subscription(mode:, token:, challenge:, expected_token: nil)
         expected_token ||= verify_token
-        return nil unless mode.to_s == "subscribe"
+        return nil unless mode.to_s == 'subscribe'
         return nil if expected_token.blank?
         return nil unless ActiveSupport::SecurityUtils.secure_compare(token.to_s, expected_token.to_s)
 
@@ -50,16 +50,16 @@ module Vendors
       # signing outbound mock deliveries).
       def signature_for(payload, secret = nil)
         secret ||= app_secret
-        "#{SIGNATURE_PREFIX}#{OpenSSL::HMAC.hexdigest("SHA256", secret.to_s, payload.to_s)}"
+        "#{SIGNATURE_PREFIX}#{OpenSSL::HMAC.hexdigest('SHA256', secret.to_s, payload.to_s)}"
       end
 
       def app_secret
-        Rails.application.credentials.dig(:meta, :app_secret) || ENV["META_APP_SECRET"]
+        Rails.application.credentials.dig(:meta, :app_secret) || ENV['META_APP_SECRET']
       end
 
       def verify_token
         Rails.application.credentials.dig(:meta, :webhook_verify_token) ||
-          ENV["META_WEBHOOK_VERIFY_TOKEN"]
+          ENV['META_WEBHOOK_VERIFY_TOKEN']
       end
     end
   end

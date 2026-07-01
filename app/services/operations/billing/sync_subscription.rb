@@ -37,14 +37,14 @@ module Operations
 
       def call
         case event_type
-        when "checkout.session.completed"          then on_checkout_completed
-        when "customer.subscription.created",
-             "customer.subscription.updated"       then upsert_from_subscription(event_object)
-        when "customer.subscription.deleted"       then on_subscription_deleted
-        when "invoice.paid"                        then on_invoice_paid
-        when "invoice.payment_failed"              then on_invoice_payment_failed
-        when "customer.subscription.trial_will_end" then on_trial_will_end
-        when "v1.billing.meter.error_report_triggered" then on_meter_error
+        when 'checkout.session.completed' then on_checkout_completed
+        when 'customer.subscription.created',
+             'customer.subscription.updated'       then upsert_from_subscription(event_object)
+        when 'customer.subscription.deleted'       then on_subscription_deleted
+        when 'invoice.paid'                        then on_invoice_paid
+        when 'invoice.payment_failed'              then on_invoice_payment_failed
+        when 'customer.subscription.trial_will_end' then on_trial_will_end
+        when 'v1.billing.meter.error_report_triggered' then on_meter_error
         else
           :ignored
         end
@@ -53,12 +53,12 @@ module Operations
       private
 
       def event_type
-        @event.respond_to?(:type) ? @event.type : @event["type"]
+        @event.respond_to?(:type) ? @event.type : @event['type']
       end
 
       def event_object
-        data = @event.respond_to?(:data) ? @event.data : @event["data"]
-        data.respond_to?(:object) ? data.object : data["object"]
+        data = @event.respond_to?(:data) ? @event.data : @event['data']
+        data.respond_to?(:object) ? data.object : data['object']
       end
 
       # checkout.session.completed carries the session. A credit-pack purchase
@@ -72,7 +72,7 @@ module Operations
         return :no_subscription if subscription_id.blank?
 
         subscription = @client.retrieve_subscription(
-          subscription_id, expand: ["items.data.price"]
+          subscription_id, expand: ['items.data.price']
         )
         record = upsert_from_subscription(subscription)
         if record.is_a?(Subscription)
@@ -90,7 +90,7 @@ module Operations
 
       def credit_pack_session?(session)
         metadata = read(session, :metadata)
-        metadata && read(metadata, :purpose).to_s == "credit_pack"
+        metadata && read(metadata, :purpose).to_s == 'credit_pack'
       end
 
       # Apply a purchased credit pack to the wallet. Idempotent on the session id.
@@ -100,9 +100,9 @@ module Operations
         return :workspace_not_found unless workspace
 
         Operations::Credits::Purchase.call(
-          workspace:  workspace,
-          amount:     read(metadata, :credits).to_i,
-          reference:  read(session, :id),
+          workspace: workspace,
+          amount: read(metadata, :credits).to_i,
+          reference: read(session, :id),
           description: "Compra de créditos — pacote #{read(metadata, :pack)}"
         )
       end
@@ -114,8 +114,8 @@ module Operations
         return if amount <= 0
 
         Operations::Credits::Grant.call(
-          workspace:  subscription.workspace,
-          amount:     amount,
+          workspace: subscription.workspace,
+          amount: amount,
           expires_at: subscription.current_period_end || 1.month.from_now,
           description: "Créditos mensais do plano #{subscription.plan}"
         )
@@ -147,11 +147,11 @@ module Operations
           seats: licensed ? (read(licensed, :quantity) || 1) : 1,
           current_period_end: epoch(read(stripe_sub, :current_period_end)),
           trial_ends_at: epoch(read(stripe_sub, :trial_end)),
-          interval: interval_from(licensed) || "month",
+          interval: interval_from(licensed) || 'month',
           cancel_at: cancel_at_for(stripe_sub),
           # Only ever upgrade to true (nil is compacted out) so a later event
           # without an expanded payment method can't clear a known card.
-          card_on_file: (read(stripe_sub, :default_payment_method).present? || nil)
+          card_on_file: read(stripe_sub, :default_payment_method).present? || nil
         }.compact
       end
 
@@ -162,7 +162,7 @@ module Operations
         record = workspace.subscription
         return :no_subscription unless record
 
-        record.update!(status: "canceled", cancel_at: Time.current)
+        record.update!(status: 'canceled', cancel_at: Time.current)
         notify_owner(workspace, record, :canceled)
         record
       end
@@ -170,7 +170,7 @@ module Operations
       # invoice.paid / invoice.payment_failed reference the subscription on the
       # invoice. Recent API versions nest it under parent.subscription_details.
       def on_invoice_paid
-        record = update_status_from_invoice("active")
+        record = update_status_from_invoice('active')
         # A paid invoice = a valid card + a fresh billing period ⇒ refill credits,
         # but ONLY when money actually changed hands (amount_paid > 0). A R$0 trial
         # invoice must not grant credits (that would reopen the trial exploit).
@@ -187,7 +187,7 @@ module Operations
       end
 
       def on_invoice_payment_failed
-        record = update_status_from_invoice("past_due")
+        record = update_status_from_invoice('past_due')
         notify_owner(record.workspace, record, :payment_failed) if record.is_a?(Subscription)
         record
       end
@@ -244,7 +244,7 @@ module Operations
 
       def from_metadata(stripe_sub)
         metadata = read(stripe_sub, :metadata)
-        workspace_id = metadata && (read(metadata, :workspace_id))
+        workspace_id = metadata && read(metadata, :workspace_id)
         workspace_id.present? ? Workspace.find_by(id: workspace_id) : nil
       end
 
@@ -308,13 +308,13 @@ module Operations
 
         price_id = read(price, :id)
         if price_id.present?
-          by_price = PricingPlan.where("stripe_price_id = :id OR stripe_annual_price_id = :id", id: price_id).first
+          by_price = PricingPlan.where('stripe_price_id = :id OR stripe_annual_price_id = :id', id: price_id).first
           return by_price.key if by_price
         end
 
         lookup = read(price, :lookup_key)
         if lookup.present?
-          by_lookup = PricingPlan.where("stripe_lookup_key = :lk OR stripe_annual_lookup_key = :lk", lk: lookup).first
+          by_lookup = PricingPlan.where('stripe_lookup_key = :lk OR stripe_annual_lookup_key = :lk', lk: lookup).first
           return by_lookup.key if by_lookup
         end
 

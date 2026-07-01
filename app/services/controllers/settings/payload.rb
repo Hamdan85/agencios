@@ -11,7 +11,7 @@ module Controllers
 
       def call
         {
-          setting:   serialize(@setting, SettingSerializer),
+          setting: serialize(@setting, SettingSerializer),
           workspace: workspace_brand
         }
       end

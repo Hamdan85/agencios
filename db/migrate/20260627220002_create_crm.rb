@@ -21,7 +21,7 @@ class CreateCrm < ActiveRecord::Migration[8.1]
       t.references :client, null: false, foreign_key: true
       t.string  :name, null: false
       t.text    :description
-      t.string  :color, null: false, default: "#7C3AED"
+      t.string  :color, null: false, default: '#7C3AED'
       t.integer :status, null: false, default: 0
       t.date    :starts_on
       t.date    :ends_on

@@ -9,7 +9,7 @@ module Api
 
       def create
         authenticated = Controllers::Sessions::Create.call(email: params[:email], password: params[:password])
-        return render_error("E-mail ou senha inválidos.", status: :unauthorized) unless authenticated
+        return render_error('E-mail ou senha inválidos.', status: :unauthorized) unless authenticated
 
         # Cookie/session lifecycle is an HTTP concern owned by the controller.
         start_new_session_for(authenticated)
@@ -19,7 +19,7 @@ module Api
 
       def destroy
         terminate_session
-        render_ok(message: "Sessão encerrada.")
+        render_ok(message: 'Sessão encerrada.')
       end
     end
   end

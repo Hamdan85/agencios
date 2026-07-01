@@ -50,10 +50,10 @@ module Vendors
           }
 
           if @refresh_token.present?
-            base[:grant_type] = "refresh_token"
+            base[:grant_type] = 'refresh_token'
             base[:refresh_token] = @refresh_token
           else
-            base[:grant_type] = "authorization_code"
+            base[:grant_type] = 'authorization_code'
             base[:code] = @code
             base[:redirect_uri] = @redirect_uri
             base[:code_verifier] = @code_verifier if @code_verifier.present?

@@ -15,7 +15,7 @@ module Vendors
         # @param commentary [String] the post body (supports @mentions, #hashtags)
         # @param media [Hash, nil] e.g. { "id" => "urn:li:image:...", "altText" => "..." }
         # @param article [Hash, nil] { source:, title:, description:, thumbnail? }
-        def initialize(social_account:, author_urn:, commentary:, media: nil, article: nil, visibility: "PUBLIC")
+        def initialize(social_account:, author_urn:, commentary:, media: nil, article: nil, visibility: 'PUBLIC')
           @social_account = social_account
           @author_urn = author_urn
           @commentary = commentary
@@ -27,37 +27,37 @@ module Vendors
         # Returns { post_urn: "urn:li:share:..." }.
         def call
           client = Vendors::Linkedin::Client.new(social_account: @social_account)
-          response = client.rest_post_raw("/rest/posts", payload)
+          response = client.rest_post_raw('/rest/posts', payload)
 
           unless response.status == 201
             raise Vendors::Base::Error.new(
-              "LinkedIn create post failed", status: response.status, body: response.body
+              'LinkedIn create post failed', status: response.status, body: response.body
             )
           end
 
-          { post_urn: response.headers["x-restli-id"] }
+          { post_urn: response.headers['x-restli-id'] }
         end
 
         private
 
         def payload
           body = {
-            "author" => @author_urn,
-            "commentary" => @commentary.to_s,
-            "visibility" => @visibility,
-            "distribution" => {
-              "feedDistribution" => "MAIN_FEED",
-              "targetEntities" => [],
-              "thirdPartyDistributionChannels" => []
+            'author' => @author_urn,
+            'commentary' => @commentary.to_s,
+            'visibility' => @visibility,
+            'distribution' => {
+              'feedDistribution' => 'MAIN_FEED',
+              'targetEntities' => [],
+              'thirdPartyDistributionChannels' => []
             },
-            "lifecycleState" => "PUBLISHED",
-            "isReshareDisabledByAuthor" => false
+            'lifecycleState' => 'PUBLISHED',
+            'isReshareDisabledByAuthor' => false
           }
 
           if @media
-            body["content"] = { "media" => @media }
+            body['content'] = { 'media' => @media }
           elsif @article
-            body["content"] = { "article" => @article }
+            body['content'] = { 'article' => @article }
           end
 
           body

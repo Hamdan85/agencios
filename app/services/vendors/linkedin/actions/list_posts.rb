@@ -18,8 +18,8 @@ module Vendors
         def call
           client = Vendors::Linkedin::Client.new(social_account: @social_account)
           client.rest_get(
-            "/rest/posts",
-            q: "author", author: @author_urn
+            '/rest/posts',
+            q: 'author', author: @author_urn
           )
         end
       end

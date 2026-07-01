@@ -8,7 +8,7 @@ module Operations
     # Generation. Image is NOT Stripe-metered, but its vendor cost is recorded in
     # the AI ledger (AiUsageLog) via Operations::Ai::LogUsage.
     class GenerateImage < Operations::Base
-      PROVIDER = "google_banana"
+      PROVIDER = 'google_banana'
 
       def initialize(ticket: nil, prompt: nil, ref_images: [], aspect_ratio: nil, creative_type: nil, client_id: nil)
         @ticket        = ticket
@@ -25,36 +25,36 @@ module Operations
         prompt = ctx.image_prompt(@prompt)
 
         creative = Operations::Creatives::Create.call(
-          ticket:        @ticket,
+          ticket: @ticket,
           creative_type: ctx.creative_type || type,
-          source:        :generated,
-          status:        :generating,
-          provider:      PROVIDER,
-          metadata:      { prompt: prompt, aspect_ratio: aspect }
+          source: :generated,
+          status: :generating,
+          provider: PROVIDER,
+          metadata: { prompt: prompt, aspect_ratio: aspect }
         )
 
         generation = workspace.generations.create!(
-          user:       Current.user,
-          creative:   creative,
-          kind:       :image,
-          status:     :processing,
-          provider:   PROVIDER,
+          user: Current.user,
+          creative: creative,
+          kind: :image,
+          status: :processing,
+          provider: PROVIDER,
           cost_cents: 0, # not Stripe-metered; real vendor cost is in AiUsageLog
-          params:     { prompt: prompt, aspect_ratio: aspect },
-          result:     {}
+          params: { prompt: prompt, aspect_ratio: aspect },
+          result: {}
         )
 
         # Charge prepaid credits BEFORE spending vendor $ — raises
         # InsufficientCredits (→ 402) if the wallet can't cover it.
         Operations::Credits::Debit.call(
-          workspace:  workspace,
-          amount:     Pricing.credits_for(kind: :image),
+          workspace: workspace,
+          amount: Pricing.credits_for(kind: :image),
           generation: generation
         )
 
         begin
           result = Vendors::Google::Banana::Actions::GenerateImage.call(
-            prompt:       prompt,
+            prompt: prompt,
             aspect_ratio: aspect
           )
         rescue StandardError
@@ -65,22 +65,22 @@ module Operations
         end
 
         creative.assets.attach(
-          io:           StringIO.new(result[:bytes]),
-          filename:     "creative-#{creative.id}.jpg",
+          io: StringIO.new(result[:bytes]),
+          filename: "creative-#{creative.id}.jpg",
           content_type: result[:content_type]
         )
         creative.update!(status: :ready)
         generation.update!(status: :completed)
 
         log_ai_cost(generation)
-        broadcast(event: "generation_done", id: generation.id, kind: "image")
+        broadcast(event: 'generation_done', id: generation.id, kind: 'image')
         generation
       end
 
       private
 
       def type
-        @creative_type.presence || @ticket&.creative_type.presence || "feed_image"
+        @creative_type.presence || @ticket&.creative_type.presence || 'feed_image'
       end
 
       def resolve_client
@@ -91,12 +91,12 @@ module Operations
 
       def log_ai_cost(generation)
         Operations::Ai::LogUsage.call(
-          provider:  AiUsageLog::PROVIDER_GOOGLE_BANANA,
-          operation: "generate_image",
-          model:     "imagen",
-          units:     1,
+          provider: AiUsageLog::PROVIDER_GOOGLE_BANANA,
+          operation: 'generate_image',
+          model: 'imagen',
+          units: 1,
           unit_kind: AiUsageLog::UNIT_IMAGE,
-          subject:   generation
+          subject: generation
         )
       end
 

@@ -10,7 +10,7 @@ module Operations
     # webhook / PollHeygenVideoJob finalizes the Creative + Generation and meters
     # it (Stripe) + records the HeyGen vendor cost (AiUsageLog).
     class GenerateUgcVideo < Operations::Base
-      PROVIDER = "heygen"
+      PROVIDER = 'heygen'
 
       def initialize(ticket: nil, script: nil, avatar: nil, voice: nil, creative_type: nil, client_id: nil)
         @ticket        = ticket
@@ -24,43 +24,43 @@ module Operations
       def call
         ctx    = ::Tickets::CreativeContext.for(@ticket, creative_type: type, client: resolve_client)
         script = @script.presence || ctx.script
-        aspect = ctx.aspect_ratio.presence || "9:16"
+        aspect = ctx.aspect_ratio.presence || '9:16'
 
         creative = Operations::Creatives::Create.call(
-          ticket:        @ticket,
+          ticket: @ticket,
           creative_type: ctx.creative_type || type,
-          source:        :generated,
-          status:        :generating,
-          provider:      PROVIDER
+          source: :generated,
+          status: :generating,
+          provider: PROVIDER
         )
 
         generation = workspace.generations.create!(
-          user:        Current.user,
-          creative:    creative,
-          kind:        :video,
-          status:      :processing,
-          provider:    PROVIDER,
-          params:      { script: script, avatar: @avatar, voice: @voice, aspect_ratio: aspect,
-                         estimated_seconds: Pricing::DEFAULT_VIDEO_SECONDS }
+          user: Current.user,
+          creative: creative,
+          kind: :video,
+          status: :processing,
+          provider: PROVIDER,
+          params: { script: script, avatar: @avatar, voice: @voice, aspect_ratio: aspect,
+                    estimated_seconds: Pricing::DEFAULT_VIDEO_SECONDS }
         )
 
         # Hold an estimate of the credit cost BEFORE kicking off the (paid) render.
         # FinalizeGeneration reconciles it to the real duration on completion.
         # Raises InsufficientCredits (→ 402) if the wallet can't cover the estimate.
         Operations::Credits::Debit.call(
-          workspace:  workspace,
-          amount:     Pricing.credits_for(kind: :video, seconds: Pricing::DEFAULT_VIDEO_SECONDS),
+          workspace: workspace,
+          amount: Pricing.credits_for(kind: :video, seconds: Pricing::DEFAULT_VIDEO_SECONDS),
           generation: generation,
-          description: "Geração de vídeo (estimativa)"
+          description: 'Geração de vídeo (estimativa)'
         )
 
         begin
           video_id = Vendors::Heygen::Actions::GenerateVideo.call(
-            avatar:       @avatar,
-            voice:        @voice,
-            script:       script,
+            avatar: @avatar,
+            voice: @voice,
+            script: script,
             aspect_ratio: aspect,
-            dimension:    dimension(ctx)
+            dimension: dimension(ctx)
           )
         rescue StandardError
           Operations::Credits::Refund.call(generation: generation)
@@ -71,14 +71,14 @@ module Operations
 
         generation.update!(external_id: video_id)
 
-        broadcast(event: "generation_progress", id: generation.id, kind: "video", status: "processing")
+        broadcast(event: 'generation_progress', id: generation.id, kind: 'video', status: 'processing')
         generation
       end
 
       private
 
       def type
-        @creative_type.presence || @ticket&.creative_type.presence || "ugc_video"
+        @creative_type.presence || @ticket&.creative_type.presence || 'ugc_video'
       end
 
       def resolve_client

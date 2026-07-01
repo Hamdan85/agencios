@@ -26,8 +26,8 @@ module Vendors
           params = {
             client_id: @client.app_id,
             redirect_uri: @redirect_uri,
-            response_type: "code",
-            scope: SCOPES.join(","),
+            response_type: 'code',
+            scope: SCOPES.join(','),
             state: @state
           }
           "#{@client.authorize_url_base}?#{URI.encode_www_form(params)}"

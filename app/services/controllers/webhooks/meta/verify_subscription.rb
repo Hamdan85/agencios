@@ -12,9 +12,9 @@ module Controllers
 
         def call
           Vendors::Meta::Webhook.verify_subscription(
-            mode: @params["hub.mode"],
-            token: @params["hub.verify_token"],
-            challenge: @params["hub.challenge"]
+            mode: @params['hub.mode'],
+            token: @params['hub.verify_token'],
+            challenge: @params['hub.challenge']
           )
         end
       end

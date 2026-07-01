@@ -20,12 +20,12 @@ module Vendors
           client = Vendors::Linkedin::Client.new(social_account: @social_account)
           response = client.rest_post_raw(
             "/rest/posts/#{Vendors::Linkedin::Client.encode_urn(@post_urn)}",
-            { "patch" => { "$set" => @set } },
-            extra_headers: { "X-RestLi-Method" => "PARTIAL_UPDATE" }
+            { 'patch' => { '$set' => @set } },
+            extra_headers: { 'X-RestLi-Method' => 'PARTIAL_UPDATE' }
           )
           unless response.status == 204
             raise Vendors::Base::Error.new(
-              "LinkedIn update post failed", status: response.status, body: response.body
+              'LinkedIn update post failed', status: response.status, body: response.body
             )
           end
           true

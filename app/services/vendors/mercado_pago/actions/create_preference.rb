@@ -20,7 +20,7 @@ module Vendors
         def self.call(...) = new(...).call
 
         def initialize(invoice:, payer:, client: nil, marketplace_fee: nil,
-                       back_urls: nil, auto_return: "approved", extra: {})
+                       back_urls: nil, auto_return: 'approved', extra: {})
           @invoice = invoice
           @payer = payer
           @client = client || Vendors::MercadoPago::Client.new(workspace: invoice.workspace)
@@ -42,7 +42,7 @@ module Vendors
               title: title,
               quantity: 1,
               unit_price: unit_price,
-              currency_id: @invoice.currency.presence || "BRL"
+              currency_id: @invoice.currency.presence || 'BRL'
             }],
             payer: @payer,
             external_reference: @invoice.external_reference,

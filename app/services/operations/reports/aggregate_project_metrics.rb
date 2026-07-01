@@ -63,7 +63,7 @@ module Operations
         posts.sum do |post|
           next 0 unless REEL_TYPES.include?(post.ticket&.creative_type)
 
-          (latest_for(post)&.shares).to_i
+          latest_for(post)&.shares.to_i
         end
       end
 
@@ -92,7 +92,7 @@ module Operations
       # Aggregate views/shares per creative type — the structural pattern behind
       # "which formats perform".
       def format_breakdown
-        groups = content_performance.group_by { |c| c[:creative_type].presence || "outros" }
+        groups = content_performance.group_by { |c| c[:creative_type].presence || 'outros' }
         groups.map do |type, entries|
           {
             creative_type: type,

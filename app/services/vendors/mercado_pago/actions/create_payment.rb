@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "securerandom"
+require 'securerandom'
 
 module Vendors
   module MercadoPago
@@ -25,8 +25,8 @@ module Vendors
         # fixed strings; card's brand id comes from the tokenization step (passed
         # explicitly), defaulting to "master" only as a placeholder.
         PAYMENT_METHOD_IDS = {
-          pix: "pix",
-          boleto: "bolbradesco",
+          pix: 'pix',
+          boleto: 'bolbradesco',
           card: nil
         }.freeze
 
@@ -108,7 +108,7 @@ module Vendors
           return @expires_at if @expires_at.is_a?(String)
           return nil unless @invoice.due_date
 
-          @invoice.due_date.end_of_day.in_time_zone("America/Sao_Paulo").iso8601(3)
+          @invoice.due_date.end_of_day.in_time_zone('America/Sao_Paulo').iso8601(3)
         end
       end
     end

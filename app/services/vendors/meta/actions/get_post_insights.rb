@@ -23,7 +23,7 @@ module Vendors
         def call
           @client.get(
             "/#{@post_id}/insights",
-            params: { metric: Array(@metrics).join(",") }
+            params: { metric: Array(@metrics).join(',') }
           )
         end
       end

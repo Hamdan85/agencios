@@ -41,7 +41,7 @@ module Vendors
           payload[:callback_url] = @callback_url if @callback_url
 
           body = @client.post("/v2/template/#{@template_id}/generate", payload)
-          body.dig("data", "video_id")
+          body.dig('data', 'video_id')
         end
       end
     end

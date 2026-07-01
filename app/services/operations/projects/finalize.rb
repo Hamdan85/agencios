@@ -15,7 +15,7 @@ module Operations
         @project.update!(status: :completed, completed_at: @project.completed_at || Time.current)
 
         report = enqueue_report
-        Broadcaster.board(@project.workspace_id, "project_finalized", project_id: @project.id)
+        Broadcaster.board(@project.workspace_id, 'project_finalized', project_id: @project.id)
         report
       end
 

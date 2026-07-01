@@ -14,7 +14,7 @@ module Operations
 
       def call
         @attachment.update!(@attributes)
-        Broadcaster.ticket(@attachment.ticket, "attachment_updated", attachment_id: @attachment.id)
+        Broadcaster.ticket(@attachment.ticket, 'attachment_updated', attachment_id: @attachment.id)
         @attachment
       end
     end

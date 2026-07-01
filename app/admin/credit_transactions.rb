@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 ActiveAdmin.register CreditTransaction do
-  menu parent: "Tenants", label: "Créditos (ledger)", priority: 4
+  menu parent: 'Tenants', label: 'Créditos (ledger)', priority: 4
   actions :index, :show
 
   filter :workspace, collection: -> { Workspace.order(:name) }
@@ -9,25 +9,27 @@ ActiveAdmin.register CreditTransaction do
   filter :created_at
 
   scope :all, default: true
-  scope("Débitos") { |s| s.where(kind: "debit") }
-  scope("Compras") { |s| s.where(kind: "purchase") }
-  scope("Concessões") { |s| s.where(kind: %w[grant adjustment]) }
+  scope('Débitos') { |s| s.where(kind: 'debit') }
+  scope('Compras') { |s| s.where(kind: 'purchase') }
+  scope('Concessões') { |s| s.where(kind: %w[grant adjustment]) }
 
   index do
     id_column
-    column("Workspace") { |t| link_to(t.workspace.name, admin_workspace_path(t.workspace)) }
+    column('Workspace') { |t| link_to(t.workspace.name, admin_workspace_path(t.workspace)) }
     column :kind
     column :bucket
-    column("Valor") { |t| t.amount }
-    column("Saldo após") { |t| t.balance_after }
-    column("Geração") { |t| t.generation_id ? link_to("##{t.generation_id}", admin_generation_path(t.generation_id)) : "—" }
+    column('Valor', &:amount)
+    column('Saldo após', &:balance_after)
+    column('Geração') do |t|
+      t.generation_id ? link_to("##{t.generation_id}", admin_generation_path(t.generation_id)) : '—'
+    end
     column :description
     column :created_at
   end
 
   show do
     attributes_table do
-      row("Workspace") { |t| link_to(t.workspace.name, admin_workspace_path(t.workspace)) }
+      row('Workspace') { |t| link_to(t.workspace.name, admin_workspace_path(t.workspace)) }
       row :kind
       row :bucket
       row :amount
@@ -36,8 +38,10 @@ ActiveAdmin.register CreditTransaction do
       row :balance_after
       row :expires_at
       row :description
-      row("Geração") { |t| t.generation_id ? link_to("##{t.generation_id}", admin_generation_path(t.generation_id)) : "—" }
-      row("Usuário") { |t| t.user&.email }
+      row('Geração') do |t|
+        t.generation_id ? link_to("##{t.generation_id}", admin_generation_path(t.generation_id)) : '—'
+      end
+      row('Usuário') { |t| t.user&.email }
       row :created_at
     end
   end

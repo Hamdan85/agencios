@@ -18,10 +18,10 @@ module Vendors
         def self.call(...) = new(...).call
 
         # `interval` is "month" (default) or "year" (annual, discounted).
-        def initialize(workspace:, plan:, success_url:, cancel_url:, interval: "month", client: nil)
+        def initialize(workspace:, plan:, success_url:, cancel_url:, interval: 'month', client: nil)
           @workspace = workspace
           @plan = plan.to_s
-          @interval = %w[month year].include?(interval.to_s) ? interval.to_s : "month"
+          @interval = %w[month year].include?(interval.to_s) ? interval.to_s : 'month'
           @success_url = success_url
           @cancel_url = cancel_url
           @client = client || Client.new
@@ -30,12 +30,12 @@ module Vendors
         # Returns the Stripe::Checkout::Session (its `.url` is the redirect target).
         def call
           @client.create_checkout_session(
-            mode: "subscription",
+            mode: 'subscription',
             line_items: [licensed_line_item],
             customer: existing_customer_id,
             client_reference_id: @workspace.id.to_s,
             # Force a card up front, even for the trial (card-required trial).
-            payment_method_collection: "always",
+            payment_method_collection: 'always',
             success_url: @success_url,
             cancel_url: @cancel_url,
             subscription_data: subscription_data,
@@ -52,7 +52,7 @@ module Vendors
             data[:trial_period_days] = Pricing.trial_days
             # If the trial ends with no usable card, cancel rather than silently
             # granting free access.
-            data[:trial_settings] = { end_behavior: { missing_payment_method: "cancel" } }
+            data[:trial_settings] = { end_behavior: { missing_payment_method: 'cancel' } }
           end
           data
         end
@@ -74,10 +74,10 @@ module Vendors
         def resolve_price_id
           plan = PricingPlan.find_by(key: @plan)
           if plan
-            cached = @interval == "year" ? plan.stripe_annual_price_id : plan.stripe_price_id
+            cached = @interval == 'year' ? plan.stripe_annual_price_id : plan.stripe_price_id
             return cached if cached.present?
 
-            lookup = @interval == "year" ? plan.stripe_annual_lookup_key : plan.stripe_lookup_key
+            lookup = @interval == 'year' ? plan.stripe_annual_lookup_key : plan.stripe_lookup_key
             if lookup.present?
               price = @client.price_by_lookup_key(lookup)
               return price.id if price

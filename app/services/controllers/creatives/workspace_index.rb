@@ -11,8 +11,8 @@ module Controllers
       def call
         deny_guests!
         scope = workspace.creatives.order(created_at: :desc)
-        scope = scope.where(creative_type: @params[:type])   if @params[:type].present?
-        scope = scope.where(status: @params[:status])         if @params[:status].present?
+        scope = scope.where(creative_type: @params[:type]) if @params[:type].present?
+        scope = scope.where(status: @params[:status]) if @params[:status].present?
         scope = apply_client_filter(scope)
         scope = apply_search(scope)
         {
@@ -28,14 +28,14 @@ module Controllers
 
         cid = @params[:client_id].to_i
         scope.left_joins(ticket: { project: :client })
-             .where("creatives.client_id = ? OR clients.id = ?", cid, cid)
+             .where('creatives.client_id = ? OR clients.id = ?', cid, cid)
       end
 
       def apply_search(scope)
         return scope if @params[:q].blank?
 
         q = "%#{@params[:q].strip}%"
-        scope.where("creatives.name ILIKE ? OR creatives.caption ILIKE ?", q, q)
+        scope.where('creatives.name ILIKE ? OR creatives.caption ILIKE ?', q, q)
       end
     end
   end

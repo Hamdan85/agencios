@@ -14,7 +14,7 @@ module Controllers
         attachment = ticket.attachments.find(@params[:id])
         authorize_removal!(attachment)
         Operations::Attachments::Destroy.call(attachment: attachment)
-        { message: "Arquivo removido." }
+        { message: 'Arquivo removido.' }
       end
 
       private
@@ -23,7 +23,7 @@ module Controllers
         return if membership&.can_manage?
         return if attachment.uploaded_by_id == user&.id
 
-        raise Operations::Errors::Forbidden, "Apenas quem enviou o arquivo ou um gestor pode removê-lo."
+        raise Operations::Errors::Forbidden, 'Apenas quem enviou o arquivo ou um gestor pode removê-lo.'
       end
     end
   end

@@ -11,11 +11,11 @@ module Controllers
 
       def call
         data = Token.verify(@params[:token])
-        raise Operations::Errors::Invalid, "Convite inválido ou expirado." unless data
+        raise Operations::Errors::Invalid, 'Convite inválido ou expirado.' unless data
 
-        target = Workspace.find(data["workspace_id"])
+        target = Workspace.find(data['workspace_id'])
         membership = target.memberships.find_or_create_by!(user: user) do |m|
-          m.role = data["role"]
+          m.role = data['role']
         end
 
         Current.session.update!(workspace_id: target.id)

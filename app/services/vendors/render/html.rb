@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "ferrum"
+require 'ferrum'
 
 module Vendors
   # Headless HTML→PNG renderer (Ferrum / Chromium over CDP). Used to compose
@@ -12,7 +12,7 @@ module Vendors
     class Html
       class RenderError < StandardError; end
 
-      DEFAULT_SELECTOR = ".slide"
+      DEFAULT_SELECTOR = '.slide'
 
       def self.call(...) = new(...).call
 
@@ -46,7 +46,7 @@ module Vendors
         new(width: width, height: height, selector: selector).render_many(htmls)
       end
 
-      def initialize(html: nil, width:, height:, selector: DEFAULT_SELECTOR)
+      def initialize(width:, height:, html: nil, selector: DEFAULT_SELECTOR)
         @html     = html
         @width    = width.to_i
         @height   = height.to_i
@@ -87,7 +87,9 @@ module Vendors
         nil
       ensure
         begin
-          page.evaluate_async("document.fonts && document.fonts.ready ? document.fonts.ready.then(() => arguments[0]()) : arguments[0]()", 5)
+          page.evaluate_async(
+            'document.fonts && document.fonts.ready ? document.fonts.ready.then(() => arguments[0]()) : arguments[0]()', 5
+          )
         rescue StandardError
           nil
         end
@@ -95,24 +97,24 @@ module Vendors
 
       def build_browser
         Ferrum::Browser.new(
-          headless:                  true,
-          browser_path:              browser_path,
-          window_size:               [@width, @height],
-          timeout:                   30,
-          process_timeout:           30,
+          headless: true,
+          browser_path: browser_path,
+          window_size: [@width, @height],
+          timeout: 30,
+          process_timeout: 30,
           pending_connection_errors: false,
-          browser_options:           {
-            "no-sandbox"            => nil,
-            "disable-dev-shm-usage" => nil,
-            "disable-gpu"           => nil,
-            "hide-scrollbars"       => nil
+          browser_options: {
+            'no-sandbox' => nil,
+            'disable-dev-shm-usage' => nil,
+            'disable-gpu' => nil,
+            'hide-scrollbars' => nil
           }
         )
       end
 
       def browser_path
-        ENV["FERRUM_BROWSER_PATH"].presence ||
-          ENV["CHROME_PATH"].presence ||
+        ENV['FERRUM_BROWSER_PATH'].presence ||
+          ENV['CHROME_PATH'].presence ||
           %w[/usr/bin/chromium /usr/bin/chromium-browser /usr/bin/google-chrome].find { |p| File.executable?(p) }
       end
     end

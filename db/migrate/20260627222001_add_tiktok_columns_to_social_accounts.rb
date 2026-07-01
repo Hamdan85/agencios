@@ -10,6 +10,6 @@ class AddTiktokColumnsToSocialAccounts < ActiveRecord::Migration[8.1]
     add_column :social_accounts, :display_name, :string              # creator display name
     add_column :social_accounts, :avatar_url, :string                # creator avatar (note: TikTok 6h TTL)
     add_column :social_accounts, :refresh_token_expires_at, :datetime # TikTok refresh window (~365d)
-    add_column :social_accounts, :revoked_at, :datetime              # set on authorization.removed webhook
+    add_column :social_accounts, :revoked_at, :datetime # set on authorization.removed webhook
   end
 end

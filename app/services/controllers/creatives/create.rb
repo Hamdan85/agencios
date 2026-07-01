@@ -15,7 +15,7 @@ module Controllers
           creative_type: @params.require(:creative_type),
           source: :uploaded,
           caption: @params[:caption],
-          metadata: @params[:metadata]&.permit!&.to_h || {}
+          metadata: @params[:metadata]&.permit!.to_h
         )
         attach_assets(creative)
         { creative: serialize(creative, CreativeSerializer) }

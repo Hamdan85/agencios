@@ -38,9 +38,9 @@ module Vendors
           return false unless price
 
           plan.update!(
-            stripe_price_id:   price.id,
+            stripe_price_id: price.id,
             stripe_product_id: product_id(price) || plan.stripe_product_id,
-            price_cents:       price.unit_amount || plan.price_cents
+            price_cents: price.unit_amount || plan.price_cents
           )
           true
         end
@@ -53,13 +53,11 @@ module Vendors
 
           plan.update!(
             stripe_annual_price_id: price.id,
-            stripe_product_id:      product_id(price) || plan.stripe_product_id,
-            annual_price_cents:     price.unit_amount || plan.annual_price_cents
+            stripe_product_id: product_id(price) || plan.stripe_product_id,
+            annual_price_cents: price.unit_amount || plan.annual_price_cents
           )
           true
         end
-
-        private
 
         # `product` is a string id, or the expanded object when we requested it.
         def product_id(price)

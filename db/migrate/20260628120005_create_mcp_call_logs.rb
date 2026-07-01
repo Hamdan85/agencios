@@ -10,11 +10,11 @@ class CreateMcpCallLogs < ActiveRecord::Migration[8.1]
       t.references :user,        null: true, foreign_key: true
       t.references :workspace,   null: true, foreign_key: true
       t.bigint     :oauth_application_id
-      t.string     :tool_name,   null: false
+      t.string     :tool_name, null: false
       t.string     :scope
-      t.boolean    :ok,          null: false, default: true
+      t.boolean    :ok, null: false, default: true
       t.string     :error_class
-      t.datetime   :created_at,  null: false
+      t.datetime   :created_at, null: false
     end
 
     add_index :mcp_call_logs, :tool_name

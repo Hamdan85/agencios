@@ -68,7 +68,7 @@ class Workspace < ApplicationRecord
 
   # ── Plan-gated features ──────────────────────────────────────────────
   # Plan tier ordering (matches the Subscription#plan enum).
-  PLAN_RANK = { "solo" => 0, "agencia" => 1, "enterprise" => 2 }.freeze
+  PLAN_RANK = { 'solo' => 0, 'agencia' => 1, 'enterprise' => 2 }.freeze
 
   def plan_rank = PLAN_RANK.fetch(plan.to_s, 0)
 

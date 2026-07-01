@@ -19,44 +19,44 @@
 #
 # See docs/integrations/heygen.md §3e.
 namespace :heygen do
-  desc "Register the agencios webhook endpoint with HeyGen and print the signing secret"
+  desc 'Register the agencios webhook endpoint with HeyGen and print the signing secret'
   task register_webhook: :environment do
-    url = ENV["URL"].presence || "#{SystemConfig.app_host}/webhooks/heygen"
-    puts "== heygen:register_webhook =="
+    url = ENV['URL'].presence || "#{SystemConfig.app_host}/webhooks/heygen"
+    puts '== heygen:register_webhook =='
     puts "Registering endpoint: #{url}"
     puts
 
     endpoint = Vendors::Heygen::Actions::AddWebhookEndpoint.call(url: url)
-    secret = endpoint["secret"] || endpoint[:secret]
+    secret = endpoint['secret'] || endpoint[:secret]
 
     puts "  endpoint_id: #{endpoint['endpoint_id'] || endpoint[:endpoint_id]}"
     puts "  status:      #{endpoint['status'] || endpoint[:status]}"
     puts "  events:      #{Array(endpoint['events'] || endpoint[:events]).join(', ')}"
     puts
     if secret.present?
-      puts "  SIGNING SECRET (shown only once — store it now):"
+      puts '  SIGNING SECRET (shown only once — store it now):'
       puts "  #{secret}"
       puts
-      puts "  → bin/rails credentials:edit, then add under `heygen:`:"
+      puts '  → bin/rails credentials:edit, then add under `heygen:`:'
       puts "      webhook_secret: #{secret}"
     else
-      puts "  ⚠ No secret in the response. If the endpoint already existed, rotate it:"
-      puts "      POST /v3/webhooks/endpoints/{id}/rotate-secret"
+      puts '  ⚠ No secret in the response. If the endpoint already existed, rotate it:'
+      puts '      POST /v3/webhooks/endpoints/{id}/rotate-secret'
     end
   rescue StandardError => e
     abort "  ✗ Failed: #{e.class}: #{e.message}"
   end
 
-  desc "List the webhook endpoints currently registered with HeyGen"
+  desc 'List the webhook endpoints currently registered with HeyGen'
   task list_webhooks: :environment do
-    puts "== heygen:list_webhooks =="
-    body = Vendors::Heygen::Client.new.get("/v3/webhooks/endpoints")
-    endpoints = body.dig("data", "endpoints") || body["data"] || body
+    puts '== heygen:list_webhooks =='
+    body = Vendors::Heygen::Client.new.get('/v3/webhooks/endpoints')
+    endpoints = body.dig('data', 'endpoints') || body['data'] || body
     Array(endpoints).each do |ep|
       ep = ep.with_indifferent_access
       puts "  #{ep[:endpoint_id]}  #{ep[:status]}  #{ep[:url]}  [#{Array(ep[:events]).join(', ')}]"
     end
-    puts "  (secret is never returned by list — only on create/rotate)"
+    puts '  (secret is never returned by list — only on create/rotate)'
   rescue StandardError => e
     abort "  ✗ Failed: #{e.class}: #{e.message}"
   end

@@ -24,7 +24,7 @@ class Subscription < ApplicationRecord
     false
   end
 
-  def trialing? = status == "trialing"
+  def trialing? = status == 'trialing'
 
   def trial_active?
     trial_ends_at.blank? || trial_ends_at.future?

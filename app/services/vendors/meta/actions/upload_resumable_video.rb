@@ -24,7 +24,7 @@ module Vendors
           @client.rupload(
             "ig-api-upload/#{@client.graph_version}/#{@creation_id}",
             body: @bytes,
-            headers: { "offset" => @offset, "file_size" => @file_size }
+            headers: { 'offset' => @offset, 'file_size' => @file_size }
           )
         end
       end

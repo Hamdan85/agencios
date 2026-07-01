@@ -17,9 +17,9 @@ class AiUsageLog < ApplicationRecord
 
   validates :provider, :operation, presence: true
 
-  PROVIDER_ANTHROPIC     = "anthropic"
-  PROVIDER_GOOGLE_BANANA = "google_banana"
-  PROVIDER_HEYGEN        = "heygen"
+  PROVIDER_ANTHROPIC     = 'anthropic'
+  PROVIDER_GOOGLE_BANANA = 'google_banana'
+  PROVIDER_HEYGEN        = 'heygen'
   PROVIDERS = [PROVIDER_ANTHROPIC, PROVIDER_GOOGLE_BANANA, PROVIDER_HEYGEN].freeze
 
   # --- pricing ---------------------------------------------------------------
@@ -27,14 +27,14 @@ class AiUsageLog < ApplicationRecord
   # Anthropic price per MILLION tokens, in USD cents, keyed by model prefix
   # (longest-prefix-wins, so order from most specific to least).
   TOKEN_PRICING = {
-    "claude-fable"     => { input: 1000, output: 5000 },
-    "claude-opus"      => { input: 500,  output: 2500 },
-    "claude-3-opus"    => { input: 500,  output: 2500 },
-    "claude-sonnet"    => { input: 300,  output: 1500 },
-    "claude-3-5-sonnet" => { input: 300, output: 1500 },
-    "claude-3-7-sonnet" => { input: 300, output: 1500 },
-    "claude-haiku"     => { input: 100,  output: 500 },
-    "claude-3-5-haiku" => { input: 100,  output: 500 }
+    'claude-fable' => { input: 1000, output: 5000 },
+    'claude-opus' => { input: 500, output: 2500 },
+    'claude-3-opus' => { input: 500,  output: 2500 },
+    'claude-sonnet' => { input: 300,  output: 1500 },
+    'claude-3-5-sonnet' => { input: 300, output: 1500 },
+    'claude-3-7-sonnet' => { input: 300, output: 1500 },
+    'claude-haiku' => { input: 100, output: 500 },
+    'claude-3-5-haiku' => { input: 100, output: 500 }
   }.freeze
 
   CACHE_READ_FACTOR  = 0.1
@@ -45,13 +45,13 @@ class AiUsageLog < ApplicationRecord
   # default is the standard-avatar rate; callers that know the engine pass an
   # explicit cost_cents instead.
   UNIT_PRICING = {
-    PROVIDER_GOOGLE_BANANA => { unit_kind: "image",  cents_per_unit: 4.0 },   # ~ $0.039 / image
-    PROVIDER_HEYGEN        => { unit_kind: "second", cents_per_unit: 1.667 }  # ~ $1.00 / min standard avatar
+    PROVIDER_GOOGLE_BANANA => { unit_kind: 'image', cents_per_unit: 4.0 }, # ~ $0.039 / image
+    PROVIDER_HEYGEN => { unit_kind: 'second', cents_per_unit: 1.667 } # ~ $1.00 / min standard avatar
   }.freeze
 
-  UNIT_TOKEN  = "token"
-  UNIT_IMAGE  = "image"
-  UNIT_SECOND = "second"
+  UNIT_TOKEN  = 'token'
+  UNIT_IMAGE  = 'image'
+  UNIT_SECOND = 'second'
 
   scope :recent_first, -> { order(created_at: :desc) }
   scope :for_provider, ->(p) { where(provider: p) }

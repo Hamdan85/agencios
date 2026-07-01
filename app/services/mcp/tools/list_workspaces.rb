@@ -6,14 +6,14 @@ module Mcp
     # can act on, with the slug to pass as the `workspace` argument of every
     # other tool. Claude should call this first.
     class ListWorkspaces < BaseTool
-      tool_name "list_workspaces"
-      description "List the workspaces (teams) you can operate, with the slug to use as the " \
-                  "`workspace` argument of every other tool, plus your role in each. Read-only. " \
-                  "Call this first."
+      tool_name 'list_workspaces'
+      description 'List the workspaces (teams) you can operate, with the slug to use as the ' \
+                  '`workspace` argument of every other tool, plus your role in each. Read-only. ' \
+                  'Call this first.'
 
       def self.mcp_spec
         Mcp::Registry::Spec.new(
-          name: "list_workspaces", service: nil, description: description,
+          name: 'list_workspaces', service: nil, description: description,
           scope: :read, workspace_scoped: false, params_arg: false,
           side_effect: false, destructive: false, cost: false
         )

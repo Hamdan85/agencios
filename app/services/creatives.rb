@@ -14,14 +14,14 @@ module Creatives
 
   def registry
     @registry ||= {
-      "reel" => Creatives::Reel,
-      "feed_image" => Creatives::FeedImage,
-      "carousel" => Creatives::Carousel,
-      "story" => Creatives::Story,
-      "ugc_video" => Creatives::UgcVideo,
-      "ad" => Creatives::Ad,
-      "thumbnail" => Creatives::Thumbnail,
-      "cover" => Creatives::Cover
+      'reel' => Creatives::Reel,
+      'feed_image' => Creatives::FeedImage,
+      'carousel' => Creatives::Carousel,
+      'story' => Creatives::Story,
+      'ugc_video' => Creatives::UgcVideo,
+      'ad' => Creatives::Ad,
+      'thumbnail' => Creatives::Thumbnail,
+      'cover' => Creatives::Cover
     }
   end
 

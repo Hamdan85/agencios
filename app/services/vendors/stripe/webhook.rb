@@ -29,12 +29,12 @@ module Vendors
 
       def signing_secret
         secret = Vendors::Base.new.send(
-          :credential, :stripe, :webhook_secret, env: "STRIPE_WEBHOOK_SECRET"
+          :credential, :stripe, :webhook_secret, env: 'STRIPE_WEBHOOK_SECRET'
         )
         return secret if secret.present?
 
         raise Vendors::Base::NotConfiguredError,
-              "Credencial ausente: stripe.webhook_secret. Configure em rails credentials:edit."
+              'Credencial ausente: stripe.webhook_secret. Configure em rails credentials:edit.'
       end
     end
   end

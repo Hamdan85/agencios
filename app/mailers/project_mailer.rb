@@ -6,9 +6,9 @@ class ProjectMailer < ApplicationMailer
   # (app/frontend/lib/constants.js) — this email is the one place that renders
   # them server-side.
   CREATIVE_TYPE_LABELS = {
-    "reel" => "Reel", "feed_image" => "Imagem", "carousel" => "Carrossel",
-    "story" => "Story", "ugc_video" => "Vídeo UGC", "ad" => "Anúncio",
-    "thumbnail" => "Thumbnail", "cover" => "Capa"
+    'reel' => 'Reel', 'feed_image' => 'Imagem', 'carousel' => 'Carrossel',
+    'story' => 'Story', 'ugc_video' => 'Vídeo UGC', 'ad' => 'Anúncio',
+    'thumbnail' => 'Thumbnail', 'cover' => 'Capa'
   }.freeze
 
   # A read-only snapshot of the project's planned/produced content, sent to

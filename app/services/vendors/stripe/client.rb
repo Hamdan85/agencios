@@ -35,13 +35,13 @@ module Vendors
       # Pin the API version so webhook payload shapes are stable across gem
       # upgrades. Billing Meters + the metered-billing webhooks require Basil
       # (2025-03-31) or later. Overridable via the stripe.api_version credential.
-      DEFAULT_API_VERSION = "2025-03-31.basil"
+      DEFAULT_API_VERSION = '2025-03-31.basil'
 
       # Stripe price ids are resolved per plan from credentials by these keys.
       PLAN_PRICE_KEYS = {
-        "solo" => :solo,
-        "agencia" => :agencia,
-        "enterprise" => :enterprise
+        'solo' => :solo,
+        'agencia' => :agencia,
+        'enterprise' => :enterprise
       }.freeze
 
       # Metered usage prices that ride on every subscription, by Generation kind.
@@ -87,7 +87,7 @@ module Vendors
       # A recurring monthly Price tagged with a stable `lookup_key`.
       # `transfer_lookup_key: true` moves the key off any existing Price so
       # re-provisioning after a price change points the key at the new amount.
-      def create_price(product:, unit_amount:, lookup_key:, currency: "brl", interval: "month")
+      def create_price(product:, unit_amount:, lookup_key:, currency: 'brl', interval: 'month')
         with_error_mapping do
           ::Stripe::Price.create(
             product: product,
@@ -110,7 +110,7 @@ module Vendors
       # through here with no deploy. Returns the Stripe::Price (nil if none).
       def price_by_lookup_key(lookup_key)
         with_error_mapping do
-          ::Stripe::Price.list(lookup_keys: [lookup_key], active: true, expand: ["data.product"]).data.first
+          ::Stripe::Price.list(lookup_keys: [lookup_key], active: true, expand: ['data.product']).data.first
         end
       end
 
@@ -136,13 +136,13 @@ module Vendors
 
       # POST /v1/billing/meters — provisioning helper (run once per environment to
       # create the two meters). Not on the hot path; here for completeness/setup.
-      def create_meter(display_name:, event_name:, formula: "sum", payload_key: "value")
+      def create_meter(display_name:, event_name:, formula: 'sum', payload_key: 'value')
         params = {
           display_name: display_name,
           event_name: event_name,
           default_aggregation: { formula: formula },
           value_settings: { event_payload_key: payload_key },
-          customer_mapping: { type: "by_id", event_payload_key: "stripe_customer_id" }
+          customer_mapping: { type: 'by_id', event_payload_key: 'stripe_customer_id' }
         }
 
         with_error_mapping { ::Stripe::Billing::Meter.create(params) }
@@ -169,8 +169,8 @@ module Vendors
 
       def secret_key
         require_credential!(
-          credential(:stripe, :secret_key, env: "STRIPE_SECRET_KEY"),
-          "stripe.secret_key"
+          credential(:stripe, :secret_key, env: 'STRIPE_SECRET_KEY'),
+          'stripe.secret_key'
         )
       end
 

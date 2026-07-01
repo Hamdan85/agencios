@@ -30,7 +30,7 @@ module Controllers
         application = latest.application
         {
           id: latest.application_id,
-          name: application&.name || "MCP Client",
+          name: application&.name || 'MCP Client',
           scopes: latest.scopes.to_a,
           dynamically_registered: application&.dynamically_registered || false,
           connected_at: tokens.map(&:created_at).min&.iso8601,

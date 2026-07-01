@@ -11,8 +11,8 @@ module Prompts
   # Questions stream as plain text; the final plan arrives as a structured tool
   # call captured by Vendors::Anthropic::Client (→ StrategySession#proposed_plan).
   class StrategyPlanner < Base
-    TOOL_NAME = "propose_content_plan"
-    UPDATE_PROJECT_TOOL = "update_project"
+    TOOL_NAME = 'propose_content_plan'
+    UPDATE_PROJECT_TOOL = 'update_project'
 
     CREATIVE_TYPES = %w[reel carousel feed_image story ugc_video ad thumbnail].freeze
     CHANNELS = Ticket::CHANNELS
@@ -29,79 +29,79 @@ module Prompts
     # prompt so the contract and the instructions evolve together.
     def self.tool
       {
-        "name" => TOOL_NAME,
-        "description" => "Propõe o plano de conteúdo final: os tickets a criar, cada um " \
-                         "com data de postagem e uma checklist de produção estimada e " \
-                         "retro-agendada. Chame SOMENTE quando a estratégia estiver " \
-                         "completa, factível e validada com o usuário.",
-        "input_schema" => {
-          "type" => "object",
-          "required" => %w[summary tickets],
-          "properties" => {
-            "summary" => {
-              "type" => "string",
-              "description" => "Resumo curto da estratégia (cadência, janela, foco)."
+        'name' => TOOL_NAME,
+        'description' => 'Propõe o plano de conteúdo final: os tickets a criar, cada um ' \
+                         'com data de postagem e uma checklist de produção estimada e ' \
+                         'retro-agendada. Chame SOMENTE quando a estratégia estiver ' \
+                         'completa, factível e validada com o usuário.',
+        'input_schema' => {
+          'type' => 'object',
+          'required' => %w[summary tickets],
+          'properties' => {
+            'summary' => {
+              'type' => 'string',
+              'description' => 'Resumo curto da estratégia (cadência, janela, foco).'
             },
-            "tickets" => {
-              "type" => "array",
-              "description" => "Um item por peça de conteúdo a produzir na janela. Definem a " \
-                               "estratégia: tipo de criativo, canais, data de postagem e o " \
-                               "conteúdo de ideação de cada peça.",
-              "items" => {
-                "type" => "object",
-                "required" => %w[title creative_type channels scheduled_at brief objective
+            'tickets' => {
+              'type' => 'array',
+              'description' => 'Um item por peça de conteúdo a produzir na janela. Definem a ' \
+                               'estratégia: tipo de criativo, canais, data de postagem e o ' \
+                               'conteúdo de ideação de cada peça.',
+              'items' => {
+                'type' => 'object',
+                'required' => %w[title creative_type channels scheduled_at brief objective
                                  target_persona content_pillar format_hypothesis subtasks],
-                "properties" => {
-                  "title" => { "type" => "string" },
-                  "creative_type" => {
-                    "type" => "string", "enum" => CREATIVE_TYPES,
-                    "description" => "Formato da peça (delimita a estratégia)."
+                'properties' => {
+                  'title' => { 'type' => 'string' },
+                  'creative_type' => {
+                    'type' => 'string', 'enum' => CREATIVE_TYPES,
+                    'description' => 'Formato da peça (delimita a estratégia).'
                   },
-                  "channels" => {
-                    "type" => "array",
-                    "items" => { "type" => "string", "enum" => CHANNELS },
-                    "description" => "Redes onde a peça será postada."
+                  'channels' => {
+                    'type' => 'array',
+                    'items' => { 'type' => 'string', 'enum' => CHANNELS },
+                    'description' => 'Redes onde a peça será postada.'
                   },
-                  "priority" => { "type" => "string", "enum" => PRIORITIES },
-                  "scheduled_at" => {
-                    "type" => "string",
-                    "description" => "Data/hora prevista de postagem, ISO 8601."
+                  'priority' => { 'type' => 'string', 'enum' => PRIORITIES },
+                  'scheduled_at' => {
+                    'type' => 'string',
+                    'description' => 'Data/hora prevista de postagem, ISO 8601.'
                   },
-                  "brief" => {
-                    "type" => "string",
-                    "description" => "Briefing de ideação: contexto e direção da peça (2-3 frases)."
+                  'brief' => {
+                    'type' => 'string',
+                    'description' => 'Briefing de ideação: contexto e direção da peça (2-3 frases).'
                   },
-                  "objective" => {
-                    "type" => "string",
-                    "description" => "Objetivo do conteúdo em uma frase."
+                  'objective' => {
+                    'type' => 'string',
+                    'description' => 'Objetivo do conteúdo em uma frase.'
                   },
-                  "target_persona" => {
-                    "type" => "string",
-                    "description" => "Persona-alvo específica desta peça, em uma frase."
+                  'target_persona' => {
+                    'type' => 'string',
+                    'description' => 'Persona-alvo específica desta peça, em uma frase.'
                   },
-                  "content_pillar" => {
-                    "type" => "string",
-                    "description" => "Pilar de conteúdo (ex.: educacional, bastidores, prova social)."
+                  'content_pillar' => {
+                    'type' => 'string',
+                    'description' => 'Pilar de conteúdo (ex.: educacional, bastidores, prova social).'
                   },
-                  "format_hypothesis" => {
-                    "type" => "string",
-                    "description" => "Hipótese de formato (ex.: Reel narrativo de 30s)."
+                  'format_hypothesis' => {
+                    'type' => 'string',
+                    'description' => 'Hipótese de formato (ex.: Reel narrativo de 30s).'
                   },
-                  "subtasks" => {
-                    "type" => "array",
-                    "description" => "Checklist de produção, retro-agendada a partir do post.",
-                    "items" => {
-                      "type" => "object",
-                      "required" => %w[title estimate_hours lead_offset_days],
-                      "properties" => {
-                        "title" => { "type" => "string" },
-                        "estimate_hours" => {
-                          "type" => "number",
-                          "description" => "Esforço estimado em horas."
+                  'subtasks' => {
+                    'type' => 'array',
+                    'description' => 'Checklist de produção, retro-agendada a partir do post.',
+                    'items' => {
+                      'type' => 'object',
+                      'required' => %w[title estimate_hours lead_offset_days],
+                      'properties' => {
+                        'title' => { 'type' => 'string' },
+                        'estimate_hours' => {
+                          'type' => 'number',
+                          'description' => 'Esforço estimado em horas.'
                         },
-                        "lead_offset_days" => {
-                          "type" => "integer",
-                          "description" => "Dias ANTES da postagem em que a tarefa deve estar pronta."
+                        'lead_offset_days' => {
+                          'type' => 'integer',
+                          'description' => 'Dias ANTES da postagem em que a tarefa deve estar pronta.'
                         }
                       }
                     }
@@ -118,18 +118,18 @@ module Prompts
     # set realistic start/end dates, sharpen the name/description, change status).
     def self.update_project_tool
       {
-        "name" => UPDATE_PROJECT_TOOL,
-        "description" => "Atualiza os dados do PRÓPRIO projeto (não os tickets): nome, " \
-                         "descrição, datas de início/fim e status. Use quando fizer sentido " \
-                         "ajustar o projeto — ex.: definir a janela real da campanha.",
-        "input_schema" => {
-          "type" => "object",
-          "properties" => {
-            "name" => { "type" => "string" },
-            "description" => { "type" => "string" },
-            "starts_on" => { "type" => "string", "description" => "Data ISO (YYYY-MM-DD) ou vazio." },
-            "ends_on" => { "type" => "string", "description" => "Data ISO (YYYY-MM-DD) ou vazio." },
-            "status" => { "type" => "string", "enum" => PROJECT_STATUSES }
+        'name' => UPDATE_PROJECT_TOOL,
+        'description' => 'Atualiza os dados do PRÓPRIO projeto (não os tickets): nome, ' \
+                         'descrição, datas de início/fim e status. Use quando fizer sentido ' \
+                         'ajustar o projeto — ex.: definir a janela real da campanha.',
+        'input_schema' => {
+          'type' => 'object',
+          'properties' => {
+            'name' => { 'type' => 'string' },
+            'description' => { 'type' => 'string' },
+            'starts_on' => { 'type' => 'string', 'description' => 'Data ISO (YYYY-MM-DD) ou vazio.' },
+            'ends_on' => { 'type' => 'string', 'description' => 'Data ISO (YYYY-MM-DD) ou vazio.' },
+            'status' => { 'type' => 'string', 'enum' => PROJECT_STATUSES }
           }
         }
       }
@@ -191,8 +191,8 @@ module Prompts
         - Preencha SEMPRE todos os campos de ideação de cada ticket: `brief`, `objective`,
           `target_persona`, `content_pillar` e `format_hypothesis` — específicos por peça,
           coerentes com a marca e o posicionamento. Não deixe nenhum em branco.
-        - `creative_type` deve ser um de: #{CREATIVE_TYPES.join(", ")}.
-        - `channels` devem ser um subconjunto de: #{CHANNELS.join(", ")}.
+        - `creative_type` deve ser um de: #{CREATIVE_TYPES.join(', ')}.
+        - `channels` devem ser um subconjunto de: #{CHANNELS.join(', ')}.
         - Cada ticket tem uma checklist ENXUTA de 3 a 4 subtarefas com `estimate_hours`
           (esforço) e `lead_offset_days` (dias de antecedência), garantindo que o post
           fique pronto antes de `scheduled_at`. Não passe de 4 subtarefas por ticket.
@@ -207,9 +207,9 @@ module Prompts
     # for the plan (the agency connects each client's Instagram/TikTok/etc.).
     def connected_channels_block
       providers = client&.social_accounts&.pluck(:provider)&.uniq
-      return "Redes conectadas do cliente: nenhuma conectada ainda." if providers.blank?
+      return 'Redes conectadas do cliente: nenhuma conectada ainda.' if providers.blank?
 
-      "Redes conectadas do cliente (use como canais padrão do plano): #{providers.join(", ")}"
+      "Redes conectadas do cliente (use como canais padrão do plano): #{providers.join(', ')}"
     end
   end
 end

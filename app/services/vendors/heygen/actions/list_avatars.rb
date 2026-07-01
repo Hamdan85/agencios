@@ -18,11 +18,11 @@ module Vendors
         end
 
         def call
-          body = @client.get("/v2/avatars")
-          data = body["data"] || {}
+          body = @client.get('/v2/avatars')
+          data = body['data'] || {}
           {
-            avatars: data["avatars"] || [],
-            talking_photos: data["talking_photos"] || []
+            avatars: data['avatars'] || [],
+            talking_photos: data['talking_photos'] || []
           }
         end
       end

@@ -17,11 +17,11 @@ module Vendors
 
         def call
           @client.oauth_post(
-            "/oauth/access_token",
+            '/oauth/access_token',
             params: {
               client_id: @client.app_id,
               client_secret: @client.app_secret,
-              grant_type: "authorization_code",
+              grant_type: 'authorization_code',
               redirect_uri: @redirect_uri,
               code: @code
             }

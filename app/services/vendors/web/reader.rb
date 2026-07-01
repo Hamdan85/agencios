@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "open-uri"
+require 'open-uri'
 
 module Vendors
   module Web
@@ -14,8 +14,8 @@ module Vendors
     class Reader
       def self.call(...) = new(...).call
 
-      USER_AGENT  = "Mozilla/5.0 (compatible; AgenciosBot/1.0; +https://agencios.app)"
-      MIN_TEXT    = 400    # below this, try the browser
+      USER_AGENT  = 'Mozilla/5.0 (compatible; AgenciosBot/1.0; +https://agencios.app)'
+      MIN_TEXT    = 400 # below this, try the browser
       MAX_TITLE   = 120
 
       def initialize(url:)
@@ -27,7 +27,7 @@ module Vendors
 
         html  = fetch_html
         title = html && title_from(html)
-        text  = html ? body_from(html) : ""
+        text  = html ? body_from(html) : ''
         text  = browser_text if text.to_s.length < MIN_TEXT
 
         text = collapse(text)
@@ -39,7 +39,7 @@ module Vendors
       private
 
       def fetch_html
-        URI.parse(@url).open("User-Agent" => USER_AGENT, read_timeout: 15, open_timeout: 8, &:read).to_s
+        URI.parse(@url).open('User-Agent' => USER_AGENT, read_timeout: 15, open_timeout: 8, &:read).to_s
       rescue StandardError => e
         Rails.logger.warn("[Vendors::Web::Reader] plain fetch failed for #{@url}: #{e.message}")
         nil
@@ -49,7 +49,7 @@ module Vendors
         Vendors::Render::Html.page_text(url: @url)
       rescue StandardError => e
         Rails.logger.warn("[Vendors::Web::Reader] browser fetch failed for #{@url}: #{e.message}")
-        ""
+        ''
       end
 
       def title_from(html)
@@ -61,16 +61,16 @@ module Vendors
       # their contents otherwise).
       def body_from(html)
         stripped = html
-                   .gsub(%r{<script.*?</script>}mi, " ")
-                   .gsub(%r{<style.*?</style>}mi, " ")
-                   .gsub(%r{<noscript.*?</noscript>}mi, " ")
-                   .gsub(/<!--.*?-->/m, " ")
+                   .gsub(%r{<script.*?</script>}mi, ' ')
+                   .gsub(%r{<style.*?</style>}mi, ' ')
+                   .gsub(%r{<noscript.*?</noscript>}mi, ' ')
+                   .gsub(/<!--.*?-->/m, ' ')
         ActionView::Base.full_sanitizer.sanitize(stripped).to_s
       end
 
       # Trim a page title down to the headline subject (drop "… | Site" suffix).
       def clean_title(title)
-        return "" if title.blank?
+        return '' if title.blank?
 
         collapse(title).split(/\s+[|·–—-]\s+/).first.to_s[0, MAX_TITLE]
       end
@@ -80,7 +80,7 @@ module Vendors
       end
 
       def collapse(text)
-        text.to_s.gsub(/\s+/, " ").strip
+        text.to_s.gsub(/\s+/, ' ').strip
       end
     end
   end

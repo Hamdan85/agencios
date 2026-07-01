@@ -10,7 +10,7 @@ module Vendors
       class SubscribePush
         def self.call(...) = new(...).call
 
-        def initialize(channel_id:, callback_url:, mode: "subscribe")
+        def initialize(channel_id:, callback_url:, mode: 'subscribe')
           @channel_id = channel_id
           @callback_url = callback_url
           @mode = mode

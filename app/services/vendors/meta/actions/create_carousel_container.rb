@@ -21,8 +21,8 @@ module Vendors
           @client.post(
             "/#{@social_account.ig_user_id}/media",
             params: {
-              media_type: "CAROUSEL",
-              children: @child_ids.join(","),
+              media_type: 'CAROUSEL',
+              children: @child_ids.join(','),
               caption: @caption
             }
           )

@@ -9,7 +9,7 @@ module Vendors
       class SetThumbnail
         def self.call(...) = new(...).call
 
-        def initialize(social_account:, video_id:, image_bytes:, content_type: "image/jpeg")
+        def initialize(social_account:, video_id:, image_bytes:, content_type: 'image/jpeg')
           @social_account = social_account
           @video_id = video_id
           @image_bytes = image_bytes

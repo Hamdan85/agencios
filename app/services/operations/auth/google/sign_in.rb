@@ -15,20 +15,20 @@ module Operations
 
         def call
           tokens  = Vendors::Google::Actions::ExchangeCode.call(code: @code, redirect_uri: @redirect_uri)
-          profile = Vendors::Google::Actions::FetchUserInfo.call(access_token: tokens["access_token"])
+          profile = Vendors::Google::Actions::FetchUserInfo.call(access_token: tokens['access_token'])
 
           Operations::Users::FindOrCreateFromGoogle.call(
-            uid:            profile["sub"],
-            email:          profile["email"],
-            name:           profile["name"],
-            email_verified: truthy?(profile["email_verified"])
+            uid: profile['sub'],
+            email: profile['email'],
+            name: profile['name'],
+            email_verified: truthy?(profile['email_verified'])
           )
         end
 
         private
 
         # userinfo returns email_verified as a boolean, but some flows stringify it.
-        def truthy?(value) = value == true || value.to_s == "true"
+        def truthy?(value) = value == true || value.to_s == 'true'
       end
     end
   end

@@ -20,12 +20,12 @@ module Vendors
 
         def call
           subscription = @workspace.subscription ||
-                         @workspace.build_subscription(plan: :solo, seats: 1, status: "incomplete")
+                         @workspace.build_subscription(plan: :solo, seats: 1, status: 'incomplete')
           return subscription.stripe_customer_id if subscription.stripe_customer_id.present?
 
           customer = @client.create_customer(
-            name:     @workspace.name,
-            email:    @workspace.owner&.email,
+            name: @workspace.name,
+            email: @workspace.owner&.email,
             metadata: { workspace_id: @workspace.id.to_s }
           )
           subscription.update!(stripe_customer_id: customer.id)

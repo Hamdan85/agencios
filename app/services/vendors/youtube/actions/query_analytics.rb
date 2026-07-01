@@ -18,7 +18,7 @@ module Vendors
         def self.call(...) = new(...).call
 
         def initialize(social_account:, metrics:, start_date:, end_date:,
-                       dimensions: nil, filters: nil, sort: nil, ids: "channel==MINE")
+                       dimensions: nil, filters: nil, sort: nil, ids: 'channel==MINE')
           @social_account = social_account
           @metrics = metrics
           @start_date = start_date
@@ -34,8 +34,8 @@ module Vendors
                  .new(access_token: @social_account.user_access_token)
                  .reports_query(params)
 
-          headers = Array(body["columnHeaders"]).map { |h| h["name"] }
-          rows = Array(body["rows"])
+          headers = Array(body['columnHeaders']).map { |h| h['name'] }
+          rows = Array(body['rows'])
 
           {
             headers: headers,

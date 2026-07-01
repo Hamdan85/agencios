@@ -15,13 +15,13 @@ module Vendors
       class GenerateVideo
         def self.call(...) = new(...).call
 
-        DEFAULT_BACKGROUND = { type: "color", value: "#FFFFFF" }.freeze
+        DEFAULT_BACKGROUND = { type: 'color', value: '#FFFFFF' }.freeze
 
         def initialize(avatar:, voice:, script:, version: :v3,
                        title: nil, callback_id: nil, callback_url: nil,
-                       aspect_ratio: "9:16", resolution: "1080p",
+                       aspect_ratio: '9:16', resolution: '1080p',
                        dimension: { width: 1080, height: 1920 },
-                       avatar_style: "normal", background: DEFAULT_BACKGROUND,
+                       avatar_style: 'normal', background: DEFAULT_BACKGROUND,
                        caption: false, test: false, client: nil)
           # `avatar`/`voice` may be a bare id String or a Hash carrying ids +
           # per-render options (style, speed, voice_id), so the operation can pass
@@ -39,7 +39,7 @@ module Vendors
           @resolution   = resolution
           @dimension    = dimension
           @avatar_style = @avatar[:avatar_style] || avatar_style
-          @background    = background
+          @background = background
           @caption      = caption
           @test         = test
           @client       = client || Client.new
@@ -47,7 +47,7 @@ module Vendors
 
         def call
           body = @version == :v2 ? handle_response(v2) : handle_response(v3)
-          body.dig("data", "video_id")
+          body.dig('data', 'video_id')
         end
 
         private
@@ -59,7 +59,7 @@ module Vendors
         # v3 — flattened discriminated union keyed on `type`.
         def v3
           payload = {
-            type: "avatar",
+            type: 'avatar',
             avatar_id: @avatar_id,
             voice_id: @voice_id,
             script: @script,
@@ -70,19 +70,19 @@ module Vendors
           payload[:title]        = @title if @title
           payload[:callback_id]  = @callback_id if @callback_id
           payload[:callback_url] = @callback_url if @callback_url
-          payload[:caption]      = { file_format: "srt", style: "default" } if @caption
-          @client.post("/v3/videos", payload)
+          payload[:caption]      = { file_format: 'srt', style: 'default' } if @caption
+          @client.post('/v3/videos', payload)
         end
 
         # v2 — `video_inputs` scenes + `dimension`.
         def v2
-          voice_input = { type: "text", input_text: @script, voice_id: @voice_id }
+          voice_input = { type: 'text', input_text: @script, voice_id: @voice_id }
           voice_input[:speed] = @voice[:speed] if @voice[:speed]
           voice_input[:emotion] = @voice[:emotion] if @voice[:emotion]
 
           payload = {
             video_inputs: [{
-              character: { type: "avatar", avatar_id: @avatar_id, avatar_style: @avatar_style },
+              character: { type: 'avatar', avatar_id: @avatar_id, avatar_style: @avatar_style },
               voice: voice_input,
               background: @background
             }],
@@ -93,7 +93,7 @@ module Vendors
           payload[:title]        = @title if @title
           payload[:callback_id]  = @callback_id if @callback_id
           payload[:callback_url] = @callback_url if @callback_url
-          @client.post("/v2/video/generate", payload)
+          @client.post('/v2/video/generate', payload)
         end
 
         def extract_id(value)

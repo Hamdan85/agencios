@@ -9,7 +9,7 @@ module Operations
       # Per-provider account-insights action (uniform return shape). Add providers
       # here as their account-level analytics are wired.
       ACTIONS = {
-        "instagram" => "Vendors::Meta::Actions::SyncAccountInsights"
+        'instagram' => 'Vendors::Meta::Actions::SyncAccountInsights'
       }.freeze
 
       def initialize(social_account:, window: 30.days)

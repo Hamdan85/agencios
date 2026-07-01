@@ -21,18 +21,18 @@ module Vendors
         # Returns { id:, text: }.
         def call
           body = Vendors::X::Client.new(social_account: @social_account)
-                                   .post_json("/2/tweets", payload)
-          data = body["data"] || {}
-          { id: data["id"], text: data["text"] }
+                                   .post_json('/2/tweets', payload)
+          data = body['data'] || {}
+          { id: data['id'], text: data['text'] }
         end
 
         private
 
         def payload
-          body = { "text" => @text.to_s }
-          body["media"] = { "media_ids" => @media_ids } if @media_ids.any?
-          body["reply"] = { "in_reply_to_tweet_id" => @reply_to_tweet_id } if @reply_to_tweet_id
-          body["quote_tweet_id"] = @quote_tweet_id if @quote_tweet_id
+          body = { 'text' => @text.to_s }
+          body['media'] = { 'media_ids' => @media_ids } if @media_ids.any?
+          body['reply'] = { 'in_reply_to_tweet_id' => @reply_to_tweet_id } if @reply_to_tweet_id
+          body['quote_tweet_id'] = @quote_tweet_id if @quote_tweet_id
           body.merge(@extra.transform_keys(&:to_s))
         end
       end

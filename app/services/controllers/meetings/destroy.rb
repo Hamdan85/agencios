@@ -12,7 +12,7 @@ module Controllers
         meeting = workspace.meetings.find(@params[:id])
         Operations::Meetings::RemoveFromCalendar.call(meeting)
         meeting.destroy!
-        { message: "Reunião removida." }
+        { message: 'Reunião removida.' }
       end
     end
   end

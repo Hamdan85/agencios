@@ -10,13 +10,13 @@ class NotifyMentionsJob < ApplicationJob
     return unless note
     return if note.mentioned_user_ids.blank?
 
-    author = note.user&.display_name || "Alguém"
+    author = note.user&.display_name || 'Alguém'
     recipients(note).each do |recipient|
       NoteMailer.mention(note: note, recipient: recipient).deliver_later
       Operations::Push::Notify.call(
         user: recipient,
         title: "#{author} mencionou você",
-        body: note.body.to_s.delete("@").squish.truncate(120),
+        body: note.body.to_s.delete('@').squish.truncate(120),
         path: "/tickets/#{note.ticket_id}"
       )
     rescue StandardError => e

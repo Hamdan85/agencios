@@ -20,7 +20,7 @@ module Mcp
         arguments do
           if workspace_scoped
             required(:workspace).filled(:string)
-              .description("Workspace slug or numeric id (see list_workspaces).")
+                                .description('Workspace slug or numeric id (see list_workspaces).')
           end
           arg_block&.call(self)
         end

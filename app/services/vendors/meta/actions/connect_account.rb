@@ -27,7 +27,7 @@ module Vendors
         def call
           context = Exchange.call(code: @code, redirect_uri: @redirect_uri, client: @client)
           page = pick_page(context[:pages])
-          raise Vendors::Base::Error, "Nenhuma Página do Facebook encontrada." if page.nil?
+          raise Vendors::Base::Error, 'Nenhuma Página do Facebook encontrada.' if page.nil?
 
           AccountAttrsForPage.call(context: context, page: page)
         end
@@ -37,9 +37,9 @@ module Vendors
         # Prefer an explicitly requested Page; otherwise the first one whose tasks
         # include CREATE_CONTENT (facebook.md §9), else the first Page.
         def pick_page(pages)
-          return pages.find { |p| p["id"] == @page_id } || pages.first if @page_id
+          return pages.find { |p| p['id'] == @page_id } || pages.first if @page_id
 
-          pages.find { |p| p["tasks"].include?("CREATE_CONTENT") } || pages.first
+          pages.find { |p| p['tasks'].include?('CREATE_CONTENT') } || pages.first
         end
       end
     end

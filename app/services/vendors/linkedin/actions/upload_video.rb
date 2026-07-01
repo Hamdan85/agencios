@@ -25,29 +25,29 @@ module Vendors
           client = Vendors::Linkedin::Client.new(social_account: @social_account)
 
           init = client.rest_post(
-            "/rest/videos?action=initializeUpload",
+            '/rest/videos?action=initializeUpload',
             {
-              "initializeUploadRequest" => {
-                "owner" => @owner_urn,
-                "fileSizeBytes" => @bytes.bytesize,
-                "uploadCaptions" => false,
-                "uploadThumbnail" => false
+              'initializeUploadRequest' => {
+                'owner' => @owner_urn,
+                'fileSizeBytes' => @bytes.bytesize,
+                'uploadCaptions' => false,
+                'uploadThumbnail' => false
               }
             }
           )
-          value = init.fetch("value")
-          video_urn = value.fetch("video")
-          upload_token = value["uploadToken"].to_s
+          value = init.fetch('value')
+          video_urn = value.fetch('video')
+          upload_token = value['uploadToken'].to_s
 
-          part_ids = upload_parts(client, value.fetch("uploadInstructions"))
+          part_ids = upload_parts(client, value.fetch('uploadInstructions'))
 
           client.rest_post(
-            "/rest/videos?action=finalizeUpload",
+            '/rest/videos?action=finalizeUpload',
             {
-              "finalizeUploadRequest" => {
-                "video" => video_urn,
-                "uploadToken" => upload_token,
-                "uploadedPartIds" => part_ids
+              'finalizeUploadRequest' => {
+                'video' => video_urn,
+                'uploadToken' => upload_token,
+                'uploadedPartIds' => part_ids
               }
             }
           )
@@ -61,10 +61,10 @@ module Vendors
         # Returns the ETags in upload order.
         def upload_parts(client, instructions)
           Array(instructions).map do |part|
-            first = part.fetch("firstByte")
-            last  = part.fetch("lastByte")
+            first = part.fetch('firstByte')
+            last  = part.fetch('lastByte')
             chunk = @bytes.byteslice(first, last - first + 1)
-            client.upload_binary(part.fetch("uploadUrl"), chunk, content_type: "application/octet-stream")
+            client.upload_binary(part.fetch('uploadUrl'), chunk, content_type: 'application/octet-stream')
           end
         end
       end

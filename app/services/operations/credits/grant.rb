@@ -23,11 +23,11 @@ module Operations
           wallet.update!(granted_balance: @amount, granted_expires_at: @expires_at)
 
           @workspace.credit_transactions.create!(
-            kind: "grant", bucket: "granted",
+            kind: 'grant', bucket: 'granted',
             amount: @amount, granted_delta: @amount, purchased_delta: 0,
             balance_after: wallet.granted_balance + wallet.purchased_balance,
             expires_at: @expires_at,
-            description: @description || "Créditos mensais do plano"
+            description: @description || 'Créditos mensais do plano'
           )
           wallet
         end
@@ -43,10 +43,10 @@ module Operations
 
         wallet.update!(granted_balance: 0)
         @workspace.credit_transactions.create!(
-          kind: "expire", bucket: "granted",
+          kind: 'expire', bucket: 'granted',
           amount: -leftover, granted_delta: -leftover, purchased_delta: 0,
           balance_after: wallet.purchased_balance,
-          description: "Créditos mensais não usados expirados"
+          description: 'Créditos mensais não usados expirados'
         )
       end
     end

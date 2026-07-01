@@ -24,9 +24,7 @@ module Controllers
         # Enforces an Instagram account when the user explicitly requested it.
         def persist_page!(client:, network:, context:, page:)
           builder = Vendors::Meta::Actions::AccountAttrsForPage.new(context: context, page: page)
-          if network.to_s == "instagram" && !builder.instagram?
-            raise InstagramRequired, "no_instagram"
-          end
+          raise InstagramRequired, 'no_instagram' if network.to_s == 'instagram' && !builder.instagram?
 
           builder.call.each do |attrs|
             Operations::Social::ConnectAccount.call(client: client, attrs: attrs)

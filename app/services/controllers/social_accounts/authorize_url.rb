@@ -30,8 +30,8 @@ module Controllers
       private
 
       def signed_state(client, network)
-        Rails.application.message_verifier("agencios:social_connect")
-             .generate({ "client_id" => client.id, "network" => network }, expires_in: 1.hour)
+        Rails.application.message_verifier('agencios:social_connect')
+             .generate({ 'client_id' => client.id, 'network' => network }, expires_in: 1.hour)
       end
     end
   end

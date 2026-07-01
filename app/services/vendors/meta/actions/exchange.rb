@@ -33,15 +33,15 @@ module Vendors
             code: @code, redirect_uri: @redirect_uri, client: @client
           )
           long_lived = ExchangeLongLivedToken.call(
-            short_lived_token: short_lived["access_token"], client: @client
+            short_lived_token: short_lived['access_token'], client: @client
           )
-          user_token = long_lived["access_token"]
-          me = @client.get("/me", params: { fields: "id" }, token: user_token)
+          user_token = long_lived['access_token']
+          me = @client.get('/me', params: { fields: 'id' }, token: user_token)
 
           {
-            external_user_id: me["id"],
+            external_user_id: me['id'],
             user_access_token: user_token,
-            token_expires_at: expiry_from(long_lived["expires_in"]),
+            token_expires_at: expiry_from(long_lived['expires_in']),
             scopes: AuthorizeUrl::SCOPES,
             pages: list_pages(user_token)
           }
@@ -50,29 +50,29 @@ module Vendors
         private
 
         def list_pages(user_token)
-          raw = Array(ListPages.call(user_access_token: user_token, client: @client)["data"])
+          raw = Array(ListPages.call(user_access_token: user_token, client: @client)['data'])
           raw.map { |page| normalize_page(page) }
         end
 
         # Resolve the linked IG business account, falling back to an explicit
         # lookup when the me/accounts expansion didn't include it.
         def normalize_page(page)
-          ig = page["instagram_business_account"]
-          if ig.nil? && page["access_token"].present?
+          ig = page['instagram_business_account']
+          if ig.nil? && page['access_token'].present?
             ig = GetLinkedInstagramAccount.call(
-              page_id: page["id"],
-              page_access_token: page["access_token"],
+              page_id: page['id'],
+              page_access_token: page['access_token'],
               client: @client
-            )["instagram_business_account"]
+            )['instagram_business_account']
           end
 
           {
-            "id" => page["id"],
-            "name" => page["name"],
-            "access_token" => page["access_token"],
-            "tasks" => Array(page["tasks"]),
-            "ig_id" => ig&.dig("id").presence,
-            "ig_username" => ig&.dig("username").presence
+            'id' => page['id'],
+            'name' => page['name'],
+            'access_token' => page['access_token'],
+            'tasks' => Array(page['tasks']),
+            'ig_id' => ig&.dig('id').presence,
+            'ig_username' => ig&.dig('username').presence
           }
         end
 

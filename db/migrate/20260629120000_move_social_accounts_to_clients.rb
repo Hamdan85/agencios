@@ -32,7 +32,7 @@ class MoveSocialAccountsToClients < ActiveRecord::Migration[8.1]
         SELECT id FROM social_accounts WHERE client_id IS NULL
       )
     SQL
-    execute "DELETE FROM social_accounts WHERE client_id IS NULL"
+    execute 'DELETE FROM social_accounts WHERE client_id IS NULL'
 
     change_column_null :social_accounts, :client_id, false
     add_index :social_accounts, %i[client_id provider]

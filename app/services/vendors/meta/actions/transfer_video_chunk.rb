@@ -26,7 +26,7 @@ module Vendors
           @client.post(
             "/#{@social_account.page_id}/videos",
             params: {
-              upload_phase: "transfer",
+              upload_phase: 'transfer',
               upload_session_id: @upload_session_id,
               start_offset: @start_offset,
               video_file_chunk: @video_file_chunk

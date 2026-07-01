@@ -18,7 +18,7 @@ module Vendors
         def call
           @client.get(
             "/#{@social_account.ig_user_id}/content_publishing_limit",
-            params: { fields: "config,quota_usage" }
+            params: { fields: 'config,quota_usage' }
           )
         end
       end

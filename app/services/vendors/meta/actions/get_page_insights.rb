@@ -13,7 +13,7 @@ module Vendors
           page_fan_adds page_video_views page_actions_post_reactions_total
         ].freeze
 
-        def initialize(social_account:, metrics: DEFAULT_METRICS, period: "day",
+        def initialize(social_account:, metrics: DEFAULT_METRICS, period: 'day',
                        since: nil, until_time: nil, client: nil)
           @social_account = social_account
           @metrics = metrics
@@ -27,7 +27,7 @@ module Vendors
           @client.get(
             "/#{@social_account.page_id}/insights",
             params: {
-              metric: Array(@metrics).join(","),
+              metric: Array(@metrics).join(','),
               period: @period,
               since: @since,
               until: @until_time

@@ -51,13 +51,13 @@ module Operations
         return if step(@to_status) >= step(from_status)
         return if @user.nil? || @user.can_manage?(@ticket.workspace)
 
-        raise Operations::Errors::InvalidTransition, "Apenas gestores podem retroceder um ticket."
+        raise Operations::Errors::InvalidTransition, 'Apenas gestores podem retroceder um ticket.'
       end
 
       def apply_status!(_from_status)
         attrs = { status: @to_status }
         attrs[:position] = @position if @position
-        attrs[:published_at] = Time.current if @to_status == "published" && @ticket.published_at.nil?
+        attrs[:published_at] = Time.current if @to_status == 'published' && @ticket.published_at.nil?
         @ticket.update!(attrs)
       end
 
@@ -108,15 +108,15 @@ module Operations
       # `published` therefore has no publish side effect here (avoids re-posting).
       def fire_side_effects(_from_status)
         case @to_status
-        when "retrospective" then draft_retrospective
-        when "done"          then spawn_follow_ups
+        when 'retrospective' then draft_retrospective
+        when 'done'          then spawn_follow_ups
         end
       end
 
       # On completion, if the retrospective recommends iterating/repeating, spawn a
       # pre-filled ideation ticket linked back to this one (iteration/repetition of).
       def spawn_follow_ups
-        rec = @ticket.fields_for("retrospective")["repeat_recommendation"].to_s
+        rec = @ticket.fields_for('retrospective')['repeat_recommendation'].to_s
         return unless %w[iterate repeat].include?(rec)
 
         Operations::Tickets::SpawnFollowUp.call(source: @ticket, recommendation: rec, user: @user)
@@ -131,8 +131,8 @@ module Operations
       end
 
       def broadcast(from_status)
-        Broadcaster.ticket(@ticket, "status_changed", to: @to_status, from: from_status)
-        Broadcaster.board(@ticket.workspace_id, "card_moved",
+        Broadcaster.ticket(@ticket, 'status_changed', to: @to_status, from: from_status)
+        Broadcaster.board(@ticket.workspace_id, 'card_moved',
                           ticket_id: @ticket.id, to: @to_status, from: from_status, position: @ticket.position)
       end
 

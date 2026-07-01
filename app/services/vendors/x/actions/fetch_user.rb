@@ -18,9 +18,9 @@ module Vendors
         def call
           body = Vendors::X::Client.new(
             access_token: @access_token, social_account: @social_account
-          ).get_json("/2/users/me")
-          data = body["data"] || {}
-          { id: data["id"], username: data["username"], name: data["name"] }
+          ).get_json('/2/users/me')
+          data = body['data'] || {}
+          { id: data['id'], username: data['username'], name: data['name'] }
         end
       end
     end

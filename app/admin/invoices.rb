@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 ActiveAdmin.register Invoice do
-  menu parent: "Tenants", label: "Faturas (clientes)", priority: 7
+  menu parent: 'Tenants', label: 'Faturas (clientes)', priority: 7
   actions :index, :show
 
   filter :workspace, collection: -> { Workspace.order(:name) }
@@ -11,10 +11,10 @@ ActiveAdmin.register Invoice do
 
   index do
     id_column
-    column("Workspace") { |i| link_to(i.workspace.name, admin_workspace_path(i.workspace)) }
-    column("Cliente") { |i| i.client&.name }
+    column('Workspace') { |i| link_to(i.workspace.name, admin_workspace_path(i.workspace)) }
+    column('Cliente') { |i| i.client&.name }
     column :status
-    column("Valor (¢)") { |i| i.amount_cents }
+    column('Valor (¢)', &:amount_cents)
     column :currency
     column :due_date
     column :created_at
@@ -22,8 +22,8 @@ ActiveAdmin.register Invoice do
 
   show do
     attributes_table do
-      row("Workspace") { |i| link_to(i.workspace.name, admin_workspace_path(i.workspace)) }
-      row("Cliente") { |i| i.client&.name }
+      row('Workspace') { |i| link_to(i.workspace.name, admin_workspace_path(i.workspace)) }
+      row('Cliente') { |i| i.client&.name }
       row :status
       row :amount_cents
       row :currency

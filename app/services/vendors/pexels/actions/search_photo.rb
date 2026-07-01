@@ -25,12 +25,12 @@ module Vendors
         def orientation_for(aspect)
           return nil if aspect.blank?
 
-          w, h = aspect.to_s.split(/[:x\/]/).map(&:to_i)
+          w, h = aspect.to_s.split(%r{[:x/]}).map(&:to_i)
           return nil if w.to_i.zero? || h.to_i.zero?
 
-          if w == h then "square"
-          elsif h > w then "portrait"
-          else "landscape"
+          if w == h then 'square'
+          elsif h > w then 'portrait'
+          else 'landscape'
           end
         end
       end

@@ -7,8 +7,8 @@ module Webhooks
   class HeygenController < BaseController
     def create
       status = Controllers::Webhooks::Heygen::Create.call(
-        signature: request.headers["Heygen-Signature"],
-        timestamp: request.headers["Heygen-Timestamp"],
+        signature: request.headers['Heygen-Signature'],
+        timestamp: request.headers['Heygen-Timestamp'],
         payload: request.raw_post,
         params: params
       )

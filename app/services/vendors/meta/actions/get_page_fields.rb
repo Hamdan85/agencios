@@ -8,7 +8,7 @@ module Vendors
       class GetPageFields
         def self.call(...) = new(...).call
 
-        DEFAULT_FIELDS = "followers_count,fan_count,name"
+        DEFAULT_FIELDS = 'followers_count,fan_count,name'
 
         def initialize(social_account:, fields: DEFAULT_FIELDS, client: nil)
           @social_account = social_account

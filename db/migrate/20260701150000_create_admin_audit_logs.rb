@@ -6,7 +6,7 @@ class CreateAdminAuditLogs < ActiveRecord::Migration[8.1]
     # godfathered toggles, manual credit grants, comps). LGPD accountability.
     create_table :admin_audit_logs do |t|
       t.references :staff_user, null: true, foreign_key: { to_table: :users }
-      t.string  :action,      null: false
+      t.string  :action, null: false
       t.string  :target_type
       t.bigint  :target_id
       t.jsonb   :metadata, null: false, default: {}

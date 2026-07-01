@@ -6,42 +6,42 @@
 module MailerHelper
   # ── Brand palette (mirrors app/frontend/styles/theme.css) ───────────────
   BRAND = {
-    violet:       "#7C3AED",
-    violet_bright: "#8B5CF6",
-    violet_deep:  "#5B21B6",
-    soft:         "#F3EEFE",
-    ink:          "#18122B",
-    ink_secondary: "#564F6F",
-    ink_muted:    "#8B86A3",
-    canvas:       "#F5F4FB",
-    surface:      "#FFFFFF",
-    border:       "#E8E6F2",
-    pink:         "#EC4899",
-    success:      "#10B981",
-    warning:      "#F59E0B",
-    danger:       "#F43F5E"
+    violet: '#7C3AED',
+    violet_bright: '#8B5CF6',
+    violet_deep: '#5B21B6',
+    soft: '#F3EEFE',
+    ink: '#18122B',
+    ink_secondary: '#564F6F',
+    ink_muted: '#8B86A3',
+    canvas: '#F5F4FB',
+    surface: '#FFFFFF',
+    border: '#E8E6F2',
+    pink: '#EC4899',
+    success: '#10B981',
+    warning: '#F59E0B',
+    danger: '#F43F5E'
   }.freeze
 
   # The 7 funnel statuses → user-facing PT-BR label + signature color.
   STATUS_LABELS = {
-    "ideation"      => ["Ideação",                 "#F59E0B"],
-    "scoping"       => ["Escopo",                  "#0EA5E9"],
-    "production"    => ["Produção",                "#7C3AED"],
-    "scheduled"     => ["Agendado",                "#EC4899"],
-    "published"     => ["Postado / Monitorando",   "#10B981"],
-    "retrospective" => ["Retrospectiva",           "#6366F1"],
-    "done"          => ["Concluído",               "#14B8A6"]
+    'ideation' => ['Ideação', '#F59E0B'],
+    'scoping' => ['Escopo', '#0EA5E9'],
+    'production' => ['Produção', '#7C3AED'],
+    'scheduled' => ['Agendado',                '#EC4899'],
+    'published' => ['Postado / Monitorando',   '#10B981'],
+    'retrospective' => ['Retrospectiva', '#6366F1'],
+    'done' => ['Concluído', '#14B8A6']
   }.freeze
 
   # Absolute base URL for links + assets in emails (no request context).
-  def app_url(path = "")
+  def app_url(path = '')
     "#{SystemConfig.app_host}#{path}"
   end
 
   # PNG logo mark — SVG is unreliable across email clients, so we ship the
   # rendered 192px icon served from /public.
   def logo_url
-    app_url("/icon-192.png")
+    app_url('/icon-192.png')
   end
 
   # ── Agency branding (client-facing emails) ──────────────────────────────
@@ -69,7 +69,7 @@ module MailerHelper
 
   # Single-letter fallback mark when the agency has no logo uploaded.
   def agency_initial(workspace)
-    workspace.name.to_s.strip[0]&.upcase || "A"
+    workspace.name.to_s.strip[0]&.upcase || 'A'
   end
 
   # Bulletproof (table-based) call-to-action button. Renders solid violet by
@@ -109,23 +109,23 @@ module MailerHelper
 
   # Money in cents → "R$ 1.234,56" (matches the frontend `brl()` formatter).
   def email_brl(cents)
-    reais = format("%.2f", (cents || 0) / 100.0)
-    int, frac = reais.split(".")
-    int = int.chars.reverse.each_slice(3).map(&:join).join(".").reverse
+    reais = format('%.2f', (cents || 0) / 100.0)
+    int, frac = reais.split('.')
+    int = int.chars.reverse.each_slice(3).map(&:join).join('.').reverse
     "R$ #{int},#{frac}"
   end
 
   # Date → "30/06/2026"; nil-safe.
   def email_date(value)
-    return "—" if value.blank?
+    return '—' if value.blank?
 
-    value.to_date.strftime("%d/%m/%Y")
+    value.to_date.strftime('%d/%m/%Y')
   end
 
   # Datetime → "30/06/2026 às 14:30"; nil-safe.
   def email_datetime(value)
-    return "—" if value.blank?
+    return '—' if value.blank?
 
-    value.strftime("%d/%m/%Y às %H:%M")
+    value.strftime('%d/%m/%Y às %H:%M')
   end
 end

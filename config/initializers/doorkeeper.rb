@@ -23,7 +23,7 @@ Doorkeeper.configure do
       session.touch_activity!
       User.find_by(id: session.user_id)
     else
-      redirect_to("/login?#{ { return_to: request.fullpath }.to_query }")
+      redirect_to("/login?#{{ return_to: request.fullpath }.to_query}")
       nil
     end
   end
@@ -35,7 +35,7 @@ Doorkeeper.configure do
   use_refresh_token
 
   # ── Token lifetimes ─────────────────────────────────────────────────
-  access_token_expires_in 2.hours            # short-lived; clients refresh
+  access_token_expires_in 2.hours # short-lived; clients refresh
   authorization_code_expires_in 10.minutes
 
   # ── Scopes (coarse capability grant; Pundit is the per-action gate) ──

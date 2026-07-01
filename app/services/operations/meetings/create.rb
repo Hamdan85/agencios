@@ -34,12 +34,10 @@ module Operations
       # => { "person@example.com" => "Name", ... } deduped, blank addresses dropped.
       def recipients(meeting)
         list = Array(meeting.attendees).filter_map do |a|
-          email = (a["email"] || a[:email]).to_s.strip
-          [email.downcase, (a["name"] || a[:name]).presence] if email.present?
+          email = (a['email'] || a[:email]).to_s.strip
+          [email.downcase, (a['name'] || a[:name]).presence] if email.present?
         end
-        if meeting.client&.email.present?
-          list << [meeting.client.email.strip.downcase, meeting.client.name]
-        end
+        list << [meeting.client.email.strip.downcase, meeting.client.name] if meeting.client&.email.present?
         list.to_h
       end
     end

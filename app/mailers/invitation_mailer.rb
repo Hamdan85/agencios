@@ -4,11 +4,11 @@
 # Controllers::Invitations::Create; this just delivers them.
 class InvitationMailer < ApplicationMailer
   ROLE_LABELS = {
-    "owner"   => "Proprietário",
-    "admin"   => "Administrador",
-    "manager" => "Gerente",
-    "member"  => "Membro",
-    "guest"   => "Convidado"
+    'owner' => 'Proprietário',
+    'admin' => 'Administrador',
+    'manager' => 'Gerente',
+    'member' => 'Membro',
+    'guest' => 'Convidado'
   }.freeze
 
   # @param email [String] the invitee address

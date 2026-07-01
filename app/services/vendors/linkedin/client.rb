@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "net/http"
-require "uri"
+require 'net/http'
+require 'uri'
 
 module Vendors
   module Linkedin
@@ -17,22 +17,22 @@ module Vendors
     # per-workspace access_token comes from the SocialAccount passed in.
     # See docs/integrations/linkedin.md.
     class Client < Vendors::Base
-      OAUTH_HOST = "https://www.linkedin.com"
-      API_HOST   = "https://api.linkedin.com"
+      OAUTH_HOST = 'https://www.linkedin.com'
+      API_HOST   = 'https://api.linkedin.com'
 
       # LinkedIn-Version is mandatory on every /rest/* call (YYYYMM). Bump ~yearly,
       # always inside the 1-year support window. June 2026 is the current version.
-      LINKEDIN_VERSION   = "202606"
-      RESTLI_VERSION     = "2.0.0"
+      LINKEDIN_VERSION   = '202606'
+      RESTLI_VERSION     = '2.0.0'
 
       def initialize(social_account: nil, access_token: nil)
         @social_account = social_account
         @access_token   = access_token || social_account&.user_access_token
         @client_id      = require_credential!(
-          credential(:linkedin, :client_id, env: "LINKEDIN_CLIENT_ID"), "linkedin.client_id"
+          credential(:linkedin, :client_id, env: 'LINKEDIN_CLIENT_ID'), 'linkedin.client_id'
         )
-        @client_secret  = require_credential!(
-          credential(:linkedin, :client_secret, env: "LINKEDIN_CLIENT_SECRET"), "linkedin.client_secret"
+        @client_secret = require_credential!(
+          credential(:linkedin, :client_secret, env: 'LINKEDIN_CLIENT_SECRET'), 'linkedin.client_secret'
         )
       end
 
@@ -42,9 +42,9 @@ module Vendors
 
       # POST /oauth/v2/accessToken — used for both code exchange and refresh.
       def token_request(form)
-        conn = build_connection(OAUTH_HOST, headers: { "Content-Type" => "application/x-www-form-urlencoded" })
-        handle(conn.post("/oauth/v2/accessToken") do |req|
-          req.headers["Content-Type"] = "application/x-www-form-urlencoded"
+        conn = build_connection(OAUTH_HOST, headers: { 'Content-Type' => 'application/x-www-form-urlencoded' })
+        handle(conn.post('/oauth/v2/accessToken') do |req|
+          req.headers['Content-Type'] = 'application/x-www-form-urlencoded'
           req.body = URI.encode_www_form(form)
         end)
       end
@@ -53,7 +53,7 @@ module Vendors
 
       def userinfo
         conn = build_connection(API_HOST, auth_token: token!)
-        handle(conn.get("/v2/userinfo"))
+        handle(conn.get('/v2/userinfo'))
       end
 
       # --- /rest/* (versioned) --------------------------------------------------
@@ -77,7 +77,7 @@ module Vendors
 
       def rest_delete(path, extra_headers: {})
         handle(rest_connection.delete(path) do |req|
-          req.headers["X-RestLi-Method"] = "DELETE"
+          req.headers['X-RestLi-Method'] = 'DELETE'
           extra_headers.each { |k, v| req.headers[k] = v }
         end)
       end
@@ -90,14 +90,15 @@ module Vendors
         uri = URI.parse(upload_url)
         http = net_http_for(uri)
         request = Net::HTTP::Put.new(uri)
-        request["Content-Type"] = content_type
-        request["Authorization"] = "Bearer #{token!}"
+        request['Content-Type'] = content_type
+        request['Authorization'] = "Bearer #{token!}"
         request.body = bytes
         response = http.request(request)
         unless response.code.to_i.between?(200, 299)
-          raise Vendors::Base::Error.new("LinkedIn upload failed", status: response.code.to_i, body: response.body)
+          raise Vendors::Base::Error.new('LinkedIn upload failed', status: response.code.to_i, body: response.body)
         end
-        response["etag"]
+
+        response['etag']
       end
 
       # Centralized Rest.li 2.0 URN encoding for query strings.
@@ -108,7 +109,7 @@ module Vendors
       private
 
       def token!
-        require_credential!(@access_token, "linkedin access_token (SocialAccount#user_access_token)")
+        require_credential!(@access_token, 'linkedin access_token (SocialAccount#user_access_token)')
       end
 
       # Every /rest/* request carries the four required headers.
@@ -116,9 +117,9 @@ module Vendors
         build_connection(
           API_HOST,
           headers: {
-            "LinkedIn-Version" => LINKEDIN_VERSION,
-            "X-Restli-Protocol-Version" => RESTLI_VERSION,
-            "Content-Type" => "application/json"
+            'LinkedIn-Version' => LINKEDIN_VERSION,
+            'X-Restli-Protocol-Version' => RESTLI_VERSION,
+            'Content-Type' => 'application/json'
           },
           auth_token: token!
         )
@@ -126,7 +127,7 @@ module Vendors
 
       def net_http_for(uri)
         http = Net::HTTP.new(uri.host, uri.port)
-        http.use_ssl = (uri.scheme == "https")
+        http.use_ssl = (uri.scheme == 'https')
         http.open_timeout = 10
         http.read_timeout = 60
         http

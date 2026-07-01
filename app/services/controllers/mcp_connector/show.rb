@@ -17,7 +17,7 @@ module Controllers
       private
 
       def locked_payload
-        { enabled: false, upgrade_required: true, min_plan: "agencia" }
+        { enabled: false, upgrade_required: true, min_plan: 'agencia' }
       end
 
       def connector_url(token)

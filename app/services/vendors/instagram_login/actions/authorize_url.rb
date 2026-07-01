@@ -28,11 +28,11 @@ module Vendors
           params = {
             client_id: @client.app_id,
             redirect_uri: @redirect_uri,
-            response_type: "code",
-            scope: SCOPES.join(","),
+            response_type: 'code',
+            scope: SCOPES.join(','),
             state: @state,
-            enable_fb_login: "0",
-            force_authentication: "1"
+            enable_fb_login: '0',
+            force_authentication: '1'
           }
           "#{@client.authorize_url_base}?#{URI.encode_www_form(params)}"
         end

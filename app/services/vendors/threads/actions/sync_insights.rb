@@ -21,16 +21,16 @@ module Vendors
           return empty if @post.external_post_id.blank?
 
           body = Vendors::Threads::Client.new(@account).get(
-            "/#{@post.external_post_id}/insights", params: { metric: METRICS.join(",") }
+            "/#{@post.external_post_id}/insights", params: { metric: METRICS.join(',') }
           )
           values = index_insights(body)
 
           {
-            reach: int(values["views"]),
-            views: int(values["views"]),
-            likes: int(values["likes"]),
-            comments: int(values["replies"]),
-            shares: int(values["reposts"]) + int(values["quotes"]) + int(values["shares"]),
+            reach: int(values['views']),
+            views: int(values['views']),
+            likes: int(values['likes']),
+            comments: int(values['replies']),
+            shares: int(values['reposts']) + int(values['quotes']) + int(values['shares']),
             saves: 0,
             raw: body
           }
@@ -43,9 +43,9 @@ module Vendors
         # Threads insights come back as data:[{ name:, total_value:{ value: } }, …]
         # (or `values:[{ value: }]` for time-series). Flatten name → number.
         def index_insights(body)
-          Array(body["data"]).each_with_object({}) do |metric, acc|
-            name = metric["name"]
-            value = metric.dig("total_value", "value") || metric.dig("values", 0, "value")
+          Array(body['data']).each_with_object({}) do |metric, acc|
+            name = metric['name']
+            value = metric.dig('total_value', 'value') || metric.dig('values', 0, 'value')
             acc[name] = value
           end
         end

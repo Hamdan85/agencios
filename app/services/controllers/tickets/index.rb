@@ -26,8 +26,8 @@ module Controllers
         scope = workspace.tickets
                          .includes(:assignee, :subtasks, :creatives, project: :client)
         case @params[:view].to_s
-        when "archived" then scope.archived
-        when "all"      then scope
+        when 'archived' then scope.archived
+        when 'all'      then scope
         else                 scope.active
         end
       end

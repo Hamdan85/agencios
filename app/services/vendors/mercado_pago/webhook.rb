@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "openssl"
-require "json"
+require 'openssl'
+require 'json'
 
 module Vendors
   module MercadoPago
@@ -35,15 +35,15 @@ module Vendors
       #
       # Returns a Result with #valid? and #payment_id.
       def verify(headers, raw_body = nil, query: {})
-        signature = header(headers, "x-signature").to_s
-        request_id = header(headers, "x-request-id").to_s
+        signature = header(headers, 'x-signature').to_s
+        request_id = header(headers, 'x-request-id').to_s
         ts, v1 = parse_signature(signature)
         payment_id = extract_data_id(query, raw_body)
 
         return Result.new(valid: false, payment_id: payment_id) if ts.blank? || v1.blank? || secret.blank?
 
         manifest = build_manifest(data_id: normalize_id(payment_id), request_id: request_id, ts: ts)
-        expected = OpenSSL::HMAC.hexdigest("SHA256", secret, manifest)
+        expected = OpenSSL::HMAC.hexdigest('SHA256', secret, manifest)
         valid = ActiveSupport::SecurityUtils.secure_compare(expected, v1)
 
         Result.new(valid: valid, payment_id: payment_id)
@@ -53,16 +53,16 @@ module Vendors
 
       def secret
         Rails.application.credentials.dig(:mercado_pago, :webhook_secret) ||
-          ENV["MERCADO_PAGO_WEBHOOK_SECRET"]
+          ENV['MERCADO_PAGO_WEBHOOK_SECRET']
       end
 
       # "ts=123,v1=abc" => ["123", "abc"]
       def parse_signature(signature)
-        parts = signature.split(",").each_with_object({}) do |segment, acc|
-          key, value = segment.split("=", 2)
+        parts = signature.split(',').each_with_object({}) do |segment, acc|
+          key, value = segment.split('=', 2)
           acc[key.to_s.strip] = value.to_s.strip if key && value
         end
-        [parts["ts"], parts["v1"]]
+        [parts['ts'], parts['v1']]
       end
 
       # data.id is authoritative from the query string; fall back to the body.
@@ -76,14 +76,14 @@ module Vendors
       def query_data_id(query)
         return nil if query.blank?
 
-        query["data.id"] || query[:data_id] || query.dig("data", "id")
+        query['data.id'] || query[:data_id] || query.dig('data', 'id')
       end
 
       def body_data_id(raw_body)
         return nil if raw_body.blank?
 
         parsed = raw_body.is_a?(String) ? JSON.parse(raw_body) : raw_body
-        parsed.is_a?(Hash) ? parsed.dig("data", "id") : nil
+        parsed.is_a?(Hash) ? parsed.dig('data', 'id') : nil
       rescue JSON::ParserError
         nil
       end
@@ -97,7 +97,7 @@ module Vendors
 
       # Build the manifest, omitting a segment only when its input is blank.
       def build_manifest(data_id:, request_id:, ts:)
-        manifest = +""
+        manifest = +''
         manifest << "id:#{data_id};" if data_id.present?
         manifest << "request-id:#{request_id};" if request_id.present?
         manifest << "ts:#{ts};" if ts.present?

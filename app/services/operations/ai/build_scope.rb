@@ -9,8 +9,8 @@ module Operations
       # plan from. If every one is blank there is nothing to build a checklist
       # out of and we bail out before spending a Claude call.
       CONTEXT_FIELDS = {
-        "ideation" => %w[brief objective format_hypothesis],
-        "scoping" => %w[copy_brief script deliverables]
+        'ideation' => %w[brief objective format_hypothesis],
+        'scoping' => %w[copy_brief script deliverables]
       }.freeze
 
       def initialize(ticket:)
@@ -18,16 +18,16 @@ module Operations
       end
 
       def call
-        fields = @ticket.fields_for("scoping")
+        fields = @ticket.fields_for('scoping')
         ensure_context!
         builder = Prompts::ScopeBuilder.new(
           workspace: @ticket.workspace, client: @ticket.project.client,
-          creative_type: fields["creative_type"] || @ticket.creative_type,
-          channels: Array(fields["channels"]).join(", "),
-          copy_brief: fields["copy_brief"], script: fields["script"]
+          creative_type: fields['creative_type'] || @ticket.creative_type,
+          channels: Array(fields['channels']).join(', '),
+          copy_brief: fields['copy_brief'], script: fields['script']
         )
         text = AiAdapter.complete(
-          builder, max_tokens: 700, operation: "build_scope", subject: @ticket
+          builder, max_tokens: 700, operation: 'build_scope', subject: @ticket
         ).to_s
 
         titles = text.lines.filter_map { |l| clean_title(l) }.first(8)
@@ -52,7 +52,7 @@ module Operations
         return if present
 
         raise Operations::Errors::Invalid,
-              "Sem contexto para gerar as subtarefas. Preencha o brief ou o escopo do ticket primeiro."
+              'Sem contexto para gerar as subtarefas. Preencha o brief ou o escopo do ticket primeiro.'
       end
 
       # The model is asked for one plain task per line, but it occasionally wraps
@@ -63,12 +63,12 @@ module Operations
         return if title.blank?
         return if title.match?(/\A(```|---|===|\#{1,6}\s*$)/) # fences / rules / empty headings
 
-        title = title.sub(/\A\s*(?:[-*+•–—]\s+|\d+[.)]\s+)/, "") # leading bullet or "1." / "1)"
-        title = title.sub(/\A#{'#'}{1,6}\s*/, "")               # leading markdown heading
-        title = title.sub(/\A>\s*/, "")                         # blockquote
-        title = title.gsub(/\*\*|__|`|~~/, "")                  # bold / code / strike markers
-        title = title.gsub(/(?<!\w)[*_](?=\S)|(?<=\S)[*_](?!\w)/, "") # stray emphasis
-        title = title.sub(/\A\[[ xX]?\]\s*/, "")                # leftover "[ ]" checkbox
+        title = title.sub(/\A\s*(?:[-*+•–—]\s+|\d+[.)]\s+)/, '') # leading bullet or "1." / "1)"
+        title = title.sub(/\A#{1,6}\s*/, '')               # leading markdown heading
+        title = title.sub(/\A>\s*/, '')                         # blockquote
+        title = title.gsub(/\*\*|__|`|~~/, '')                  # bold / code / strike markers
+        title = title.gsub(/(?<!\w)[*_](?=\S)|(?<=\S)[*_](?!\w)/, '') # stray emphasis
+        title = title.sub(/\A\[[ xX]?\]\s*/, '') # leftover "[ ]" checkbox
         title.strip.presence
       end
     end

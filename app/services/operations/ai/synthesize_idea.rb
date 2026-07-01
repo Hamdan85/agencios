@@ -10,13 +10,13 @@ module Operations
       end
 
       def call
-        fields = @ticket.fields_for("ideation")
+        fields = @ticket.fields_for('ideation')
         builder = Prompts::IdeaSynthesis.new(
           workspace: @ticket.workspace, client: @ticket.project.client,
-          brief: fields["brief"], objective: fields["objective"], persona: fields["target_persona"]
+          brief: fields['brief'], objective: fields['objective'], persona: fields['target_persona']
         )
         text = AiAdapter.complete(
-          builder, max_tokens: 700, operation: "synthesize_idea", subject: @ticket
+          builder, max_tokens: 700, operation: 'synthesize_idea', subject: @ticket
         ).to_s.strip
         Operations::Notes::Create.call(ticket: @ticket, user: nil, kind: :ai, body: text)
         text

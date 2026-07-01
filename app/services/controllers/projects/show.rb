@@ -26,10 +26,10 @@ module Controllers
         scope = scope.where(status: @params[:status]) if @params[:status].present?
         scope = scope.where(assignee_id: @params[:assignee_id]) if @params[:assignee_id].present?
         scope = scope.where(creative_type: @params[:creative_type]) if @params[:creative_type].present?
-        scope = scope.where("? = ANY(channels)", @params[:channel]) if @params[:channel].present?
+        scope = scope.where('? = ANY(channels)', @params[:channel]) if @params[:channel].present?
         if @params[:q].present?
           like = "%#{escape_like(@params[:q])}%"
-          scope = scope.where("tickets.title ILIKE :q OR tickets.creative_type ILIKE :q", q: like)
+          scope = scope.where('tickets.title ILIKE :q OR tickets.creative_type ILIKE :q', q: like)
         end
         scope.board_ordered
       end

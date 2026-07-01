@@ -10,7 +10,7 @@ module Vendors
       class FinishReel
         def self.call(...) = new(...).call
 
-        def initialize(social_account:, video_id:, description: nil, video_state: "PUBLISHED",
+        def initialize(social_account:, video_id:, description: nil, video_state: 'PUBLISHED',
                        scheduled_publish_time: nil, client: nil)
           @social_account = social_account
           @video_id = video_id
@@ -25,7 +25,7 @@ module Vendors
             "/#{@social_account.page_id}/video_reels",
             params: {
               video_id: @video_id,
-              upload_phase: "finish",
+              upload_phase: 'finish',
               video_state: @video_state,
               description: @description,
               scheduled_publish_time: @scheduled_publish_time

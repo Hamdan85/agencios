@@ -14,14 +14,14 @@ module Controllers
         sub = user.push_subscriptions.find_or_initialize_by(endpoint: @params.require(:endpoint))
         sub.update!(
           p256dh_key: @params.require(:p256dh_key),
-          auth_key:   @params.require(:auth_key)
+          auth_key: @params.require(:auth_key)
         )
 
         PushNotificationJob.perform_later(
           user.id,
-          title: "Notificações ativadas ✅",
-          body:  "Você vai receber avisos de tickets, prazos e publicações aqui.",
-          path:  "/painel"
+          title: 'Notificações ativadas ✅',
+          body: 'Você vai receber avisos de tickets, prazos e publicações aqui.',
+          path: '/painel'
         )
 
         { ok: true }

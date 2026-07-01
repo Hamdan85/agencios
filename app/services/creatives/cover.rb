@@ -3,14 +3,14 @@
 module Creatives
   # Profile / page cover artwork. Uploaded only — not generatable.
   class Cover < Base
-    def self.type_key = "cover"
+    def self.type_key = 'cover'
 
     def self.details
       {
-        label: "Capa",
+        label: 'Capa',
         width: 1080,
         height: 1080,
-        aspect: "1:1",
+        aspect: '1:1',
         generatable: false,
         kind: nil,
         network_fit: %w[instagram facebook linkedin youtube],

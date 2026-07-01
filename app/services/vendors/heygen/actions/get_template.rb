@@ -16,7 +16,7 @@ module Vendors
 
         def call
           body = @client.get("/v2/template/#{@template_id}")
-          body["data"] || body
+          body['data'] || body
         end
       end
     end

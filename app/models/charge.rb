@@ -9,5 +9,5 @@ class Charge < ApplicationRecord
   enum :method, { pix: 0, boleto: 1, card: 2 }, prefix: true
 
   def pix? = method_pix?
-  def paid? = status == "approved"
+  def paid? = status == 'approved'
 end

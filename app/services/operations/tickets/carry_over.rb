@@ -18,8 +18,8 @@ module Operations
       # target_key => [source_status, source_key]; applied only when the target
       # is still blank.
       SEEDS = {
-        "scoping"    => { "copy_brief" => %w[ideation brief] },
-        "production" => { "caption"    => %w[scoping copy_brief] }
+        'scoping' => { 'copy_brief' => %w[ideation brief] },
+        'production' => { 'caption' => %w[scoping copy_brief] }
       }.freeze
 
       def initialize(ticket:, status: nil)

@@ -37,7 +37,7 @@ module Vendors
             client_id: @client.app_id,
             redirect_uri: @redirect_uri,
             state: @state,
-            response_type: "code"
+            response_type: 'code'
           }
           # Facebook Login for Business: a dashboard-created configuration
           # (config_id) replaces scope. Fall back to the classic scope-based
@@ -46,7 +46,7 @@ module Vendors
           if config_id.present?
             params[:config_id] = config_id
           else
-            params[:scope] = SCOPES.join(",")
+            params[:scope] = SCOPES.join(',')
           end
           "#{@client.dialog_url}?#{URI.encode_www_form(params)}"
         end

@@ -6,8 +6,8 @@ module Operations
     # source's context, and links it back via a TicketRelation. Driven by
     # ChangeStatus when a ticket reaches `done` recommending iterate / repeat.
     class SpawnFollowUp < Operations::Base
-      KIND_FOR = { "iterate" => :iteration_of, "repeat" => :repetition_of }.freeze
-      PREFIX   = { "iterate" => "Iteração", "repeat" => "Repetição" }.freeze
+      KIND_FOR = { 'iterate' => :iteration_of, 'repeat' => :repetition_of }.freeze
+      PREFIX   = { 'iterate' => 'Iteração', 'repeat' => 'Repetição' }.freeze
 
       def initialize(source:, recommendation:, user: nil)
         @source = source
@@ -52,11 +52,11 @@ module Operations
       # Carry over the original brief/ideation context. For an iteration, prepend
       # the (plain-text) lessons learned so the new cycle starts from them.
       def ideation_fields
-        base = @source.fields_for("ideation").to_h.dup
-        if @recommendation == "iterate"
-          lessons = strip_html(@source.fields_for("retrospective")["lessons_learned"])
+        base = @source.fields_for('ideation').to_h.dup
+        if @recommendation == 'iterate'
+          lessons = strip_html(@source.fields_for('retrospective')['lessons_learned'])
           if lessons.present?
-            base["brief"] = ["Lições do ciclo anterior:\n#{lessons}", base["brief"]].reject(&:blank?).join("\n\n")
+            base['brief'] = ["Lições do ciclo anterior:\n#{lessons}", base['brief']].reject(&:blank?).join("\n\n")
           end
         end
         base

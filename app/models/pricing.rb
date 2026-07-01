@@ -35,41 +35,41 @@ module Pricing
 
   DEFAULT_PLANS = [
     {
-      key: "solo", name: "Solo", stripe_lookup_key: "solo_monthly", stripe_annual_lookup_key: "solo_yearly",
+      key: 'solo', name: 'Solo', stripe_lookup_key: 'solo_monthly', stripe_annual_lookup_key: 'solo_yearly',
       price_cents: 9_900, usd_cents: 1_900, seats: 2, clients: 3, included_credits: 40,
       features: [
-        "2 assentos", "Até 3 clientes", "Quadro de produção completo",
-        "Carrosséis e legendas com IA inclusos",
-        "40 créditos/mês para vídeos e imagens", "Integrações sociais diretas"
+        '2 assentos', 'Até 3 clientes', 'Quadro de produção completo',
+        'Carrosséis e legendas com IA inclusos',
+        '40 créditos/mês para vídeos e imagens', 'Integrações sociais diretas'
       ]
     },
     {
-      key: "agencia", name: "Agência", stripe_lookup_key: "agencia_monthly", stripe_annual_lookup_key: "agencia_yearly",
+      key: 'agencia', name: 'Agência', stripe_lookup_key: 'agencia_monthly', stripe_annual_lookup_key: 'agencia_yearly',
       price_cents: 34_900, usd_cents: 7_900, seats: 20, clients: 25, included_credits: 200,
       features: [
-        "Até 20 assentos", "Até 25 clientes", "Tudo do Solo",
-        "200 créditos/mês para vídeos e imagens",
-        "Faturamento de clientes (Mercado Pago)", "Calendário e reuniões (Google)",
-        "Aprovações de cliente e relatórios com IA"
+        'Até 20 assentos', 'Até 25 clientes', 'Tudo do Solo',
+        '200 créditos/mês para vídeos e imagens',
+        'Faturamento de clientes (Mercado Pago)', 'Calendário e reuniões (Google)',
+        'Aprovações de cliente e relatórios com IA'
       ]
     },
     {
-      key: "enterprise", name: "Enterprise", stripe_lookup_key: "enterprise_monthly", stripe_annual_lookup_key: "enterprise_yearly",
+      key: 'enterprise', name: 'Enterprise', stripe_lookup_key: 'enterprise_monthly', stripe_annual_lookup_key: 'enterprise_yearly',
       price_cents: 99_900, usd_cents: 24_900, seats: 1_000_000, clients: 1_000_000,
       included_credits: 600,
       features: [
-        "Assentos ilimitados", "Clientes ilimitados", "Tudo da Agência",
-        "600 créditos/mês para vídeos e imagens", "White-label e SSO",
-        "Suporte prioritário e onboarding dedicado"
+        'Assentos ilimitados', 'Clientes ilimitados', 'Tudo da Agência',
+        '600 créditos/mês para vídeos e imagens', 'White-label e SSO',
+        'Suporte prioritário e onboarding dedicado'
       ]
     }
   ].freeze
 
   DEFAULT_PACKS = [
-    { key: "starter", name: "Inicial", price_cents: 5_000,   credits: 50 },
-    { key: "pro",     name: "Pro",     price_cents: 20_000,  credits: 220 },
-    { key: "studio",  name: "Studio",  price_cents: 50_000,  credits: 575 },
-    { key: "scale",   name: "Scale",   price_cents: 100_000, credits: 1_200 }
+    { key: 'starter', name: 'Inicial', price_cents: 5_000,   credits: 50 },
+    { key: 'pro',     name: 'Pro',     price_cents: 20_000,  credits: 220 },
+    { key: 'studio',  name: 'Studio',  price_cents: 50_000,  credits: 575 },
+    { key: 'scale',   name: 'Scale',   price_cents: 100_000, credits: 1_200 }
   ].freeze
 
   # ── Config accessors (DB, falling back to code defaults) ──────────────────
@@ -108,19 +108,22 @@ module Pricing
   # Resolve the Stripe lookup_key for a plan + billing interval.
   def lookup_key_for(plan_key, interval)
     p = plan(plan_key) or return nil
-    interval.to_s == "year" ? p[:stripe_annual_lookup_key] : p[:stripe_lookup_key]
+    interval.to_s == 'year' ? p[:stripe_annual_lookup_key] : p[:stripe_lookup_key]
   end
 
   # ── Credit cost of a generation ───────────────────────────────────────────
   def credits_for(kind:, seconds: nil, engine: nil)
     c = config
     case kind.to_s
-    when "image"    then c.image_credits
-    when "carousel" then c.carousel_credits
-    when "video"
+    when 'image'    then c.image_credits
+    when 'carousel' then c.carousel_credits
+    when 'video'
       secs  = (seconds || DEFAULT_VIDEO_SECONDS).to_f
-      per15 = photoreal_engine?(engine) ? c.video_photoreal_credits_per_15s
-                                         : c.video_standard_credits_per_15s
+      per15 = if photoreal_engine?(engine)
+                c.video_photoreal_credits_per_15s
+              else
+                c.video_standard_credits_per_15s
+              end
       (secs * per15 / 15.0).ceil
     else
       0

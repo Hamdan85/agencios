@@ -27,7 +27,7 @@ module Vendors
           client = Vendors::X::Client.new(social_account: @social_account)
 
           init = client.media_command(
-            command: "INIT",
+            command: 'INIT',
             media_type: @media_type,
             total_bytes: @bytes.bytesize,
             media_category: @media_category
@@ -36,7 +36,7 @@ module Vendors
 
           append_chunks(client, media_id)
 
-          final = client.media_command(command: "FINALIZE", media_id: media_id)
+          final = client.media_command(command: 'FINALIZE', media_id: media_id)
           wait_until_succeeded(client, media_id, final)
 
           media_id
@@ -63,11 +63,11 @@ module Vendors
           return if info.nil?
 
           STATUS_POLLS.times do
-            state = info["state"]
-            return if state == "succeeded"
-            raise Vendors::Base::Error, "X media processing failed" if state == "failed"
+            state = info['state']
+            return if state == 'succeeded'
+            raise Vendors::Base::Error, 'X media processing failed' if state == 'failed'
 
-            sleep(info["check_after_secs"] || DEFAULT_WAIT)
+            sleep(info['check_after_secs'] || DEFAULT_WAIT)
             status = client.media_status(media_id)
             info = processing_info(status) || {}
           end
@@ -75,13 +75,13 @@ module Vendors
 
         # The v2 media endpoint nests the payload under "data".
         def media_id_from(body)
-          (body["data"] || body)["media_id_string"] ||
-            (body["data"] || body)["id"] ||
-            (body["data"] || body)["media_id"].to_s
+          (body['data'] || body)['media_id_string'] ||
+            (body['data'] || body)['id'] ||
+            (body['data'] || body)['media_id'].to_s
         end
 
         def processing_info(body)
-          (body["data"] || body)["processing_info"]
+          (body['data'] || body)['processing_info']
         end
       end
     end

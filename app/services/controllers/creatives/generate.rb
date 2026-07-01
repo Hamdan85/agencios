@@ -24,17 +24,17 @@ module Controllers
       def run(ticket)
         gen_params = generation_params
         case @params[:kind].to_s
-        when "carousel"
+        when 'carousel'
           Operations::Creatives::GenerateViralCarousel.call(
             ticket: ticket, slides: gen_params[:slides], params: gen_params
           )
-        when "video"
+        when 'video'
           Operations::Creatives::GenerateUgcVideo.call(
             ticket: ticket, script: gen_params[:script],
             avatar: gen_params[:avatar], voice: gen_params[:voice],
             creative_type: @params[:type].presence
           )
-        when "image"
+        when 'image'
           Operations::Creatives::GenerateImage.call(
             ticket: ticket, prompt: gen_params[:prompt],
             ref_images: gen_params.fetch(:ref_images, []),

@@ -20,14 +20,14 @@ module Vendors
 
         def call
           result = @client.graph_get(
-            "/refresh_access_token",
-            params: { grant_type: "ig_refresh_token", access_token: @social_account.user_access_token },
+            '/refresh_access_token',
+            params: { grant_type: 'ig_refresh_token', access_token: @social_account.user_access_token },
             token: nil
           )
 
           {
-            user_access_token: result["access_token"],
-            token_expires_at: expiry_from(result["expires_in"])
+            user_access_token: result['access_token'],
+            token_expires_at: expiry_from(result['expires_in'])
           }
         end
 

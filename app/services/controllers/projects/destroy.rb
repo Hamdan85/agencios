@@ -10,7 +10,7 @@ module Controllers
       def call
         require_manager!
         workspace.projects.find(@params[:id]).destroy!
-        { message: "Projeto removido." }
+        { message: 'Projeto removido.' }
       end
     end
   end

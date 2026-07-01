@@ -31,13 +31,13 @@ module Controllers
     def require_manager!
       return if membership&.can_manage?
 
-      raise Operations::Errors::Forbidden, "Acesso restrito a gestores do workspace."
+      raise Operations::Errors::Forbidden, 'Acesso restrito a gestores do workspace.'
     end
 
     def require_owner!
       return if membership&.owner?
 
-      raise Operations::Errors::Forbidden, "Acesso restrito ao owner do workspace."
+      raise Operations::Errors::Forbidden, 'Acesso restrito ao owner do workspace.'
     end
 
     def deny_guests!
@@ -62,8 +62,8 @@ module Controllers
       return unless workspace&.over_seat_limit?
 
       raise Operations::Errors::SeatLimitReached,
-            "O workspace tem mais membros do que o plano atual permite. " \
-              "Remova membros ou faça upgrade para continuar criando tickets e projetos."
+            'O workspace tem mais membros do que o plano atual permite. ' \
+              'Remova membros ou faça upgrade para continuar criando tickets e projetos.'
     end
 
     # Preflight prepaid-credit check for a metered generation (video/image).
@@ -96,9 +96,7 @@ module Controllers
     # request asks for it via `page`/`per`. Lets existing callers that expect the
     # whole array keep working while new infinite-scroll clients opt in.
     def collection_payload(scope, serializer, key, params, **opts)
-      unless params[:page].present? || params[:per].present?
-        return { key => serialize_collection(scope, serializer) }
-      end
+      return { key => serialize_collection(scope, serializer) } unless params[:page].present? || params[:per].present?
 
       records, meta = paginate(scope, params, **opts)
       { key => serialize_collection(records, serializer), :meta => meta }

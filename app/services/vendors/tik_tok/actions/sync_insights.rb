@@ -19,14 +19,14 @@ module Vendors
 
         def call
           video = fetch_video
-          views = int(video["view_count"])
+          views = int(video['view_count'])
 
           {
             reach: views,
             views: views,
-            likes: int(video["like_count"]),
-            comments: int(video["comment_count"]),
-            shares: int(video["share_count"]),
+            likes: int(video['like_count']),
+            comments: int(video['comment_count']),
+            shares: int(video['share_count']),
             saves: 0,
             raw: video
           }
@@ -41,7 +41,7 @@ module Vendors
           data = Vendors::TikTok::Actions::QueryVideos.call(
             social_account: @social_account, video_ids: [id]
           )
-          Array(data["videos"]).find { |v| v["id"].to_s == id.to_s } || {}
+          Array(data['videos']).find { |v| v['id'].to_s == id.to_s } || {}
         rescue Vendors::Base::Error
           {}
         end

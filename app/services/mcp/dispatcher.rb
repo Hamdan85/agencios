@@ -8,9 +8,9 @@ module Mcp
     # Protocol revisions we can speak. We echo the client's requested version
     # when supported, else negotiate down to the latest we know.
     SUPPORTED_PROTOCOL_VERSIONS = %w[2025-06-18 2025-03-26 2024-11-05].freeze
-    LATEST_PROTOCOL_VERSION = "2025-06-18"
+    LATEST_PROTOCOL_VERSION = '2025-06-18'
 
-    SERVER_INFO = { name: "agencios", version: "1.0.0" }.freeze
+    SERVER_INFO = { name: 'agencios', version: '1.0.0' }.freeze
 
     def initialize(actor:, granted_scopes:, application_id: nil)
       @actor = actor
@@ -22,12 +22,12 @@ module Mcp
     def handle(request)
       return nil unless request.is_a?(Hash)
 
-      id = request["id"]
-      case request["method"]
-      when "initialize"            then result(id, initialize_result(request["params"] || {}))
-      when "ping"                  then result(id, {})
-      when "tools/list"            then result(id, { tools: tool_list })
-      when "tools/call"            then handle_call(request["params"] || {}, id)
+      id = request['id']
+      case request['method']
+      when 'initialize'            then result(id, initialize_result(request['params'] || {}))
+      when 'ping'                  then result(id, {})
+      when 'tools/list'            then result(id, { tools: tool_list })
+      when 'tools/call'            then handle_call(request['params'] || {}, id)
       when %r{\Anotifications/}    then nil # client → server notices need no reply
       when nil                     then nil # a response/notification echoed back
       else error(id, -32_601, "Method not found: #{request['method']}")
@@ -37,7 +37,7 @@ module Mcp
     private
 
     def initialize_result(params)
-      requested = params["protocolVersion"]
+      requested = params['protocolVersion']
       version = SUPPORTED_PROTOCOL_VERSIONS.include?(requested) ? requested : LATEST_PROTOCOL_VERSION
       {
         protocolVersion: version,
@@ -52,7 +52,7 @@ module Mcp
         {
           name: klass.tool_name,
           description: klass.description.to_s,
-          inputSchema: klass.input_schema_to_json || { type: "object", properties: {}, required: [] },
+          inputSchema: klass.input_schema_to_json || { type: 'object', properties: {}, required: [] },
           annotations: annotations_for(klass, spec)
         }
       end
@@ -60,21 +60,21 @@ module Mcp
 
     def annotations_for(klass, spec)
       {
-        title: klass.tool_name.tr("_", " ").capitalize,
+        title: klass.tool_name.tr('_', ' ').capitalize,
         readOnlyHint: !(spec.side_effect || spec.cost),
         destructiveHint: spec.destructive
       }
     end
 
     def handle_call(params, id)
-      name = params["name"]
-      return error(id, -32_602, "Invalid params: missing tool name") if name.blank?
+      name = params['name']
+      return error(id, -32_602, 'Invalid params: missing tool name') if name.blank?
 
       klass = Catalog.find(name)
       return error(id, -32_602, "Unknown tool: #{name}") unless klass
 
       spec = klass.mcp_spec
-      args = symbolize(params["arguments"] || {})
+      args = symbolize(params['arguments'] || {})
       tool = klass.new(actor: @actor, granted_scopes: @granted_scopes)
 
       begin
@@ -90,14 +90,14 @@ module Mcp
     # --- Tool result envelopes (MCP tools/call result shape) -----------------
     def tool_success(value)
       {
-        content: [{ type: "text", text: stringify(value) }],
+        content: [{ type: 'text', text: stringify(value) }],
         structuredContent: value.is_a?(Hash) ? value : { result: value },
         isError: false
       }
     end
 
     def tool_failure(message)
-      { content: [{ type: "text", text: message }], isError: true }
+      { content: [{ type: 'text', text: message }], isError: true }
     end
 
     def stringify(value)
@@ -118,9 +118,9 @@ module Mcp
            Operations::Errors::BillingRequired
         err.message
       when Pundit::NotAuthorizedError
-        "Your role in this workspace does not permit this action."
+        'Your role in this workspace does not permit this action.'
       when ActiveRecord::RecordNotFound
-        "Record not found."
+        'Record not found.'
       when ActiveRecord::RecordInvalid
         err.record.errors.full_messages.to_sentence.presence || err.message
       when FastMcp::Tool::InvalidArgumentsError
@@ -140,11 +140,11 @@ module Mcp
     end
 
     def result(id, value)
-      { jsonrpc: "2.0", id: id, result: value }
+      { jsonrpc: '2.0', id: id, result: value }
     end
 
     def error(id, code, message)
-      { jsonrpc: "2.0", id: id, error: { code: code, message: message } }
+      { jsonrpc: '2.0', id: id, error: { code: code, message: message } }
     end
 
     def symbolize(hash)

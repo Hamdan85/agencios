@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "openssl"
+require 'openssl'
 
 module Vendors
   module Google
@@ -15,9 +15,9 @@ module Vendors
     #   TOKEN    = https://oauth2.googleapis.com         (code → tokens)
     #   USERINFO = https://openidconnect.googleapis.com  (profile lookup)
     class Oauth < Vendors::Base
-      AUTH     = "https://accounts.google.com"
-      TOKEN    = "https://oauth2.googleapis.com"
-      USERINFO = "https://openidconnect.googleapis.com"
+      AUTH     = 'https://accounts.google.com'
+      TOKEN    = 'https://oauth2.googleapis.com'
+      USERINFO = 'https://openidconnect.googleapis.com'
 
       # Minimal sign-in scopes: identity + verified email. No offline/Calendar.
       SCOPES = %w[openid email profile].freeze
@@ -28,11 +28,11 @@ module Vendors
         params = {
           client_id: client_id,
           redirect_uri: redirect_uri,
-          response_type: "code",
-          scope: SCOPES.join(" "),
-          access_type: "online",
-          include_granted_scopes: "true",
-          prompt: "select_account",
+          response_type: 'code',
+          scope: SCOPES.join(' '),
+          access_type: 'online',
+          include_granted_scopes: 'true',
+          prompt: 'select_account',
           state: state
         }
         "#{AUTH}/o/oauth2/v2/auth?#{params.to_query}"
@@ -46,7 +46,7 @@ module Vendors
           client_id: client_id,
           client_secret: client_secret,
           redirect_uri: redirect_uri,
-          grant_type: "authorization_code"
+          grant_type: 'authorization_code'
         )
       end
 
@@ -54,17 +54,17 @@ module Vendors
       #   { "sub" =>, "email" =>, "email_verified" =>, "name" =>, "picture" => }
       def fetch_userinfo(access_token:)
         conn = build_connection(USERINFO, auth_token: access_token)
-        handle(conn.get("/v1/userinfo"))
+        handle(conn.get('/v1/userinfo'))
       end
 
       private
 
       def client_id
-        require_credential!(credential(:google, :client_id, env: "GOOGLE_CLIENT_ID"), "google.client_id")
+        require_credential!(credential(:google, :client_id, env: 'GOOGLE_CLIENT_ID'), 'google.client_id')
       end
 
       def client_secret
-        require_credential!(credential(:google, :client_secret, env: "GOOGLE_CLIENT_SECRET"), "google.client_secret")
+        require_credential!(credential(:google, :client_secret, env: 'GOOGLE_CLIENT_SECRET'), 'google.client_secret')
       end
 
       # Google's token endpoint is form-encoded and returns a flat JSON error
@@ -79,7 +79,7 @@ module Vendors
                     methods: %i[post]
           f.adapter Faraday.default_adapter
         end
-        response = conn.post("/token", body)
+        response = conn.post('/token', body)
         return response.body if response.success?
 
         parsed = response.body
@@ -88,13 +88,13 @@ module Vendors
       end
 
       def invalid_grant?(body)
-        body.is_a?(Hash) && body["error"] == "invalid_grant"
+        body.is_a?(Hash) && body['error'] == 'invalid_grant'
       end
 
       def token_error_message(body)
-        return "#{body["error"]}: #{body["error_description"]}" if body.is_a?(Hash) && body["error"]
+        return "#{body['error']}: #{body['error_description']}" if body.is_a?(Hash) && body['error']
 
-        "OAuth token request failed"
+        'OAuth token request failed'
       end
     end
   end

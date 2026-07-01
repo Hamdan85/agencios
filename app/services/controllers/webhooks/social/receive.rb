@@ -32,8 +32,8 @@ module Controllers
         def resolve_secret
           key, env =
             case @provider
-            when "instagram" then [:instagram_app_secret, "INSTAGRAM_APP_SECRET"]
-            when "threads"   then [:threads_app_secret, "THREADS_APP_SECRET"]
+            when 'instagram' then [:instagram_app_secret, 'INSTAGRAM_APP_SECRET']
+            when 'threads'   then [:threads_app_secret, 'THREADS_APP_SECRET']
             end
           return nil unless key
 

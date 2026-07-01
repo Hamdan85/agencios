@@ -26,24 +26,24 @@ module Vendors
             code: @code, redirect_uri: @redirect_uri, client: @client
           )
           long = ExchangeLongLivedToken.call(
-            short_lived_token: short["access_token"], client: @client
+            short_lived_token: short['access_token'], client: @client
           )
-          user_token = long["access_token"]
+          user_token = long['access_token']
           profile = GetProfile.call(access_token: user_token, client: @client)
 
-          ig_user_id = (profile["user_id"] || short["user_id"]).to_s
+          ig_user_id = (profile['user_id'] || short['user_id']).to_s
 
           {
             provider: :instagram,
             connection_type: :instagram_login,
             external_user_id: ig_user_id,
             ig_user_id: ig_user_id,
-            username: profile["username"],
-            avatar_url: profile["profile_picture_url"],
+            username: profile['username'],
+            avatar_url: profile['profile_picture_url'],
             user_access_token: user_token,
             page_id: nil,
             page_access_token: nil,
-            token_expires_at: expiry_from(long["expires_in"]),
+            token_expires_at: expiry_from(long['expires_in']),
             scopes: AuthorizeUrl::SCOPES,
             status: :connected
           }

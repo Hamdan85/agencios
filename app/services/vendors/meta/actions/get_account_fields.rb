@@ -8,7 +8,7 @@ module Vendors
       class GetAccountFields
         def self.call(...) = new(...).call
 
-        DEFAULT_FIELDS = "followers_count,follows_count,media_count,username"
+        DEFAULT_FIELDS = 'followers_count,follows_count,media_count,username'
 
         def initialize(social_account:, fields: DEFAULT_FIELDS, client: nil)
           @social_account = social_account

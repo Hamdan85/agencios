@@ -39,12 +39,12 @@ module AiUsageChart
     rows = scoped.where(created_at: first_day.beginning_of_day..)
                  .group(date_expr, :operation)
                  .pluck(date_expr, :operation,
-                        Arel.sql("COUNT(*)"),
-                        Arel.sql("COALESCE(SUM(input_tokens), 0)"),
-                        Arel.sql("COALESCE(SUM(cache_creation_input_tokens), 0)"),
-                        Arel.sql("COALESCE(SUM(cache_read_input_tokens), 0)"),
-                        Arel.sql("COALESCE(SUM(output_tokens), 0)"),
-                        Arel.sql("COALESCE(SUM(cost_cents), 0)"))
+                        Arel.sql('COUNT(*)'),
+                        Arel.sql('COALESCE(SUM(input_tokens), 0)'),
+                        Arel.sql('COALESCE(SUM(cache_creation_input_tokens), 0)'),
+                        Arel.sql('COALESCE(SUM(cache_read_input_tokens), 0)'),
+                        Arel.sql('COALESCE(SUM(output_tokens), 0)'),
+                        Arel.sql('COALESCE(SUM(cost_cents), 0)'))
 
     data = Hash.new { |h, k| h[k] = {} }
     rows.each do |day, op, calls, input, cache_write, cache_read, output, cost|
@@ -58,8 +58,12 @@ module AiUsageChart
   end
 
   def self.svg(days, data, operations, colors)
-    width, height                 = 960, 280
-    m_left, m_right, m_top, m_bot = 64, 12, 14, 30
+    width = 960
+    height = 280
+    m_left = 64
+    m_right = 12
+    m_top = 14
+    m_bot = 30
     plot_w = width - m_left - m_right
     plot_h = height - m_top - m_bot
     slot   = plot_w.to_f / days.size
@@ -94,7 +98,7 @@ module AiUsageChart
       end
     end
 
-    parts << "</svg>"
+    parts << '</svg>'
     parts.join
   end
 
@@ -103,13 +107,13 @@ module AiUsageChart
     summary = %(<p style="margin:10px 0 4px;font-size:12px;color:#555">) +
               %(<strong>Total do período: #{usd(totals.sum { |t| t[:cost] })}</strong> · ) +
               %(#{totals.sum { |t| t[:calls] }} chamadas · ) +
-              %(#{tokens(totals.sum { |t| t[:input] })} tokens entrada · #{tokens(totals.sum { |t| t[:output] })} saída</p>)
+              %(#{tokens(totals.sum { |t| t[:input] })} tokens entrada · #{tokens(totals.sum do |t|
+                t[:output]
+              end)} saída</p>)
 
     items = operations.map do |op|
       t = op_totals[op]
-      %(<span style="display:inline-flex;align-items:center;gap:6px">) +
-        %(<span style="width:10px;height:10px;border-radius:3px;background:#{colors[op]};display:inline-block"></span>) +
-        %(<span><strong>#{esc(op)}</strong> · #{t[:calls]} chamadas · #{usd(t[:cost])}</span></span>)
+      "<span style=\"display:inline-flex;align-items:center;gap:6px\"><span style=\"width:10px;height:10px;border-radius:3px;background:#{colors[op]};display:inline-block\"></span><span><strong>#{esc(op)}</strong> · #{t[:calls]} chamadas · #{usd(t[:cost])}</span></span>"
     end
 
     summary + %(<div style="display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12px;color:#555">#{items.join}</div>)
@@ -122,14 +126,14 @@ module AiUsageChart
 
   def self.usd(cents)
     dollars = cents / 100.0
-    format(dollars >= 0.01 || dollars.zero? ? "US$ %.2f" : "US$ %.4f", dollars)
+    format(dollars >= 0.01 || dollars.zero? ? 'US$ %.2f' : 'US$ %.4f', dollars)
   end
 
   def self.tokens(count)
     count = count.to_i
     return count.to_s if count < 1_000
 
-    count < 1_000_000 ? format("%.1fk", count / 1_000.0) : format("%.2fM", count / 1_000_000.0)
+    count < 1_000_000 ? format('%.1fk', count / 1_000.0) : format('%.2fM', count / 1_000_000.0)
   end
 
   def self.esc(text) = CGI.escapeHTML(text.to_s)
@@ -150,7 +154,7 @@ module ActiveAdmin
 end
 
 ActiveAdmin.register AiUsageLog do
-  menu parent: "Plataforma", label: "Custo de IA", priority: 1
+  menu parent: 'Plataforma', label: 'Custo de IA', priority: 1
   actions :index, :show
 
   filter :workspace
@@ -161,10 +165,10 @@ ActiveAdmin.register AiUsageLog do
   filter :created_at
 
   scope :all, default: true
-  scope("Hoje") { |s| s.where(created_at: Time.zone.now.beginning_of_day..) }
-  scope("7 dias") { |s| s.where(created_at: 7.days.ago..) }
-  scope("30 dias") { |s| s.where(created_at: 30.days.ago..) }
-  scope("Este mês") { |s| s.where(created_at: Time.zone.now.beginning_of_month..) }
+  scope('Hoje') { |s| s.where(created_at: Time.zone.now.beginning_of_day..) }
+  scope('7 dias') { |s| s.where(created_at: 7.days.ago..) }
+  scope('30 dias') { |s| s.where(created_at: 30.days.ago..) }
+  scope('Este mês') { |s| s.where(created_at: Time.zone.now.beginning_of_month..) }
 
   index as: :table_with_chart do
     column :created_at
@@ -172,10 +176,10 @@ ActiveAdmin.register AiUsageLog do
     column :provider
     column :operation
     column :model
-    column("Tokens (in/out)") { |l| "#{l.input_tokens} / #{l.output_tokens}" }
-    column("Unidades") { |l| l.units.to_f.zero? ? "—" : "#{l.units} #{l.unit_kind}" }
-    column("Custo (US$)") { |l| number_to_currency(l.estimated_cost_usd, unit: "US$ ") }
-    column("Sujeito") { |l| l.subject_type ? "#{l.subject_type}##{l.subject_id}" : "—" }
+    column('Tokens (in/out)') { |l| "#{l.input_tokens} / #{l.output_tokens}" }
+    column('Unidades') { |l| l.units.to_f.zero? ? '—' : "#{l.units} #{l.unit_kind}" }
+    column('Custo (US$)') { |l| number_to_currency(l.estimated_cost_usd, unit: 'US$ ') }
+    column('Sujeito') { |l| l.subject_type ? "#{l.subject_type}##{l.subject_id}" : '—' }
   end
 
   show do
@@ -186,37 +190,37 @@ ActiveAdmin.register AiUsageLog do
       row :provider
       row :operation
       row :model
-      row("Sujeito") { |l| l.subject_type ? "#{l.subject_type}##{l.subject_id}" : "—" }
+      row('Sujeito') { |l| l.subject_type ? "#{l.subject_type}##{l.subject_id}" : '—' }
       row :input_tokens
       row :output_tokens
       row :cache_creation_input_tokens
       row :cache_read_input_tokens
       row :unit_kind
       row :units
-      row("Custo (US$)") { |l| number_to_currency(l.estimated_cost_usd, unit: "US$ ") }
+      row('Custo (US$)') { |l| number_to_currency(l.estimated_cost_usd, unit: 'US$ ') }
       row :created_at
     end
   end
 
-  sidebar "Resumo de custo", only: :index do
+  sidebar 'Resumo de custo', only: :index do
     scoped = collection.except(:select, :order, :limit, :offset)
     total  = scoped.total_cost_cents.to_f
     by_provider  = scoped.cost_by_provider
     by_operation = scoped.cost_by_operation.sort_by { |_, v| -v.to_f }.first(8)
 
     div do
-      strong "Total: "
-      span number_to_currency(total / 100.0, unit: "US$ ")
+      strong 'Total: '
+      span number_to_currency(total / 100.0, unit: 'US$ ')
     end
     hr
-    strong "Por provider"
+    strong 'Por provider'
     ul do
       by_provider.each do |provider, cents|
         li "#{provider}: #{number_to_currency(cents.to_f / 100.0, unit: 'US$ ')}"
       end
     end
     hr
-    strong "Top operations"
+    strong 'Top operations'
     ul do
       by_operation.each do |operation, cents|
         li "#{operation}: #{number_to_currency(cents.to_f / 100.0, unit: 'US$ ')}"

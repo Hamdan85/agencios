@@ -13,17 +13,17 @@ module Operations
       def call
         guard_media_support!
         @post.update!(status: :publishing)
-        Broadcaster.ticket(@post.ticket, "post_publishing", post_id: @post.id)
+        Broadcaster.ticket(@post.ticket, 'post_publishing', post_id: @post.id)
 
         result = Publishers::SocialPublisher.publish(@post)
 
         @post.update!(
           status: :published,
           published_at: Time.current,
-          external_post_id: result[:external_post_id] || result["external_post_id"],
-          permalink: result[:permalink] || result["permalink"]
+          external_post_id: result[:external_post_id] || result['external_post_id'],
+          permalink: result[:permalink] || result['permalink']
         )
-        Broadcaster.ticket(@post.ticket, "post_published", post_id: @post.id, permalink: @post.permalink)
+        Broadcaster.ticket(@post.ticket, 'post_published', post_id: @post.id, permalink: @post.permalink)
         notify("Post publicado em #{@post.social_account.provider} ✅", @post.ticket.title)
         email { |to| PostMailer.published(post: @post, recipient: to) }
         advance_ticket_if_all_published
@@ -34,7 +34,7 @@ module Operations
           ticket: @post.ticket, user: nil, kind: :system,
           body: "Falha ao publicar em #{@post.social_account.provider}: #{e.message}"
         )
-        Broadcaster.ticket(@post.ticket, "post_failed", post_id: @post.id)
+        Broadcaster.ticket(@post.ticket, 'post_failed', post_id: @post.id)
         notify("Falha ao publicar em #{@post.social_account.provider}", @post.ticket.title)
         email { |to| PostMailer.failed(post: @post, recipient: to, reason: e.message) }
         raise
@@ -59,10 +59,10 @@ module Operations
       # last pending post of a ticket in the posting step publishes, advance it.
       def advance_ticket_if_all_published
         ticket = @post.ticket
-        return unless ticket.status == "scheduled"
+        return unless ticket.status == 'scheduled'
         return if ticket.posts.where.not(status: Post.statuses[:published]).exists?
 
-        Operations::Tickets::ChangeStatus.call(ticket, "published", user: nil, force: true)
+        Operations::Tickets::ChangeStatus.call(ticket, 'published', user: nil, force: true)
       rescue StandardError => e
         Rails.logger.warn("[Posts::Publish] auto-advance to published failed: #{e.message}")
       end

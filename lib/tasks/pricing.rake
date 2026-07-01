@@ -13,43 +13,43 @@
 #     bin/rails pricing:stripe:sync        # pull current Stripe amounts into DB
 #     bin/rails pricing:show               # print the current catalog
 namespace :pricing do
-  desc "Ensure the DB pricing catalog exists (idempotent, additive — safe for prod)"
+  desc 'Ensure the DB pricing catalog exists (idempotent, additive — safe for prod)'
   task seed: :environment do
     Pricing.seed_defaults!
     puts "✅ Catálogo garantido: #{PricingPlan.count} planos · #{PricingPack.count} pacotes · config ##{PricingConfig.instance.id}"
-    Rake::Task["pricing:show"].invoke
+    Rake::Task['pricing:show'].invoke
   end
 
-  desc "Full setup: seed the DB catalog + provision Stripe Products/Prices + sync"
+  desc 'Full setup: seed the DB catalog + provision Stripe Products/Prices + sync'
   task setup: :environment do
     Pricing.seed_defaults!
-    Rake::Task["pricing:stripe:provision"].invoke
+    Rake::Task['pricing:stripe:provision'].invoke
   end
 
-  desc "Print the current pricing catalog"
+  desc 'Print the current pricing catalog'
   task show: :environment do
     puts "\n── Planos ──────────────────────────────────────────────"
     PricingPlan.ordered.each do |p|
       annual = Pricing.annual_price_cents_for(p.key)
       printf("  %-11s R$%-7.2f/mês  R$%-8.2f/ano  %3d créditos  seats:%-6s price:%s\n",
              p.key, p.price_cents / 100.0, annual / 100.0, p.included_credits,
-             (p.seats >= 1_000_000 ? "∞" : p.seats),
-             p.stripe_price_id || "— (não provisionado)")
+             (p.seats >= 1_000_000 ? '∞' : p.seats),
+             p.stripe_price_id || '— (não provisionado)')
     end
     puts "  (desconto anual: #{PricingConfig.instance.annual_discount_percent}%)"
-    puts "── Pacotes de crédito ──────────────────────────────────"
+    puts '── Pacotes de crédito ──────────────────────────────────'
     PricingPack.ordered.each do |p|
       printf("  %-9s R$%-7.2f  %5d créditos\n", p.key, p.price_cents / 100.0, p.credits)
     end
     c = PricingConfig.instance
-    puts "── Config ──────────────────────────────────────────────"
+    puts '── Config ──────────────────────────────────────────────'
     puts "  trial: #{c.trial_days} dias · crédito: R$#{c.credit_unit_cents / 100.0} · " \
          "img #{c.image_credits}cr · vídeo #{c.video_standard_credits_per_15s}/#{c.video_photoreal_credits_per_15s}cr por 15s"
-    puts ""
+    puts ''
   end
 
   namespace :stripe do
-    desc "Create/ensure Stripe Products + Prices (lookup_key) for each plan; cache ids back"
+    desc 'Create/ensure Stripe Products + Prices (lookup_key) for each plan; cache ids back'
     task provision: :environment do
       Pricing.seed_defaults!
       results = Vendors::Stripe::Actions::ProvisionPlanPrices.call
@@ -59,16 +59,16 @@ namespace :pricing do
       puts "✅ Stripe provisionado (#{results.size} planos)."
     rescue Vendors::Base::NotConfiguredError => e
       warn "⚠️  Stripe não configurado (#{e.message}). Rode 'pricing:seed' para só o catálogo, " \
-           "ou configure stripe.secret_key nas credentials."
+           'ou configure stripe.secret_key nas credentials.'
     end
 
-    desc "Pull current Stripe amounts (by lookup_key) into the DB catalog"
+    desc 'Pull current Stripe amounts (by lookup_key) into the DB catalog'
     task sync: :environment do
       updated = Vendors::Stripe::Actions::SyncPlanPrices.call
       puts "✅ #{updated} plano(s) sincronizado(s) com o Stripe."
     end
 
-    desc "Create a Stripe Customer for every workspace missing one (idempotent)"
+    desc 'Create a Stripe Customer for every workspace missing one (idempotent)'
     task backfill_customers: :environment do
       total = created = skipped = 0
       Workspace.includes(:subscription).find_each do |ws|

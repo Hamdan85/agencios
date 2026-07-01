@@ -7,7 +7,7 @@
 class AddPaymentLinkToCharges < ActiveRecord::Migration[8.1]
   def change
     change_table :charges, bulk: true do |t|
-      t.string :provider, null: false, default: "mercado_pago"
+      t.string :provider, null: false, default: 'mercado_pago'
       t.text   :payment_link
       t.string :preference_id
     end

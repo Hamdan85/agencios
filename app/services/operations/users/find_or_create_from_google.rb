@@ -18,8 +18,8 @@ module Operations
       end
 
       def call
-        raise Operations::Errors::Invalid, "Conta Google sem identificador." if @uid.blank?
-        raise Operations::Errors::Invalid, "E-mail do Google ausente." if @email.blank?
+        raise Operations::Errors::Invalid, 'Conta Google sem identificador.' if @uid.blank?
+        raise Operations::Errors::Invalid, 'E-mail do Google ausente.' if @email.blank?
 
         existing_by_uid || link_existing_by_email || create_new
       end
@@ -46,12 +46,12 @@ module Operations
       end
 
       def create_new
-        raise Operations::Errors::Invalid, "E-mail do Google não verificado." unless @email_verified
+        raise Operations::Errors::Invalid, 'E-mail do Google não verificado.' unless @email_verified
 
         user = User.create!(
-          email:        @email,
-          name:         @name,
-          google_uid:   @uid,
+          email: @email,
+          name: @name,
+          google_uid: @uid,
           confirmed_at: Time.current # Google already verified the address
         )
         Operations::Workspaces::SetupForUser.call(user: user)

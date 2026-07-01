@@ -7,7 +7,7 @@ class Membership < ApplicationRecord
   enum :role, { owner: 0, admin: 1, manager: 2, member: 3, guest: 4 }
 
   # Capability ranking — used for "role >= X" gating in policies.
-  RANK = { "owner" => 4, "admin" => 3, "manager" => 2, "member" => 1, "guest" => 0 }.freeze
+  RANK = { 'owner' => 4, 'admin' => 3, 'manager' => 2, 'member' => 1, 'guest' => 0 }.freeze
 
   validates :user_id, uniqueness: { scope: :workspace_id }
   validate  :single_owner_per_workspace
@@ -33,6 +33,6 @@ class Membership < ApplicationRecord
     return unless owner?
 
     clash = Membership.where(workspace_id: workspace_id, role: :owner).where.not(id: id)
-    errors.add(:role, "workspace already has an owner") if clash.exists?
+    errors.add(:role, 'workspace already has an owner') if clash.exists?
   end
 end

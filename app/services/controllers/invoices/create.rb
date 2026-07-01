@@ -10,11 +10,11 @@ module Controllers
       def call
         require_manager!
         invoice = Operations::Invoices::Create.call(
-          client_id:    create_params[:client_id],
+          client_id: create_params[:client_id],
           amount_cents: create_params[:amount_cents],
-          description:  create_params[:description],
-          due_date:     create_params[:due_date],
-          project_ids:  create_params[:project_ids] || [],
+          description: create_params[:description],
+          due_date: create_params[:due_date],
+          project_ids: create_params[:project_ids] || [],
           send_payment_link: create_params[:send_payment_link] || false
         )
         { invoice: serialize(invoice, InvoiceSerializer) }

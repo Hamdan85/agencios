@@ -8,7 +8,7 @@ module Controllers
     # that entity's own creator service.
     class Register < Controllers::Base
       ALLOWED_SCOPES = %w[read write billing].freeze
-      DEFAULT_SCOPES = "read write"
+      DEFAULT_SCOPES = 'read write'
 
       def initialize(params:)
         @params = params
@@ -17,13 +17,13 @@ module Controllers
       def call
         metadata = permitted_metadata
         uris = Array(metadata[:redirect_uris]).reject(&:blank?)
-        raise Operations::Errors::Invalid, "redirect_uris is required" if uris.empty?
+        raise Operations::Errors::Invalid, 'redirect_uris is required' if uris.empty?
 
         validate_redirect_uris!(uris)
-        public_client = metadata[:token_endpoint_auth_method].to_s == "none"
+        public_client = metadata[:token_endpoint_auth_method].to_s == 'none'
 
         application = ::Doorkeeper::Application.new(
-          name: metadata[:client_name].presence || "MCP Client",
+          name: metadata[:client_name].presence || 'MCP Client',
           redirect_uri: uris.join("\n"),
           scopes: requested_scopes(metadata[:scope]),
           confidential: !public_client,
@@ -57,7 +57,7 @@ module Controllers
 
       def requested_scopes(scope)
         wanted = scope.to_s.split & ALLOWED_SCOPES
-        wanted.presence&.join(" ") || DEFAULT_SCOPES
+        wanted.presence&.join(' ') || DEFAULT_SCOPES
       end
 
       def registration_response(application, uris, public_client)
@@ -68,7 +68,7 @@ module Controllers
           redirect_uris: uris,
           grant_types: %w[authorization_code refresh_token],
           response_types: %w[code],
-          token_endpoint_auth_method: public_client ? "none" : "client_secret_basic",
+          token_endpoint_auth_method: public_client ? 'none' : 'client_secret_basic',
           scope: application.scopes.to_s
         }
         unless public_client

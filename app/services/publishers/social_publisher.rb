@@ -6,13 +6,13 @@ module Publishers
   # never branch on provider.
   class SocialPublisher
     DIRECT = {
-      "instagram" => "Vendors::Meta",
-      "facebook"  => "Vendors::Meta",
-      "threads"   => "Vendors::Threads",
-      "tiktok"    => "Vendors::TikTok",
-      "youtube"   => "Vendors::Youtube",
-      "linkedin"  => "Vendors::Linkedin",
-      "x"         => "Vendors::X",
+      'instagram' => 'Vendors::Meta',
+      'facebook' => 'Vendors::Meta',
+      'threads' => 'Vendors::Threads',
+      'tiktok' => 'Vendors::TikTok',
+      'youtube' => 'Vendors::Youtube',
+      'linkedin' => 'Vendors::Linkedin',
+      'x' => 'Vendors::X'
     }.freeze
 
     # OAuth connect routing: which slug a network authenticates through, and the
@@ -21,26 +21,26 @@ module Publishers
     # non-technical clients); Facebook via the Meta Facebook-Login app; Threads
     # via the Threads API. All three live in one Meta app.
     CONNECT_SLUG = {
-      "instagram" => "instagram", "facebook" => "facebook", "threads" => "threads",
-      "tiktok" => "tiktok", "youtube" => "youtube", "linkedin" => "linkedin", "x" => "x",
+      'instagram' => 'instagram', 'facebook' => 'facebook', 'threads' => 'threads',
+      'tiktok' => 'tiktok', 'youtube' => 'youtube', 'linkedin' => 'linkedin', 'x' => 'x'
     }.freeze
     SLUG_VENDOR = {
-      "facebook" => "Vendors::Meta", "instagram" => "Vendors::InstagramLogin",
-      "threads" => "Vendors::Threads", "tiktok" => "Vendors::TikTok",
-      "youtube" => "Vendors::Youtube", "linkedin" => "Vendors::Linkedin", "x" => "Vendors::X",
+      'facebook' => 'Vendors::Meta', 'instagram' => 'Vendors::InstagramLogin',
+      'threads' => 'Vendors::Threads', 'tiktok' => 'Vendors::TikTok',
+      'youtube' => 'Vendors::Youtube', 'linkedin' => 'Vendors::Linkedin', 'x' => 'Vendors::X'
     }.freeze
 
     # Media kinds each network can publish (Creative#media_kind). A creative whose
     # kind isn't supported is never posted to that network — e.g. TikTok / YouTube
     # are video-only, so an image creative skips them.
     SUPPORTED_MEDIA = {
-      "instagram" => %w[image carousel video],
-      "facebook"  => %w[image carousel video text],
-      "threads"   => %w[image carousel video text],
-      "tiktok"    => %w[video],
-      "youtube"   => %w[video],
-      "linkedin"  => %w[image carousel video text],
-      "x"         => %w[image carousel video text],
+      'instagram' => %w[image carousel video],
+      'facebook' => %w[image carousel video text],
+      'threads' => %w[image carousel video text],
+      'tiktok' => %w[video],
+      'youtube' => %w[video],
+      'linkedin' => %w[image carousel video text],
+      'x' => %w[image carousel video text]
     }.freeze
 
     # Providers where a still image can ride a video post as its cover/thumbnail
@@ -69,7 +69,10 @@ module Publishers
     end
 
     def self.connect_slug(network) = CONNECT_SLUG[network.to_s]
-    def self.vendor_for_slug(slug) = SLUG_VENDOR.fetch(slug.to_s) { raise Vendors::Base::Error, "Slug inválido: #{slug}" }.constantize
+
+    def self.vendor_for_slug(slug) = SLUG_VENDOR.fetch(slug.to_s) do
+      raise Vendors::Base::Error, "Slug inválido: #{slug}"
+    end.constantize
 
     def initialize(post)
       @post = post

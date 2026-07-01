@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "openssl"
-require "base64"
-require "json"
+require 'openssl'
+require 'base64'
+require 'json'
 
 module Vendors
   module WebPush
@@ -10,21 +10,21 @@ module Vendors
     # and RFC 8292 (VAPID) using only openssl (stdlib) and faraday (already in
     # the Gemfile). No external web-push gem required.
     class Client
-      CONTACT = "mailto:suporte@agencios.app"
-      CURVE   = "prime256v1"
+      CONTACT = 'mailto:suporte@agencios.app'
+      CURVE   = 'prime256v1'
       RS      = 4096 # aes128gcm record size; single record fits any reasonable payload
 
-      def self.send_to_user(user, title:, body:, path: "/")
+      def self.send_to_user(user, title:, body:, path: '/')
         new.send_to_user(user, title:, body:, path:)
       end
 
-      def send_to_user(user, title:, body:, path: "/")
+      def send_to_user(user, title:, body:, path: '/')
         return unless vapid_configured?
 
         payload = JSON.generate({
-          title:   title,
-          options: { body:, icon: "/icon.png", badge: "/icon.png", data: { path: } }
-        })
+                                  title: title,
+                                  options: { body:, icon: '/icon.png', badge: '/icon.png', data: { path: } }
+                                })
 
         user.push_subscriptions.each { |sub| deliver(sub, payload) }
       end
@@ -37,18 +37,21 @@ module Vendors
         uri      = URI.parse(subscription.endpoint)
         body     = encrypt(payload, subscription.p256dh_key, subscription.auth_key)
         response = build_connection(uri).post(uri.request_uri) do |req|
-          req.headers["Authorization"]    = vapid_header(uri)
-          req.headers["Content-Encoding"] = "aes128gcm"
-          req.headers["Content-Type"]     = "application/octet-stream"
-          req.headers["TTL"]              = "86400"
+          req.headers['Authorization']    = vapid_header(uri)
+          req.headers['Content-Encoding'] = 'aes128gcm'
+          req.headers['Content-Type']     = 'application/octet-stream'
+          req.headers['TTL']              = '86400'
           req.body = body
         end
-        subscription.destroy if [ 404, 410 ].include?(response.status)
+        subscription.destroy if [404, 410].include?(response.status)
       rescue Faraday::Error => e
         status = e.response&.dig(:status)
-        [ 404, 410 ].include?(status) ? subscription.destroy :
+        if [404, 410].include?(status)
+          subscription.destroy
+        else
           Rails.logger.error("[WebPush] HTTP error for sub #{subscription.id}: #{e.message}")
-      rescue => e
+        end
+      rescue StandardError => e
         Rails.logger.error("[WebPush] Error for sub #{subscription.id}: #{e.class}: #{e.message}")
       end
 
@@ -66,11 +69,11 @@ module Vendors
         key      = load_vapid_private_key
         audience = "#{uri.scheme}://#{uri.host}"
 
-        header = b64(JSON.generate({ typ: "JWT", alg: "ES256" }))
+        header = b64(JSON.generate({ typ: 'JWT', alg: 'ES256' }))
         claims = b64(JSON.generate({ aud: audience, exp: Time.now.to_i + 43_200, sub: CONTACT }))
 
         input = "#{header}.#{claims}"
-        der   = key.sign(OpenSSL::Digest::SHA256.new, input)
+        der   = key.sign(OpenSSL::Digest.new('SHA256'), input)
 
         # Convert DER-encoded ECDSA signature to fixed 64-byte R||S (JWT format)
         asn1 = OpenSSL::ASN1.decode(der)
@@ -86,10 +89,11 @@ module Vendors
         raw = b64url_decode(Rails.application.credentials.dig(:vapid, :private_key))
         # Build SEC1 ECPrivateKey DER so we don't rely on deprecated EC setter API
         asn1 = OpenSSL::ASN1::Sequence([
-          OpenSSL::ASN1::Integer(OpenSSL::BN.new(1)),
-          OpenSSL::ASN1::OctetString(raw),
-          OpenSSL::ASN1::ASN1Data.new([ OpenSSL::ASN1::ObjectId(CURVE) ], 0, :CONTEXT_SPECIFIC)
-        ])
+                                         OpenSSL::ASN1::Integer(OpenSSL::BN.new(1)),
+                                         OpenSSL::ASN1::OctetString(raw),
+                                         OpenSSL::ASN1::ASN1Data.new([OpenSSL::ASN1::ObjectId(CURVE)], 0,
+                                                                     :CONTEXT_SPECIFIC)
+                                       ])
         OpenSSL::PKey::EC.new(asn1.to_der)
       end
 
@@ -115,28 +119,28 @@ module Vendors
         nonce = hkdf_expand(prk2, "Content-Encoding: nonce\x00".b, 12)
 
         # AES-128-GCM: plaintext || 0x02 (last-record delimiter per RFC 8291 §2.1)
-        cipher = OpenSSL::Cipher.new("aes-128-gcm").tap do |c|
+        cipher = OpenSSL::Cipher.new('aes-128-gcm').tap do |c|
           c.encrypt
           c.key       = cek
           c.iv        = nonce
-          c.auth_data = ""
+          c.auth_data = ''
         end
         ciphertext = cipher.update(plaintext.b + "\x02".b) + cipher.final + cipher.auth_tag
 
         # Record: salt(16) | rs(4BE) | idlen(1) | server_pub(65) | ciphertext
-        [ salt, [ RS ].pack("N"), [ srv_pub_bytes.bytesize ].pack("C"), srv_pub_bytes, ciphertext ].join
+        [salt, [RS].pack('N'), [srv_pub_bytes.bytesize].pack('C'), srv_pub_bytes, ciphertext].join
       end
 
       # ── Helpers ────────────────────────────────────────────────────────────────
 
       # RFC 5869 HKDF-Extract: PRK = HMAC-SHA256(salt, IKM)
-      def hkdf_extract(salt, ikm) = OpenSSL::HMAC.digest("SHA256", salt, ikm)
+      def hkdf_extract(salt, ikm) = OpenSSL::HMAC.digest('SHA256', salt, ikm)
 
       # RFC 5869 HKDF-Expand
       def hkdf_expand(prk, info, length)
-        t = "".b
-        (1..((length + 31) / 32)).each_with_object("".b) do |i, out|
-          t = OpenSSL::HMAC.digest("SHA256", prk, t + info + i.chr)
+        t = ''.b
+        (1..((length + 31) / 32)).each_with_object(''.b) do |i, out|
+          t = OpenSSL::HMAC.digest('SHA256', prk, t + info + i.chr)
           out << t
         end.slice(0, length)
       end
@@ -148,7 +152,7 @@ module Vendors
       end
 
       def b64url_decode(str)
-        padded = str.length % 4 == 0 ? str : str.ljust((str.length + 3) & ~3, "=")
+        padded = (str.length % 4).zero? ? str : str.ljust((str.length + 3) & ~3, '=')
         Base64.urlsafe_decode64(padded)
       end
 

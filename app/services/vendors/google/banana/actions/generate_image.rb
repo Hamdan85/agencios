@@ -15,11 +15,11 @@ module Vendors
           def self.call(...) = new(...).call
 
           RATIO_MAP = {
-            [1, 1]  => "1:1",
-            [16, 9] => "16:9",
-            [9, 16] => "9:16",
-            [4, 3]  => "4:3",
-            [3, 4]  => "3:4"
+            [1, 1] => '1:1',
+            [16, 9] => '16:9',
+            [9, 16] => '9:16',
+            [4, 3] => '4:3',
+            [3, 4] => '3:4'
           }.freeze
 
           def initialize(prompt:, aspect_ratio: nil, width: nil, height: nil, negative_prompt: nil)
@@ -27,13 +27,13 @@ module Vendors
             @negative_prompt = negative_prompt
             @aspect_ratio    = aspect_ratio.presence ||
                                derive_ratio(width.to_i, height.to_i) ||
-                               "1:1"
+                               '1:1'
           end
 
           def call
             Vendors::Google::Banana::Client.new.generate_image(
-              prompt:          @prompt,
-              aspect_ratio:    @aspect_ratio,
+              prompt: @prompt,
+              aspect_ratio: @aspect_ratio,
               negative_prompt: @negative_prompt
             )
           end

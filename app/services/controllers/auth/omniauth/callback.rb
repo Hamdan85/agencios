@@ -23,13 +23,13 @@ module Controllers
 
         def call
           data = verify_state(@state)
-          raise Operations::Errors::Invalid, "state" unless data
+          raise Operations::Errors::Invalid, 'state' unless data
 
-          client = Client.find(data["client_id"])
-          network = data["network"].to_s
+          client = Client.find(data['client_id'])
+          network = data['network'].to_s
           # Present only for the public per-client connect page — routes the
           # success/mobile-fallback back to /conectar/:token instead of the app.
-          @link = data["link"]
+          @link = data['link']
 
           facebook? ? connect_facebook(client, network) : connect_generic(client, network)
         end
@@ -38,14 +38,14 @@ module Controllers
 
         # The Facebook flow (Vendors::Meta) needs Page selection; other networks
         # return a single attrs hash.
-        def facebook? = @provider == "facebook"
+        def facebook? = @provider == 'facebook'
 
         # Facebook: exchange once, then let the user pick which Page to attach when
         # there is more than one. A single Page connects immediately.
         def connect_facebook(client, network)
           context = Vendors::Meta::Actions::Exchange.call(code: @code, redirect_uri: redirect_uri)
           pages = context[:pages]
-          raise Vendors::Base::Error, "Nenhuma Página do Facebook encontrada." if pages.empty?
+          raise Vendors::Base::Error, 'Nenhuma Página do Facebook encontrada.' if pages.empty?
 
           if pages.one?
             persist_page!(client: client, network: network, context: context, page: pages.first)
@@ -68,7 +68,7 @@ module Controllers
         # Non-sensitive Page list for the picker view (no tokens).
         def page_options(pages)
           pages.map do |p|
-            { id: p["id"], name: p["name"], ig_username: p["ig_username"], has_ig: p["ig_id"].present? }
+            { id: p['id'], name: p['name'], ig_username: p['ig_username'], has_ig: p['ig_id'].present? }
           end
         end
 
@@ -87,7 +87,7 @@ module Controllers
         end
 
         def verify_state(token)
-          Rails.application.message_verifier("agencios:social_connect").verify(token.to_s)
+          Rails.application.message_verifier('agencios:social_connect').verify(token.to_s)
         rescue StandardError
           nil
         end

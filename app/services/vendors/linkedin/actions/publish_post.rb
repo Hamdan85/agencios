@@ -45,7 +45,7 @@ module Vendors
         # member profile URN.
         def resolve_author_urn
           urn = @social_account.default_org_urn.presence || @social_account.member_urn.presence
-          raise Vendors::Base::Error, "LinkedIn author URN missing on SocialAccount" if urn.blank?
+          raise Vendors::Base::Error, 'LinkedIn author URN missing on SocialAccount' if urn.blank?
 
           urn
         end
@@ -59,19 +59,19 @@ module Vendors
           bytes = asset.download
           content_type = asset.content_type.to_s
 
-          if content_type.start_with?("video")
+          if content_type.start_with?('video')
             urn = Vendors::Linkedin::Actions::UploadVideo.call(
               social_account: @social_account, owner_urn: author_urn, bytes: bytes
             )
             wait_for_available { Vendors::Linkedin::Actions::GetVideo.call(social_account: @social_account, video_urn: urn) }
-            { "id" => urn, "title" => media_title }
+            { 'id' => urn, 'title' => media_title }
           else
             urn = Vendors::Linkedin::Actions::UploadImage.call(
               social_account: @social_account, owner_urn: author_urn, bytes: bytes,
-              content_type: content_type.presence || "image/jpeg"
+              content_type: content_type.presence || 'image/jpeg'
             )
             wait_for_available { Vendors::Linkedin::Actions::GetImage.call(social_account: @social_account, image_urn: urn) }
-            { "id" => urn, "altText" => media_title }
+            { 'id' => urn, 'altText' => media_title }
           end
         end
 
@@ -81,14 +81,14 @@ module Vendors
         end
 
         def media_title
-          @post.caption.to_s.truncate(80).presence || "agencios"
+          @post.caption.to_s.truncate(80).presence || 'agencios'
         end
 
         # Poll the asset GET until status == AVAILABLE (uploads process async).
         def wait_for_available
           AVAILABILITY_POLLS.times do
             body = yield
-            return true if body["status"] == "AVAILABLE"
+            return true if body['status'] == 'AVAILABLE'
 
             sleep AVAILABILITY_INTERVAL
           end

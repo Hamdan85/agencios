@@ -19,7 +19,7 @@ module Vendors
         def call
           @client.get(
             "/#{@page_id}",
-            params: { fields: "instagram_business_account{id,username}" },
+            params: { fields: 'instagram_business_account{id,username}' },
             token: @page_access_token
           )
         end

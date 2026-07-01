@@ -20,8 +20,8 @@ module Vendors
           body = Vendors::Youtube::Client.new.refresh(refresh_token: @social_account.refresh_token)
 
           {
-            user_access_token: body["access_token"],
-            token_expires_at: expires_at(body["expires_in"])
+            user_access_token: body['access_token'],
+            token_expires_at: expires_at(body['expires_in'])
           }
         end
 

@@ -13,7 +13,7 @@ module Operations
         attachment_id = @attachment.id
         @attachment.destroy!
 
-        Broadcaster.ticket(ticket, "attachment_removed", attachment_id: attachment_id)
+        Broadcaster.ticket(ticket, 'attachment_removed', attachment_id: attachment_id)
         true
       end
     end

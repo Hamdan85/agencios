@@ -19,11 +19,9 @@ module Controllers
 
         def call
           data = MetaSignedRequest.parse(@signed_request, MetaSignedRequest.secret_for(@provider))
-          user_id = data && data["user_id"]
+          user_id = data && data['user_id']
 
-          if user_id.present?
-            Operations::Social::DeleteUserData.call(providers: [@provider], external_user_id: user_id)
-          end
+          Operations::Social::DeleteUserData.call(providers: [@provider], external_user_id: user_id) if user_id.present?
 
           code = SecureRandom.hex(10)
           { url: "#{SystemConfig.app_host}/data-deletion?code=#{code}", confirmation_code: code }

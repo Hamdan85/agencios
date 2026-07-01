@@ -25,7 +25,7 @@ module Vendors
 
         # Whether the chosen Page exposes a connectable Instagram business account.
         def instagram?
-          @page["ig_id"].present?
+          @page['ig_id'].present?
         end
 
         private
@@ -42,19 +42,19 @@ module Vendors
         def facebook_attrs
           base.merge(
             provider: :facebook,
-            page_id: @page["id"],
-            username: @page["name"],
-            page_access_token: @page["access_token"]
+            page_id: @page['id'],
+            username: @page['name'],
+            page_access_token: @page['access_token']
           )
         end
 
         def instagram_attrs
           base.merge(
             provider: :instagram,
-            page_id: @page["id"],
-            ig_user_id: @page["ig_id"],
-            username: @page["ig_username"],
-            page_access_token: @page["access_token"]
+            page_id: @page['id'],
+            ig_user_id: @page['ig_id'],
+            username: @page['ig_username'],
+            page_access_token: @page['access_token']
           )
         end
       end

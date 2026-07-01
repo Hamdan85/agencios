@@ -17,7 +17,7 @@ module Vendors
         def call
           @client.post(
             "/#{@social_account.page_id}/video_reels",
-            params: { upload_phase: "start" }
+            params: { upload_phase: 'start' }
           )
         end
       end

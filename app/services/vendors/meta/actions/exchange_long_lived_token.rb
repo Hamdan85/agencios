@@ -17,9 +17,9 @@ module Vendors
         # Returns { "access_token" => long_lived, "token_type" =>, "expires_in" => }.
         def call
           @client.get(
-            "/oauth/access_token",
+            '/oauth/access_token',
             params: {
-              grant_type: "fb_exchange_token",
+              grant_type: 'fb_exchange_token',
               client_id: @client.app_id,
               client_secret: @client.app_secret,
               fb_exchange_token: @short_lived_token

@@ -9,9 +9,9 @@ class CreatePricingCatalog < ActiveRecord::Migration[8.1]
     # Singleton row: the credit economy + trial knobs.
     create_table :pricing_configs do |t|
       t.integer :trial_days, null: false, default: 7
-      t.integer :credit_unit_cents, null: false, default: 100  # 1 credit = R$1,00
-      t.integer :margin_multiplier, null: false, default: 5     # 5× cost ⇒ 80% margin (display)
-      t.decimal :usd_brl, precision: 8, scale: 4, null: false, default: "5.40"
+      t.integer :credit_unit_cents, null: false, default: 100 # 1 credit = R$1,00
+      t.integer :margin_multiplier, null: false, default: 5 # 5× cost ⇒ 80% margin (display)
+      t.decimal :usd_brl, precision: 8, scale: 4, null: false, default: '5.40'
       t.integer :image_credits, null: false, default: 1
       t.integer :carousel_credits, null: false, default: 0
       t.integer :video_standard_credits_per_15s, null: false, default: 8

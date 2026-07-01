@@ -14,8 +14,8 @@ module Vendors
           likes comments saves shares replies
         ].freeze
 
-        def initialize(social_account:, metrics: DEFAULT_METRICS, period: "day",
-                       since: nil, until_time: nil, metric_type: "total_value", client: nil)
+        def initialize(social_account:, metrics: DEFAULT_METRICS, period: 'day',
+                       since: nil, until_time: nil, metric_type: 'total_value', client: nil)
           @social_account = social_account
           @metrics = metrics
           @period = period
@@ -29,7 +29,7 @@ module Vendors
           @client.get(
             "/#{@social_account.ig_user_id}/insights",
             params: {
-              metric: Array(@metrics).join(","),
+              metric: Array(@metrics).join(','),
               metric_type: @metric_type,
               period: @period,
               since: @since,

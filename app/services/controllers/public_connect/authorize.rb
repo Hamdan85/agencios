@@ -14,7 +14,7 @@ module Controllers
 
       def call
         client = client_from_token(@token)
-        raise Operations::Errors::Invalid, "network" unless NETWORKS.include?(@network)
+        raise Operations::Errors::Invalid, 'network' unless NETWORKS.include?(@network)
 
         slug = Publishers::SocialPublisher.connect_slug(@network)
         vendor = Publishers::SocialPublisher.vendor_for_slug(slug)
@@ -29,8 +29,8 @@ module Controllers
       private
 
       def signed_state(client)
-        Rails.application.message_verifier("agencios:social_connect").generate(
-          { "client_id" => client.id, "network" => @network, "link" => @token },
+        Rails.application.message_verifier('agencios:social_connect').generate(
+          { 'client_id' => client.id, 'network' => @network, 'link' => @token },
           expires_in: 1.hour
         )
       end

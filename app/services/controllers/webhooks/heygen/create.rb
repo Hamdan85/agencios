@@ -20,7 +20,8 @@ module Controllers
 
           generation = Generation.find_by(external_id: video_id) if video_id.present?
           if generation && status.match?(/success|completed|ready/)
-            Operations::Creatives::FinalizeGeneration.call(generation: generation, video_url: data[:video_url] || data[:url])
+            Operations::Creatives::FinalizeGeneration.call(generation: generation,
+                                                           video_url: data[:video_url] || data[:url])
           elsif generation && status.match?(/fail|error/)
             Operations::Creatives::FailGeneration.call(generation: generation, reason: data[:msg].to_s)
           end

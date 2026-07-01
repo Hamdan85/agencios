@@ -20,7 +20,7 @@ module Operations
         count = tickets.count
         tickets.update_all(archived_at: Time.current, updated_at: Time.current) if count.positive?
 
-        Broadcaster.board(@workspace.id, "column_cleared", status: @status, count: count)
+        Broadcaster.board(@workspace.id, 'column_cleared', status: @status, count: count)
         { status: @status, archived_count: count }
       end
 

@@ -15,7 +15,7 @@ module Vendors
     #
     # See docs/integrations/mercado-pago.md.
     class Client < Vendors::Base
-      BASE = "https://api.mercadopago.com"
+      BASE = 'https://api.mercadopago.com'
 
       attr_reader :workspace
 
@@ -26,7 +26,7 @@ module Vendors
       # that narrower, marketplace-only check).
       def self.platform_configured?
         Rails.application.credentials.dig(:mercado_pago, :access_token).present? ||
-          ENV["MERCADO_PAGO_ACCESS_TOKEN"].present?
+          ENV['MERCADO_PAGO_ACCESS_TOKEN'].present?
       end
 
       # Pass a workspace to prefer its connected OAuth token (marketplace), or an
@@ -46,36 +46,36 @@ module Vendors
       # The platform's app-level Mercado Pago access token (backend Bearer).
       def platform_access_token
         require_credential!(
-          credential(:mercado_pago, :access_token, env: "MERCADO_PAGO_ACCESS_TOKEN"),
-          "mercado_pago.access_token"
+          credential(:mercado_pago, :access_token, env: 'MERCADO_PAGO_ACCESS_TOKEN'),
+          'mercado_pago.access_token'
         )
       end
 
       # OAuth application identifier (marketplace connect / token exchange).
       def client_id
         require_credential!(
-          credential(:mercado_pago, :client_id, env: "MERCADO_PAGO_CLIENT_ID"),
-          "mercado_pago.client_id"
+          credential(:mercado_pago, :client_id, env: 'MERCADO_PAGO_CLIENT_ID'),
+          'mercado_pago.client_id'
         )
       end
 
       # OAuth application secret (marketplace connect / token exchange).
       def client_secret
         require_credential!(
-          credential(:mercado_pago, :client_secret, env: "MERCADO_PAGO_CLIENT_SECRET"),
-          "mercado_pago.client_secret"
+          credential(:mercado_pago, :client_secret, env: 'MERCADO_PAGO_CLIENT_SECRET'),
+          'mercado_pago.client_secret'
         )
       end
 
       # POST /v1/payments — Pix / boleto / card. `X-Idempotency-Key` is mandatory
       # (one UUID per Charge attempt, so retries never double-charge).
       def create_payment(body:, idempotency_key:)
-        post("/v1/payments", body: body, headers: { "X-Idempotency-Key" => idempotency_key })
+        post('/v1/payments', body: body, headers: { 'X-Idempotency-Key' => idempotency_key })
       end
 
       # POST /checkout/preferences — hosted Checkout Pro link (returns init_point).
       def create_preference(body:)
-        post("/checkout/preferences", body: body)
+        post('/checkout/preferences', body: body)
       end
 
       # GET /v1/payments/{id} — the AUTHORITATIVE status read. Webhooks carry only
@@ -88,7 +88,7 @@ module Vendors
       # connected-account access token. Authenticates with client_id/secret in the
       # body, not a Bearer header.
       def oauth_token(body:)
-        handle(no_auth_connection.post("/oauth/token", body))
+        handle(no_auth_connection.post('/oauth/token', body))
       end
 
       # GET on the MP API with the Bearer token.

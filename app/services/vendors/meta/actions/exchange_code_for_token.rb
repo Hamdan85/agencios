@@ -18,7 +18,7 @@ module Vendors
         # Returns { "access_token" => short_lived, "token_type" =>, "expires_in" => }.
         def call
           @client.get(
-            "/oauth/access_token",
+            '/oauth/access_token',
             params: {
               client_id: @client.app_id,
               client_secret: @client.app_secret,

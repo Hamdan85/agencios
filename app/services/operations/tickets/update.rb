@@ -16,7 +16,7 @@ module Operations
 
         previous_assignee_id = @ticket.assignee_id
         @ticket.update!(attrs)
-        Broadcaster.board(@ticket.workspace_id, "ticket_updated", ticket_id: @ticket.id)
+        Broadcaster.board(@ticket.workspace_id, 'ticket_updated', ticket_id: @ticket.id)
         notify_reassignment(previous_assignee_id)
         @ticket
       end
@@ -28,7 +28,7 @@ module Operations
 
         Operations::Push::Notify.call(
           user: @ticket.assignee, actor: Current.user,
-          title: "Ticket atribuído a você",
+          title: 'Ticket atribuído a você',
           body: @ticket.title,
           path: "/tickets/#{@ticket.id}"
         )

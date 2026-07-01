@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ApplicationController < ActionController::Base
   # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
   allow_browser versions: :modern
@@ -20,6 +22,6 @@ class ApplicationController < ActionController::Base
   def authenticate_staff!
     return if current_staff_user
 
-    redirect_to "/", alert: "Acesso restrito à equipe da plataforma."
+    redirect_to '/', alert: 'Acesso restrito à equipe da plataforma.'
   end
 end

@@ -14,7 +14,7 @@ module Controllers
         authorize!(creative, :update?)
 
         permitted = @params.slice(:name, :client_id)
-        permitted[:client_id] = permitted[:client_id].presence  # allow clearing with null
+        permitted[:client_id] = permitted[:client_id].presence # allow clearing with null
         creative.update!(**permitted.compact)
         { creative: serialize(creative, CreativeSerializer) }
       end

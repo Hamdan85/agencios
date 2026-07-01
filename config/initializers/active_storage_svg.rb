@@ -20,7 +20,7 @@
 # `after_initialize` hook) so ActiveStorage's own config-copy step picks these
 # values up during boot — mutating the module attributes races with that step.
 Rails.application.config.active_storage.content_types_to_serve_as_binary =
-  ActiveStorage.content_types_to_serve_as_binary - ["image/svg+xml"]
+  ActiveStorage.content_types_to_serve_as_binary - ['image/svg+xml']
 
 Rails.application.config.active_storage.content_types_allowed_inline =
-  ActiveStorage.content_types_allowed_inline | ["image/svg+xml"]
+  ActiveStorage.content_types_allowed_inline | ['image/svg+xml']

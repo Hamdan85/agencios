@@ -43,9 +43,9 @@ module Prompts
 
     def user_prompt
       <<~TXT
-        Marca: #{context[:name].presence || "—"}
+        Marca: #{context[:name].presence || '—'}
         Descrição do cliente:
-        #{context[:brief].presence || "—"}
+        #{context[:brief].presence || '—'}
       TXT
     end
   end

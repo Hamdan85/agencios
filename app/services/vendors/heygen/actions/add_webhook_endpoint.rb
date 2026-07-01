@@ -31,7 +31,7 @@ module Vendors
 
         def call
           body = @version == :v1 ? add_v1 : add_v3
-          body["data"] || body
+          body['data'] || body
         end
 
         private
@@ -39,11 +39,11 @@ module Vendors
         def add_v3
           payload = { url: @url, events: @events }
           payload[:entity_id] = @entity_id if @entity_id
-          @client.post("/v3/webhooks/endpoints", payload)
+          @client.post('/v3/webhooks/endpoints', payload)
         end
 
         def add_v1
-          @client.post("/v1/webhook/endpoint.add", { url: @url, events: @events })
+          @client.post('/v1/webhook/endpoint.add', { url: @url, events: @events })
         end
       end
     end

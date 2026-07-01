@@ -13,9 +13,9 @@ module Vendors
     module Webhook
       module_function
 
-      SIGNATURE_HEADER = "Heygen-Signature"
-      TIMESTAMP_HEADER = "Heygen-Timestamp"
-      EVENT_ID_HEADER  = "Heygen-Event-Id"
+      SIGNATURE_HEADER = 'Heygen-Signature'
+      TIMESTAMP_HEADER = 'Heygen-Timestamp'
+      EVENT_ID_HEADER  = 'Heygen-Event-Id'
 
       # Constant-time compare of the computed HMAC against the supplied signature.
       # `payload` is the RAW request body string; `signature` is the
@@ -25,7 +25,7 @@ module Vendors
         secret ||= webhook_secret
         return false if payload.nil? || signature.blank? || secret.blank?
 
-        expected = OpenSSL::HMAC.hexdigest("SHA256", secret.to_s, payload.to_s)
+        expected = OpenSSL::HMAC.hexdigest('SHA256', secret.to_s, payload.to_s)
         ActiveSupport::SecurityUtils.secure_compare(expected, signature.to_s)
       rescue StandardError
         false
@@ -42,7 +42,7 @@ module Vendors
       end
 
       def webhook_secret
-        Rails.application.credentials.dig(:heygen, :webhook_secret) || ENV["HEYGEN_WEBHOOK_SECRET"]
+        Rails.application.credentials.dig(:heygen, :webhook_secret) || ENV['HEYGEN_WEBHOOK_SECRET']
       end
     end
   end

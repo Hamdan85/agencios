@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require_relative "mailer_preview_data"
+require_relative 'mailer_preview_data'
 
 # Preview at /rails/mailers/invoice_mailer
 class InvoiceMailerPreview < ActionMailer::Preview
   def created
-    InvoiceMailer.created(invoice: MailerPreviewData.invoice, payment_url: "https://www.mercadopago.com.br/checkout/sample")
+    InvoiceMailer.created(invoice: MailerPreviewData.invoice, payment_url: 'https://www.mercadopago.com.br/checkout/sample')
   end
 
   def paid
@@ -13,7 +13,7 @@ class InvoiceMailerPreview < ActionMailer::Preview
   end
 
   def overdue
-    InvoiceMailer.overdue(invoice: MailerPreviewData.invoice, payment_url: "https://www.mercadopago.com.br/checkout/sample")
+    InvoiceMailer.overdue(invoice: MailerPreviewData.invoice, payment_url: 'https://www.mercadopago.com.br/checkout/sample')
   end
 
   def canceled

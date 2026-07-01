@@ -19,26 +19,26 @@ module Vendors
         return false if signature_header.blank? || secret.blank?
 
         parts = parse_signature(signature_header)
-        timestamp = parts["t"]
-        provided = parts["s"]
+        timestamp = parts['t']
+        provided = parts['s']
         return false if timestamp.blank? || provided.blank?
 
         signed_payload = "#{timestamp}.#{raw_body}"
-        expected = OpenSSL::HMAC.hexdigest("SHA256", secret, signed_payload)
+        expected = OpenSSL::HMAC.hexdigest('SHA256', secret, signed_payload)
         ActiveSupport::SecurityUtils.secure_compare(expected, provided)
       end
 
       # Parses the webhook envelope; `content` is a JSON string TikTok double-encodes.
       def parse_event(raw_body)
         envelope = JSON.parse(raw_body)
-        content = envelope["content"]
-        envelope["content"] = JSON.parse(content) if content.is_a?(String)
+        content = envelope['content']
+        envelope['content'] = JSON.parse(content) if content.is_a?(String)
         envelope
       end
 
       def parse_signature(header)
-        header.split(",").each_with_object({}) do |pair, acc|
-          key, value = pair.split("=", 2)
+        header.split(',').each_with_object({}) do |pair, acc|
+          key, value = pair.split('=', 2)
           acc[key.to_s.strip] = value.to_s.strip
         end
       end

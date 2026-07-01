@@ -6,7 +6,7 @@ module Controllers
     class Destroy < Base
       def call
         require_manager!
-        { message: "Convite cancelado." }
+        { message: 'Convite cancelado.' }
       end
     end
   end

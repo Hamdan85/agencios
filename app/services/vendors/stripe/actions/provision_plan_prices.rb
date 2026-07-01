@@ -46,9 +46,9 @@ module Vendors
         # The two prices to ensure per plan, with where to cache each.
         def intervals(plan)
           [
-            { interval: "month", lookup_key: plan.stripe_lookup_key.presence || "#{plan.key}_monthly",
+            { interval: 'month', lookup_key: plan.stripe_lookup_key.presence || "#{plan.key}_monthly",
               amount: plan.price_cents, id_col: :stripe_price_id, cents_col: :price_cents, lookup_col: :stripe_lookup_key },
-            { interval: "year", lookup_key: plan.stripe_annual_lookup_key.presence || "#{plan.key}_yearly",
+            { interval: 'year', lookup_key: plan.stripe_annual_lookup_key.presence || "#{plan.key}_yearly",
               amount: Pricing.annual_price_cents_for(plan.key),
               id_col: :stripe_annual_price_id, cents_col: :annual_price_cents, lookup_col: :stripe_annual_lookup_key }
           ]
@@ -63,9 +63,9 @@ module Vendors
         def cache!(plan, spec, price)
           plan.update!(
             spec[:lookup_col] => spec[:lookup_key],
-            spec[:id_col]     => price.id,
-            spec[:cents_col]  => (price.unit_amount || spec[:amount]),
-            stripe_product_id: (price_product_id(price) || plan.stripe_product_id)
+            spec[:id_col] => price.id,
+            spec[:cents_col] => price.unit_amount || spec[:amount],
+            stripe_product_id: price_product_id(price) || plan.stripe_product_id
           )
         end
 

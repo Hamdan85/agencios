@@ -18,7 +18,7 @@ module Operations
 
         ApplicationRecord.transaction do
           debit = workspace.credit_transactions
-                           .where(generation_id: @generation.id, kind: "debit")
+                           .where(generation_id: @generation.id, kind: 'debit')
                            .order(:created_at).last
           return :none unless debit
           return :already if refunded?(workspace)
@@ -30,16 +30,16 @@ module Operations
           purchased = -debit.purchased_delta
 
           wallet.update!(
-            granted_balance:   wallet.granted_balance + granted,
+            granted_balance: wallet.granted_balance + granted,
             purchased_balance: wallet.purchased_balance + purchased
           )
 
           workspace.credit_transactions.create!(
             generation: @generation, user: @generation.user,
-            kind: "refund", bucket: debit.bucket,
+            kind: 'refund', bucket: debit.bucket,
             amount: granted + purchased, granted_delta: granted, purchased_delta: purchased,
             balance_after: wallet.granted_balance + wallet.purchased_balance,
-            description: @description || "Estorno — geração falhou"
+            description: @description || 'Estorno — geração falhou'
           )
           wallet
         end
@@ -48,7 +48,7 @@ module Operations
       private
 
       def refunded?(workspace)
-        workspace.credit_transactions.exists?(generation_id: @generation.id, kind: "refund")
+        workspace.credit_transactions.exists?(generation_id: @generation.id, kind: 'refund')
       end
     end
   end

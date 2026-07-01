@@ -21,7 +21,7 @@ module Vendors
         def call
           client = Vendors::X::Client.new
           client.token_request(
-            grant_type: "authorization_code",
+            grant_type: 'authorization_code',
             code: @code,
             client_id: client.client_id,
             redirect_uri: @redirect_uri,

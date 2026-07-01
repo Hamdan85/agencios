@@ -20,7 +20,7 @@ module Vendors
           body = Vendors::TikTok::Client
                  .new(access_token: @social_account.user_access_token)
                  .fetch_status(publish_id: @publish_id)
-          body["data"] || {}
+          body['data'] || {}
         end
       end
     end

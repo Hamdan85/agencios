@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 ActiveAdmin.setup do |config|
   # == Site Title
   #
@@ -6,7 +8,7 @@ ActiveAdmin.setup do |config|
   # by extracting the _site_header partial into your project
   # to use your own logo, styles, etc.
   #
-  config.site_title = "Agencios"
+  config.site_title = 'Agencios'
 
   # == Load Paths
   #
@@ -112,7 +114,7 @@ ActiveAdmin.setup do |config|
   # will call the method to return the path.
   #
   # No separate admin session — staff log out through the main app.
-  config.logout_link_path = "/"
+  config.logout_link_path = '/'
 
   # == Root
   #
@@ -160,7 +162,7 @@ ActiveAdmin.setup do |config|
   # You can exclude possibly sensitive model attributes from being displayed,
   # added to forms, or exported by default by ActiveAdmin
   #
-  config.filter_attributes = [:encrypted_password, :password, :password_confirmation]
+  config.filter_attributes = %i[encrypted_password password password_confirmation]
 
   # == Localize Date/Time Format
   #

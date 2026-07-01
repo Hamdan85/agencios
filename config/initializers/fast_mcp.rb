@@ -5,4 +5,4 @@
 # the gem for its FastMcp::Tool argument DSL + JSON-Schema generation — the
 # transport is our own Mcp::ServerController — so just ensure the constant is
 # loaded before Zeitwerk autoloads Mcp::Tools::BaseTool (which subclasses it).
-require "fast_mcp"
+require 'fast_mcp'

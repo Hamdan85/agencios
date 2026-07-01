@@ -19,7 +19,7 @@ module Operations
         ids = tickets.pluck(:id)
         tickets.destroy_all if ids.any?
 
-        Broadcaster.board(@workspace.id, "cards_deleted", ticket_ids: ids) if ids.any?
+        Broadcaster.board(@workspace.id, 'cards_deleted', ticket_ids: ids) if ids.any?
         { deleted_count: ids.size }
       end
     end

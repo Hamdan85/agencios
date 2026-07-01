@@ -9,7 +9,7 @@ module Oauth
     def create
       render json: Controllers::Oauth::Register.call(params: params), status: :created
     rescue Operations::Errors::Invalid => e
-      render json: { error: "invalid_client_metadata", error_description: e.message },
+      render json: { error: 'invalid_client_metadata', error_description: e.message },
              status: :bad_request
     end
   end

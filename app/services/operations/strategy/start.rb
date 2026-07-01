@@ -23,7 +23,7 @@ module Operations
 
       def create_session
         session = @project.strategy_sessions.new(
-          workspace: @project.workspace, user: @user, status: "active"
+          workspace: @project.workspace, user: @user, status: 'active'
         )
         session.push_message(role: :assistant, content: opening_message)
         session.save!
@@ -35,12 +35,12 @@ module Operations
       def opening_message
         client = @project.client
         who = client&.name.presence
-        greeting = who ? "Vou planejar o conteúdo de **#{who}** com você." : "Vou planejar o conteúdo deste projeto com você."
+        greeting = who ? "Vou planejar o conteúdo de **#{who}** com você." : 'Vou planejar o conteúdo deste projeto com você.'
 
         "Oi! Sou seu estrategista de conteúdo. #{greeting} " \
-          "Me diga a **cadência** (ex.: 1 reel e 2 carrosséis por semana) e o **período** " \
-          "(um mês, uma campanha ou contínuo) — eu já monto os tickets agendados, com as " \
-          "tarefas estimadas. Já uso o contexto do cliente (marca, posicionamento e redes conectadas)."
+          'Me diga a **cadência** (ex.: 1 reel e 2 carrosséis por semana) e o **período** ' \
+          '(um mês, uma campanha ou contínuo) — eu já monto os tickets agendados, com as ' \
+          'tarefas estimadas. Já uso o contexto do cliente (marca, posicionamento e redes conectadas).'
       end
     end
   end

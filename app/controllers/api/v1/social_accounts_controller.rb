@@ -6,7 +6,7 @@ module Api
     # Removing an account is manager-gated; reconnecting is a member action
     # (enforced in the services).
     class SocialAccountsController < BaseController
-      def index   = render_ok(Controllers::SocialAccounts::Index.call(params:))
+      def index = render_ok(Controllers::SocialAccounts::Index.call(params:))
 
       # GET /clients/:client_id/social_accounts/authorize_url?network=instagram —
       # returns the OAuth URL the browser opens (state carries the client).

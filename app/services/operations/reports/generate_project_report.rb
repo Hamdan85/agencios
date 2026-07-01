@@ -34,15 +34,15 @@ module Operations
         @report.update!(
           status: :ready,
           data: data,
-          overall_score: sections.dig("overall", "score"),
+          overall_score: sections.dig('overall', 'score'),
           generated_at: Time.current
         )
-        Broadcaster.board(@project.workspace_id, "report_ready", report_id: @report.id, project_id: @project.id)
+        Broadcaster.board(@project.workspace_id, 'report_ready', report_id: @report.id, project_id: @project.id)
         @report
       rescue StandardError => e
         Rails.logger.warn("[Reports::GenerateProjectReport] report ##{@report.id}: #{e.class}: #{e.message}")
         @report.update!(status: :failed)
-        Broadcaster.board(@project.workspace_id, "report_failed", report_id: @report.id, project_id: @project.id)
+        Broadcaster.board(@project.workspace_id, 'report_failed', report_id: @report.id, project_id: @project.id)
         @report
       end
 
@@ -58,7 +58,7 @@ module Operations
           content_json: JSON.pretty_generate(computed[:content]),
           tickets_context: tickets_context
         )
-        text = AiAdapter.complete(builder, max_tokens: MAX_TOKENS, operation: "project_audit", subject: @report)
+        text = AiAdapter.complete(builder, max_tokens: MAX_TOKENS, operation: 'project_audit', subject: @report)
         parse_json(text)
       end
 
@@ -66,8 +66,8 @@ module Operations
       # the offline stub (returns {} so only the numbers render).
       def parse_json(text)
         raw = text.to_s
-        start = raw.index("{")
-        finish = raw.rindex("}")
+        start = raw.index('{')
+        finish = raw.rindex('}')
         return {} if start.nil? || finish.nil? || finish <= start
 
         JSON.parse(raw[start..finish])
@@ -78,21 +78,21 @@ module Operations
 
       def tickets_context
         @project.tickets.order(created_at: :desc).first(40).map do |ticket|
-          objective = ticket.fields_for("ideation")["objective"]
-          lessons = strip_html(ticket.fields_for("retrospective")["lessons_learned"])
+          objective = ticket.fields_for('ideation')['objective']
+          lessons = strip_html(ticket.fields_for('retrospective')['lessons_learned'])
           parts = ["- [#{ticket.creative_type}] #{ticket.display_title}"]
           parts << "objetivo: #{objective}" if objective.present?
           parts << "retro: #{lessons.truncate(200)}" if lessons.present?
-          parts.join(" | ")
+          parts.join(' | ')
         end.join("\n")
       end
 
-      def strip_html(html) = html.to_s.gsub(/<[^>]+>/, " ").squish
+      def strip_html(html) = html.to_s.gsub(/<[^>]+>/, ' ').squish
 
       def period_label
         start = @report.period_start
         finish = @report.period_end
-        return "" if start.nil? || finish.nil?
+        return '' if start.nil? || finish.nil?
 
         "#{start.strftime('%d/%m/%Y')} – #{finish.strftime('%d/%m/%Y')}"
       end

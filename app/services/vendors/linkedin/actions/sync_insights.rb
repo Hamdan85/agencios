@@ -24,8 +24,8 @@ module Vendors
           share_urn = @post.external_post_id.presence
 
           # Member-only posts have no analytics endpoint at all.
-          return unavailable("member_profile_analytics_unsupported") if org_urn.blank?
-          return unavailable("missing_share_urn") if share_urn.blank?
+          return unavailable('member_profile_analytics_unsupported') if org_urn.blank?
+          return unavailable('missing_share_urn') if share_urn.blank?
 
           stats = Vendors::Linkedin::Actions::FetchPostStatistics.call(
             social_account: @social_account, org_urn: org_urn, share_urn: share_urn
@@ -33,18 +33,18 @@ module Vendors
           map_metrics(stats)
         rescue Vendors::Base::AuthenticationError => e
           # Org analytics require partner approval (rw_organization_admin).
-          unavailable("analytics_not_authorized", detail: e.message)
+          unavailable('analytics_not_authorized', detail: e.message)
         end
 
         private
 
         def map_metrics(stats)
           {
-            reach: stats["uniqueImpressionsCount"].to_i,
-            views: stats["impressionCount"].to_i,
-            likes: stats["likeCount"].to_i,
-            comments: stats["commentCount"].to_i,
-            shares: stats["shareCount"].to_i,
+            reach: stats['uniqueImpressionsCount'].to_i,
+            views: stats['impressionCount'].to_i,
+            likes: stats['likeCount'].to_i,
+            comments: stats['commentCount'].to_i,
+            shares: stats['shareCount'].to_i,
             saves: 0, # LinkedIn has no "save" metric
             raw: stats
           }
@@ -53,7 +53,7 @@ module Vendors
         def unavailable(reason, detail: nil)
           {
             reach: 0, views: 0, likes: 0, comments: 0, shares: 0, saves: 0,
-            raw: { "unavailable" => reason, "detail" => detail }.compact
+            raw: { 'unavailable' => reason, 'detail' => detail }.compact
           }
         end
       end

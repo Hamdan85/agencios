@@ -16,9 +16,9 @@ module Vendors
         def call
           body = Vendors::Youtube::Client
                  .new(access_token: @social_account.user_access_token)
-                 .list_channels(part: "statistics")
-          item = Array(body["items"]).first || {}
-          item["statistics"] || {}
+                 .list_channels(part: 'statistics')
+          item = Array(body['items']).first || {}
+          item['statistics'] || {}
         end
       end
     end

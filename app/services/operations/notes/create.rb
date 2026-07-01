@@ -29,7 +29,7 @@ module Operations
         )
 
         attach_files(note)
-        Broadcaster.ticket(@ticket, "note_added", note_id: note.id)
+        Broadcaster.ticket(@ticket, 'note_added', note_id: note.id)
         notify_mentions(note)
         note
       end
@@ -42,7 +42,7 @@ module Operations
         return unless @kind.to_sym == :comment
         return if @body.present? || @files.any?
 
-        raise Operations::Errors::Invalid, "Comentário vazio."
+        raise Operations::Errors::Invalid, 'Comentário vazio.'
       end
 
       # ActiveStorage attach does blob I/O during save! — deliberately kept out

@@ -34,7 +34,7 @@ module Operations
         charge = find_charge(payment)
         return unless charge
 
-        new_status = payment["status"].to_s.presence
+        new_status = payment['status'].to_s.presence
         return charge if new_status.blank?
 
         update_charge(charge, new_status, payment)
@@ -56,7 +56,7 @@ module Operations
         charge = charge_scope.find_by(mp_payment_id: @payment_id)
         return charge if charge
 
-        reference = payment["external_reference"].to_s
+        reference = payment['external_reference'].to_s
         return nil if reference.blank?
 
         invoice = invoice_scope.find_by(external_reference: reference)
@@ -67,7 +67,7 @@ module Operations
       # of the same value is a no-op as far as state is concerned).
       def update_charge(charge, new_status, payment)
         attrs = { status: new_status }
-        attrs[:expires_at] = parse_time(payment["date_of_expiration"]) if payment["date_of_expiration"].present?
+        attrs[:expires_at] = parse_time(payment['date_of_expiration']) if payment['date_of_expiration'].present?
         charge.update!(attrs)
       end
 

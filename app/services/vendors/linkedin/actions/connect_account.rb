@@ -20,7 +20,7 @@ module Vendors
           token = Vendors::Linkedin::Actions::ExchangeCode.call(
             code: @code, redirect_uri: @redirect_uri
           )
-          access_token = token["access_token"]
+          access_token = token['access_token']
 
           identity = Vendors::Linkedin::Actions::FetchUserInfo.call(access_token: access_token)
           org_urns = Vendors::Linkedin::Actions::FetchAdminOrganizations.call(access_token: access_token)
@@ -30,9 +30,9 @@ module Vendors
             external_user_id: identity[:member_id],
             username: identity[:member_name],
             user_access_token: access_token,
-            refresh_token: token["refresh_token"],
-            token_expires_at: expires_at(token["expires_in"]),
-            scopes: scopes_array(token["scope"]),
+            refresh_token: token['refresh_token'],
+            token_expires_at: expires_at(token['expires_in']),
+            scopes: scopes_array(token['scope']),
             member_urn: identity[:member_urn],
             default_org_urn: org_urns.first
           }

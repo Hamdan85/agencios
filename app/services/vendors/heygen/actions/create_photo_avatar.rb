@@ -24,14 +24,14 @@ module Vendors
         def call
           file =
             if @asset_id
-              { type: "asset_id", asset_id: @asset_id }
+              { type: 'asset_id', asset_id: @asset_id }
             else
-              { type: "url", url: @url }
+              { type: 'url', url: @url }
             end
 
-          body = @client.post("/v3/avatars", { type: "photo", name: @name, file: file })
-          data = body["data"] || body
-          data["avatar_id"] || data["id"]
+          body = @client.post('/v3/avatars', { type: 'photo', name: @name, file: file })
+          data = body['data'] || body
+          data['avatar_id'] || data['id']
         end
       end
     end

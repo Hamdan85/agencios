@@ -10,8 +10,8 @@ module Controllers
         def call
           setting = workspace.setting || Setting.create!(workspace: workspace)
           setting.update!(
-            google_access_token:          nil,
-            google_refresh_token:         nil,
+            google_access_token: nil,
+            google_refresh_token: nil,
             google_calendar_connected_at: nil
           )
           {}

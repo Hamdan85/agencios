@@ -7,7 +7,7 @@ class Project < ApplicationRecord
   has_many :tickets, dependent: :destroy
   has_many :invoice_projects, dependent: :destroy
   has_many :invoices, through: :invoice_projects
-  has_many :reports, class_name: "ProjectReport", dependent: :destroy
+  has_many :reports, class_name: 'ProjectReport', dependent: :destroy
   has_many :strategy_sessions, dependent: :destroy
 
   # Lifecycle: a project is born `draft` (planning), is explicitly started into

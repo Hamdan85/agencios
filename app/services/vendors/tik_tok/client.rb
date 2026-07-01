@@ -15,8 +15,8 @@ module Vendors
     # and signals success with error.code == "ok" (HTTP 200 even on logical errors),
     # so #handle alone is not enough — we also inspect the envelope.
     class Client < Vendors::Base
-      API   = "https://open.tiktokapis.com"
-      OAUTH = "https://www.tiktok.com"
+      API   = 'https://open.tiktokapis.com'
+      OAUTH = 'https://www.tiktok.com'
 
       def initialize(access_token: nil)
         @access_token = access_token
@@ -30,24 +30,24 @@ module Vendors
         params = {
           client_key: client_key,
           scope: scope,
-          response_type: "code",
+          response_type: 'code',
           redirect_uri: redirect_uri,
           state: state
         }
         if code_challenge
           params[:code_challenge] = code_challenge
-          params[:code_challenge_method] = "S256"
+          params[:code_challenge_method] = 'S256'
         end
         "#{OAUTH}/v2/auth/authorize/?#{params.to_query}"
       end
 
       # POST /v2/oauth/token/ grant_type=authorization_code (§4.2)
       def exchange_code(code:, redirect_uri:, code_verifier: nil)
-        form_post("/v2/oauth/token/", {
+        form_post('/v2/oauth/token/', {
           client_key: client_key,
           client_secret: client_secret,
           code: code,
-          grant_type: "authorization_code",
+          grant_type: 'authorization_code',
           redirect_uri: redirect_uri,
           code_verifier: code_verifier
         }.compact)
@@ -55,49 +55,49 @@ module Vendors
 
       # POST /v2/oauth/token/ grant_type=refresh_token (§4.3) — may rotate refresh_token.
       def refresh(refresh_token:)
-        form_post("/v2/oauth/token/", {
-          client_key: client_key,
-          client_secret: client_secret,
-          grant_type: "refresh_token",
-          refresh_token: refresh_token
-        })
+        form_post('/v2/oauth/token/', {
+                    client_key: client_key,
+                    client_secret: client_secret,
+                    grant_type: 'refresh_token',
+                    refresh_token: refresh_token
+                  })
       end
 
       # POST /v2/oauth/revoke/ (§4.4)
       def revoke(token:)
-        form_post("/v2/oauth/revoke/", {
-          client_key: client_key,
-          client_secret: client_secret,
-          token: token
-        })
+        form_post('/v2/oauth/revoke/', {
+                    client_key: client_key,
+                    client_secret: client_secret,
+                    token: token
+                  })
       end
 
       # --- Content Posting API (§6) --------------------------------------------
 
       # Mandatory before every post (§6.0). Returns creator_info data.
       def query_creator_info
-        json_post("/v2/post/publish/creator_info/query/", {})
+        json_post('/v2/post/publish/creator_info/query/', {})
       end
 
       # Direct Post video init (§6.1). source_info selects FILE_UPLOAD or PULL_FROM_URL.
       def init_video(post_info:, source_info:)
-        json_post("/v2/post/publish/video/init/", { post_info: post_info, source_info: source_info })
+        json_post('/v2/post/publish/video/init/', { post_info: post_info, source_info: source_info })
       end
 
       # Photo / carousel init (§6.4) — unified content/init endpoint.
       def init_content(payload)
-        json_post("/v2/post/publish/content/init/", payload)
+        json_post('/v2/post/publish/content/init/', payload)
       end
 
       # Poll publish status (§6.3).
       def fetch_status(publish_id:)
-        json_post("/v2/post/publish/status/fetch/", { publish_id: publish_id })
+        json_post('/v2/post/publish/status/fetch/', { publish_id: publish_id })
       end
 
       # PUT a single chunk to the upload_url returned by init_video (FILE_UPLOAD, §6.2).
       # content_range is 0-indexed inclusive, e.g. "bytes 0-30567099/30567100".
       # Returns the raw Faraday response (201 for whole-file, 206 for partial).
-      def upload_chunk(upload_url:, bytes:, content_range:, mime: "video/mp4")
+      def upload_chunk(upload_url:, bytes:, content_range:, mime: 'video/mp4')
         conn = Faraday.new do |f|
           f.request :retry,
                     max: 2, interval: 0.4, backoff_factor: 2,
@@ -106,9 +106,9 @@ module Vendors
           f.adapter Faraday.default_adapter
         end
         conn.put(upload_url) do |req|
-          req.headers["Content-Type"]   = mime
-          req.headers["Content-Length"] = bytes.bytesize.to_s
-          req.headers["Content-Range"]  = content_range
+          req.headers['Content-Type']   = mime
+          req.headers['Content-Length'] = bytes.bytesize.to_s
+          req.headers['Content-Range']  = content_range
           req.body = bytes
         end
       end
@@ -117,7 +117,7 @@ module Vendors
 
       # GET /v2/user/info/?fields=... (§7.1) — account stats / profile.
       def user_info(fields:)
-        json_get("/v2/user/info/", fields: fields)
+        json_get('/v2/user/info/', fields: fields)
       end
 
       # POST /v2/video/list/?fields=... (§7.2) — paginated public videos + metrics.
@@ -132,17 +132,17 @@ module Vendors
 
       # Webhook signature secret (= client_secret unless TikTok issues a separate one, §5.1).
       def webhook_secret
-        credential(:tiktok, :webhook_secret, env: "TIKTOK_WEBHOOK_SECRET") || client_secret
+        credential(:tiktok, :webhook_secret, env: 'TIKTOK_WEBHOOK_SECRET') || client_secret
       end
 
       private
 
       def client_key
-        require_credential!(credential(:tiktok, :client_key, env: "TIKTOK_CLIENT_KEY"), "tiktok.client_key")
+        require_credential!(credential(:tiktok, :client_key, env: 'TIKTOK_CLIENT_KEY'), 'tiktok.client_key')
       end
 
       def client_secret
-        require_credential!(credential(:tiktok, :client_secret, env: "TIKTOK_CLIENT_SECRET"), "tiktok.client_secret")
+        require_credential!(credential(:tiktok, :client_secret, env: 'TIKTOK_CLIENT_SECRET'), 'tiktok.client_secret')
       end
 
       # application/x-www-form-urlencoded POST (OAuth token/revoke). No bearer auth.
@@ -174,7 +174,7 @@ module Vendors
       def json_connection
         build_connection(
           API,
-          headers: { "Content-Type" => "application/json; charset=UTF-8" },
+          headers: { 'Content-Type' => 'application/json; charset=UTF-8' },
           auth_token: @access_token
         )
       end
@@ -183,31 +183,31 @@ module Vendors
       def check_envelope(body)
         return body unless body.is_a?(Hash)
 
-        error = body["error"]
-        return body if error.nil? || error["code"].nil? || error["code"] == "ok"
+        error = body['error']
+        return body if error.nil? || error['code'].nil? || error['code'] == 'ok'
 
         raise_tiktok_error(error)
       end
 
       # OAuth token endpoint uses a flat { error:, error_description: } on failure.
       def check_oauth(body)
-        return body unless body.is_a?(Hash) && body["error"].is_a?(String)
+        return body unless body.is_a?(Hash) && body['error'].is_a?(String)
 
         raise Vendors::Base::AuthenticationError.new(
-          body["error_description"] || body["error"], body: body
+          body['error_description'] || body['error'], body: body
         )
       end
 
       def raise_tiktok_error(error)
-        code = error["code"]
-        message = "#{code}: #{error["message"]} (log_id=#{error["log_id"]})"
+        code = error['code']
+        message = "#{code}: #{error['message']} (log_id=#{error['log_id']})"
         klass =
           case code
-          when "access_token_invalid", "scope_not_authorized", "scope_permission_missed"
+          when 'access_token_invalid', 'scope_not_authorized', 'scope_permission_missed'
             Vendors::Base::AuthenticationError
-          when "rate_limit_exceeded"
+          when 'rate_limit_exceeded'
             Vendors::Base::RateLimitError
-          when "internal_error"
+          when 'internal_error'
             Vendors::Base::ServerError
           else
             Vendors::Base::Error

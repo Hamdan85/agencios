@@ -24,7 +24,7 @@ module Tickets
       filter(:assignee_id) { |v| @scope.where(assignee_id: v) }
       filter(:creative_type) { |v| @scope.where(creative_type: v) }
       filter(:priority)    { |v| @scope.where(priority: v) }
-      filter(:channel)     { |v| @scope.where("? = ANY(tickets.channels)", v) }
+      filter(:channel)     { |v| @scope.where('? = ANY(tickets.channels)', v) }
       filter(:q)           { |v| search(v) }
 
       @scope
@@ -45,7 +45,7 @@ module Tickets
     def search(term)
       like = "%#{sanitize(term)}%"
       @scope.where(
-        "tickets.title ILIKE :q OR tickets.creative_type ILIKE :q OR projects.name ILIKE :q",
+        'tickets.title ILIKE :q OR tickets.creative_type ILIKE :q OR projects.name ILIKE :q',
         q: like
       )
     end

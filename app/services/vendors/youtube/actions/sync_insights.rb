@@ -9,7 +9,7 @@ module Vendors
       # this API, so reach mirrors views and saves -> 0. Returns:
       #   { reach:, views:, likes:, comments:, shares:, saves:, raw: {...} }
       class SyncInsights
-        METRICS = "views,likes,comments,shares,estimatedMinutesWatched"
+        METRICS = 'views,likes,comments,shares,estimatedMinutesWatched'
         # Lifetime window — the Analytics API has no all-time, so we span a wide range.
         LOOKBACK_DAYS = 365
 
@@ -27,11 +27,11 @@ module Vendors
           row = aggregate_row(video_id)
 
           {
-            reach: row["views"].to_i,
-            views: row["views"].to_i,
-            likes: row["likes"].to_i,
-            comments: row["comments"].to_i,
-            shares: row["shares"].to_i,
+            reach: row['views'].to_i,
+            views: row['views'].to_i,
+            likes: row['likes'].to_i,
+            comments: row['comments'].to_i,
+            shares: row['shares'].to_i,
             saves: 0,
             raw: row
           }

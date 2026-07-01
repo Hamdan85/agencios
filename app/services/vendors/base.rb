@@ -27,7 +27,7 @@ module Vendors
 
     def build_connection(base_url, headers: {}, auth_token: nil)
       headers = headers.dup
-      headers["Authorization"] ||= "Bearer #{auth_token}" if auth_token
+      headers['Authorization'] ||= "Bearer #{auth_token}" if auth_token
 
       Faraday.new(url: base_url) do |f|
         f.request :json
@@ -59,9 +59,9 @@ module Vendors
 
     def error_message(response)
       body = response.body
-      return body["error"]["message"] if body.is_a?(Hash) && body["error"].is_a?(Hash)
-      return body["error"] if body.is_a?(Hash) && body["error"].is_a?(String)
-      return body["message"] if body.is_a?(Hash) && body["message"]
+      return body['error']['message'] if body.is_a?(Hash) && body['error'].is_a?(Hash)
+      return body['error'] if body.is_a?(Hash) && body['error'].is_a?(String)
+      return body['message'] if body.is_a?(Hash) && body['message']
 
       "HTTP #{response.status}"
     end

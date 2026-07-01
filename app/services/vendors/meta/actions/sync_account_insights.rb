@@ -34,13 +34,13 @@ module Vendors
           series = timeseries_insights
 
           {
-            followers: int(fields["followers_count"]),
+            followers: int(fields['followers_count']),
             new_followers: series.fetch(:follower_count, 0),
-            accounts_reached: int(totals["reach"]),
-            profile_views: int(totals["profile_views"]),
-            views: int(totals["views"]),
-            story_replies: int(totals["replies"]),
-            total_interactions: int(totals["total_interactions"]),
+            accounts_reached: int(totals['reach']),
+            profile_views: int(totals['profile_views']),
+            views: int(totals['views']),
+            story_replies: int(totals['replies']),
+            total_interactions: int(totals['total_interactions']),
             raw: { fields: fields, totals: totals, series: series }
           }
         end
@@ -56,7 +56,7 @@ module Vendors
         def total_value_insights
           body = GetAccountInsights.call(
             social_account: @social_account, client: @client,
-            metrics: TOTAL_METRICS, metric_type: "total_value",
+            metrics: TOTAL_METRICS, metric_type: 'total_value',
             since: epoch(@since), until_time: epoch(@until_time)
           )
           index_total_value(body)
@@ -68,12 +68,12 @@ module Vendors
         def timeseries_insights
           body = GetAccountInsights.call(
             social_account: @social_account, client: @client,
-            metrics: TIMESERIES_METRICS, metric_type: "time_series", period: "day",
+            metrics: TIMESERIES_METRICS, metric_type: 'time_series', period: 'day',
             since: epoch(@since), until_time: epoch(@until_time)
           )
-          Array(body["data"]).each_with_object({}) do |metric, acc|
-            name = metric["name"].to_s
-            acc[name.to_sym] = Array(metric["values"]).sum { |v| int(v["value"]) }
+          Array(body['data']).each_with_object({}) do |metric, acc|
+            name = metric['name'].to_s
+            acc[name.to_sym] = Array(metric['values']).sum { |v| int(v['value']) }
           end
         rescue Vendors::Base::Error
           {}
@@ -81,8 +81,8 @@ module Vendors
 
         # total_value insights → { name => value }.
         def index_total_value(body)
-          Array(body["data"]).each_with_object({}) do |metric, acc|
-            acc[metric["name"]] = metric.dig("total_value", "value")
+          Array(body['data']).each_with_object({}) do |metric, acc|
+            acc[metric['name']] = metric.dig('total_value', 'value')
           end
         end
 

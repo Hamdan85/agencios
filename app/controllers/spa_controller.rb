@@ -6,6 +6,6 @@ class SpaController < ActionController::Base
   protect_from_forgery with: :exception
 
   def index
-    render template: "spa/index", layout: false
+    render template: 'spa/index', layout: false
   end
 end

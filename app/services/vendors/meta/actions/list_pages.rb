@@ -19,9 +19,9 @@ module Vendors
         # { id, name, access_token, tasks, instagram_business_account{ id, username } }.
         def call
           @client.get(
-            "/me/accounts",
+            '/me/accounts',
             params: {
-              fields: "id,name,access_token,tasks,instagram_business_account{id,username}"
+              fields: 'id,name,access_token,tasks,instagram_business_account{id,username}'
             },
             token: @user_access_token
           )

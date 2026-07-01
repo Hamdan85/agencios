@@ -11,31 +11,31 @@ module Prompts
   # approval status, the channel selection) are intentionally excluded.
   class FieldFill < Base
     SPECS = {
-      "ideation" => {
-        "objective" => "Objetivo claro do conteúdo, em uma frase",
-        "target_persona" => "Persona-alvo específica (quem queremos impactar), em uma frase",
-        "content_pillar" => "Pilar de conteúdo em poucas palavras (ex.: bastidores, educacional)",
-        "format_hypothesis" => "Hipótese de formato (ex.: Reel narrativo de 30s)"
+      'ideation' => {
+        'objective' => 'Objetivo claro do conteúdo, em uma frase',
+        'target_persona' => 'Persona-alvo específica (quem queremos impactar), em uma frase',
+        'content_pillar' => 'Pilar de conteúdo em poucas palavras (ex.: bastidores, educacional)',
+        'format_hypothesis' => 'Hipótese de formato (ex.: Reel narrativo de 30s)'
       },
-      "scoping" => {
-        "copy_brief" => "Direção de mensagem para a legenda, 2 a 3 frases",
-        "script" => "Roteiro/storyboard enxuto do conteúdo",
-        "deliverables" => "Lista de entregáveis concretos (array de strings)",
-        "effort_estimate" => "Estimativa de esforço (ex.: 4h, 2 dias)"
+      'scoping' => {
+        'copy_brief' => 'Direção de mensagem para a legenda, 2 a 3 frases',
+        'script' => 'Roteiro/storyboard enxuto do conteúdo',
+        'deliverables' => 'Lista de entregáveis concretos (array de strings)',
+        'effort_estimate' => 'Estimativa de esforço (ex.: 4h, 2 dias)'
       },
-      "production" => {
-        "caption" => "Legenda final pronta para publicar: gancho na 1ª linha, corpo curto e CTA",
-        "hashtags" => "Hashtags relevantes SEM o # (array de 5 a 12 strings)",
-        "internal_notes" => "Observações de produção para a equipe (HTML simples)"
+      'production' => {
+        'caption' => 'Legenda final pronta para publicar: gancho na 1ª linha, corpo curto e CTA',
+        'hashtags' => 'Hashtags relevantes SEM o # (array de 5 a 12 strings)',
+        'internal_notes' => 'Observações de produção para a equipe (HTML simples)'
       },
-      "scheduled" => {
-        "first_comment" => "Primeiro comentário a fixar no post (hashtags extras / contexto)"
+      'scheduled' => {
+        'first_comment' => 'Primeiro comentário a fixar no post (hashtags extras / contexto)'
       },
-      "retrospective" => {
-        "wins" => "O que funcionou bem (array de strings)",
-        "improvements" => "O que pode melhorar no próximo ciclo (array de strings)",
-        "lessons_learned" => "Aprendizado consolidado em HTML simples (<p>, <ul>, <li>, <strong>)",
-        "repeat_recommendation" => "Recomendação — exatamente um de: repeat, iterate, retire"
+      'retrospective' => {
+        'wins' => 'O que funcionou bem (array de strings)',
+        'improvements' => 'O que pode melhorar no próximo ciclo (array de strings)',
+        'lessons_learned' => 'Aprendizado consolidado em HTML simples (<p>, <ul>, <li>, <strong>)',
+        'repeat_recommendation' => 'Recomendação — exatamente um de: repeat, iterate, retire'
       }
     }.freeze
 

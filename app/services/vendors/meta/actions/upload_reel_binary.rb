@@ -23,9 +23,9 @@ module Vendors
         end
 
         def call
-          headers = { "offset" => @offset }
-          headers["file_size"] = @file_size if @file_size
-          headers["file_url"] = @file_url if @file_url
+          headers = { 'offset' => @offset }
+          headers['file_size'] = @file_size if @file_size
+          headers['file_url'] = @file_url if @file_url
 
           @client.rupload(
             "video-upload/#{@client.graph_version}/#{@video_id}",

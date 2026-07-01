@@ -28,7 +28,7 @@ module Vendors
           )
 
           tweet_id = result.fetch(:id)
-          raise Vendors::Base::Error, "X returned no tweet id" if tweet_id.blank?
+          raise Vendors::Base::Error, 'X returned no tweet id' if tweet_id.blank?
 
           { external_post_id: tweet_id, permalink: "https://x.com/i/web/status/#{tweet_id}" }
         end
@@ -48,7 +48,7 @@ module Vendors
           media_id = Vendors::X::Actions::UploadMedia.call(
             social_account: @social_account,
             bytes: bytes,
-            media_type: content_type.presence || "application/octet-stream",
+            media_type: content_type.presence || 'application/octet-stream',
             media_category: category
           )
           [media_id]
@@ -60,12 +60,12 @@ module Vendors
         end
 
         def media_category(content_type)
-          if content_type.start_with?("video")
-            "tweet_video"
-          elsif content_type == "image/gif"
-            "tweet_gif"
+          if content_type.start_with?('video')
+            'tweet_video'
+          elsif content_type == 'image/gif'
+            'tweet_gif'
           else
-            "tweet_image"
+            'tweet_image'
           end
         end
       end

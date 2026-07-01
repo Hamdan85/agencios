@@ -11,7 +11,7 @@ module Controllers
 
       def call
         target = user.workspaces.find_by(id: @params[:workspace_id])
-        raise ActiveRecord::RecordNotFound, "Workspace não encontrado." unless target
+        raise ActiveRecord::RecordNotFound, 'Workspace não encontrado.' unless target
 
         Current.session.update!(workspace_id: target.id)
         Current.workspace = target

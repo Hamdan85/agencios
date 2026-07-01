@@ -10,7 +10,7 @@ module Auth
     include Authentication
     allow_unauthenticated_access only: %i[start callback]
 
-    LOGIN_PATH = "/login"
+    LOGIN_PATH = '/login'
 
     def start
       url = Controllers::Auth::Google::Start.call(return_to: params[:return_to])

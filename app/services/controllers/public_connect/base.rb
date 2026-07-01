@@ -7,7 +7,7 @@ module Controllers
     # the client never needs an agencios account. Networks are connected straight
     # onto the client referenced by the token.
     class Base < Controllers::Base
-      SALT = "agencios:client_connect"
+      SALT = 'agencios:client_connect'
 
       # Networks offered on the public page — every network the agency can connect
       # for a client. Each maps to a connect slug via Publishers::SocialPublisher.
@@ -23,7 +23,7 @@ module Controllers
 
       # Generate the long-lived token the agency shares with the client.
       def self.token_for(client)
-        verifier.generate({ "client_id" => client.id }, expires_in: 30.days)
+        verifier.generate({ 'client_id' => client.id }, expires_in: 30.days)
       end
 
       private
@@ -31,9 +31,9 @@ module Controllers
       # Resolve the client from the signed token, or raise Invalid.
       def client_from_token(token)
         data = self.class.verifier.verify(token.to_s)
-        Client.find(data["client_id"])
+        Client.find(data['client_id'])
       rescue StandardError
-        raise Operations::Errors::Invalid, "token"
+        raise Operations::Errors::Invalid, 'token'
       end
     end
   end

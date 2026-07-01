@@ -23,13 +23,13 @@ module Vendors
 
         def call
           params = {
-            media_type: "REELS",
+            media_type: 'REELS',
             caption: @caption,
             cover_url: @cover_url,
             share_to_feed: @share_to_feed
           }
           if @resumable
-            params[:upload_type] = "resumable"
+            params[:upload_type] = 'resumable'
           else
             params[:video_url] = @video_url
           end

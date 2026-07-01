@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "securerandom"
+require 'securerandom'
 
 module Operations
   module Invoices
@@ -10,7 +10,7 @@ module Operations
     # (see Operations::Billing::GeneratePaymentLink).
     class Create < Operations::Base
       def initialize(client_id:, amount_cents:, description: nil, due_date: nil, project_ids: [],
-                      send_payment_link: false)
+                     send_payment_link: false)
         @client_id = client_id
         @amount_cents = amount_cents
         @description = description

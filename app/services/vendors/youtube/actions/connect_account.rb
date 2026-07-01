@@ -27,18 +27,18 @@ module Vendors
             code: @code, redirect_uri: @redirect_uri
           )
 
-          channel = resolve_channel(token["access_token"])
+          channel = resolve_channel(token['access_token'])
 
           {
             provider: :youtube,
-            channel_id: channel["id"],
-            channel_title: channel.dig("snippet", "title"),
-            username: channel.dig("snippet", "title"),
-            external_user_id: channel["id"],
-            user_access_token: token["access_token"],
-            refresh_token: token["refresh_token"],
-            token_expires_at: expires_at(token["expires_in"]),
-            scopes: scopes_from(token["scope"]),
+            channel_id: channel['id'],
+            channel_title: channel.dig('snippet', 'title'),
+            username: channel.dig('snippet', 'title'),
+            external_user_id: channel['id'],
+            user_access_token: token['access_token'],
+            refresh_token: token['refresh_token'],
+            token_expires_at: expires_at(token['expires_in']),
+            scopes: scopes_from(token['scope']),
             status: :connected
           }
         end
@@ -49,8 +49,8 @@ module Vendors
         def resolve_channel(access_token)
           body = Vendors::Youtube::Client
                  .new(access_token: access_token)
-                 .list_channels(part: "id,snippet")
-          Array(body["items"]).first || {}
+                 .list_channels(part: 'id,snippet')
+          Array(body['items']).first || {}
         end
 
         def expires_at(seconds)
@@ -58,7 +58,7 @@ module Vendors
         end
 
         def scopes_from(scope)
-          scope.to_s.split(" ").reject(&:empty?)
+          scope.to_s.split(' ').reject(&:empty?)
         end
       end
     end

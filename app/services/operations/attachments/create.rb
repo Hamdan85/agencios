@@ -8,7 +8,8 @@ module Operations
     # appears in the file list) and `broadcast: false` lets the caller emit a
     # single `note_added` event instead of one `attachment_added` per file.
     class Create < Operations::Base
-      def initialize(ticket:, file:, uploaded_by: nil, title: nil, description: nil, metadata: {}, note: nil, broadcast: true)
+      def initialize(ticket:, file:, uploaded_by: nil, title: nil, description: nil, metadata: {}, note: nil,
+                     broadcast: true)
         @ticket = ticket
         @file = file
         @uploaded_by = uploaded_by
@@ -32,7 +33,7 @@ module Operations
         attachment.file.attach(@file)
         attachment.save!
 
-        Broadcaster.ticket(@ticket, "attachment_added", attachment_id: attachment.id) if @broadcast
+        Broadcaster.ticket(@ticket, 'attachment_added', attachment_id: attachment.id) if @broadcast
         attachment
       end
 

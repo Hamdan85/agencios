@@ -13,7 +13,7 @@ module Controllers
       def call
         # Filters may join `projects`, so qualify the column to avoid "ambiguous
         # column id".
-        ids = ::Tickets::Filters.apply(base_scope, @params).pluck("tickets.id")
+        ids = ::Tickets::Filters.apply(base_scope, @params).pluck('tickets.id')
         { ids: ids }
       end
 
@@ -22,8 +22,8 @@ module Controllers
       def base_scope
         scope = workspace.tickets
         case @params[:view].to_s
-        when "archived" then scope.archived
-        when "all"      then scope
+        when 'archived' then scope.archived
+        when 'all'      then scope
         else                 scope.active
         end
       end

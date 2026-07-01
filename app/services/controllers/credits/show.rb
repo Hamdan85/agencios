@@ -10,11 +10,11 @@ module Controllers
 
         {
           wallet: {
-            available:         workspace.godfathered? ? nil : wallet.available,
-            granted:           wallet.live_granted,
-            purchased:         wallet.purchased_balance,
+            available: workspace.godfathered? ? nil : wallet.available,
+            granted: wallet.live_granted,
+            purchased: wallet.purchased_balance,
             granted_expires_at: wallet.granted_expires_at&.iso8601,
-            unlimited:         workspace.godfathered?
+            unlimited: workspace.godfathered?
           },
           packs: Pricing.credit_packs.map { |p| p.slice(:key, :name, :price_cents, :credits) },
           costs: Pricing.public_catalog[:credit_costs],

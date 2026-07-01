@@ -11,10 +11,10 @@ module Vendors
     # Degrades gracefully: with no key (or on any API error) it returns [] so the
     # carousel simply falls back to brand-only / generated imagery.
     class Client < Vendors::Base
-      BASE_URL = "https://api.pexels.com"
+      BASE_URL = 'https://api.pexels.com'
 
       def initialize(api_key: nil)
-        @api_key = api_key || credential(:pexels, :api_key, env: "PEXELS_API_KEY")
+        @api_key = api_key || credential(:pexels, :api_key, env: 'PEXELS_API_KEY')
       end
 
       def configured? = @api_key.present?
@@ -26,8 +26,8 @@ module Vendors
         params = { query: query, per_page: per_page }
         params[:orientation] = orientation if orientation.present?
 
-        body = handle(connection.get("/v1/search", params))
-        Array(body["photos"]).map { |photo| normalize(photo) }
+        body = handle(connection.get('/v1/search', params))
+        Array(body['photos']).map { |photo| normalize(photo) }
       rescue Vendors::Base::Error => e
         Rails.logger.warn("[Vendors::Pexels] #{e.class}: #{e.message} — returning no photos.")
         []
@@ -36,16 +36,16 @@ module Vendors
       private
 
       def connection
-        @connection ||= build_connection(BASE_URL, headers: { "Authorization" => @api_key.to_s })
+        @connection ||= build_connection(BASE_URL, headers: { 'Authorization' => @api_key.to_s })
       end
 
       def normalize(photo)
-        src = photo["src"] || {}
+        src = photo['src'] || {}
         {
-          id:           photo["id"],
-          url:          src["large2x"] || src["large"] || src["original"],
-          photographer: photo["photographer"],
-          alt:          photo["alt"]
+          id: photo['id'],
+          url: src['large2x'] || src['large'] || src['original'],
+          photographer: photo['photographer'],
+          alt: photo['alt']
         }
       end
     end

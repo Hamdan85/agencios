@@ -9,7 +9,7 @@ module Vendors
       class GetProfile
         def self.call(...) = new(...).call
 
-        FIELDS = "id,username,threads_profile_picture_url"
+        FIELDS = 'id,username,threads_profile_picture_url'
 
         def initialize(access_token:, client: nil)
           @access_token = access_token
@@ -17,7 +17,7 @@ module Vendors
         end
 
         def call
-          @client.get("/me", params: { fields: FIELDS }, token: @access_token)
+          @client.get('/me', params: { fields: FIELDS }, token: @access_token)
         end
       end
     end

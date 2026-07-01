@@ -35,19 +35,19 @@ module Operations
         return nil if ws.nil?
 
         AiUsageLog.create!(
-          workspace:                   ws,
-          user:                        resolve_user,
-          subject:                     @subject,
-          provider:                    @provider,
-          operation:                   @operation,
-          model:                       @model.to_s.presence,
-          input_tokens:                token(:input_tokens),
-          output_tokens:               token(:output_tokens),
+          workspace: ws,
+          user: resolve_user,
+          subject: @subject,
+          provider: @provider,
+          operation: @operation,
+          model: @model.to_s.presence,
+          input_tokens: token(:input_tokens),
+          output_tokens: token(:output_tokens),
           cache_creation_input_tokens: token(:cache_creation_input_tokens),
-          cache_read_input_tokens:     token(:cache_read_input_tokens),
-          unit_kind:                   resolved_unit_kind,
-          units:                       resolved_units,
-          cost_cents:                  computed_cost_cents
+          cache_read_input_tokens: token(:cache_read_input_tokens),
+          unit_kind: resolved_unit_kind,
+          units: resolved_units,
+          cost_cents: computed_cost_cents
         )
       rescue StandardError => e
         Rails.logger.warn("[Operations::Ai::LogUsage] failed (#{@provider}/#{@operation}): #{e.class}: #{e.message}")
@@ -76,7 +76,7 @@ module Operations
       end
 
       def batch?
-        @operation.end_with?("_batch")
+        @operation.end_with?('_batch')
       end
 
       def resolved_unit_kind
@@ -97,12 +97,12 @@ module Operations
 
         if @provider == AiUsageLog::PROVIDER_ANTHROPIC
           AiUsageLog.token_cost_cents(
-            model:       @model,
-            input:       token(:input_tokens),
-            output:      token(:output_tokens),
+            model: @model,
+            input: token(:input_tokens),
+            output: token(:output_tokens),
             cache_write: token(:cache_creation_input_tokens),
-            cache_read:  token(:cache_read_input_tokens),
-            batch:       batch?
+            cache_read: token(:cache_read_input_tokens),
+            batch: batch?
           )
         elsif @units
           AiUsageLog.unit_cost_cents(provider: @provider, units: @units)

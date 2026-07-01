@@ -18,9 +18,9 @@ module Auth
       )
       render_result(result)
     rescue Controllers::Auth::Omniauth::MetaConnect::InstagramRequired
-      redirect_to_status(error: "no_instagram")
+      redirect_to_status(error: 'no_instagram')
     rescue Operations::Errors::Invalid
-      redirect_to_status(error: "state")
+      redirect_to_status(error: 'state')
     rescue StandardError => e
       Rails.logger.warn("[Auth::Omniauth] #{params[:provider]}: #{e.message}")
       redirect_to_status(error: params[:provider])
@@ -33,16 +33,16 @@ module Auth
       )
       render_result(result)
     rescue Controllers::Auth::Omniauth::MetaConnect::InstagramRequired
-      redirect_to_status(error: "no_instagram")
+      redirect_to_status(error: 'no_instagram')
     rescue Operations::Errors::Invalid
-      redirect_to_status(error: "expired")
+      redirect_to_status(error: 'expired')
     rescue StandardError => e
       Rails.logger.warn("[Auth::Omniauth] choose_page: #{e.message}")
-      redirect_to_status(error: "meta")
+      redirect_to_status(error: 'meta')
     end
 
     def failure
-      redirect_to_status(error: "oauth")
+      redirect_to_status(error: 'oauth')
     end
 
     # Tiny inline page — signals the opener and closes the popup. Falls back to a

@@ -23,20 +23,20 @@ module Vendors
             code: @code, redirect_uri: @redirect_uri, client: @client
           )
           long = ExchangeLongLivedToken.call(
-            short_lived_token: short["access_token"], client: @client
+            short_lived_token: short['access_token'], client: @client
           )
-          user_token = long["access_token"]
+          user_token = long['access_token']
           profile = GetProfile.call(access_token: user_token, client: @client)
 
-          threads_user_id = (profile["id"] || short["user_id"]).to_s
+          threads_user_id = (profile['id'] || short['user_id']).to_s
 
           {
             provider: :threads,
             external_user_id: threads_user_id,
-            username: profile["username"],
-            avatar_url: profile["threads_profile_picture_url"],
+            username: profile['username'],
+            avatar_url: profile['threads_profile_picture_url'],
             user_access_token: user_token,
-            token_expires_at: expiry_from(long["expires_in"]),
+            token_expires_at: expiry_from(long['expires_in']),
             scopes: AuthorizeUrl::SCOPES,
             status: :connected
           }

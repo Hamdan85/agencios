@@ -16,9 +16,9 @@ module Vendors
 
         def call
           @client.oauth_get(
-            "/access_token",
+            '/access_token',
             params: {
-              grant_type: "th_exchange_token",
+              grant_type: 'th_exchange_token',
               client_secret: @client.app_secret,
               access_token: @short_lived_token
             }

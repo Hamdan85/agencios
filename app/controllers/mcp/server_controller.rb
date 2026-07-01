@@ -21,7 +21,7 @@ module Mcp
     # POST /mcp — a single JSON-RPC request/notification or a batch array.
     def handle
       payload = parse_payload
-      return render(json: rpc_error(nil, -32_700, "Parse error"), status: :ok) if payload.nil?
+      return render(json: rpc_error(nil, -32_700, 'Parse error'), status: :ok) if payload.nil?
 
       dispatcher = Mcp::Dispatcher.new(
         actor: @actor, granted_scopes: @granted_scopes, application_id: @application_id
@@ -38,7 +38,7 @@ module Mcp
 
     # GET /mcp — we don't offer a standalone server→client SSE stream.
     def stream
-      response.set_header("Allow", "POST, DELETE")
+      response.set_header('Allow', 'POST, DELETE')
       head :method_not_allowed
     end
 
@@ -58,10 +58,10 @@ module Mcp
     # ── Auth ────────────────────────────────────────────────────────────
     def authenticate_token!
       access = bearer_access_token
-      return challenge!("invalid_token") unless access&.accessible?
+      return challenge!('invalid_token') unless access&.accessible?
 
       @actor = User.find_by(id: access.resource_owner_id)
-      return challenge!("invalid_token") unless @actor
+      return challenge!('invalid_token') unless @actor
 
       @granted_scopes = access.scopes.to_a
       @application_id = access.application_id
@@ -75,35 +75,35 @@ module Mcp
     def challenge!(error)
       metadata_url = "#{request.base_url}/.well-known/oauth-protected-resource"
       response.set_header(
-        "WWW-Authenticate",
+        'WWW-Authenticate',
         %(Bearer resource_metadata="#{metadata_url}", error="#{error}", scope="read write")
       )
-      render json: rpc_error(nil, -32_001, "Unauthorized"), status: :unauthorized
+      render json: rpc_error(nil, -32_001, 'Unauthorized'), status: :unauthorized
     end
 
     def rpc_error(id, code, message)
-      { jsonrpc: "2.0", id: id, error: { code: code, message: message } }
+      { jsonrpc: '2.0', id: id, error: { code: code, message: message } }
     end
 
     # ── CORS / Origin (DNS-rebinding protection) ─────────────────────────
     def set_cors_headers
-      origin = request.headers["Origin"]
+      origin = request.headers['Origin']
       return if origin.blank?
 
-      response.set_header("Access-Control-Allow-Origin", origin)
-      response.set_header("Vary", "Origin")
-      response.set_header("Access-Control-Allow-Methods", "POST, GET, DELETE, OPTIONS")
-      response.set_header("Access-Control-Allow-Headers",
-                          "Authorization, Content-Type, Mcp-Session-Id, MCP-Protocol-Version")
-      response.set_header("Access-Control-Expose-Headers", "WWW-Authenticate, Mcp-Session-Id")
+      response.set_header('Access-Control-Allow-Origin', origin)
+      response.set_header('Vary', 'Origin')
+      response.set_header('Access-Control-Allow-Methods', 'POST, GET, DELETE, OPTIONS')
+      response.set_header('Access-Control-Allow-Headers',
+                          'Authorization, Content-Type, Mcp-Session-Id, MCP-Protocol-Version')
+      response.set_header('Access-Control-Expose-Headers', 'WWW-Authenticate, Mcp-Session-Id')
     end
 
     def handle_preflight
-      head(:no_content) if request.request_method == "OPTIONS"
+      head(:no_content) if request.request_method == 'OPTIONS'
     end
 
     def validate_origin!
-      origin = request.headers["Origin"]
+      origin = request.headers['Origin']
       return if origin.blank? # server-to-server (Claude) sends no Origin
 
       host = begin

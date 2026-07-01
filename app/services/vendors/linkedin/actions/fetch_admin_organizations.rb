@@ -22,10 +22,10 @@ module Vendors
             access_token: @access_token, social_account: @social_account
           )
           body = client.rest_get(
-            "/rest/organizationAcls",
-            q: "roleAssignee", role: "ADMINISTRATOR", state: "APPROVED"
+            '/rest/organizationAcls',
+            q: 'roleAssignee', role: 'ADMINISTRATOR', state: 'APPROVED'
           )
-          Array(body["elements"]).map { |el| el["organizationTarget"] }.compact
+          Array(body['elements']).map { |el| el['organizationTarget'] }.compact
         rescue Vendors::Base::AuthenticationError
           # Org scopes are partner-gated; absent approval this 401/403s. Member
           # posting still works, so degrade gracefully to "no admin orgs".

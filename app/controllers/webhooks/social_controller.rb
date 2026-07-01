@@ -12,7 +12,7 @@ module Webhooks
 
       status = Controllers::Webhooks::Social::Receive.call(
         provider: params[:provider],
-        signature: request.headers["X-Hub-Signature-256"],
+        signature: request.headers['X-Hub-Signature-256'],
         payload: request.raw_post
       )
       head status

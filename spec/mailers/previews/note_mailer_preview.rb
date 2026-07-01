@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "mailer_preview_data"
+require_relative 'mailer_preview_data'
 
 # Preview at /rails/mailers/note_mailer
 class NoteMailerPreview < ActionMailer::Preview

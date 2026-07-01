@@ -31,15 +31,15 @@ module Vendors
 
         # v1/v2: GET /v1/video_status.get?video_id=<id>
         def from_v1
-          body = @client.get("/v1/video_status.get", video_id: @video_id)
-          data = body["data"] || {}
+          body = @client.get('/v1/video_status.get', video_id: @video_id)
+          data = body['data'] || {}
           normalize(
-            status: data["status"],
-            video_url: data["video_url"],
-            thumbnail_url: data["thumbnail_url"],
-            gif_url: data["gif_url"],
-            duration: data["duration"],
-            failure_message: data.dig("error", "message") || data["error"],
+            status: data['status'],
+            video_url: data['video_url'],
+            thumbnail_url: data['thumbnail_url'],
+            gif_url: data['gif_url'],
+            duration: data['duration'],
+            failure_message: data.dig('error', 'message') || data['error'],
             raw: body
           )
         end
@@ -47,14 +47,14 @@ module Vendors
         # v3: GET /v3/videos/{video_id}
         def from_v3
           body = @client.get("/v3/videos/#{@video_id}")
-          data = body["data"] || body
+          data = body['data'] || body
           normalize(
-            status: data["status"],
-            video_url: data["video_url"],
-            thumbnail_url: data["thumbnail_url"],
-            gif_url: data["gif_url"],
-            duration: data["duration"],
-            failure_message: data["failure_message"] || data["failure_code"],
+            status: data['status'],
+            video_url: data['video_url'],
+            thumbnail_url: data['thumbnail_url'],
+            gif_url: data['gif_url'],
+            duration: data['duration'],
+            failure_message: data['failure_message'] || data['failure_code'],
             raw: body
           )
         end
@@ -62,8 +62,8 @@ module Vendors
         def normalize(status:, video_url:, thumbnail_url:, gif_url:, duration:, failure_message:, raw:)
           {
             status: status.to_s,
-            completed: status.to_s == "completed",
-            failed: status.to_s == "failed",
+            completed: status.to_s == 'completed',
+            failed: status.to_s == 'failed',
             video_url: video_url,
             thumbnail_url: thumbnail_url,
             gif_url: gif_url,

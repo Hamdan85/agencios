@@ -12,8 +12,8 @@ module Controllers
 
       def call
         payload = {
-          user:       serialize(user, UserSerializer),
-          workspace:  workspace && serialize(workspace, WorkspaceSerializer),
+          user: serialize(user, UserSerializer),
+          workspace: workspace && serialize(workspace, WorkspaceSerializer),
           workspaces: serialize_collection(user.workspaces.order(:created_at), WorkspaceSerializer),
           # Whether the user may still create another workspace (per-user limit).
           can_create_workspace: user.can_create_workspace?,

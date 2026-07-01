@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "base64"
+require 'base64'
 
 module Vendors
   module Google
@@ -19,43 +19,43 @@ module Vendors
       # The API returns base64-encoded image bytes inline in the response.
       # The caller is responsible for attaching the bytes to ActiveStorage.
       class Client < Vendors::Base
-        BASE_URL      = "https://generativelanguage.googleapis.com"
-        DEFAULT_MODEL = "gemini-2.0-flash-preview-image-generation"
+        BASE_URL      = 'https://generativelanguage.googleapis.com'
+        DEFAULT_MODEL = 'gemini-2.0-flash-preview-image-generation'
 
         SUPPORTED_ASPECT_RATIOS = %w[1:1 16:9 9:16 4:3 3:4].freeze
 
         def initialize(api_key: nil, model: nil)
           @api_key = api_key ||
-                     credential(:google_banana, :api_key, env: "GOOGLE_BANANA_API_KEY")
+                     credential(:google_banana, :api_key, env: 'GOOGLE_BANANA_API_KEY')
           @model   = model ||
-                     credential(:google_banana, :model, env: "GOOGLE_BANANA_MODEL").presence ||
+                     credential(:google_banana, :model, env: 'GOOGLE_BANANA_MODEL').presence ||
                      DEFAULT_MODEL
         end
 
         # Generates one image. Returns { bytes: <binary String>, content_type: "image/jpeg" }.
-        def generate_image(prompt:, aspect_ratio: "1:1", negative_prompt: nil)
-          require_credential!(@api_key, "google_banana.api_key")
+        def generate_image(prompt:, aspect_ratio: '1:1', negative_prompt: nil)
+          require_credential!(@api_key, 'google_banana.api_key')
 
           payload = {
             contents: [
               {
-                parts: [ { text: full_prompt(prompt, aspect_ratio, negative_prompt) } ]
+                parts: [{ text: full_prompt(prompt, aspect_ratio, negative_prompt) }]
               }
             ],
             generationConfig: {
-              responseModalities: [ "IMAGE", "TEXT" ]
+              responseModalities: %w[IMAGE TEXT]
             }
           }
 
           result  = handle(connection.post("/v1beta/models/#{@model}:generateContent?key=#{@api_key}", payload))
-          parts   = result.dig("candidates", 0, "content", "parts") || []
-          image   = parts.find { |p| p["inlineData"] }
+          parts   = result.dig('candidates', 0, 'content', 'parts') || []
+          image   = parts.find { |p| p['inlineData'] }
 
-          raise Vendors::Google::Banana::Error, "No image returned by Google Banana" unless image
+          raise Vendors::Google::Banana::Error, 'No image returned by Google Banana' unless image
 
           {
-            bytes:        Base64.strict_decode64(image["inlineData"]["data"]),
-            content_type: image["inlineData"]["mimeType"].presence || "image/jpeg"
+            bytes: Base64.strict_decode64(image['inlineData']['data']),
+            content_type: image['inlineData']['mimeType'].presence || 'image/jpeg'
           }
         end
 
@@ -68,14 +68,14 @@ module Vendors
         # Fold aspect ratio and negative prompt into the text prompt — the
         # generateContent API doesn't have dedicated params for these.
         def full_prompt(prompt, aspect_ratio, negative_prompt)
-          parts = [ prompt ]
+          parts = [prompt]
           parts << "Aspect ratio: #{normalize_aspect_ratio(aspect_ratio)}." if aspect_ratio.present?
           parts << "Avoid: #{negative_prompt}." if negative_prompt.present?
-          parts.join(" ")
+          parts.join(' ')
         end
 
         def normalize_aspect_ratio(ratio)
-          SUPPORTED_ASPECT_RATIOS.include?(ratio.to_s) ? ratio.to_s : "1:1"
+          SUPPORTED_ASPECT_RATIOS.include?(ratio.to_s) ? ratio.to_s : '1:1'
         end
       end
     end

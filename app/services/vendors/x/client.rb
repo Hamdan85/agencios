@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require "net/http"
-require "uri"
-require "securerandom"
-require "digest"
-require "base64"
+require 'net/http'
+require 'uri'
+require 'securerandom'
+require 'digest'
+require 'base64'
 
 module Vendors
   module X
@@ -21,17 +21,17 @@ module Vendors
     # user access token comes from the SocialAccount passed in.
     # See docs/integrations/x-twitter.md.
     class Client < Vendors::Base
-      AUTHORIZE_URL = "https://x.com/i/oauth2/authorize"
-      API_HOST      = "https://api.x.com"
+      AUTHORIZE_URL = 'https://x.com/i/oauth2/authorize'
+      API_HOST      = 'https://api.x.com'
 
       def initialize(social_account: nil, access_token: nil)
         @social_account = social_account
         @access_token   = access_token || social_account&.user_access_token
         @client_id      = require_credential!(
-          credential(:x, :client_id, env: "X_CLIENT_ID"), "x.client_id"
+          credential(:x, :client_id, env: 'X_CLIENT_ID'), 'x.client_id'
         )
-        @client_secret  = require_credential!(
-          credential(:x, :client_secret, env: "X_CLIENT_SECRET"), "x.client_secret"
+        @client_secret = require_credential!(
+          credential(:x, :client_secret, env: 'X_CLIENT_SECRET'), 'x.client_secret'
         )
       end
 
@@ -43,9 +43,9 @@ module Vendors
       # HTTP Basic base64(client_id:client_secret).
       def token_request(form)
         conn = build_connection(API_HOST, headers: token_headers)
-        handle(conn.post("/2/oauth2/token") do |req|
-          req.headers["Content-Type"] = "application/x-www-form-urlencoded"
-          req.headers["Authorization"] = basic_auth_header
+        handle(conn.post('/2/oauth2/token') do |req|
+          req.headers['Content-Type'] = 'application/x-www-form-urlencoded'
+          req.headers['Authorization'] = basic_auth_header
           req.body = URI.encode_www_form(form)
         end)
       end
@@ -70,7 +70,7 @@ module Vendors
       def media_command(form)
         uri = URI.parse("#{API_HOST}/2/media/upload")
         request = Net::HTTP::Post.new(uri)
-        request["Authorization"] = "Bearer #{token!}"
+        request['Authorization'] = "Bearer #{token!}"
         request.set_form_data(form)
         run_media_request(uri, request)
       end
@@ -79,35 +79,35 @@ module Vendors
       def media_append(media_id:, segment_index:, chunk:)
         uri = URI.parse("#{API_HOST}/2/media/upload")
         request = Net::HTTP::Post.new(uri)
-        request["Authorization"] = "Bearer #{token!}"
+        request['Authorization'] = "Bearer #{token!}"
         request.set_form(
           [
-            ["command", "APPEND"],
-            ["media_id", media_id.to_s],
-            ["segment_index", segment_index.to_s],
-            ["media", chunk, { filename: "blob", content_type: "application/octet-stream" }]
+            %w[command APPEND],
+            ['media_id', media_id.to_s],
+            ['segment_index', segment_index.to_s],
+            ['media', chunk, { filename: 'blob', content_type: 'application/octet-stream' }]
           ],
-          "multipart/form-data"
+          'multipart/form-data'
         )
         run_media_request(uri, request)
       end
 
       def media_status(media_id)
         uri = URI.parse("#{API_HOST}/2/media/upload")
-        uri.query = URI.encode_www_form(command: "STATUS", media_id: media_id)
+        uri.query = URI.encode_www_form(command: 'STATUS', media_id: media_id)
         request = Net::HTTP::Get.new(uri)
-        request["Authorization"] = "Bearer #{token!}"
+        request['Authorization'] = "Bearer #{token!}"
         run_media_request(uri, request)
       end
 
       private
 
       def token!
-        require_credential!(@access_token, "x access_token (SocialAccount#user_access_token)")
+        require_credential!(@access_token, 'x access_token (SocialAccount#user_access_token)')
       end
 
       def token_headers
-        { "Content-Type" => "application/x-www-form-urlencoded" }
+        { 'Content-Type' => 'application/x-www-form-urlencoded' }
       end
 
       def basic_auth_header
@@ -132,7 +132,7 @@ module Vendors
           when 500..599 then Vendors::Base::ServerError
           else Vendors::Base::Error
           end
-        raise klass.new("X media upload failed", status: response.code.to_i, body: body)
+        raise klass.new('X media upload failed', status: response.code.to_i, body: body)
       end
 
       def parse_json(raw)
@@ -140,7 +140,7 @@ module Vendors
 
         JSON.parse(raw)
       rescue JSON::ParserError
-        { "raw" => raw }
+        { 'raw' => raw }
       end
     end
   end

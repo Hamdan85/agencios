@@ -8,7 +8,7 @@ module Vendors
       class SendToUser
         def self.call(...) = new(...).call
 
-        def initialize(user:, title:, body:, path: "/")
+        def initialize(user:, title:, body:, path: '/')
           @user = user
           @title = title
           @body = body

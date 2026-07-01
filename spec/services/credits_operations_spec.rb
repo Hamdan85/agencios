@@ -1,28 +1,28 @@
 # frozen_string_literal: true
 
-require "rails_helper"
+require 'rails_helper'
 
-RSpec.describe "Operations::Credits", type: :model do
-  let(:workspace) { Workspace.create!(name: "W", slug: "w-#{SecureRandom.hex(4)}") }
+RSpec.describe 'Operations::Credits', type: :model do
+  let(:workspace) { Workspace.create!(name: 'W', slug: "w-#{SecureRandom.hex(4)}") }
 
   def balance = Operations::Credits::EnsureWallet.call(workspace: workspace).reload.available
 
-  describe "Pricing.credits_for" do
-    it "charges 1 credit per image and 0 for carousel" do
+  describe 'Pricing.credits_for' do
+    it 'charges 1 credit per image and 0 for carousel' do
       expect(Pricing.credits_for(kind: :image)).to eq(1)
       expect(Pricing.credits_for(kind: :carousel)).to eq(0)
     end
 
-    it "charges standard vs photoreal video per second" do
+    it 'charges standard vs photoreal video per second' do
       expect(Pricing.credits_for(kind: :video, seconds: 30)).to eq(16)                       # 8/15 * 30
-      expect(Pricing.credits_for(kind: :video, seconds: 30, engine: "avatar_iv")).to eq(60)  # 2 * 30
+      expect(Pricing.credits_for(kind: :video, seconds: 30, engine: 'avatar_iv')).to eq(60)  # 2 * 30
     end
   end
 
-  describe "Grant + Purchase + Debit ordering" do
-    it "spends granted credits before purchased" do
+  describe 'Grant + Purchase + Debit ordering' do
+    it 'spends granted credits before purchased' do
       Operations::Credits::Grant.call(workspace: workspace, amount: 10, expires_at: 1.month.from_now)
-      Operations::Credits::Purchase.call(workspace: workspace, amount: 5, reference: "p1")
+      Operations::Credits::Purchase.call(workspace: workspace, amount: 5, reference: 'p1')
       expect(balance).to eq(15)
 
       Operations::Credits::Debit.call(workspace: workspace, amount: 12)
@@ -32,17 +32,17 @@ RSpec.describe "Operations::Credits", type: :model do
       expect(balance).to eq(3)
     end
 
-    it "raises InsufficientCredits and leaves the balance untouched" do
-      Operations::Credits::Purchase.call(workspace: workspace, amount: 2, reference: "p2")
-      expect {
+    it 'raises InsufficientCredits and leaves the balance untouched' do
+      Operations::Credits::Purchase.call(workspace: workspace, amount: 2, reference: 'p2')
+      expect do
         Operations::Credits::Debit.call(workspace: workspace, amount: 5)
-      }.to raise_error(Operations::Errors::InsufficientCredits)
+      end.to raise_error(Operations::Errors::InsufficientCredits)
       expect(balance).to eq(2)
     end
   end
 
-  describe "Grant resets and expires the previous allotment" do
-    it "replaces granted credits (use-it-or-lose-it)" do
+  describe 'Grant resets and expires the previous allotment' do
+    it 'replaces granted credits (use-it-or-lose-it)' do
       Operations::Credits::Grant.call(workspace: workspace, amount: 10, expires_at: 1.month.from_now)
       Operations::Credits::Debit.call(workspace: workspace, amount: 4)
       Operations::Credits::Grant.call(workspace: workspace, amount: 8, expires_at: 1.month.from_now)
@@ -50,19 +50,19 @@ RSpec.describe "Operations::Credits", type: :model do
     end
   end
 
-  describe "Purchase idempotency" do
-    it "does not double-credit the same reference" do
-      Operations::Credits::Purchase.call(workspace: workspace, amount: 50, reference: "dup")
-      Operations::Credits::Purchase.call(workspace: workspace, amount: 50, reference: "dup")
+  describe 'Purchase idempotency' do
+    it 'does not double-credit the same reference' do
+      Operations::Credits::Purchase.call(workspace: workspace, amount: 50, reference: 'dup')
+      Operations::Credits::Purchase.call(workspace: workspace, amount: 50, reference: 'dup')
       expect(balance).to eq(50)
     end
   end
 
-  describe "Refund" do
-    it "returns the exact per-bucket amounts a generation debit took" do
+  describe 'Refund' do
+    it 'returns the exact per-bucket amounts a generation debit took' do
       Operations::Credits::Grant.call(workspace: workspace, amount: 10, expires_at: 1.month.from_now)
-      Operations::Credits::Purchase.call(workspace: workspace, amount: 5, reference: "r1")
-      gen = workspace.generations.create!(kind: :video, status: :processing, provider: "heygen")
+      Operations::Credits::Purchase.call(workspace: workspace, amount: 5, reference: 'r1')
+      gen = workspace.generations.create!(kind: :video, status: :processing, provider: 'heygen')
       Operations::Credits::Debit.call(workspace: workspace, amount: 12, generation: gen)
       expect(balance).to eq(3)
 
@@ -72,17 +72,17 @@ RSpec.describe "Operations::Credits", type: :model do
       expect(wallet.purchased_balance).to eq(5)
     end
 
-    it "is idempotent" do
-      Operations::Credits::Purchase.call(workspace: workspace, amount: 10, reference: "r2")
-      gen = workspace.generations.create!(kind: :image, status: :processing, provider: "google_banana")
+    it 'is idempotent' do
+      Operations::Credits::Purchase.call(workspace: workspace, amount: 10, reference: 'r2')
+      gen = workspace.generations.create!(kind: :image, status: :processing, provider: 'google_banana')
       Operations::Credits::Debit.call(workspace: workspace, amount: 1, generation: gen)
       2.times { Operations::Credits::Refund.call(generation: gen) }
       expect(balance).to eq(10)
     end
   end
 
-  describe "Godfathered workspaces never debit" do
-    it "is a no-op debit" do
+  describe 'Godfathered workspaces never debit' do
+    it 'is a no-op debit' do
       workspace.update!(godfathered: true)
       expect(Operations::Credits::Debit.call(workspace: workspace, amount: 999)).to eq(:godfathered)
     end

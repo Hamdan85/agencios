@@ -37,7 +37,7 @@ class ReconcileSeatsJob < ApplicationJob
 
     client = Vendors::Stripe::Client.new
     stripe_sub = client.retrieve_subscription(
-      subscription.stripe_subscription_id, expand: ["items.data.price"]
+      subscription.stripe_subscription_id, expand: ['items.data.price']
     )
 
     item = licensed_item(stripe_sub, client)
@@ -47,7 +47,7 @@ class ReconcileSeatsJob < ApplicationJob
     return if desired <= 0
     return if item.quantity == desired
 
-    client.update_subscription_item(item.id, quantity: desired, proration_behavior: "create_prorations")
+    client.update_subscription_item(item.id, quantity: desired, proration_behavior: 'create_prorations')
     subscription.update!(seats: desired)
   end
 

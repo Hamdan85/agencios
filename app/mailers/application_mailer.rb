@@ -2,7 +2,7 @@
 
 class ApplicationMailer < ActionMailer::Base
   default from: SystemConfig.mailer_from
-  layout "mailer"
+  layout 'mailer'
 
   # Discard delivery when a GlobalID-serialized argument (e.g. the mention
   # recipient) no longer exists at perform time, instead of failing forever.

@@ -23,7 +23,7 @@ module Vendors
 
         def call
           Vendors::Youtube::Client.new.authorize_url(
-            scope: SCOPES.join(" "),
+            scope: SCOPES.join(' '),
             redirect_uri: @redirect_uri,
             state: @state
           )

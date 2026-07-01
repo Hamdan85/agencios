@@ -32,9 +32,9 @@ module Vendors
 
         def call
           init = client.init_video(post_info: @post_info, source_info: source_info)
-          data = init["data"] || {}
-          publish_id = data["publish_id"]
-          upload_url = data["upload_url"]
+          data = init['data'] || {}
+          publish_id = data['publish_id']
+          upload_url = data['upload_url']
 
           # FILE_UPLOAD path: TikTok hands back an upload_url (valid 1h). PULL_FROM_URL
           # has no upload_url — TikTok downloads from video_url itself.
@@ -50,15 +50,15 @@ module Vendors
         end
 
         def source_info
-          return { source: "PULL_FROM_URL", video_url: @video_url } if @video_url
+          return { source: 'PULL_FROM_URL', video_url: @video_url } if @video_url
 
           size = @video_bytes.bytesize
           if size < MIN_CHUNK
             # Whole-file upload: single chunk equal to the file size (HTTP 201 on PUT).
-            { source: "FILE_UPLOAD", video_size: size, chunk_size: size, total_chunk_count: 1 }
+            { source: 'FILE_UPLOAD', video_size: size, chunk_size: size, total_chunk_count: 1 }
           else
             chunk = CHUNK_SIZE
-            { source: "FILE_UPLOAD", video_size: size, chunk_size: chunk,
+            { source: 'FILE_UPLOAD', video_size: size, chunk_size: chunk,
               total_chunk_count: [size / chunk, 1].max }
           end
         end
@@ -72,18 +72,18 @@ module Vendors
           (0...total).each do |index|
             first = index * chunk
             # Final chunk swallows any remainder (may exceed chunk_size, up to 128 MB).
-            last = (index == total - 1) ? size - 1 : (first + chunk - 1)
+            last = index == total - 1 ? size - 1 : (first + chunk - 1)
             slice = @video_bytes.byteslice(first, last - first + 1)
             response = client.upload_chunk(
               upload_url: upload_url,
               bytes: slice,
               content_range: "bytes #{first}-#{last}/#{size}"
             )
-            unless [200, 201, 206].include?(response.status)
-              raise Vendors::Base::Error.new(
-                "TikTok chunk upload failed (HTTP #{response.status})", status: response.status
-              )
-            end
+            next if [200, 201, 206].include?(response.status)
+
+            raise Vendors::Base::Error.new(
+              "TikTok chunk upload failed (HTTP #{response.status})", status: response.status
+            )
           end
         end
       end

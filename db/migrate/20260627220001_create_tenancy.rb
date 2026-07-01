@@ -14,18 +14,18 @@ class CreateTenancy < ActiveRecord::Migration[8.1]
       t.datetime :confirmed_at
       t.timestamps
     end
-    add_index :users, "lower(email)", unique: true, name: "index_users_on_lower_email"
-    add_index :users, :google_uid, unique: true, where: "google_uid IS NOT NULL"
+    add_index :users, 'lower(email)', unique: true, name: 'index_users_on_lower_email'
+    add_index :users, :google_uid, unique: true, where: 'google_uid IS NOT NULL'
 
     create_table :workspaces do |t|
       t.string :name, null: false
       t.string :slug, null: false
-      t.string :timezone, null: false, default: "America/Sao_Paulo"
-      t.string :locale, null: false, default: "pt-BR"
+      t.string :timezone, null: false, default: 'America/Sao_Paulo'
+      t.string :locale, null: false, default: 'pt-BR'
       t.text   :brand_voice
       t.string :default_handle
-      t.string :brand_primary_color, default: "#7C3AED"
-      t.string :brand_secondary_color, default: "#F59E0B"
+      t.string :brand_primary_color, default: '#7C3AED'
+      t.string :brand_secondary_color, default: '#F59E0B'
       t.timestamps
     end
     add_index :workspaces, :slug, unique: true
@@ -68,7 +68,7 @@ class CreateTenancy < ActiveRecord::Migration[8.1]
       t.integer  :plan, null: false, default: 0
       t.string   :stripe_customer_id
       t.string   :stripe_subscription_id
-      t.string   :status, default: "trialing"
+      t.string   :status, default: 'trialing'
       t.integer  :seats, null: false, default: 1
       t.datetime :trial_ends_at
       t.datetime :current_period_end

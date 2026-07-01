@@ -10,7 +10,7 @@ module Controllers
       def call
         require_manager!
         workspace.clients.find(@params[:id]).destroy!
-        { message: "Cliente removido." }
+        { message: 'Cliente removido.' }
       end
     end
   end

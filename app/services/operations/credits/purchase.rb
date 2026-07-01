@@ -28,11 +28,11 @@ module Operations
 
           @workspace.credit_transactions.create!(
             user: @user,
-            kind: "purchase", bucket: "purchased",
+            kind: 'purchase', bucket: 'purchased',
             amount: @amount, granted_delta: 0, purchased_delta: @amount,
             balance_after: wallet.granted_balance + wallet.purchased_balance,
             expires_at: @expires_at,
-            description: @description || "Compra de créditos",
+            description: @description || 'Compra de créditos',
             metadata: { reference: @reference }
           )
           wallet
@@ -45,7 +45,7 @@ module Operations
         return false if @reference.blank?
 
         @workspace.credit_transactions
-                  .where(kind: "purchase")
+                  .where(kind: 'purchase')
                   .where("metadata->>'reference' = ?", @reference)
                   .exists?
       end

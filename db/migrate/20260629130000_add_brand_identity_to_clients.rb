@@ -9,8 +9,8 @@ class AddBrandIdentityToClients < ActiveRecord::Migration[8.1]
   def up
     add_column :clients, :brand_voice, :text
     add_column :clients, :default_handle, :string
-    add_column :clients, :brand_primary_color, :string, default: "#7C3AED", null: false
-    add_column :clients, :brand_secondary_color, :string, default: "#F59E0B", null: false
+    add_column :clients, :brand_primary_color, :string, default: '#7C3AED', null: false
+    add_column :clients, :brand_secondary_color, :string, default: '#F59E0B', null: false
 
     # Lift any brand_voice that was captured inside the positioning jsonb.
     execute <<~SQL.squish

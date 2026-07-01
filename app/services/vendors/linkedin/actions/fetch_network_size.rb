@@ -20,7 +20,7 @@ module Vendors
           encoded = Vendors::Linkedin::Client.encode_urn(@org_urn)
           client.rest_get(
             "/rest/networkSizes/#{encoded}",
-            edgeType: "CompanyFollowedByMember"
+            edgeType: 'CompanyFollowedByMember'
           )
         end
       end

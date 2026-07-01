@@ -19,7 +19,7 @@ module Operations
         attrs.merge!(mirrored_columns(clean))
 
         @ticket.update!(attrs)
-        Broadcaster.ticket(@ticket, "ticket_updated", status: @ticket.status)
+        Broadcaster.ticket(@ticket, 'ticket_updated', status: @ticket.status)
         @ticket
       end
 
@@ -30,17 +30,17 @@ module Operations
       # chips / filters (which read the single column) keep working.
       def mirrored_columns(clean)
         cols = {}
-        if clean.key?("creative_types")
-          types = Array(clean["creative_types"]).map(&:to_s).compact_blank
+        if clean.key?('creative_types')
+          types = Array(clean['creative_types']).map(&:to_s).compact_blank
           cols[:creative_types] = types
           cols[:creative_type] = types.first
-        elsif clean.key?("creative_type")
-          cols[:creative_type] = clean["creative_type"]
-          cols[:creative_types] = Array(clean["creative_type"]).map(&:to_s).compact_blank
+        elsif clean.key?('creative_type')
+          cols[:creative_type] = clean['creative_type']
+          cols[:creative_types] = Array(clean['creative_type']).map(&:to_s).compact_blank
         end
-        cols[:channels] = Array(clean["channels"]).compact_blank if clean.key?("channels")
-        cols[:scheduled_at] = clean["scheduled_at"] if clean.key?("scheduled_at")
-        cols[:due_date] = clean["due_date"] if clean.key?("due_date")
+        cols[:channels] = Array(clean['channels']).compact_blank if clean.key?('channels')
+        cols[:scheduled_at] = clean['scheduled_at'] if clean.key?('scheduled_at')
+        cols[:due_date] = clean['due_date'] if clean.key?('due_date')
         cols
       end
     end

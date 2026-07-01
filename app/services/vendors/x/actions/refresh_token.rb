@@ -22,15 +22,15 @@ module Vendors
         def call
           client = Vendors::X::Client.new(social_account: @social_account)
           body = client.token_request(
-            grant_type: "refresh_token",
+            grant_type: 'refresh_token',
             refresh_token: @social_account.refresh_token,
             client_id: client.client_id
           )
 
           {
-            user_access_token: body["access_token"],
-            refresh_token: body["refresh_token"] || @social_account.refresh_token,
-            token_expires_at: token_expires_at(body["expires_in"])
+            user_access_token: body['access_token'],
+            refresh_token: body['refresh_token'] || @social_account.refresh_token,
+            token_expires_at: token_expires_at(body['expires_in'])
           }
         end
 

@@ -9,7 +9,7 @@ module BillingSpecHelpers
   # Simulate a paid, card-on-file subscription (post-checkout state).
   def activate_billing(workspace)
     sub = workspace.subscription || workspace.build_subscription(plan: :solo, seats: 1)
-    sub.update!(status: "active", card_on_file: true, current_period_end: 30.days.from_now)
+    sub.update!(status: 'active', card_on_file: true, current_period_end: 30.days.from_now)
     workspace
   end
 

@@ -6,8 +6,8 @@
 class Ticket < ApplicationRecord
   belongs_to :workspace
   belongs_to :project
-  belongs_to :assignee, class_name: "User", optional: true
-  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :assignee, class_name: 'User', optional: true
+  belongs_to :created_by, class_name: 'User', optional: true
   # The strategy-planner session that created this ticket, when it came from an
   # applied content plan (nil for hand-made tickets). Lets a re-apply of an
   # edited plan rewrite its batch from scratch.
@@ -25,8 +25,8 @@ class Ticket < ApplicationRecord
   # INCOMING (e.g. "#9 is an iteration of this").
   has_many :ticket_relations, dependent: :destroy
   has_many :related_tickets, through: :ticket_relations
-  has_many :inverse_ticket_relations, class_name: "TicketRelation",
-           foreign_key: :related_ticket_id, dependent: :destroy
+  has_many :inverse_ticket_relations, class_name: 'TicketRelation',
+                                      foreign_key: :related_ticket_id, dependent: :destroy
 
   # `scopes: false` — the `scoping` status would otherwise generate a
   # `Ticket.scoping` scope that clashes with ActiveRecord::Relation#scoping.
@@ -47,13 +47,13 @@ class Ticket < ApplicationRecord
 
   # User-facing PT-BR labels (used in system note copy + frontend label map).
   STATUS_LABELS = {
-    "ideation" => "Ideação",
-    "scoping" => "Escopo",
-    "production" => "Produção",
-    "scheduled" => "Postagem",
-    "published" => "No ar",
-    "retrospective" => "Retrospectiva",
-    "done" => "Concluído"
+    'ideation' => 'Ideação',
+    'scoping' => 'Escopo',
+    'production' => 'Produção',
+    'scheduled' => 'Postagem',
+    'published' => 'No ar',
+    'retrospective' => 'Retrospectiva',
+    'done' => 'Concluído'
   }.freeze
 
   validates :status, presence: true
@@ -66,8 +66,8 @@ class Ticket < ApplicationRecord
   # `due_date` is set. Feeds the daily ticket digest (Operations::Digests).
   scope :due_or_overdue, lambda {
     where(
-      "(due_date IS NOT NULL AND due_date <= :today) OR " \
-      "(due_date IS NULL AND scheduled_at IS NOT NULL AND scheduled_at::date <= :today)",
+      '(due_date IS NOT NULL AND due_date <= :today) OR ' \
+      '(due_date IS NULL AND scheduled_at IS NOT NULL AND scheduled_at::date <= :today)',
       today: Date.current
     )
   }
@@ -93,7 +93,7 @@ class Ticket < ApplicationRecord
   end
 
   def display_title
-    title.presence || [creative_type, project&.name].compact.join(" · ").presence || "Sem título"
+    title.presence || [creative_type, project&.name].compact.join(' · ').presence || 'Sem título'
   end
 
   def summary_for(some_status)
@@ -109,7 +109,7 @@ class Ticket < ApplicationRecord
   # field bag; the top-level column mirrors it (and the legacy single column) so
   # board chips / filters keep working.
   def creative_types_list
-    list = Array(fields_for("scoping")["creative_types"]).map(&:to_s).compact_blank
+    list = Array(fields_for('scoping')['creative_types']).map(&:to_s).compact_blank
     list = Array(creative_types).map(&:to_s).compact_blank if list.blank?
     list.presence || Array(creative_type).map(&:to_s).compact_blank
   end

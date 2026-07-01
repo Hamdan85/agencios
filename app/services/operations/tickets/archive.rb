@@ -20,11 +20,11 @@ module Operations
 
         Operations::Notes::Create.call(
           ticket: @ticket, user: nil, kind: :system,
-          body: @archived ? "Ticket arquivado." : "Ticket restaurado."
+          body: @archived ? 'Ticket arquivado.' : 'Ticket restaurado.'
         )
 
-        Broadcaster.ticket(@ticket, @archived ? "archived" : "unarchived")
-        Broadcaster.board(@ticket.workspace_id, "card_archived",
+        Broadcaster.ticket(@ticket, @archived ? 'archived' : 'unarchived')
+        Broadcaster.board(@ticket.workspace_id, 'card_archived',
                           ticket_id: @ticket.id, archived: @archived)
         @ticket
       end

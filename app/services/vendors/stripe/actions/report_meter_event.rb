@@ -19,8 +19,8 @@ module Vendors
         # Maps Generation kind → the meter's `event_name`. Only carousel/video are
         # metered; image generation is tracked but never sent here.
         EVENT_NAMES = {
-          "carousel" => "carousel_generation",
-          "video" => "video_generation"
+          'carousel' => 'carousel_generation',
+          'video' => 'video_generation'
         }.freeze
 
         def initialize(generation, client: nil)

@@ -22,11 +22,11 @@ module Vendors
           body = Vendors::TikTok::Client.new.refresh(refresh_token: @social_account.refresh_token)
 
           {
-            user_access_token: body["access_token"],
-            refresh_token: body["refresh_token"],
-            token_expires_at: expires_at(body["expires_in"]),
-            refresh_token_expires_at: expires_at(body["refresh_expires_in"]),
-            scopes: scopes_from(body["scope"])
+            user_access_token: body['access_token'],
+            refresh_token: body['refresh_token'],
+            token_expires_at: expires_at(body['expires_in']),
+            refresh_token_expires_at: expires_at(body['refresh_expires_in']),
+            scopes: scopes_from(body['scope'])
           }
         end
 
@@ -37,7 +37,7 @@ module Vendors
         end
 
         def scopes_from(scope)
-          scope.to_s.split(",").map(&:strip).reject(&:empty?)
+          scope.to_s.split(',').map(&:strip).reject(&:empty?)
         end
       end
     end

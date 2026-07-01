@@ -18,7 +18,7 @@ module Operations
 
       def call
         builder = Prompts::ClientPositioning.new(brief: @brief, name: @name)
-        text = AiAdapter.complete(builder, max_tokens: 900, operation: "synthesize_positioning").to_s
+        text = AiAdapter.complete(builder, max_tokens: 900, operation: 'synthesize_positioning').to_s
 
         parsed = parse(text)
         Client.sanitize_positioning(parsed.presence || fallback)
@@ -43,7 +43,7 @@ module Operations
       def fallback
         return {} if @brief.blank?
 
-        { "one_liner" => @brief.strip[0, 280] }
+        { 'one_liner' => @brief.strip[0, 280] }
       end
     end
   end

@@ -16,7 +16,7 @@ module Vendors
 
         def self.call(...) = new(...).call
 
-        def initialize(social_account:, post_info:, photo_images:, photo_cover_index: 0, post_mode: "DIRECT_POST")
+        def initialize(social_account:, post_info:, photo_images:, photo_cover_index: 0, post_mode: 'DIRECT_POST')
           @social_account = social_account
           @post_info = post_info
           @photo_images = Array(photo_images).first(MAX_IMAGES)
@@ -26,7 +26,7 @@ module Vendors
 
         def call
           body = client.init_content(payload)
-          (body["data"] || {})["publish_id"]
+          (body['data'] || {})['publish_id']
         end
 
         private
@@ -37,11 +37,11 @@ module Vendors
 
         def payload
           {
-            media_type: "PHOTO",
+            media_type: 'PHOTO',
             post_mode: @post_mode, # DIRECT_POST (video.publish) | MEDIA_UPLOAD (video.upload)
             post_info: @post_info,
             source_info: {
-              source: "PULL_FROM_URL",
+              source: 'PULL_FROM_URL',
               photo_cover_index: @photo_cover_index,
               photo_images: @photo_images
             }

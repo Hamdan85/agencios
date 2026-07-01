@@ -8,10 +8,10 @@ module Vendors
   # case (docs/integrations/threads.md).
   module Threads
     class Client < Vendors::Base
-      DEFAULT_GRAPH_VERSION = "v1.0"
+      DEFAULT_GRAPH_VERSION = 'v1.0'
 
-      AUTHORIZE_HOST = "https://threads.net"        # OAuth authorize dialog
-      GRAPH_HOST     = "https://graph.threads.net"  # token exchange, profile, publish
+      AUTHORIZE_HOST = 'https://threads.net'        # OAuth authorize dialog
+      GRAPH_HOST     = 'https://graph.threads.net'  # token exchange, profile, publish
 
       attr_reader :access_token, :graph_version
 
@@ -25,13 +25,13 @@ module Vendors
 
       def app_id
         require_credential!(
-          credential(:meta, :threads_app_id, env: "THREADS_APP_ID"), "meta.threads_app_id"
+          credential(:meta, :threads_app_id, env: 'THREADS_APP_ID'), 'meta.threads_app_id'
         )
       end
 
       def app_secret
         require_credential!(
-          credential(:meta, :threads_app_secret, env: "THREADS_APP_SECRET"), "meta.threads_app_secret"
+          credential(:meta, :threads_app_secret, env: 'THREADS_APP_SECRET'), 'meta.threads_app_secret'
         )
       end
 
@@ -50,7 +50,7 @@ module Vendors
       def post(path, params: {}, token: access_token)
         params = { access_token: token }.merge(params.compact) if token && !params.key?(:access_token)
         handle(form_connection("#{graph_base}/").post(join(path)) do |req|
-          req.headers["Content-Type"] = "application/x-www-form-urlencoded"
+          req.headers['Content-Type'] = 'application/x-www-form-urlencoded'
           req.body = URI.encode_www_form(params)
         end)
       end
@@ -59,7 +59,7 @@ module Vendors
 
       def oauth_post(path, params: {})
         handle(form_connection("#{GRAPH_HOST}/").post(join(path)) do |req|
-          req.headers["Content-Type"] = "application/x-www-form-urlencoded"
+          req.headers['Content-Type'] = 'application/x-www-form-urlencoded'
           req.body = URI.encode_www_form(params)
         end)
       end
@@ -72,7 +72,7 @@ module Vendors
 
       def form_connection(base) = raw_connection(base)
 
-      def join(path) = path.to_s.start_with?("/") ? path.to_s[1..] : path.to_s
+      def join(path) = path.to_s.start_with?('/') ? path.to_s[1..] : path.to_s
     end
   end
 end

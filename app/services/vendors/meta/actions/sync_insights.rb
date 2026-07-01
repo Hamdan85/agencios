@@ -39,12 +39,12 @@ module Vendors
           values = index_insights(body)
 
           {
-            reach: int(values["reach"]),
-            views: int(values["views"]),
-            likes: int(values["likes"]),
-            comments: int(values["comments"]),
-            shares: int(values["shares"]),
-            saves: int(values["saves"]),
+            reach: int(values['reach']),
+            views: int(values['views']),
+            likes: int(values['likes']),
+            comments: int(values['comments']),
+            shares: int(values['shares']),
+            saves: int(values['saves']),
             raw: body
           }
         end
@@ -54,16 +54,16 @@ module Vendors
             social_account: @social_account, post_id: @post.external_post_id
           )
           values = index_insights(body)
-          views = int(values["post_video_views"]) + int(values["post_impressions"])
-          reactions = reactions_total(values["post_reactions_by_type_total"])
+          views = int(values['post_video_views']) + int(values['post_impressions'])
+          reactions = reactions_total(values['post_reactions_by_type_total'])
 
           {
-            reach: int(values["post_impressions_unique"]),
+            reach: int(values['post_impressions_unique']),
             views: views,
             likes: reactions,
-            comments: int(values["post_comments"]),
-            shares: int(values["post_shares"]),
-            saves: int(values["post_saves"]),
+            comments: int(values['post_comments']),
+            shares: int(values['post_shares']),
+            saves: int(values['post_saves']),
             raw: body
           }
         end
@@ -71,13 +71,13 @@ module Vendors
         # Insights come back as data:[{ name:, values:[{ value: }] } | { total_value: }].
         # Reduce to a { name => value } hash, handling both shapes.
         def index_insights(body)
-          Array(body["data"]).each_with_object({}) do |metric, acc|
-            name = metric["name"]
+          Array(body['data']).each_with_object({}) do |metric, acc|
+            name = metric['name']
             acc[name] =
-              if metric.key?("total_value")
-                metric.dig("total_value", "value")
+              if metric.key?('total_value')
+                metric.dig('total_value', 'value')
               else
-                Array(metric["values"]).last&.fetch("value", nil)
+                Array(metric['values']).last&.fetch('value', nil)
               end
           end
         end

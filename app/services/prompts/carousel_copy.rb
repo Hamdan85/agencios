@@ -11,10 +11,10 @@ module Prompts
   # `slides` may be a number (honor it) or nil/"auto" (let the model choose 3–10).
   class CarouselCopy < Base
     OBJECTIVES = {
-      "engagement" => "gerar engajamento (salvamentos, comentários, compartilhamentos)",
-      "reach"      => "ampliar alcance",
-      "conversion" => "gerar conversão (levar à ação/compra)",
-      "education"  => "educar a audiência"
+      'engagement' => 'gerar engajamento (salvamentos, comentários, compartilhamentos)',
+      'reach' => 'ampliar alcance',
+      'conversion' => 'gerar conversão (levar à ação/compra)',
+      'education' => 'educar a audiência'
     }.freeze
 
     def system
@@ -49,11 +49,11 @@ module Prompts
       [
         link_instruction,
         reference_instruction,
-        present_line("Tema", context[:topic]),
-        present_line("Material de apoio", context[:copy_brief]),
-        present_line("Roteiro", context[:script]),
-        present_line("Canais", context[:channels])
-      ].compact.join("\n\n").presence || "Crie um carrossel sobre a marca e sua proposta de valor."
+        present_line('Tema', context[:topic]),
+        present_line('Material de apoio', context[:copy_brief]),
+        present_line('Roteiro', context[:script]),
+        present_line('Canais', context[:channels])
+      ].compact.join("\n\n").presence || 'Crie um carrossel sobre a marca e sua proposta de valor.'
     end
 
     private
@@ -95,7 +95,7 @@ module Prompts
     # A numeric request is honored; nil/"auto" lets the model decide.
     def fixed_count
       raw = context[:slides]
-      return nil if raw.nil? || raw.to_s.strip.downcase.in?(["", "auto"])
+      return nil if raw.nil? || raw.to_s.strip.downcase.in?(['', 'auto'])
 
       raw.to_i.clamp(3, 10)
     end
@@ -103,20 +103,20 @@ module Prompts
     def structure_instruction
       if fixed_count
         "Crie o conteúdo de um carrossel de #{fixed_count} slides: o slide 1 é o " \
-          "GANCHO, os slides do meio entregam UM ponto cada (valor), e o último é o CTA."
+          'GANCHO, os slides do meio entregam UM ponto cada (valor), e o último é o CTA.'
       else
-        "Escolha o número ideal de slides (entre 3 e 10, normalmente 5 a 8) para a " \
-          "mensagem. O slide 1 é o GANCHO, os slides do meio entregam UM ponto cada " \
-          "(valor), e o último é o CTA."
+        'Escolha o número ideal de slides (entre 3 e 10, normalmente 5 a 8) para a ' \
+          'mensagem. O slide 1 é o GANCHO, os slides do meio entregam UM ponto cada ' \
+          '(valor), e o último é o CTA.'
       end
     end
 
     def count_phrase
-      fixed_count ? "de exatamente #{fixed_count} objetos" : "de 3 a 10 objetos"
+      fixed_count ? "de exatamente #{fixed_count} objetos" : 'de 3 a 10 objetos'
     end
 
     def objective_label
-      OBJECTIVES[context[:objective].to_s] || context[:objective].presence || "gerar engajamento"
+      OBJECTIVES[context[:objective].to_s] || context[:objective].presence || 'gerar engajamento'
     end
 
     def present_line(label, value)

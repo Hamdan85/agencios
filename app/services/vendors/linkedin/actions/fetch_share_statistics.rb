@@ -20,13 +20,13 @@ module Vendors
         def call
           client = Vendors::Linkedin::Client.new(social_account: @social_account)
           params = {
-            q: "organizationalEntity",
+            q: 'organizationalEntity',
             organizationalEntity: @org_urn
           }
           # Per-post stats: shares=List(urn%3Ali%3Ashare%3A...). The Rest.li client
           # URL-encodes the value; we pass the List(...) wrapper literally.
           params[:shares] = "List(#{@shares.join(',')})" if @shares
-          client.rest_get("/rest/organizationalEntityShareStatistics", params)
+          client.rest_get('/rest/organizationalEntityShareStatistics', params)
         end
       end
     end

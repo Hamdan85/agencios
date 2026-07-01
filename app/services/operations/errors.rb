@@ -9,14 +9,14 @@ module Operations
 
     # Inviting/adding a seat past the plan's seat limit.
     class SeatLimitReached < Error
-      def initialize(msg = "Limite de assentos do plano atingido.")
+      def initialize(msg = 'Limite de assentos do plano atingido.')
         super
       end
     end
 
     # Workspace billing is not active and the action requires it.
     class BillingRequired < Error
-      def initialize(msg = "Assinatura necessária para esta ação.")
+      def initialize(msg = 'Assinatura necessária para esta ação.')
         super
       end
     end
@@ -28,7 +28,7 @@ module Operations
       def initialize(required: nil, available: nil)
         @required = required
         @available = available
-        super("Créditos insuficientes para esta geração.")
+        super('Créditos insuficientes para esta geração.')
       end
     end
 

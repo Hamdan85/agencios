@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "open-uri"
+require 'open-uri'
 
 module Operations
   module Creatives
@@ -19,11 +19,11 @@ module Operations
       # Per-second HeyGen rates by engine (USD). Standard avatar ≈ $1/min.
       # See docs/integrations/heygen.md §6.
       HEYGEN_RATE_CENTS_PER_SECOND = {
-        "avatar" => 1.667,    # ~$1.00/min standard avatar video
-        "avatar_iv" => 5.0,   # $0.05/sec Avatar IV
-        "avatar_iii" => 4.33  # $0.0433/sec Avatar III photo avatar
+        'avatar' => 1.667,    # ~$1.00/min standard avatar video
+        'avatar_iv' => 5.0,   # $0.05/sec Avatar IV
+        'avatar_iii' => 4.33  # $0.0433/sec Avatar III photo avatar
       }.freeze
-      DEFAULT_HEYGEN_RATE_CENTS_PER_SECOND = HEYGEN_RATE_CENTS_PER_SECOND.fetch("avatar")
+      DEFAULT_HEYGEN_RATE_CENTS_PER_SECOND = HEYGEN_RATE_CENTS_PER_SECOND.fetch('avatar')
 
       def initialize(generation:, video_url: nil, image_url: nil, duration: nil, metadata: {})
         @generation = generation
@@ -79,14 +79,14 @@ module Operations
 
       def file_meta(url)
         if @video_url.present?
-          ["#{@generation.external_id || @generation.id}.mp4", "video/mp4"]
+          ["#{@generation.external_id || @generation.id}.mp4", 'video/mp4']
         else
-          ext = File.extname(URI.parse(url).path).presence || ".png"
-          content_type = ext == ".jpg" || ext == ".jpeg" ? "image/jpeg" : "image/png"
+          ext = File.extname(URI.parse(url).path).presence || '.png'
+          content_type = ['.jpg', '.jpeg'].include?(ext) ? 'image/jpeg' : 'image/png'
           ["#{@generation.external_id || @generation.id}#{ext}", content_type]
         end
       rescue URI::InvalidURIError
-        ["#{@generation.id}.bin", "application/octet-stream"]
+        ["#{@generation.id}.bin", 'application/octet-stream']
       end
 
       # --- cost ----------------------------------------------------------------
@@ -95,8 +95,8 @@ module Operations
         return @generation.cost_cents if @generation.cost_cents.present?
 
         case @generation.kind
-        when "video"
-          duration = (@duration || @generation.result["duration"] || @generation.params["duration"]).to_f
+        when 'video'
+          duration = (@duration || @generation.result['duration'] || @generation.params['duration']).to_f
           rate = HEYGEN_RATE_CENTS_PER_SECOND[engine] || DEFAULT_HEYGEN_RATE_CENTS_PER_SECOND
           (duration * rate).round
         else
@@ -105,7 +105,7 @@ module Operations
       end
 
       def engine
-        (@metadata[:engine] || @generation.params["engine"] || "avatar").to_s
+        (@metadata[:engine] || @generation.params['engine'] || 'avatar').to_s
       end
 
       # --- credits -------------------------------------------------------------
@@ -115,7 +115,7 @@ module Operations
       # if the video came out shorter, charges the difference (best-effort) if
       # longer/photoreal. Images/carousels were charged exactly — nothing to do.
       def reconcile_credits!
-        return unless @generation.kind == "video"
+        return unless @generation.kind == 'video'
 
         actual = Pricing.credits_for(kind: :video, seconds: video_seconds, engine: engine)
         debit = @generation.workspace.credit_transactions
@@ -127,15 +127,15 @@ module Operations
         return if delta.zero?
 
         Operations::Credits::Adjust.call(
-          workspace:  @generation.workspace,
-          amount:     delta,
+          workspace: @generation.workspace,
+          amount: delta,
           generation: @generation,
           description: "Ajuste de créditos do vídeo (#{video_seconds.round}s)"
         )
       end
 
       def video_seconds
-        (@duration || @generation.result["duration"] || @generation.params["duration"] ||
+        (@duration || @generation.result['duration'] || @generation.params['duration'] ||
           Pricing::DEFAULT_VIDEO_SECONDS).to_f
       end
 
@@ -145,19 +145,19 @@ module Operations
       # ledger. Engine-specific rate is already folded into cost_cents, so pass it
       # explicitly. Runs outside a request — resolve tenant from the Generation.
       def log_ai_cost!(cost_cents)
-        return unless @generation.kind == "video"
+        return unless @generation.kind == 'video'
 
-        duration = (@duration || @generation.result["duration"] || @generation.params["duration"]).to_f
+        duration = (@duration || @generation.result['duration'] || @generation.params['duration']).to_f
         Operations::Ai::LogUsage.call(
-          provider:   AiUsageLog::PROVIDER_HEYGEN,
-          operation:  "generate_ugc_video",
-          model:      engine,
-          units:      duration,
-          unit_kind:  AiUsageLog::UNIT_SECOND,
+          provider: AiUsageLog::PROVIDER_HEYGEN,
+          operation: 'generate_ugc_video',
+          model: engine,
+          units: duration,
+          unit_kind: AiUsageLog::UNIT_SECOND,
           cost_cents: cost_cents,
-          subject:    @generation,
-          workspace:  @generation.workspace,
-          user:       @generation.user
+          subject: @generation,
+          workspace: @generation.workspace,
+          user: @generation.user
         )
       end
 
@@ -170,12 +170,12 @@ module Operations
 
       def broadcast!(creative)
         if creative&.ticket
-          Broadcaster.ticket(creative.ticket, "creative_ready", creative_id: creative.id, generation_id: @generation.id)
+          Broadcaster.ticket(creative.ticket, 'creative_ready', creative_id: creative.id, generation_id: @generation.id)
         end
         Broadcaster.generations(
           @generation.workspace_id,
-          "generation_done",
-          id: @generation.id, kind: @generation.kind, status: "completed"
+          'generation_done',
+          id: @generation.id, kind: @generation.kind, status: 'completed'
         )
         notify_owner(creative)
       end
@@ -183,12 +183,13 @@ module Operations
       # Tell whoever requested the generation that their creative is ready (no
       # actor exclusion — they want the completion notice even if they started it).
       def notify_owner(creative)
-        kind_label = { "carousel" => "Carrossel", "video" => "Vídeo", "image" => "Imagem" }[@generation.kind.to_s] || "Criativo"
+        kind_label = { 'carousel' => 'Carrossel', 'video' => 'Vídeo',
+                       'image' => 'Imagem' }[@generation.kind.to_s] || 'Criativo'
         Operations::Push::Notify.call(
           user: @generation.user,
           title: "#{kind_label} pronto ✨",
-          body: "Sua geração foi concluída e já está disponível.",
-          path: creative&.ticket ? "/tickets/#{creative.ticket_id}" : "/estudio"
+          body: 'Sua geração foi concluída e já está disponível.',
+          path: creative&.ticket ? "/tickets/#{creative.ticket_id}" : '/estudio'
         )
 
         owner = @generation.user
@@ -208,10 +209,10 @@ module Operations
 
       def result_payload(url)
         payload = {}
-        payload["video_url"] = url if @video_url.present?
-        payload["image_url"] = url if @image_url.present?
-        payload["duration"] = @duration if @duration
-        payload.merge(@metadata.stringify_keys.slice("thumbnail_url", "gif_url"))
+        payload['video_url'] = url if @video_url.present?
+        payload['image_url'] = url if @image_url.present?
+        payload['duration'] = @duration if @duration
+        payload.merge(@metadata.stringify_keys.slice('thumbnail_url', 'gif_url'))
       end
     end
   end

@@ -18,7 +18,7 @@ module Vendors
         def call
           @client.get(
             "/#{@creation_id}",
-            params: { fields: "status_code,status" }
+            params: { fields: 'status_code,status' }
           )
         end
       end

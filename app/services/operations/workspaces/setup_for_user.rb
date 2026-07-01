@@ -23,10 +23,10 @@ module Operations
         Membership.create!(workspace: workspace, user: @user, role: :owner)
         Setting.create!(workspace: workspace)
         Subscription.create!(
-          workspace:    workspace,
-          plan:         :solo,
-          status:       "incomplete", # awaiting payment — no access until checkout
-          seats:        1,
+          workspace: workspace,
+          plan: :solo,
+          status: 'incomplete', # awaiting payment — no access until checkout
+          seats: 1,
           card_on_file: false
         )
         Operations::Credits::EnsureWallet.call(workspace: workspace)
@@ -41,11 +41,11 @@ module Operations
       end
 
       def default_handle
-        "@#{@user.display_name.parameterize.delete("-")}"
+        "@#{@user.display_name.parameterize.delete('-')}"
       end
 
       def unique_slug(name)
-        base = name.parameterize.presence || "agencia"
+        base = name.parameterize.presence || 'agencia'
         base = base[0, 56]
         candidate = base
         suffix = 1

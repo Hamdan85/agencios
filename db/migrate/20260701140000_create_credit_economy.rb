@@ -28,8 +28,8 @@ class CreateCreditEconomy < ActiveRecord::Migration[8.1]
       # grant | purchase | debit | refund | expire | adjustment
       t.string   :kind,   null: false
       # bucket touched: granted | purchased | mixed
-      t.string   :bucket, null: false, default: "purchased"
-      t.integer  :amount, null: false                 # signed (+ credit, − debit)
+      t.string   :bucket, null: false, default: 'purchased'
+      t.integer  :amount, null: false # signed (+ credit, − debit)
       t.integer  :granted_delta,   null: false, default: 0
       t.integer  :purchased_delta, null: false, default: 0
       t.integer  :balance_after,   null: false, default: 0
