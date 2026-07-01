@@ -103,8 +103,6 @@ ActiveAdmin.register Workspace do
                                                                                      class: 'button', data: { confirm: "Entrar como #{workspace.owner.email}?" })
       end
     end
-
-    active_admin_comments
   end
 
   # ── Godfathered toggle audit ──────────────────────────────────────────────

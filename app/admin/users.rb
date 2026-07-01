@@ -58,8 +58,6 @@ ActiveAdmin.register User do
                                                                                   class: 'button', data: { confirm: "Entrar como #{user.email}?" })
       end
     end
-
-    active_admin_comments
   end
 
   # Guardrail: log any staff-flag change.
