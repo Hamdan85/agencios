@@ -4,10 +4,11 @@ import { PRIORITY_META } from '@/lib/constants'
 import { Card } from '@/components/ui/card'
 import { Avatar } from '@/components/ui/avatar'
 import { ChannelIcons, CreativeTypeChip } from '@/components/ui/iconography'
+import { DateTimePicker } from '@/components/ui/date-picker'
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
-import { dt, date, relativeDay } from '@/lib/formatters'
+import { date, relativeDay } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 import { User, Flag, CalendarClock, CalendarDays, Radio, Wand2, ChevronDown, Check, GitBranch } from 'lucide-react'
 
@@ -110,8 +111,16 @@ export default function MetaCard({ ticket, onUpdate }) {
           </div>
         </Row>
 
+        {/* Agendado — always inline-editable; writes the ticket's scheduled_at
+            column (the same value the "Postagem" step publishes at). */}
         <Row icon={CalendarClock} label="Agendado">
-          <span className="text-sm font-medium text-ink-secondary">{ticket?.scheduled_at ? dt(ticket.scheduled_at) : '—'}</span>
+          <DateTimePicker
+            align="end"
+            placeholder="Agendar…"
+            className="w-48"
+            value={ticket?.scheduled_at ? String(ticket.scheduled_at).slice(0, 16) : ''}
+            onChange={(v) => onUpdate?.({ scheduled_at: v || null })}
+          />
         </Row>
 
         <Row icon={Radio} label="Canais">

@@ -56,6 +56,10 @@ export function useTicketMutations(id) {
       'Criativo adicionado ao ticket!',
       () => qc.invalidateQueries({ queryKey: ['creatives'] }),
     ),
+    // Autopilot ("GO mode"). Estimate is fetched imperatively (mutateAsync) for
+    // the confirm dialog; autopilot launches the run after confirmation.
+    autopilotEstimate: mk(() => ticketsApi.autopilotEstimate(id)),
+    autopilot: mk((payload) => ticketsApi.autopilotStart(id, payload), 'Piloto automático iniciado 🚀'),
     addPost: mk((data) => ticketsApi.createPost(id, data), undefined, () => analytics.track(EVENTS.POST_CREATED)),
     unpublishPost: mk((postId) => ticketsApi.unpublishPost(id, postId), 'Post despublicado.'),
     uploadAttachments: mk(({ files, meta }) => attachmentsApi.create(id, files, meta), 'Arquivo(s) enviado(s)!'),

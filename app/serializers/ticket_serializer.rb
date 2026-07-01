@@ -6,7 +6,8 @@ class TicketSerializer < ActiveModel::Serializer
              :due_date, :scheduled_at, :published_at, :channels, :creative_type, :creative_types,
              :ai_summaries, :fields, :workflow_step, :next_status,
              :project, :assignee, :created_by, :allowed_field_keys, :created_at,
-             :archived, :archived_at, :relations, :connected_channels, :overdue
+             :archived, :archived_at, :relations, :connected_channels, :overdue,
+             :autopilot_eligible, :autopilot_run
 
   def display_title = object.display_title
   def overdue = object.overdue?
@@ -51,6 +52,18 @@ class TicketSerializer < ActiveModel::Serializer
         kind: r.kind }
     end
     outgoing + incoming
+  end
+
+  # Whether the ticket can run on autopilot (every scoped creative type is
+  # auto-generatable) — the GO button is only offered when true.
+  def autopilot_eligible
+    Operations::Autopilot::Eligibility.call(ticket: object)[:eligible]
+  end
+
+  # The in-flight GO run, if any (drives the run chip + disables the button).
+  def autopilot_run
+    run = object.active_autopilot_run
+    run && AutopilotRunSerializer.new(run).as_json
   end
 
   private

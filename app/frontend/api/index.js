@@ -87,6 +87,9 @@ export const ticketsApi = {
   attachCreative: (id, creativeId) => api.post(`/tickets/${id}/creatives/attach`, { creative_id: creativeId }),
   createPost: (id, data) => api.post(`/tickets/${id}/posts`, { post: data }),
   unpublishPost: (id, postId) => api.post(`/tickets/${id}/posts/${postId}/unpublish`),
+  // Autopilot ("GO mode"): estimate the credit cost, then launch the run.
+  autopilotEstimate: (id) => api.post(`/tickets/${id}/autopilot_estimate`),
+  autopilotStart: (id, payload = {}) => api.post(`/tickets/${id}/autopilot_start`, payload),
 }
 
 export const subtasksApi = {
@@ -151,6 +154,9 @@ export const projectsApi = {
   finalize: (id) => api.post(`/projects/${id}/finalize`),
   // Emails a read-only content-scope summary to the given addresses.
   sendScope: (id, recipients) => api.post(`/projects/${id}/send_scope`, { recipients }),
+  // Autopilot ("GO mode") over the whole project — estimate then launch.
+  autopilotEstimate: (id) => api.post(`/projects/${id}/autopilot_estimate`),
+  autopilotStart: (id, payload = {}) => api.post(`/projects/${id}/autopilot_start`, payload),
 }
 
 // End-of-run project audit reports (the finalize deck).

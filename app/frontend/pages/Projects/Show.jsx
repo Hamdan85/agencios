@@ -19,6 +19,7 @@ import { StrategyDrawer } from '@/components/project/StrategyDrawer'
 import { PlanBuildingLoader } from '@/components/project/PlanBuildingLoader'
 import { ProjectFormDialog } from '@/components/project/ProjectFormDialog'
 import { SendScopeDialog } from '@/components/project/SendScopeDialog'
+import AutopilotButton from '@/components/ticket/AutopilotButton'
 import { InvoiceFormDialog } from '@/components/billing/InvoiceFormDialog'
 import { ticketsApi } from '@/api'
 import analytics, { EVENTS } from '@/lib/analytics'
@@ -64,7 +65,7 @@ export default function ProjectShow() {
   const { data: strategySession } = useStrategySession(id)
   const applyStrategy = useApplyStrategy(id)
   const discardStrategy = useDiscardStrategy(id)
-  const { start, finalize, update, destroy, sendScope } = useProjectMutations()
+  const { start, finalize, update, destroy, sendScope, autopilotEstimate, autopilot } = useProjectMutations()
   const { archive, unarchive } = useTicketArchiveMutations()
   const { data: me } = useCurrentUser()
   const manager = canManage(me?.membership?.role)
@@ -242,6 +243,14 @@ export default function ProjectShow() {
               <Button className="w-10 justify-center px-0 sm:w-auto sm:justify-start sm:px-4" aria-label="Iniciar projeto" onClick={handleStart} disabled={start.isPending}>
                 <Play size={16} /> <span className="hidden sm:inline">Iniciar projeto</span>
               </Button>
+            )}
+            {!isCompleted && (
+              <AutopilotButton
+                estimating={autopilotEstimate.isPending}
+                starting={autopilot.isPending}
+                onEstimate={() => autopilotEstimate.mutateAsync(id).then((d) => d?.estimate)}
+                onStart={() => autopilot.mutate({ id, payload: { mode: 'scheduled' } })}
+              />
             )}
             {!isCompleted && !isDraft && (
               <Button className="w-10 justify-center px-0 sm:w-auto sm:justify-start sm:px-4" aria-label="Finalizar projeto" onClick={handleFinalize} disabled={finalize.isPending}>

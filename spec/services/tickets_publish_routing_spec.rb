@@ -63,7 +63,7 @@ RSpec.describe Operations::Tickets::Publish do
     end
   end
 
-  it "posts the cover image standalone on a network that can't attach a thumbnail" do
+  it "drops the thumbnail (no separate post) on a network that can't attach a cover" do
     connect('facebook')
     ticket = ticket_on(%w[facebook])
     reel = creative(ticket, 'reel')
@@ -71,11 +71,41 @@ RSpec.describe Operations::Tickets::Publish do
 
     result = described_class.call(ticket: ticket, user: user, creative_ids: [reel.id, thumb.id])
 
+    # The combined-post rule: the thumbnail rides the video as a cover where
+    # supported (FB isn't) — it is NOT split into its own post.
     media = Post.where(id: result[:posts]).map(&:media)
-    expect(media).to contain_exactly(
-      { 'creative_id' => reel.id.to_s },      # video post, no cover pairing on FB
-      { 'creative_id' => thumb.id.to_s }      # cover falls back to a standalone image post
+    expect(media).to contain_exactly({ 'creative_id' => reel.id.to_s })
+  end
+
+  it 'bundles video + cover + story into ONE Instagram post with a story reshare flag' do
+    connect('instagram')
+    ticket = ticket_on(%w[instagram])
+    reel = creative(ticket, 'reel')
+    thumb = creative(ticket, 'thumbnail')
+    story = creative(ticket, 'story')
+
+    result = described_class.call(ticket: ticket, user: user, creative_ids: [reel.id, thumb.id, story.id])
+
+    posts = Post.where(id: result[:posts]).to_a
+    expect(posts.size).to eq(1)
+    expect(posts.first.media).to eq(
+      'creative_id' => reel.id.to_s,
+      'cover_creative_id' => thumb.id.to_s,
+      'share_to_story' => true
     )
+  end
+
+  it 'gives TikTok the video only — no story reshare (no story API)' do
+    connect('tiktok')
+    ticket = ticket_on(%w[tiktok])
+    reel = creative(ticket, 'reel')
+    story = creative(ticket, 'story')
+
+    result = described_class.call(ticket: ticket, user: user, creative_ids: [reel.id, story.id])
+
+    posts = Post.where(id: result[:posts]).to_a
+    expect(posts.size).to eq(1)
+    expect(posts.first.media).to eq('creative_id' => reel.id.to_s)
   end
 
   it 'skips channels that support none of the selected media' do

@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import StatusStepper from '@/components/ticket/StatusStepper'
 import TicketBody from '@/components/ticket/TicketBody'
+import AutopilotButton from '@/components/ticket/AutopilotButton'
 import {
   ArrowLeft, ArrowRight, ChevronDown, Building2, Ghost, Folder, Layers, AlertTriangle,
 } from 'lucide-react'
@@ -117,8 +118,8 @@ export default function Show() {
             {/* Status jump */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="default" disabled={mut.advance.isPending} className="shrink-0">
-                  <Layers size={15} /> Mover etapa <ChevronDown size={14} />
+                <Button variant="outline" size="default" disabled={mut.advance.isPending} className="shrink-0" aria-label="Mover etapa">
+                  <Layers size={15} /> <span className="hidden sm:inline">Mover etapa</span> <ChevronDown size={14} className="hidden sm:inline" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-52">
@@ -145,8 +146,23 @@ export default function Show() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Advance — hidden on the posting step, where publishing (not a
-                manual move) is what carries the ticket to "No ar". */}
+            {/* GO mode — shown on the ticket view page (and the board drawer),
+                on auto-generatable tickets not yet scheduled. */}
+            {(ticket.autopilot_run?.active ||
+              (ticket.autopilot_eligible && ['ideation', 'scoping', 'production'].includes(status))) && (
+              <span className="shrink-0">
+                <AutopilotButton
+                  run={ticket.autopilot_run}
+                  estimating={mut.autopilotEstimate.isPending}
+                  starting={mut.autopilot.isPending}
+                  onEstimate={() => mut.autopilotEstimate.mutateAsync().then((d) => d?.estimate)}
+                  onStart={() => mut.autopilot.mutate({ mode: 'scheduled' })}
+                />
+              </span>
+            )}
+
+            {/* Advance — always the rightmost action. Hidden on the posting step,
+                where publishing (not a manual move) carries the ticket to "No ar". */}
             {nextStatus && nextMeta && status !== 'scheduled' && (
               <Button
                 onClick={() => mut.advance.mutate({ toStatus: nextStatus })}

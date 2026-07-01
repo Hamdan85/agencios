@@ -47,9 +47,13 @@ export default function PostingPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ticket?.id, JSON.stringify(ticket?.creative_types), ready.length])
 
+  // The scheduled moment is the ticket's `scheduled_at` column (mirrored from
+  // this field bag on save, and also editable from the ticket's "Agendado"
+  // detail row) — fall back to it so both surfaces show the same value.
+  const initialScheduledAt = fields.scheduled_at || ticket?.scheduled_at
   const [selectedByType, setSelectedByType] = useState({})
-  const [mode, setMode] = useState(fields.post_mode || 'immediate')
-  const [scheduledAt, setScheduledAt] = useState(fields.scheduled_at ? String(fields.scheduled_at).slice(0, 16) : '')
+  const [mode, setMode] = useState(fields.post_mode || (initialScheduledAt ? 'scheduled' : 'immediate'))
+  const [scheduledAt, setScheduledAt] = useState(initialScheduledAt ? String(initialScheduledAt).slice(0, 16) : '')
   const [firstComment, setFirstComment] = useState(fields.first_comment || '')
   const [linkInBio, setLinkInBio] = useState(fields.link_in_bio || '')
   const baseCaption = ticket?.fields?.production?.caption || ''

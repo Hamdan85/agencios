@@ -19,6 +19,7 @@ class Ticket < ApplicationRecord
   has_many :posts, dependent: :destroy
   has_many :notes, dependent: :destroy
   has_many :ticket_status_logs, dependent: :destroy
+  has_many :autopilot_runs, dependent: :destroy
 
   # Typed links to other tickets. `ticket_relations` are this ticket's OUTGOING
   # links (e.g. "this is an iteration of #4"); `inverse_ticket_relations` are
@@ -98,6 +99,12 @@ class Ticket < ApplicationRecord
 
   def summary_for(some_status)
     ai_summaries[some_status.to_s]
+  end
+
+  # The in-flight "GO mode" run, if any (the ticket is walking itself). At most
+  # one active run exists at a time (enforced by a unique partial index).
+  def active_autopilot_run
+    autopilot_runs.ticket_runs.active.order(created_at: :desc).first
   end
 
   # Status-namespaced structured field bag (see Tickets::Fields).

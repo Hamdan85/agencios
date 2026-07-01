@@ -19,6 +19,12 @@ module Api
       # POST /api/v1/tickets/:id/publish  { creative_id, mode, scheduled_at }
       def publish  = render_ok(Controllers::Tickets::Publish.call(params:))
 
+      # POST /api/v1/tickets/:id/autopilot_estimate — GO-run credit estimate.
+      def autopilot_estimate = render_ok(Controllers::Autopilot::Estimate.call(params:, target: :ticket))
+
+      # POST /api/v1/tickets/:id/autopilot_start  { mode, scheduled_at } — launch GO.
+      def autopilot_start = render_ok(Controllers::Autopilot::Start.call(params:, target: :ticket))
+
       # PATCH /api/v1/tickets/:id/reorder  { position }
       def reorder  = render_ok(Controllers::Tickets::Reorder.call(params:))
 

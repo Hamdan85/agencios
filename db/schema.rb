@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_01_230000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_01_240000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -140,6 +140,33 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_01_230000) do
     t.index ["uploaded_by_id"], name: "index_attachments_on_uploaded_by_id"
     t.index ["workspace_id", "created_at"], name: "index_attachments_on_workspace_id_and_created_at"
     t.index ["workspace_id"], name: "index_attachments_on_workspace_id"
+  end
+
+  create_table "autopilot_runs", force: :cascade do |t|
+    t.bigint "batch_id"
+    t.datetime "created_at", null: false
+    t.integer "estimated_credits", default: 0, null: false
+    t.string "failure_reason"
+    t.datetime "finished_at"
+    t.string "mode", default: "scheduled", null: false
+    t.jsonb "progress", default: {}, null: false
+    t.datetime "scheduled_at"
+    t.string "scope", default: "ticket", null: false
+    t.integer "spent_credits", default: 0, null: false
+    t.datetime "started_at"
+    t.string "state", default: "pending", null: false
+    t.string "target_status", default: "scheduled", null: false
+    t.bigint "ticket_id"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.bigint "workspace_id", null: false
+    t.index ["batch_id"], name: "index_autopilot_runs_on_batch_id"
+    t.index ["ticket_id", "state"], name: "index_autopilot_runs_on_ticket_id_and_state"
+    t.index ["ticket_id"], name: "index_autopilot_runs_on_ticket_id"
+    t.index ["ticket_id"], name: "index_autopilot_runs_one_active_per_ticket", unique: true, where: "(((scope)::text = 'ticket'::text) AND ((state)::text = ANY ((ARRAY['pending'::character varying, 'scoping'::character varying, 'generating'::character varying, 'awaiting_generation'::character varying, 'publishing'::character varying])::text[])))"
+    t.index ["user_id"], name: "index_autopilot_runs_on_user_id"
+    t.index ["workspace_id", "state"], name: "index_autopilot_runs_on_workspace_id_and_state"
+    t.index ["workspace_id"], name: "index_autopilot_runs_on_workspace_id"
   end
 
   create_table "charges", force: :cascade do |t|
@@ -741,6 +768,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_01_230000) do
   add_foreign_key "attachments", "tickets"
   add_foreign_key "attachments", "users", column: "uploaded_by_id"
   add_foreign_key "attachments", "workspaces"
+  add_foreign_key "autopilot_runs", "tickets"
+  add_foreign_key "autopilot_runs", "users"
+  add_foreign_key "autopilot_runs", "workspaces"
   add_foreign_key "charges", "invoices"
   add_foreign_key "charges", "workspaces"
   add_foreign_key "clients", "workspaces"

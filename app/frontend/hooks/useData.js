@@ -144,6 +144,9 @@ export function useProjectMutations() {
     finalize: useMutation({ mutationFn: projectsApi.finalize, onSuccess: () => { inv(); toast.success('Projeto finalizado! Gerando o relatório…') }, onError: onErr('Erro ao finalizar o projeto.') }),
     sendScope: useMutation({ mutationFn: ({ id, recipients }) => projectsApi.sendScope(id, recipients), onSuccess: () => toast.success('Escopo enviado ao cliente!'), onError: onErr('Erro ao enviar o escopo.') }),
     destroy: useMutation({ mutationFn: projectsApi.destroy, onSuccess: () => { inv(); toast.success('Projeto excluído.') }, onError: onErr('Erro ao excluir o projeto.') }),
+    // Autopilot ("GO mode") over the whole project.
+    autopilotEstimate: useMutation({ mutationFn: projectsApi.autopilotEstimate, onError: onErr('Erro ao estimar os créditos.') }),
+    autopilot: useMutation({ mutationFn: ({ id, payload }) => projectsApi.autopilotStart(id, payload), onSuccess: () => { inv(); qc.invalidateQueries({ queryKey: ['board'] }); toast.success('Piloto automático iniciado 🚀') }, onError: onErr('Erro ao iniciar o piloto automático.') }),
   }
 }
 

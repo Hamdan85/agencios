@@ -100,58 +100,13 @@ module Operations
           next [] unless account
 
           caption = captions[channel.to_s].presence || base_caption
-          plan_channel(channel).map do |media|
+          Publishers::PostBundle.for_channel(channel: channel, creatives: creatives, skipped: @skipped).map do |media|
             Operations::Posts::Create.call(
               ticket: @ticket, social_account: account,
               scheduled_at: publish_at, caption: caption, media: media
             )
           end
         end
-      end
-
-      # Which creatives actually post on `channel`, as an array of Post `media`
-      # hashes. A cover image (thumbnail/cover type) rides a video post as its
-      # cover on thumbnail-capable networks; otherwise it is a standalone image
-      # post where supported, else dropped. Everything the channel can't receive is
-      # recorded in @skipped.
-      def plan_channel(channel)
-        has_video = creatives.any? { |c| c.media_kind == 'video' && supports?(channel, 'video') }
-        cover = creatives.find { |c| cover_type?(c) }
-        attach_cover = cover && has_video && Publishers::SocialPublisher.thumbnail_capable?(channel)
-
-        specs = []
-        creatives.reject { |c| cover_type?(c) }.each do |c|
-          unless supports?(channel, c.media_kind)
-            @skipped << skip(channel, c)
-            next
-          end
-
-          media = { 'creative_id' => c.id.to_s }
-          media['cover_creative_id'] = cover.id.to_s if attach_cover && c.media_kind == 'video'
-          specs << media
-        end
-
-        if cover && !attach_cover
-          if supports?(channel, cover.media_kind)
-            specs << { 'creative_id' => cover.id.to_s }
-          else
-            @skipped << skip(channel, cover)
-          end
-        end
-
-        specs
-      end
-
-      def cover_type?(creative)
-        Ticket::COVER_TYPES.include?(creative.creative_type.to_s)
-      end
-
-      def supports?(channel, media_kind)
-        Publishers::SocialPublisher.supports?(channel, media_kind)
-      end
-
-      def skip(channel, creative)
-        { channel: channel, creative_type: creative.creative_type, media_kind: creative.media_kind }
       end
 
       def skipped_note

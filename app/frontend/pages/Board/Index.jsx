@@ -246,6 +246,7 @@ export default function Board() {
       <TicketDrawer
         ticketId={drawerTicketId}
         open={!!drawerTicketId}
+        showAutopilot
         onOpenChange={(o) => { if (!o) setDrawerTicketId(null) }}
       />
     </Page>

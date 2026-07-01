@@ -145,6 +145,8 @@ Rails.application.routes.draw do
           post :start
           post :finalize
           post :send_scope
+          post :autopilot_estimate
+          post :autopilot_start
         end
         # End-of-run audit reports (the finalize deck). Listed under a project;
         # a single report is fetched by its own id (the deck page).
@@ -182,6 +184,8 @@ Rails.application.routes.draw do
           post  :generate_subtasks
           post  :archive
           post  :unarchive
+          post  :autopilot_estimate
+          post  :autopilot_start
         end
         resources :subtasks, only: %i[create update destroy]
         resources :creatives, only: %i[index create destroy] do

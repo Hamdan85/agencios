@@ -23,6 +23,8 @@ module Operations
           @generation.workspace_id, 'generation_failed',
           id: @generation.id, kind: @generation.kind, reason: @reason
         )
+        # Halt the owning autopilot run, if any (rescued internally).
+        Operations::Autopilot::OnGenerationSettled.call(generation: @generation)
         @generation
       rescue NameError
         # Broadcaster not loaded in some contexts — the state change still stands.

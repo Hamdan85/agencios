@@ -11,6 +11,11 @@ module Api
       def start   = render_ok(Controllers::Projects::Start.call(params:))
       def finalize = render_ok(Controllers::Projects::Finalize.call(params:))
       def send_scope = render_ok(Controllers::Projects::SendScope.call(params:))
+
+      # Autopilot ("GO mode") over the whole project — estimate then launch a run
+      # per eligible ticket. Blocked if any ticket needs manual creatives.
+      def autopilot_estimate = render_ok(Controllers::Autopilot::Estimate.call(params:, target: :project))
+      def autopilot_start = render_ok(Controllers::Autopilot::Start.call(params:, target: :project))
     end
   end
 end

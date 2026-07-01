@@ -56,6 +56,9 @@ module Operations
         reconcile_credits!
         log_ai_cost!(cost_cents)
         broadcast!(creative)
+        # Re-enter autopilot if this generation belongs to a GO run (rescued
+        # internally — must never break finalization).
+        Operations::Autopilot::OnGenerationSettled.call(generation: @generation)
 
         @generation
       end
