@@ -292,7 +292,7 @@ generation id). Carousel generation produces N slide images using brand identity
 
 **SocialAccount** (one row per connected network per workspace)
 ```
-workspace_id, provider:integer enum { instagram:0, facebook:1, tiktok:2, youtube:3, linkedin:4, x:5, upload_post:6 },
+workspace_id, provider:integer enum { instagram:0, facebook:1, tiktok:2, youtube:3, linkedin:4, x:5, threads:7 },
 external_user_id:string, username:string, page_id:string, ig_user_id:string, channel_id:string,
 member_urn:string, default_org_urn:string,            # provider-specific ids (see each guide)
 user_access_token:text (encrypted), page_access_token:text (encrypted), refresh_token:text (encrypted),
@@ -314,9 +314,9 @@ media:jsonb (asset refs), failure_reason:string
 shares:integer, saves:integer, raw:jsonb`
 
 ### Publishing seam
-`Publishers::SocialPublisher.publish(post)` resolves the provider for `post.social_account` and the
-workspace's per-network mode (direct vs `upload_post`) and calls the right vendor action. Direct is
-default; aggregator is the fallback. Implement each vendor strictly per its guide.
+`Publishers::SocialPublisher.publish(post)` resolves the provider for `post.social_account` and
+calls the right direct vendor action. Every network integrates directly. Implement each vendor
+strictly per its guide.
 
 `Operations::Posts::Publish(post)`:
 1. status → `publishing`; broadcast.
@@ -501,7 +501,7 @@ mirroring the route table — same discipline as adv-os).
    seat reconciliation, gating. *Ship:* paid plans + metered carousel/video usage.
 9. **Client billing (Mercado Pago)** — `Invoice`/`Charge`, Pix, webhooks + reconciliation. *Ship:*
    invoice a client, get paid via Pix.
-10. **Remaining networks** — TikTok, YouTube, LinkedIn, X; Upload-Post aggregator fallback behind
+10. **Remaining networks** — Threads, TikTok, YouTube, LinkedIn, X; each a direct vendor behind
     the publisher seam (per `integrations/*`).
 11. **Internal admin (ActiveAdmin)** — staff console + impersonation + usage credits + audit log
     (per ARCHITECTURE §6).
@@ -527,8 +527,8 @@ mirroring the route table — same discipline as adv-os).
 - **Image generation metering** — tracked now, not billed; revisit if costs warrant a third meter.
 - **Approval/guest portal depth** — guests approve creatives; a richer client review surface is a
   later milestone.
-- **Aggregator vs direct per network** — start direct for Meta; use Upload-Post to ship long-tail
-  networks fast, swap to direct later behind `SocialPublisher` (see `integrations/README.md`).
+- **Direct integration per network** — every network publishes through its own direct vendor behind
+  `SocialPublisher` (see `integrations/README.md`).
 - **HeyGen v2 vs v3** — v2 sunsets 2026-10-31; build the vendor against v3, keep v2 as fallback.
 - **X API tier** — Free is write-only with no analytics; gate X analytics behind a paid tier
   (see `integrations/x-twitter.md`).

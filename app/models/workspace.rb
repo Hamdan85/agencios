@@ -63,8 +63,23 @@ class Workspace < ApplicationRecord
 
   def within_client_limit? = clients.count < client_limit
 
-  # Spendable prepaid credits (0 when godfathered — they never debit).
-  def credits_available = credit_wallet&.available || 0
+  # A godfathered workspace whose monthly generation credits are capped by staff.
+  # (Godfathered without a cap = truly unlimited; non-godfathered ignore the cap.)
+  def credit_limited? = godfathered? && monthly_credit_limit.present?
+
+  # Spendable prepaid credits. Unlimited godfathered workspaces never debit; the
+  # caller should treat their balance as infinite (see the serializer). Capped
+  # godfathered workspaces spend from the monthly allotment like everyone else —
+  # before the cycle's grant lands (fresh month) we report the full cap.
+  def credits_available
+    return credit_wallet&.available || 0 unless credit_limited?
+
+    wallet = credit_wallet
+    return monthly_credit_limit if wallet.nil?
+    return wallet.available if wallet.granted_current?
+
+    monthly_credit_limit + wallet.purchased_balance
+  end
 
   # ── Plan-gated features ──────────────────────────────────────────────
   # Plan tier ordering (matches the Subscription#plan enum).
@@ -79,7 +94,7 @@ class Workspace < ApplicationRecord
   def mcp_enabled? = godfathered? || plan_at_least?(:agencia)
 
   def self.ransackable_attributes(_auth = nil)
-    %w[id name slug godfathered over_seat_limit timezone locale created_at updated_at]
+    %w[id name slug godfathered monthly_credit_limit over_seat_limit timezone locale created_at updated_at]
   end
 
   def self.ransackable_associations(_auth = nil)

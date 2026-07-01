@@ -81,18 +81,23 @@ RSpec.describe 'AI content-strategy planning' do
       session = Operations::Strategy::Start.call(project: @project, user: @user)
       post_at = 10.days.from_now.change(hour: 10)
 
-      fake = Vendors::Anthropic::Client::StreamResult.new(
-        text: 'Aqui está o plano.',
-        tools: [{ name: Prompts::StrategyPlanner::TOOL_NAME, input: sample_plan(post_at) }],
-        usage: { 'input_tokens' => 10, 'output_tokens' => 5 },
-        model: 'claude-sonnet-4-6'
+      # The stream carries only the chat text; a SYNC forced decision then the SYNC
+      # forced plan call produce the proposal.
+      fake = Vendors::Ai::StreamResult.new(
+        text: 'Aqui está o plano.', tools: [],
+        usage: { 'input_tokens' => 10, 'output_tokens' => 5 }, model: 'claude-sonnet-4-6'
       )
-      client = instance_double(Vendors::Anthropic::Client)
-      allow(Vendors::Anthropic::Client).to receive(:new).and_return(client)
+      client = instance_double(Vendors::OpenRouter::Client, provider_key: AiUsageLog::PROVIDER_OPENROUTER)
+      allow(Vendors::Ai).to receive(:client).and_return(client)
       allow(client).to receive(:stream) do |**_kw, &blk|
         blk&.call('Aqui ')
         blk&.call('está o plano.')
         fake
+      end
+      allow(client).to receive(:generate) do |**kw|
+        input = kw[:tool]['name'] == Prompts::StrategyPlanner::DECISION_TOOL ? { 'ready' => true } : sample_plan(post_at)
+        Vendors::Ai::Result.new(text: '', tool_input: input,
+                                usage: { 'input_tokens' => 20, 'output_tokens' => 40 }, model: 'claude-sonnet-4-6')
       end
 
       chunks = []
@@ -108,12 +113,16 @@ RSpec.describe 'AI content-strategy planning' do
 
     it 'keeps asking (no proposal) when the model returns only text' do
       session = Operations::Strategy::Start.call(project: @project, user: @user)
-      fake = Vendors::Anthropic::Client::StreamResult.new(
+      fake = Vendors::Ai::StreamResult.new(
         text: 'Quais redes?', tools: [], usage: {}, model: 'claude-sonnet-4-6'
       )
-      client = instance_double(Vendors::Anthropic::Client)
-      allow(Vendors::Anthropic::Client).to receive(:new).and_return(client)
+      client = instance_double(Vendors::OpenRouter::Client, provider_key: AiUsageLog::PROVIDER_OPENROUTER)
+      allow(Vendors::Ai).to receive(:client).and_return(client)
       allow(client).to receive(:stream).and_return(fake)
+      # The readiness gate says "not yet" → no plan generated.
+      allow(client).to receive(:generate).and_return(
+        Vendors::Ai::Result.new(text: '', tool_input: { 'ready' => false }, usage: {}, model: 'claude-sonnet-4-6')
+      )
 
       result = Operations::Strategy::Converse.call(session: session, content: 'quero postar')
       expect(result.proposal).to be_nil

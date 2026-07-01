@@ -29,6 +29,11 @@ class CreditWallet < ApplicationRecord
 
   def granted_expired? = granted_expires_at.present? && granted_expires_at.past? && granted_balance.positive?
 
+  # True while the current allotment window is still open. Grants always expire at
+  # the end of their period, so a future expiry means this period's grant already
+  # landed (used to decide whether a godfathered monthly refill is due).
+  def granted_current? = granted_expires_at.present? && granted_expires_at.future?
+
   def self.ransackable_attributes(_auth = nil)
     %w[id workspace_id granted_balance purchased_balance granted_expires_at created_at updated_at]
   end

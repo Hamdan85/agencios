@@ -24,9 +24,9 @@
     <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand">Em resumo</p>
     <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">Três passos, na prática</h2>
   </div>
-  <div class="mt-12 grid gap-6 md:grid-cols-3">
+  <div class="mt-12 grid gap-6 md:grid-cols-3" data-reveal-group data-reveal-step="90">
     <% @steps.each do |s| %>
-      <div class="relative rounded-2xl border border-border bg-surface p-7 lift reveal">
+      <div class="relative rounded-2xl border border-border bg-surface p-7 lift reveal reveal-scale">
         <span class="flex size-12 items-center justify-center rounded-2xl font-display text-xl font-black text-white shadow-lg" style="background: <%= s[:color] %>;"><%= s[:n] %></span>
         <h3 class="mt-4 flex items-center gap-2 font-display text-xl font-bold text-ink">
           <span style="color: <%= s[:color] %>;"><%= icon s[:icon], size: 20 %></span> <%= s[:title] %>
@@ -34,6 +34,22 @@
         <p class="mt-2 text-sm leading-relaxed text-ink-muted"><%= s[:desc] %></p>
       </div>
     <% end %>
+  </div>
+
+  <%# ── Strategist head-start ───────────────────────────────────── %>
+  <div class="reveal relative mt-8 overflow-hidden rounded-3xl border border-border bg-shell-gradient p-7 text-white sm:p-9">
+    <div class="anim-aurora pointer-events-none absolute inset-0 bg-aurora opacity-60"></div>
+    <div class="relative flex flex-col items-start gap-5 sm:flex-row sm:items-center">
+      <span class="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-indigo ring-1 ring-white/10"><%= icon "bot", size: 28, stroke: 2.1 %></span>
+      <div class="flex-1">
+        <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-white/50">Antes de tudo</p>
+        <h3 class="mt-1 font-display text-xl font-extrabold sm:text-2xl">Ou deixe o estrategista preencher o mês por você</h3>
+        <p class="mt-1.5 max-w-2xl text-sm text-white/70">Diga a cadência e o objetivo e a IA cria dezenas de tickets já em Ideação — cada um com brief, canais e subtarefas. Você começa o funil com o quadro cheio.</p>
+      </div>
+      <%= link_to feature_path("estrategista"), class: "inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10" do %>
+        Ver o estrategista <%= icon "arrow-right", size: 15 %>
+      <% end %>
+    </div>
   </div>
 </section>
 
@@ -43,12 +59,12 @@
     <div class="text-center reveal">
       <p class="text-xs font-bold uppercase tracking-[0.16em] text-pink">O funil completo</p>
       <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">As sete etapas, uma a uma</h2>
-      <p class="mx-auto mt-3 max-w-lg text-ink-muted">A vista do ticket é contextual: cada etapa mostra seus próprios campos e um resumo do Claude que evolui com o conteúdo.</p>
+      <p class="mx-auto mt-3 max-w-lg text-ink-muted">A vista do ticket é contextual: cada etapa mostra seus próprios campos e um resumo da IA que evolui com o conteúdo.</p>
     </div>
 
-    <ol class="mt-14 space-y-3">
+    <ol class="mt-14 space-y-3" data-reveal-group data-reveal-step="70">
       <% @funnel.each_with_index do |s, i| %>
-        <li class="relative flex gap-5 rounded-2xl border border-border bg-canvas p-5 sm:p-6 reveal">
+        <li class="relative flex gap-5 rounded-2xl border border-border bg-canvas p-5 sm:p-6 reveal reveal-left">
           <%# Step index + connector %>
           <div class="flex flex-col items-center">
             <span class="flex size-12 shrink-0 items-center justify-center rounded-2xl shadow-sm" style="background: <%= soft_bg(s[:color]) %>; color: <%= s[:color] %>;">
@@ -77,11 +93,11 @@
   <div class="grid items-center gap-12 lg:grid-cols-2">
     <div class="reveal">
       <p class="text-xs font-bold uppercase tracking-[0.16em] text-amber">IA em cada etapa</p>
-      <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">O Claude trabalha junto com o time</h2>
+      <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">A IA trabalha junto com o time</h2>
       <p class="mt-4 text-ink-muted">A inteligência artificial não é um botão isolado — ela acompanha o ticket pelo funil, do primeiro brief à retrospectiva final.</p>
       <ul class="mt-8 space-y-5">
         <% [
-          ["sparkles", "#F59E0B", "Resumo contextual", "A cada mudança de etapa, um resumo do Claude é gerado e fica visível no ticket."],
+          ["sparkles", "#F59E0B", "Resumo contextual", "A cada mudança de etapa, um resumo da IA é gerado e fica visível no ticket."],
           ["lightbulb", "#0EA5E9", "Ideias & escopo", "O brief vira ângulos; a ideia escolhida vira um escopo com subtarefas."],
           ["wand-sparkles", "#7C3AED", "Criativos & legendas", "Carrosséis, vídeos e imagens gerados, com legendas adaptadas a cada rede."],
           ["chart-line", "#10B981", "Retrospectiva", "As métricas do post viram aprendizado para o próximo ciclo."],
@@ -101,7 +117,7 @@
       <div class="relative">
         <div class="absolute -inset-6 bg-aurora opacity-50 blur-3xl"></div>
         <div class="relative space-y-3 rounded-3xl border border-border bg-surface p-6 shadow-[0_30px_80px_-40px_rgba(24,18,43,0.45)]">
-          <div class="flex items-center gap-2 text-sm font-bold text-brand"><%= icon "sparkles", size: 16 %> Resumo do Claude · Produção</div>
+          <div class="flex items-center gap-2 text-sm font-bold text-brand"><%= icon "sparkles", size: 16 %> Resumo da IA · Produção</div>
           <div class="rounded-2xl bg-canvas p-4">
             <div class="space-y-2">
               <div class="h-2.5 w-full rounded bg-surface-muted"></div>

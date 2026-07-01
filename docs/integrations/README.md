@@ -24,7 +24,7 @@ agencios backend plan (vendor classes, `SocialAccount`/model columns, operations
 | [tiktok.md](./tiktok.md) | TikTok | Content Posting API; audit required before public posts |
 | [linkedin.md](./linkedin.md) | LinkedIn | Posts API; org posting/analytics need partner approval |
 | [x-twitter.md](./x-twitter.md) | X (Twitter) | v2 API; **Free is write-only, no analytics** |
-| [upload-post.md](./upload-post.md) | Upload-Post (aggregator) | One API → many networks; the fast-path fallback |
+| Threads | Threads (Meta) | Threads API; text + image/video posts, post insights |
 
 ### Creative generation + Google integrations
 
@@ -46,39 +46,34 @@ agencios backend plan (vendor classes, `SocialAccount`/model columns, operations
 
 ---
 
-## Strategy: direct integration vs. aggregator
+## Strategy: direct integration
 
-agencios publishes through one seam — `Publishers::SocialPublisher` — so any network can be served
-either by a **direct** vendor (`Vendors::Meta`, `Vendors::TikTok`, …) or by the **aggregator**
-(`Vendors::UploadPost`). Switching a network is a one-line change in the publisher; callers never
-branch on provider.
+agencios publishes through one seam — `Publishers::SocialPublisher` — and every network is served by
+its own **direct** vendor (`Vendors::Meta`, `Vendors::Threads`, `Vendors::TikTok`, …). Callers never
+branch on provider; the publisher resolves the vendor per network.
 
-**Default: direct.** Prefer building the network's own app/API. You get full control of the
+**Direct, always.** Each network is built against its own app/API. You get full control of the
 publishing payload, deeper and cheaper analytics, no per-post markup, and no third-party dependency
-in the critical path.
-
-**Aggregator (Upload-Post) when:** you need to ship a long-tail network *now*, the network's app
-review is slow or gated (TikTok audit, LinkedIn partner approval, X paid tiers), or analytics depth
-doesn't matter for that network yet. Trade-offs: per-upload cost, a dependency, shallower analytics,
-and ToS exposure. See [upload-post.md](./upload-post.md).
+in the critical path. There is **no aggregator** in the stack.
 
 ### Recommended rollout
 
-1. **Meta first (direct)** — Instagram + Facebook share one app and OAuth; highest-value networks.
-2. **YouTube (direct)** — straightforward OAuth, but watch the upload quota.
-3. **TikTok, LinkedIn, X** — start via **Upload-Post** to ship, because each has a real gate
-   (TikTok audit / LinkedIn partner approval / X paid analytics). Migrate to direct per network as
-   approvals land and analytics needs grow.
+1. **Meta first** — Instagram + Facebook share one app and OAuth; highest-value networks.
+2. **Threads** — Meta-owned; reuses much of the Meta app setup.
+3. **YouTube** — straightforward OAuth, but watch the upload quota.
+4. **TikTok, LinkedIn, X** — each has a real approval gate (TikTok audit / LinkedIn partner approval
+   / X paid analytics); plan for the review lead time when scheduling the work.
 
 ### Effort & gating at a glance
 
-| Network | Direct approval gate | Analytics depth (direct) | Aggregator-friendly |
-|---|---|---|---|
-| Instagram / Facebook | App Review + Business Verification | High | Yes |
-| YouTube | Sensitive-scope verification (~days–weeks) | High | Yes |
-| TikTok | **App audit** (public posts blocked until done) | Medium | Yes (recommended first) |
-| LinkedIn | **Partner approval** for org posting/analytics | Medium (org only) | Yes (recommended first) |
-| X (Twitter) | Paid tier for any read/analytics | Low on Free | Yes (recommended first) |
+| Network | Direct approval gate | Analytics depth |
+|---|---|---|
+| Instagram / Facebook | App Review + Business Verification | High |
+| Threads | Meta app review (shared with Meta) | Medium |
+| YouTube | Sensitive-scope verification (~days–weeks) | High |
+| TikTok | **App audit** (public posts blocked until done) | Medium |
+| LinkedIn | **Partner approval** for org posting/analytics | Medium (org only) |
+| X (Twitter) | Paid tier for any read/analytics | Low on Free |
 
 ---
 

@@ -72,6 +72,19 @@ module Mcp
       t('delete_client', 'Controllers::Clients::Destroy',
         'Permanently delete a client. DESTRUCTIVE.', scope: :write, side_effect: true,
                                                      destructive: true) { |s| s.required(:id).filled(:integer) },
+      t('extract_client_from_url', 'Controllers::Clients::ExtractFromUrl',
+        'Have Claude read a URL (site / social profile) and extract a draft client profile. ' \
+        'Read-only (returns a suggestion; does not persist).') { |s| s.required(:url).filled(:string) },
+      t('preview_client_positioning', 'Controllers::Clients::PositioningPreview',
+        'Synthesize a strategic positioning from a free-text brief via Claude. Read-only preview.') do |s|
+        s.required(:brief).filled(:string)
+        s.optional(:name).filled(:string)
+      end,
+      t('update_client_positioning', 'Controllers::Clients::UpdatePositioning',
+        "Persist a client's strategic positioning. WRITE.", scope: :write, side_effect: true) do |s|
+        s.required(:id).filled(:integer)
+        s.required(:positioning).value(:hash).description('positioning fields (jsonb)')
+      end,
 
       # ── Projects ─────────────────────────────────────────────────────
       t('list_projects', 'Controllers::Projects::Index', 'List projects. Read-only.') do |s|
@@ -106,6 +119,39 @@ module Mcp
       t('delete_project', 'Controllers::Projects::Destroy',
         'Permanently delete a project. DESTRUCTIVE.', scope: :write, side_effect: true,
                                                       destructive: true) { |s| s.required(:id).filled(:integer) },
+      t('start_project', 'Controllers::Projects::Start',
+        'Kick a project off (move it into active production). WRITE.',
+        scope: :write, side_effect: true) { |s| s.required(:id).filled(:integer) },
+      t('finalize_project', 'Controllers::Projects::Finalize',
+        'Close a project and generate its end-of-run audit report (the finalize deck). WRITE.',
+        scope: :write, side_effect: true) { |s| s.required(:id).filled(:integer) },
+      t('send_project_scope', 'Controllers::Projects::SendScope',
+        'Email the project scope to the given recipients. WRITE.',
+        scope: :write, side_effect: true) do |s|
+        s.required(:id).filled(:integer)
+        s.optional(:recipients).array(:string).description('email addresses; defaults to the client contact')
+      end,
+
+      # ── AI content-strategy planning ─────────────────────────────────
+      t('get_strategy', 'Controllers::Strategy::Show',
+        "The project's active strategy-planning session (the proposed content plan). Read-only.") do |s|
+        s.required(:project_id).filled(:integer)
+      end,
+      t('create_strategy', 'Controllers::Strategy::Create',
+        'Start an AI content-strategy planning session for a project. WRITE.',
+        scope: :write, side_effect: true) { |s| s.required(:project_id).filled(:integer) },
+      t('apply_strategy', 'Controllers::Strategy::Apply',
+        'Apply a strategy session — fan the proposed plan out into real tickets. WRITE.',
+        scope: :write, side_effect: true) { |s| s.required(:id).filled(:integer) },
+      t('discard_strategy', 'Controllers::Strategy::Discard',
+        'Discard a strategy session without creating tickets. WRITE.',
+        scope: :write, side_effect: true) { |s| s.required(:id).filled(:integer) },
+
+      # ── Project reports (end-of-run audit decks) ─────────────────────
+      t('list_reports', 'Controllers::Reports::Index',
+        "A project's end-of-run audit reports. Read-only.") { |s| s.required(:project_id).filled(:integer) },
+      t('get_report', 'Controllers::Reports::Show',
+        'Fetch one project report (the finalize deck). Read-only.') { |s| s.required(:id).filled(:integer) },
 
       # ── Board, tickets & funnel ──────────────────────────────────────
       t('get_board', 'Controllers::Board::Index',
@@ -170,6 +216,25 @@ module Mcp
       t('ticket_ai_action', 'Controllers::Tickets::AiAction',
         "Run the AI action for the ticket's current status (idea synthesis, scope build, etc.). WRITE.",
         scope: :write, side_effect: true) { |s| s.required(:id).filled(:integer) },
+      t('publish_ticket', 'Controllers::Tickets::Publish',
+        'Run the posting step: build posts from the ticket\'s creatives and publish them (or ' \
+        "schedule them). The ticket only reaches \"No ar\" on success. WRITE.",
+        scope: :write, side_effect: true) do |s|
+        s.required(:id).filled(:integer)
+        s.optional(:creative_ids).array(:integer)
+        s.optional(:creative_id).filled(:integer)
+        s.optional(:mode).filled(:string).description('immediate | scheduled')
+        s.optional(:scheduled_at).filled(:string).description('ISO 8601, required when mode=scheduled')
+      end,
+      t('generate_ticket_subtasks', 'Controllers::Tickets::GenerateSubtasks',
+        'Turn the ticket brief/scope into a production subtask checklist via Claude. WRITE.',
+        scope: :write, side_effect: true) { |s| s.required(:id).filled(:integer) },
+      t('archive_ticket', 'Controllers::Tickets::Archive',
+        'Archive a ticket (removes it from the board without deleting). WRITE.',
+        scope: :write, side_effect: true) { |s| s.required(:id).filled(:integer) },
+      t('unarchive_ticket', 'Controllers::Tickets::Unarchive',
+        'Restore an archived ticket to the board. WRITE.',
+        scope: :write, side_effect: true) { |s| s.required(:id).filled(:integer) },
 
       # ── Subtasks ─────────────────────────────────────────────────────
       t('create_subtask', 'Controllers::Subtasks::Create',
@@ -226,6 +291,12 @@ module Mcp
         s.required(:ticket_id).filled(:integer)
         s.required(:id).filled(:integer)
       end,
+      t('unpublish_post', 'Controllers::Posts::Unpublish',
+        'Remove an already-published post from its network (or mark it manually removable). ' \
+        'DESTRUCTIVE.', scope: :write, side_effect: true, destructive: true) do |s|
+        s.required(:ticket_id).filled(:integer)
+        s.required(:id).filled(:integer)
+      end,
 
       # ── Creatives & generation ───────────────────────────────────────
       t('list_creatives', 'Controllers::Creatives::Index',
@@ -237,6 +308,12 @@ module Mcp
         s.required(:creative_type).filled(:string)
         s.optional(:caption).filled(:string)
         s.optional(:metadata).value(:hash)
+      end,
+      t('update_creative', 'Controllers::Creatives::Update',
+        'Rename a creative or (re)assign it to a client. WRITE.', scope: :write, side_effect: true) do |s|
+        s.required(:id).filled(:integer)
+        s.optional(:name).filled(:string)
+        s.optional(:client_id).filled(:integer).description('null clears the assignment')
       end,
       t('delete_creative', 'Controllers::Creatives::Destroy',
         'Delete a creative. DESTRUCTIVE.', scope: :write, side_effect: true, destructive: true) do |s|
@@ -264,6 +341,17 @@ module Mcp
       end,
       t('get_studio', 'Controllers::Studio::Index',
         'Studio context (brand identity, defaults). Read-only.', params_arg: false),
+      t('list_studio_creatives', 'Controllers::Creatives::WorkspaceIndex',
+        'The Studio gallery: every creative in the workspace, filterable. Read-only.') do |s|
+        s.optional(:type).filled(:string).description('creative_type filter')
+        s.optional(:status).filled(:string)
+        s.optional(:client_id).filled(:integer)
+        s.optional(:q).filled(:string).description('search name/caption')
+        s.optional(:unassigned).filled(:bool).description('only creatives not attached to a ticket')
+      end,
+      t('delete_studio_creative', 'Controllers::Creatives::WorkspaceDestroy',
+        'Delete a creative from the Studio gallery (no ticket scope). DESTRUCTIVE.',
+        scope: :write, side_effect: true, destructive: true) { |s| s.required(:id).filled(:integer) },
 
       # ── Calendar, tasks, dashboard ───────────────────────────────────
       t('get_calendar', 'Controllers::Calendar::Index',
@@ -347,23 +435,40 @@ module Mcp
       t('generate_invoice_payment_link', 'Controllers::Invoices::GeneratePaymentLink',
         'Generate a hosted payment link for an invoice (Mercado Pago Checkout Pro). WRITE.',
         scope: :write, side_effect: true, wrap: :invoice) { |s| s.required(:id).filled(:integer) },
+      t('send_invoice_payment_link', 'Controllers::Invoices::SendPaymentLink',
+        "Email the invoice's payment link to the client. WRITE.",
+        scope: :write, side_effect: true) { |s| s.required(:id).filled(:integer) },
       t('cancel_invoice', 'Controllers::Invoices::Cancel',
         'Cancel an invoice. DESTRUCTIVE.', scope: :write, side_effect: true,
                                            destructive: true) { |s| s.required(:id).filled(:integer) },
 
-      # ── Social accounts ──────────────────────────────────────────────
+      # ── Social accounts (each client's own connected networks) ───────
+      # These are nested under a client — the agency connects each client's
+      # Instagram/TikTok/etc.; a client_id is always required.
       t('list_social_accounts', 'Controllers::SocialAccounts::Index',
-        'List connected social accounts. Read-only.', params_arg: false),
+        "List a client's connected social accounts. Read-only.") do |s|
+        s.required(:client_id).filled(:integer)
+      end,
       t('get_social_authorize_url', 'Controllers::SocialAccounts::AuthorizeUrl',
-        'Get the OAuth URL to connect a social network. Read-only.') do |s|
+        "Get the OAuth URL to connect one of a client's social networks. Read-only.") do |s|
+        s.required(:client_id).filled(:integer)
         s.required(:network).filled(:string).description('instagram | facebook | tiktok | youtube | linkedin | x')
       end,
+      t('get_social_connect_link', 'Controllers::SocialAccounts::ConnectLink',
+        "Get the login-less /conectar link the agency shares so the client connects their own " \
+        'networks. Read-only.') { |s| s.required(:client_id).filled(:integer) },
       t('reconnect_social_account', 'Controllers::SocialAccounts::Reconnect',
-        'Begin reconnecting an expired social account. WRITE.',
-        scope: :write, side_effect: true) { |s| s.required(:id).filled(:integer) },
+        'Mark an expired social account reconnected. WRITE.',
+        scope: :write, side_effect: true) do |s|
+        s.required(:client_id).filled(:integer)
+        s.required(:id).filled(:integer)
+      end,
       t('delete_social_account', 'Controllers::SocialAccounts::Destroy',
-        'Disconnect a social account. DESTRUCTIVE.', scope: :write, side_effect: true,
-                                                     destructive: true) { |s| s.required(:id).filled(:integer) },
+        "Disconnect a client's social account. DESTRUCTIVE.", scope: :write, side_effect: true,
+                                                              destructive: true) do |s|
+        s.required(:client_id).filled(:integer)
+        s.required(:id).filled(:integer)
+      end,
 
       # ── Settings & workspace ─────────────────────────────────────────
       t('get_settings', 'Controllers::Settings::Show',
@@ -373,6 +478,11 @@ module Mcp
         scope: :write, side_effect: true) do |s|
         s.required(:setting).value(:hash)
       end,
+      t('get_google_calendar_authorize_url', 'Controllers::Settings::GoogleCalendar::AuthorizeUrl',
+        'Get the OAuth URL to connect the workspace Google Calendar. Read-only.', params_arg: false),
+      t('disconnect_google_calendar', 'Controllers::Settings::GoogleCalendar::Disconnect',
+        'Disconnect the workspace Google Calendar. WRITE.', scope: :write, side_effect: true,
+                                                            params_arg: false),
       t('get_workspace', 'Controllers::Workspaces::Show',
         "The active workspace's details. Read-only.", params_arg: false),
       t('update_workspace', 'Controllers::Workspaces::Update',
@@ -425,7 +535,27 @@ module Mcp
         scope: :billing, side_effect: true, destructive: true, params_arg: false),
       t('billing_reactivate', 'Controllers::Billing::Reactivate',
         'Undo a scheduled SaaS cancellation. BILLING.', scope: :billing, side_effect: true,
-                                                        params_arg: false)
+                                                        params_arg: false),
+
+      # ── Prepaid credit wallet (video/image generation) ───────────────
+      t('get_credits', 'Controllers::Credits::Show',
+        'The workspace prepaid credit wallet (balance, packs, per-generation costs, history). ' \
+        'Read-only.', params_arg: false),
+      t('buy_credits', 'Controllers::Credits::Checkout',
+        'Create a Stripe checkout session to top up credits. BILLING.',
+        scope: :billing, side_effect: true) do |s|
+        s.required(:pack).filled(:string).description('credit pack key (see get_credits.packs)')
+      end,
+
+      # ── Authorized connections (MCP clients like Claude) ─────────────
+      t('list_connections', 'Controllers::Connections::Index',
+        'List external apps authorized to act for this user (MCP connectors). Read-only.',
+        workspace_scoped: false, params_arg: false),
+      t('revoke_connection', 'Controllers::Connections::Destroy',
+        'Revoke an authorized external app. DESTRUCTIVE.', scope: :write, side_effect: true,
+                                                           destructive: true, workspace_scoped: false) do |s|
+        s.required(:id).filled(:integer)
+      end
     ].freeze
     # Build the FastMcp::Tool subclasses for every spec. Built fresh each call so
     # a dev code-reload never hands back classes closed over stale constants.

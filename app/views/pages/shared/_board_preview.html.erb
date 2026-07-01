@@ -1,36 +1,74 @@
-<%# A stylised preview of the production board (the 7-stage Kanban).
+<%# The hero's "living board" — a stylised, animated preview of the 7-stage
+    Kanban. Pointer-tilt (JS-driven, desktop only), a sweeping sheen, floating
+    context chips and a real-time pulse. All motion is CSS + reduced-motion safe.
     Local: funnel (the FUNNEL array). %>
-<div class="relative mx-auto mt-14 max-w-5xl">
-  <div class="absolute -inset-x-8 -top-8 bottom-0 bg-aurora opacity-60 blur-2xl"></div>
-  <div class="relative overflow-hidden rounded-3xl border border-white/10 bg-brand-ink2/80 p-3 shadow-2xl backdrop-blur">
-    <div class="flex items-center gap-1.5 px-2 pb-2.5 pt-1">
-      <span class="size-2.5 rounded-full bg-rose/80"></span>
-      <span class="size-2.5 rounded-full bg-amber/80"></span>
-      <span class="size-2.5 rounded-full bg-emerald/80"></span>
-      <span class="ml-3 font-mono text-[11px] text-white/40">quadro · produção</span>
-    </div>
-    <div class="flex gap-3 overflow-x-auto rounded-2xl bg-canvas p-4 no-scrollbar">
-      <% funnel.each_with_index do |s, col| %>
-        <div class="w-44 shrink-0">
-          <div class="mb-2 flex items-center gap-1.5 rounded-lg px-2 py-1.5" style="background: <%= soft_bg(s[:color]) %>; color: <%= s[:color] %>;">
-            <%= icon s[:icon], size: 14, stroke: 2.5 %>
-            <span class="text-xs font-bold"><%= s[:label] %></span>
-          </div>
-          <div class="space-y-2">
-            <% (col.even? ? 2 : 1).times do %>
-              <div class="rounded-xl border border-border bg-surface p-3 shadow-sm">
-                <div class="h-1.5 w-10 rounded-full" style="background: <%= s[:color] %>;"></div>
-                <div class="mt-2 h-2 w-full rounded bg-surface-muted"></div>
-                <div class="mt-1.5 h-2 w-2/3 rounded bg-surface-muted"></div>
-                <div class="mt-3 flex items-center gap-1">
-                  <span class="size-5 rounded-full" style="background: <%= s[:color] %>33;"></span>
-                  <span class="h-1.5 w-8 rounded-full bg-surface-muted"></span>
+<div class="relative mx-auto mt-16 max-w-5xl" data-tilt-zone>
+  <%# ambient glow behind the board %>
+  <div class="anim-aurora pointer-events-none absolute -inset-x-10 -top-10 bottom-0 bg-aurora opacity-70 blur-2xl"></div>
+
+  <div class="tilt relative" data-tilt>
+    <div class="anim-sheen relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-brand-ink2/80 p-3 shadow-2xl backdrop-blur">
+      <%# window chrome + live badge %>
+      <div class="flex items-center gap-1.5 px-2 pb-2.5 pt-1">
+        <span class="size-2.5 rounded-full bg-rose/80"></span>
+        <span class="size-2.5 rounded-full bg-amber/80"></span>
+        <span class="size-2.5 rounded-full bg-emerald/80"></span>
+        <span class="ml-3 font-mono text-[11px] text-white/40">quadro · produção</span>
+        <span class="ml-auto inline-flex items-center gap-1.5 rounded-full bg-emerald/15 px-2 py-1 text-[10px] font-bold text-emerald">
+          <span class="pulse-ring relative flex size-1.5 rounded-full bg-emerald text-emerald"></span>
+          tempo real
+        </span>
+      </div>
+
+      <%# board columns %>
+      <div class="flex gap-3 overflow-x-auto rounded-2xl bg-canvas p-4 no-scrollbar">
+        <% funnel.each_with_index do |s, col| %>
+          <div class="w-40 shrink-0 sm:w-44">
+            <div class="mb-2 flex items-center gap-1.5 rounded-lg px-2 py-1.5" style="background: <%= soft_bg(s[:color]) %>; color: <%= s[:color] %>;">
+              <%= icon s[:icon], size: 14, stroke: 2.5 %>
+              <span class="text-xs font-bold"><%= s[:label] %></span>
+              <span class="ml-auto text-[10px] font-bold opacity-60"><%= col.even? ? 2 : 1 %></span>
+            </div>
+            <div class="space-y-2">
+              <% (col.even? ? 2 : 1).times do |row| %>
+                <div class="rounded-xl border border-border bg-surface p-3 shadow-sm <%= 'ring-2 ring-brand/30' if col == 2 && row.zero? %>">
+                  <div class="h-1.5 w-10 rounded-full" style="background: <%= s[:color] %>;"></div>
+                  <div class="mt-2 h-2 w-full rounded bg-surface-muted"></div>
+                  <div class="mt-1.5 h-2 w-2/3 rounded bg-surface-muted"></div>
+                  <div class="mt-3 flex items-center gap-1">
+                    <span class="size-5 rounded-full" style="background: <%= s[:color] %>33;"></span>
+                    <span class="h-1.5 w-8 rounded-full bg-surface-muted"></span>
+                  </div>
                 </div>
-              </div>
-            <% end %>
+              <% end %>
+            </div>
           </div>
-        </div>
-      <% end %>
+        <% end %>
+      </div>
+    </div>
+
+    <%# floating context chips (desktop only) %>
+    <div class="anim-float pointer-events-none absolute -right-5 -top-5 hidden w-52 rounded-2xl border border-white/10 bg-brand-ink2/90 p-3 shadow-xl backdrop-blur lg:block" style="transform-style: preserve-3d;">
+      <div class="flex items-center gap-1.5 text-[11px] font-bold text-amber">
+        <%= icon "sparkles", size: 13 %> IA · resumo
+      </div>
+      <p class="mt-1 text-[11px] leading-snug text-white/70">O gancho de bastidores puxou +38% de alcance. Repetir no próximo ciclo.</p>
+    </div>
+
+    <div class="anim-float-sm pointer-events-none absolute -bottom-6 -left-6 hidden items-center gap-2 rounded-2xl border border-white/10 bg-brand-ink2/90 px-3.5 py-2.5 shadow-xl backdrop-blur lg:flex">
+      <span class="flex size-8 items-center justify-center rounded-xl bg-emerald/15 text-emerald"><%= icon "trending-up", size: 16, stroke: 2.5 %></span>
+      <div>
+        <p class="font-display text-sm font-extrabold leading-none text-white">+38%</p>
+        <p class="mt-0.5 text-[10px] text-white/50">alcance vs. média</p>
+      </div>
+    </div>
+
+    <div class="anim-float-slow pointer-events-none absolute -bottom-8 right-8 hidden items-center gap-2 rounded-2xl border border-white/10 bg-brand-ink2/90 px-3.5 py-2.5 shadow-xl backdrop-blur lg:flex">
+      <span class="flex size-8 items-center justify-center rounded-xl bg-pink/15 text-pink"><%= icon "wand-sparkles", size: 16, stroke: 2.3 %></span>
+      <div>
+        <p class="font-display text-xs font-bold leading-none text-white">Carrossel gerado</p>
+        <p class="mt-0.5 text-[10px] text-white/50">com a identidade da marca</p>
+      </div>
     </div>
   </div>
 </div>

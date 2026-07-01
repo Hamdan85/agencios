@@ -49,9 +49,9 @@
     <p class="text-xs font-bold uppercase tracking-[0.16em]" style="color: <%= c %>;">Por dentro</p>
     <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">O que você ganha com <%= @feature[:name] %></h2>
   </div>
-  <div class="mt-12 grid gap-6 sm:grid-cols-2">
+  <div class="mt-12 grid gap-6 sm:grid-cols-2" data-reveal-group data-reveal-step="80">
     <% @feature[:points].each do |p| %>
-      <div class="rounded-2xl border border-border bg-surface p-6 lift reveal">
+      <div class="rounded-2xl border border-border bg-surface p-6 lift reveal reveal-scale">
         <span class="flex size-12 items-center justify-center rounded-2xl" style="background: <%= soft_bg(c) %>; color: <%= c %>;">
           <%= icon p[:icon], size: 24, stroke: 2.2 %>
         </span>

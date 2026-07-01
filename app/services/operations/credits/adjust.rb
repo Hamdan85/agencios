@@ -6,7 +6,8 @@ module Operations
     # Positive `amount` returns credits (to the purchased bucket); negative charges
     # more, best-effort clamped to the available balance so it NEVER raises — the
     # generation already happened, we just true-up the ledger. No-op for
-    # godfathered workspaces and for a zero delta.
+    # unlimited godfathered workspaces and for a zero delta (capped godfathered
+    # workspaces have a real wallet, so they true-up too).
     class Adjust < Operations::Base
       def initialize(workspace:, amount:, generation: nil, description: nil)
         @workspace   = workspace
@@ -16,7 +17,7 @@ module Operations
       end
 
       def call
-        return :noop if @amount.zero? || @workspace.godfathered?
+        return :noop if @amount.zero? || (@workspace.godfathered? && !@workspace.credit_limited?)
 
         wallet = Operations::Credits::EnsureWallet.call(workspace: @workspace)
 

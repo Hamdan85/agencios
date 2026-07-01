@@ -9,8 +9,10 @@ module Vendors
         def self.call(...) = new(...).call
 
         # Default metrics cover image/carousel + Reels survivors (instagram.md §7b).
+        # NOTE: the IG metric is `saved` (singular) — `saves` is rejected, and the
+        # Graph API fails the ENTIRE request on one invalid metric name.
         DEFAULT_METRICS = %w[
-          reach views likes comments saves shares total_interactions
+          reach views likes comments saved shares total_interactions
         ].freeze
 
         def initialize(social_account:, media_id:, metrics: DEFAULT_METRICS, client: nil)
@@ -21,10 +23,7 @@ module Vendors
         end
 
         def call
-          @client.get(
-            "/#{@media_id}/insights",
-            params: { metric: Array(@metrics).join(',') }
-          )
+          @client.insights_get("/#{@media_id}/insights", metrics: @metrics)
         end
       end
     end

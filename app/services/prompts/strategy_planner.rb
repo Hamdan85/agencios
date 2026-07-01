@@ -12,6 +12,7 @@ module Prompts
   # call captured by Vendors::Anthropic::Client (→ StrategySession#proposed_plan).
   class StrategyPlanner < Base
     TOOL_NAME = 'propose_content_plan'
+    DECISION_TOOL = 'plan_readiness'
     UPDATE_PROJECT_TOOL = 'update_project'
 
     CREATIVE_TYPES = %w[reel carousel feed_image story ugc_video ad thumbnail].freeze
@@ -19,10 +20,36 @@ module Prompts
     PRIORITIES = %w[low medium high].freeze
     PROJECT_STATUSES = %w[active paused archived completed].freeze
 
-    # The tools the planner can call: propose the content plan, and update the
-    # project's own metadata (name, description, dates, status).
-    def self.tools
-      [tool, update_project_tool]
+    # Tools available DURING the streamed conversation. The plan is NOT streamed
+    # (streaming the big JSON tripped connection resets) and — because the model
+    # emits tool calls unreliably mid-conversation — readiness is NOT left to a
+    # spontaneous tool call either. Instead Operations::Strategy::Converse makes a
+    # separate SYNC forced-tool call (#decision_tool → #plan_tool). The stream only
+    # keeps update_project (a nice-to-have the model may or may not call).
+    def self.stream_tools
+      [update_project_tool]
+    end
+
+    # Forced-tool schema (deterministic): decide whether to generate the plan now.
+    def self.decision_tool
+      {
+        'name' => DECISION_TOOL,
+        'description' => 'Decide se JÁ dá para gerar o plano de conteúdo agora (o usuário pediu e há o ' \
+                         'mínimo — período/cadência, ou pediu para não perguntar) ou se ainda falta ' \
+                         'algo essencial e você deve continuar perguntando.',
+        'input_schema' => {
+          'type' => 'object', 'required' => %w[ready],
+          'properties' => {
+            'ready' => { 'type' => 'boolean', 'description' => 'true se o plano pode ser gerado agora' },
+            'reason' => { 'type' => 'string', 'description' => 'Justificativa curta.' }
+          }
+        }
+      }
+    end
+
+    # The full structured-plan schema, used by the SYNC forced-tool call.
+    def self.plan_tool
+      tool
     end
 
     # Anthropic tool schema for the final structured plan. Kept here next to the
@@ -173,9 +200,9 @@ module Prompts
           for apertado demais (ex.: "poste amanhã" mas a produção leva 5 dias), CRITIQUE
           e proponha datas realistas — empurre a primeira postagem para dar tempo de
           produzir com qualidade. Nunca gere tarefas com prazo anterior a hoje.
-        - Ao propor: escreva ANTES UMA frase curta avisando (ex.: "Fechado, montando o
-          plano — dá uma olhada nos tickets à esquerda.") e SÓ ENTÃO chame a ferramenta
-          #{TOOL_NAME}. Não redescreva o plano em texto — os tickets aparecem na lista.
+        - Quando a estratégia estiver pronta, escreva UMA frase curta avisando que vai
+          montar (ex.: "Fechado, montando o plano — dá uma olhada nos tickets à esquerda.").
+          Os tickets são gerados automaticamente e aparecem na lista — NÃO os descreva em texto.
         - Você também pode ajustar o PRÓPRIO projeto com a ferramenta #{UPDATE_PROJECT_TOOL}
           (nome, descrição, datas de início/fim, status) — ex.: definir a janela real da
           campanha que vocês acabaram de combinar. Pode chamá-la junto com o plano.

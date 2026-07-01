@@ -68,10 +68,13 @@ module Controllers
 
     # Preflight prepaid-credit check for a metered generation (video/image).
     # Fails fast with 402 before any Creative/Generation row or vendor call, so
-    # we don't orphan records. Godfathered workspaces never need credits.
-    # (The authoritative atomic debit still happens inside the generation op.)
+    # we don't orphan records. Unlimited godfathered workspaces never need credits;
+    # capped godfathered workspaces are gated on their monthly allotment like
+    # everyone else. (The authoritative atomic debit still happens in the op.)
     def require_credits!(kind:, seconds: nil, engine: nil)
-      return if workspace&.godfathered?
+      return if workspace&.godfathered? && !workspace.credit_limited?
+
+      Operations::Credits::EnsureGodfatheredGrant.call(workspace: workspace) if workspace&.credit_limited?
 
       needed = Pricing.credits_for(kind: kind, seconds: seconds, engine: engine)
       return if needed <= 0

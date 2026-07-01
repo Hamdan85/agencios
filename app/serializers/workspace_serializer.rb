@@ -11,8 +11,13 @@ class WorkspaceSerializer < ActiveModel::Serializer
   def billing_active = object.billing_active?
   def godfathered = object.godfathered?
   def over_seat_limit = object.over_seat_limit?
-  # nil for godfathered workspaces (credits are unlimited/not tracked).
-  def credits_available = object.godfathered? ? nil : object.credits_available
+  # nil only for UNLIMITED godfathered workspaces (credits not tracked). Capped
+  # godfathered workspaces report their remaining monthly allotment like anyone.
+  def credits_available
+    return nil if object.godfathered? && !object.credit_limited?
+
+    object.credits_available
+  end
 
   def seat_limit
     limit = object.seat_limit

@@ -29,20 +29,22 @@ module Vendors
 
       attr_reader :model
 
-      # Carries the assistant text alongside the token `usage` hash and the
-      # resolved model id, so callers can record AI cost (AiUsageLog).
-      # `tool_input` is the captured tool_use input (a Hash) when `tool:` was
-      # passed to #generate — nil otherwise.
-      Result = Struct.new(:text, :usage, :model, :tool_input, keyword_init: true)
-
-      # Streaming result: the full assistant text, every captured `tool_use` block
-      # (as [{ name:, input: }], possibly empty), token `usage`, and the model.
-      StreamResult = Struct.new(:text, :tools, :usage, :model, keyword_init: true)
+      # Shared with Vendors::OpenRouter::Client via Vendors::Ai so callers never
+      # branch on the provider. `Result { text, usage, model, tool_input }` and
+      # `StreamResult { text, tools, usage, model }`.
+      Result       = Vendors::Ai::Result
+      StreamResult = Vendors::Ai::StreamResult
 
       def initialize(api_key: nil, model: nil)
         @api_key = api_key || credential(:anthropic, :api_key, env: 'ANTHROPIC_API_KEY')
-        @model   = model || credential(:anthropic, :model, env: 'ANTHROPIC_MODEL').presence || DEFAULT_MODEL
+        @model   = model.presence || credential(:anthropic, :model, env: 'ANTHROPIC_MODEL').presence || DEFAULT_MODEL
       end
+
+      # Which ledger bucket this client's calls belong to.
+      def provider_key = AiUsageLog::PROVIDER_ANTHROPIC
+
+      # Claude reads URLs itself via the server-side web_fetch tool.
+      def supports_web_fetch? = true
 
       # Returns the assistant text as a plain String.
       def messages(system:, prompt:, max_tokens: 1024)
@@ -60,7 +62,10 @@ module Vendors
       # given, the call forces `tool_choice` to it, so the response's structured
       # `tool_use` input (Result#tool_input) is the reliable way to get JSON back,
       # instead of asking the model to print JSON as text and parsing it.
-      def generate(system:, prompt:, max_tokens: 1024, web_fetch: false, tool: nil)
+      # `reasoning:` is accepted for cross-provider signature parity (Claude's
+      # extended thinking is configured separately) and ignored here.
+      def generate(system:, prompt:, max_tokens: 1024, web_fetch: false, tool: nil, reasoning: false)
+        _ = reasoning
         target = web_fetch ? fetch_model : @model
         if @api_key.blank?
           return Result.new(text: stub(system: system, prompt: prompt), usage: {}, model: target, tool_input: nil)

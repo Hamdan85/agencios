@@ -26,6 +26,11 @@ reconcile_seats:
   class: "ReconcileSeatsJob"
   queue: low
 
+grant_godfathered_credits:
+  cron: "10 0 1 * *"          # monthly, 1st at 00:10 — refill godfathered allotments
+  class: "GrantGodfatheredCreditsJob"
+  queue: low
+
 reconcile_invoices:
   cron: "*/30 * * * *"         # every 30 minutes (Mercado Pago Pix sweep)
   class: "Invoices::ReconcileJob"

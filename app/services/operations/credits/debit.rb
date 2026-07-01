@@ -4,7 +4,8 @@ module Operations
   module Credits
     # Spend credits for a generation. Granted (monthly) credits are consumed
     # first, then purchased. Raises Operations::Errors::InsufficientCredits if the
-    # wallet can't cover the amount. Godfathered workspaces never debit.
+    # wallet can't cover the amount. Unlimited godfathered workspaces never debit
+    # (capped godfathered workspaces spend from their monthly allotment).
     #
     # Takes a row lock so concurrent generations can't oversell the balance.
     # Records a `debit` CreditTransaction carrying the per-bucket split so a later
@@ -20,7 +21,12 @@ module Operations
 
       def call
         return :free if @amount <= 0
-        return :godfathered if @workspace.godfathered?
+        # Unlimited godfathered workspaces never debit; capped ones (a
+        # monthly_credit_limit is set) spend from the refilled monthly allotment
+        # exactly like a paying workspace.
+        return :godfathered if @workspace.godfathered? && !@workspace.credit_limited?
+
+        Operations::Credits::EnsureGodfatheredGrant.call(workspace: @workspace) if @workspace.credit_limited?
 
         wallet = Operations::Credits::EnsureWallet.call(workspace: @workspace)
 

@@ -14,7 +14,9 @@ module Operations
 
       def call
         workspace = @generation.workspace
-        return :none if workspace.godfathered?
+        # Capped godfathered workspaces really debited, so they really refund;
+        # only unlimited godfathered workspaces have nothing to return.
+        return :none if workspace.godfathered? && !workspace.credit_limited?
 
         ApplicationRecord.transaction do
           debit = workspace.credit_transactions

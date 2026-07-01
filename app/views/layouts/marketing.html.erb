@@ -31,10 +31,23 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400..800&family=Inter:opsz,wght@14..32,300..700&family=Space+Grotesk:wght@400..700&display=swap" />
 
+    <%= marketing_structured_data %>
+
     <%= vite_client_tag %>
+    <%# Load the stylesheet render-blocking in <head> so navigations never flash
+        unstyled content (the CSS is NOT imported from marketing.js for this reason). %>
+    <%= vite_stylesheet_tag "marketing.css" %>
     <%= vite_javascript_tag "marketing.js" %>
   </head>
-  <body class="min-h-screen bg-canvas text-ink antialiased">
+  <body class="min-h-screen text-ink antialiased">
+    <%# Ambient, page-wide decorative background: drifting brand flares + faint
+        circuit grid. Fixed behind all content; shows through transparent sections. %>
+    <div class="marketing-bg" aria-hidden="true">
+      <span class="flare flare-1"></span>
+      <span class="flare flare-2"></span>
+      <span class="flare flare-3"></span>
+      <span class="flare flare-4"></span>
+    </div>
     <%= render "pages/shared/header" %>
     <main>
       <%= yield %>

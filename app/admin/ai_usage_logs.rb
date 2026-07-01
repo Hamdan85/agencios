@@ -124,9 +124,15 @@ module AiUsageChart
     [1, 2, 2.5, 5, 10].map { |m| m * exponent }.find { |n| n >= value }
   end
 
+  # AI costs are often fractions of a cent (cheap models), so 2 decimals renders
+  # them as "US$ 0.00". Show enough precision to reveal sub-cent spend.
   def self.usd(cents)
-    dollars = cents / 100.0
-    format(dollars >= 0.01 || dollars.zero? ? 'US$ %.2f' : 'US$ %.4f', dollars)
+    dollars = cents.to_f / 100.0
+    fmt = if dollars.zero? || dollars.abs >= 0.01 then 'US$ %.2f'
+          elsif dollars.abs >= 0.0001 then 'US$ %.4f'
+          else 'US$ %.6f'
+          end
+    format(fmt, dollars)
   end
 
   def self.tokens(count)
@@ -178,7 +184,7 @@ ActiveAdmin.register AiUsageLog do
     column :model
     column('Tokens (in/out)') { |l| "#{l.input_tokens} / #{l.output_tokens}" }
     column('Unidades') { |l| l.units.to_f.zero? ? '—' : "#{l.units} #{l.unit_kind}" }
-    column('Custo (US$)') { |l| number_to_currency(l.estimated_cost_usd, unit: 'US$ ') }
+    column('Custo (US$)') { |l| AiUsageChart.usd(l.cost_cents) }
     column('Sujeito') { |l| l.subject_type ? "#{l.subject_type}##{l.subject_id}" : '—' }
   end
 
@@ -197,7 +203,7 @@ ActiveAdmin.register AiUsageLog do
       row :cache_read_input_tokens
       row :unit_kind
       row :units
-      row('Custo (US$)') { |l| number_to_currency(l.estimated_cost_usd, unit: 'US$ ') }
+      row('Custo (US$)') { |l| AiUsageChart.usd(l.cost_cents) }
       row :created_at
     end
   end
@@ -210,20 +216,20 @@ ActiveAdmin.register AiUsageLog do
 
     div do
       strong 'Total: '
-      span number_to_currency(total / 100.0, unit: 'US$ ')
+      span AiUsageChart.usd(total)
     end
     hr
     strong 'Por provider'
     ul do
       by_provider.each do |provider, cents|
-        li "#{provider}: #{number_to_currency(cents.to_f / 100.0, unit: 'US$ ')}"
+        li "#{provider}: #{AiUsageChart.usd(cents)}"
       end
     end
     hr
     strong 'Top operations'
     ul do
       by_operation.each do |operation, cents|
-        li "#{operation}: #{number_to_currency(cents.to_f / 100.0, unit: 'US$ ')}"
+        li "#{operation}: #{AiUsageChart.usd(cents)}"
       end
     end
   end

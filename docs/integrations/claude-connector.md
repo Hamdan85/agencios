@@ -72,14 +72,17 @@ O servidor expõe o catálogo completo de ferramentas do agencios, entre elas:
 
 | Área | Exemplos de ferramentas |
 |---|---|
-| Quadro & tickets | `get_board`, `list_tickets`, `create_ticket`, `advance_ticket`, `summarize_ticket` |
-| Subtarefas & notas | `create_subtask`, `update_subtask`, `create_note` |
-| Clientes & projetos | `list_clients`, `create_client`, `list_projects`, `create_project` |
-| Estúdio / criativos | `studio_generate`, `generate_creative`, `list_generations` |
-| Publicação | `list_posts`, `create_post`, `list_social_accounts` |
+| Quadro & tickets | `get_board`, `list_tickets`, `create_ticket`, `advance_ticket`, `publish_ticket`, `archive_ticket`, `summarize_ticket` |
+| Subtarefas & notas | `create_subtask`, `update_subtask`, `generate_ticket_subtasks`, `create_note` |
+| Clientes & projetos | `list_clients`, `create_client`, `extract_client_from_url`, `list_projects`, `create_project`, `start_project`, `finalize_project` |
+| Estratégia (IA) | `get_strategy`, `create_strategy`, `apply_strategy` |
+| Estúdio / criativos | `studio_generate`, `generate_creative`, `list_studio_creatives`, `list_generations` |
+| Publicação | `list_posts`, `create_post`, `unpublish_post`, `list_social_accounts`, `get_social_connect_link` |
 | Calendário & reuniões | `get_calendar`, `list_meetings`, `create_meeting` |
 | Cobranças | `list_invoices`, `create_invoice`, `mark_invoice_paid`, `generate_invoice_payment_link` |
-| Conta | `list_workspaces`, `me`, `get_settings`, `list_members` |
+| Relatórios | `list_reports`, `get_report` |
+| Créditos & plano | `get_credits`, `buy_credits`, `get_billing` |
+| Conta | `list_workspaces`, `me`, `get_settings`, `list_members`, `list_connections` |
 
 ---
 

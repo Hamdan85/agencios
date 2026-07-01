@@ -74,6 +74,30 @@ module Vendors
         handle(connection.get(join(path), params))
       end
 
+      # GET an /insights edge, resiliently dropping any metric the API rejects.
+      # Graph fails the ENTIRE request on a single invalid metric name, reporting
+      # its position as "metric[N] must be one of the following values: ...". We
+      # drop metric N and retry, so one deprecated metric can't zero out the rest
+      # (Meta deprecates insights metrics aggressively). Returns the last response
+      # body, or { 'data' => [] } if no metric survives. Non-metric errors (auth,
+      # rate limit, …) propagate unchanged.
+      def insights_get(path, metrics:)
+        metrics = Array(metrics).dup
+        loop do
+          return { 'data' => [] } if metrics.empty?
+
+          begin
+            return get(path, params: { metric: metrics.join(',') })
+          rescue Vendors::Base::Error => e
+            idx = invalid_metric_index(e)
+            raise if idx.nil? || idx >= metrics.size
+
+            dropped = metrics.delete_at(idx)
+            Rails.logger.warn("[Meta::Client] dropping unsupported insights metric #{dropped.inspect} on #{path}: #{e.message}")
+          end
+        end
+      end
+
       # DELETE {path} on the Graph API (e.g. a Page post/photo/video).
       def delete(path, params: {}, token: access_token)
         params = { access_token: token }.merge(params.compact) if token && !params.key?(:access_token)
@@ -149,6 +173,15 @@ module Vendors
 
       def join(path)
         path.to_s.start_with?('/') ? path.to_s[1..] : path.to_s
+      end
+
+      # Graph reports the first invalid insights metric by index, e.g.
+      # "metric[4] must be one of the following values: …". Extract that index so
+      # insights_get can drop the offending metric and retry. Returns nil when the
+      # error isn't an invalid-metric error (so the caller re-raises).
+      def invalid_metric_index(error)
+        match = error.message.to_s.match(/metric\[(\d+)\]/)
+        match && match[1].to_i
       end
     end
   end

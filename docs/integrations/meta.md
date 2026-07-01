@@ -501,10 +501,13 @@ GET /v25.0/{IG_USER_ID}/insights
 
 ```
 GET /v25.0/{MEDIA_ID}/insights
-  metric=reach,views,likes,comments,saves,shares,total_interactions,
+  metric=reach,views,likes,comments,saved,shares,total_interactions,
          profile_visits,follows,profile_activity
   access_token={PAGE_TOKEN}
 ```
+The metric is `saved` (singular), NOT `saves`. Graph rejects the whole request on
+one invalid metric name, so a typo here zeroes out every metric for the post.
+
 Reels additionally: `ig_reels_avg_watch_time`, `ig_reels_video_view_total_time`.
 Stories (24h window): `reach,views,replies,navigation,total_interactions`.
 → `Vendors::Meta::Actions::GetMediaInsights`
@@ -531,13 +534,26 @@ Note: `fan_count` is being retired — prefer `followers_count`.
 
 ### 7d. Facebook per-post insights
 
+Engagement (likes/comments/shares) comes from the **post object**, NOT `/insights`.
+Meta retired the `post_impressions*` and unique-reach families across all API
+versions (2025-11 / 2026-06), and Graph fails the WHOLE `/insights` request on one
+invalid metric — so relying on insights for engagement silently zeroes everything.
+
 ```
+# Engagement — stable object fields (Vendors::Meta::Actions::GetPostEngagement)
+GET /v25.0/{POST_ID}?fields=shares,comments.summary(true),reactions.summary(true)
+  → reactions.summary.total_count = likes, comments.summary.total_count, shares.count
+  access_token={PAGE_TOKEN}
+
+# Reach/views — best-effort insights (Vendors::Meta::Actions::GetPostInsights)
 GET /v25.0/{POST_ID}/insights
-  metric=post_impressions,post_impressions_unique,post_engaged_users,post_clicks,
-         post_reactions_by_type_total,post_video_views
+  metric=post_impressions_unique,post_impressions,post_video_views
   access_token={PAGE_TOKEN}
 ```
-→ `Vendors::Meta::Actions::GetPostInsights`
+`GetPostInsights` (and `GetMediaInsights`) go through `Client#insights_get`, which
+drops any metric the current Graph version rejects and retries, so a deprecated
+metric can't zero out the rest. Reach/views may read 0 until Meta's replacement
+metric names are confirmed against a live Page.
 
 Persist via `Facebook::SyncInsightsJob` → `Operations::Facebook::SyncInsights`.
 
@@ -690,5 +706,6 @@ Base `https://graph.facebook.com/v25.0` unless noted. All publish/insight calls 
 | `FinishReel` | POST | `/{page_id}/video_reels` (upload_phase=finish, video_state=PUBLISHED) | `page_id`, `page_access_token` | `pages_manage_posts` |
 | `GetPageInsights` | GET | `/{page_id}/insights?metric=page_views_total,...&period=day` | `page_id`, `page_access_token` | `read_insights` |
 | `GetPageFields` | GET | `/{page_id}?fields=followers_count,fan_count,name` | `page_id`, `page_access_token` | `pages_read_engagement` |
-| `GetPostInsights` | GET | `/{post_id}/insights?metric=post_engaged_users,...` | `page_access_token` | `read_insights` |
+| `GetPostInsights` | GET | `/{post_id}/insights?metric=post_impressions_unique,...` (reach/views) | `page_access_token` | `read_insights` |
+| `GetPostEngagement` | GET | `/{post_id}?fields=shares,comments.summary(true),reactions.summary(true)` | `page_access_token` | `pages_read_engagement` |
 | `SubscribePageWebhooks` | POST | `/{page_id}/subscribed_apps?subscribed_fields=feed,mention` | `page_id`, `page_access_token` | `pages_manage_posts` |

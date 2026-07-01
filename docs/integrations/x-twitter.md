@@ -57,7 +57,7 @@ Sources: [wearefounders.uk — X API price hike](https://www.wearefounders.uk/th
 - **Free tier is a trap for production.** 500 posts/month total and (critically) **no read access** means you cannot fetch `public_metrics`. You can post on Free, you cannot do analytics on Free.
 - **Basic ($200/mo) and Pro ($5,000/mo) are now legacy** — only existing subscribers keep them. New developers get **pay-as-you-go or Enterprise**. ([blotato](https://www.blotato.com/blog/twitter-api-pricing), [postproxy](https://postproxy.dev/blog/x-api-pricing-2026/))
 - **Posts with links cost ~13× more** under pay-as-you-go (~$0.20 vs ~$0.015). For an agency that posts campaign links constantly, this adds up fast — factor it into per-workspace billing.
-- If reading metrics at scale is the real product, the direct X path is expensive. This is exactly why **`upload-post.md` exists as the fallback** — it amortizes X's cost across their customer base, and for some accounts you may decide the aggregator is cheaper than direct.
+- If reading metrics at scale is the real product, the direct X path is expensive. Factor X's read/analytics pricing into per-workspace billing, and gate analytics features on the account's X tier.
 
 ---
 
@@ -193,7 +193,7 @@ Read via `Rails.application.credentials.dig(:x, :client_id)`. Never in `.env`.
 # migration sketch
 create_table :social_accounts do |t|
   t.references :workspace, null: false, foreign_key: true
-  t.string  :provider, null: false            # "x", "upload_post", ...
+  t.string  :provider, null: false            # "x", "threads", ...
   t.string  :external_account_id              # X user id
   t.string  :username                         # @handle
   t.text    :access_token                     # encrypted
@@ -211,7 +211,7 @@ class SocialAccount < ApplicationRecord
   belongs_to :workspace
   encrypts :access_token
   encrypts :refresh_token
-  enum :provider, { x: "x", upload_post: "upload_post" }, prefix: true
+  enum :provider, { x: "x", threads: "threads" }, prefix: true
 end
 ```
 

@@ -18,9 +18,13 @@ class AiUsageLog < ApplicationRecord
   validates :provider, :operation, presence: true
 
   PROVIDER_ANTHROPIC     = 'anthropic'
+  # OpenRouter is token-based like Anthropic, but its calls carry the REAL USD
+  # cost returned per generation — LogUsage stores that verbatim (no price table).
+  PROVIDER_OPENROUTER    = 'openrouter'
   PROVIDER_GOOGLE_BANANA = 'google_banana'
   PROVIDER_HEYGEN        = 'heygen'
-  PROVIDERS = [PROVIDER_ANTHROPIC, PROVIDER_GOOGLE_BANANA, PROVIDER_HEYGEN].freeze
+  PROVIDERS = [PROVIDER_ANTHROPIC, PROVIDER_OPENROUTER, PROVIDER_GOOGLE_BANANA, PROVIDER_HEYGEN].freeze
+  TOKEN_PROVIDERS = [PROVIDER_ANTHROPIC, PROVIDER_OPENROUTER].freeze
 
   # --- pricing ---------------------------------------------------------------
 

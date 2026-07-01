@@ -9,10 +9,10 @@ class SocialAccount < ApplicationRecord
   has_many :posts, dependent: :nullify
   has_many :account_metrics, dependent: :destroy
 
-  # Networks integrate directly by default; `upload_post` is the aggregator
-  # fallback provider (publisher seam routes to it per workspace/network).
+  # Every network integrates directly (no aggregator). Integer values are
+  # stable/historical — `6` is intentionally retired and left unused.
   enum :provider, {
-    instagram: 0, facebook: 1, tiktok: 2, youtube: 3, linkedin: 4, x: 5, upload_post: 6,
+    instagram: 0, facebook: 1, tiktok: 2, youtube: 3, linkedin: 4, x: 5,
     threads: 7
   }, prefix: true
 

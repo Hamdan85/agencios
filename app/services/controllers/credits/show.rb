@@ -6,15 +6,20 @@ module Controllers
     # catalog of packs it can buy.
     class Show < Base
       def call
-        wallet = Operations::Credits::EnsureWallet.call(workspace: workspace)
+        # Refill first so the balance reflects the current cycle's allotment.
+        Operations::Credits::EnsureGodfatheredGrant.call(workspace: workspace) if workspace.credit_limited?
+        wallet = Operations::Credits::EnsureWallet.call(workspace: workspace).reload
+
+        unlimited = workspace.godfathered? && !workspace.credit_limited?
 
         {
           wallet: {
-            available: workspace.godfathered? ? nil : wallet.available,
+            available: unlimited ? nil : wallet.available,
             granted: wallet.live_granted,
             purchased: wallet.purchased_balance,
             granted_expires_at: wallet.granted_expires_at&.iso8601,
-            unlimited: workspace.godfathered?
+            unlimited: unlimited,
+            monthly_limit: workspace.credit_limited? ? workspace.monthly_credit_limit : nil
           },
           packs: Pricing.credit_packs.map { |p| p.slice(:key, :name, :price_cents, :credits) },
           costs: Pricing.public_catalog[:credit_costs],

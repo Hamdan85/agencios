@@ -17,7 +17,10 @@
 @plugin '@tailwindcss/forms';
 
 html { scroll-behavior: smooth; }
-html, body { background-color: var(--color-canvas); }
+/* Base colour lives on <html> only. <body> stays transparent so the fixed
+   `.marketing-bg` ambient layer (z-index -10) shows through the page. */
+html { background-color: var(--color-canvas); }
+body { background-color: transparent; }
 body {
   font-family: var(--font-sans);
   color: var(--color-ink);
@@ -42,8 +45,20 @@ a, button, [role='button'] { touch-action: manipulation; }
   transition: opacity .6s var(--ease-spring), transform .6s var(--ease-spring);
 }
 .js .reveal.is-visible { opacity: 1; transform: none; }
+
+/* Directional / scale reveal variants (opt-in via extra class). */
+.js .reveal-left  { transform: translateX(-22px); }
+.js .reveal-right { transform: translateX(22px); }
+.js .reveal-scale { transform: scale(.94); }
+.js .reveal-left.is-visible,
+.js .reveal-right.is-visible,
+.js .reveal-scale.is-visible { transform: none; }
+
 @media (prefers-reduced-motion: reduce) {
-  .js .reveal { opacity: 1; transform: none; transition: none; }
+  .js .reveal,
+  .js .reveal-left,
+  .js .reveal-right,
+  .js .reveal-scale { opacity: 1; transform: none; transition: none; }
   html { scroll-behavior: auto; }
 }
 

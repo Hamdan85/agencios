@@ -81,18 +81,22 @@ module Operations
 
       def resolved_unit_kind
         return @unit_kind.to_s if @unit_kind.present?
-        return AiUsageLog::UNIT_TOKEN if @provider == AiUsageLog::PROVIDER_ANTHROPIC
+        return AiUsageLog::UNIT_TOKEN if token_provider?
 
         AiUsageLog::UNIT_PRICING.dig(@provider, :unit_kind)
       end
 
       def resolved_units
-        return @units if @units
+        @units || 0
+      end
 
-        @provider == AiUsageLog::PROVIDER_ANTHROPIC ? 0 : 0
+      def token_provider?
+        AiUsageLog::TOKEN_PROVIDERS.include?(@provider)
       end
 
       def computed_cost_cents
+        # OpenRouter reports the real USD cost per call; callers pass it as
+        # `cost_cents` so we store it directly (no per-model price table).
         return @cost_cents if @cost_cents
 
         if @provider == AiUsageLog::PROVIDER_ANTHROPIC

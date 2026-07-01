@@ -1,89 +1,525 @@
 <% content_for :title, "agencios — o sistema operacional da sua agência" %>
+<% content_for :description, "Do brief ao post no ar: funil de produção com IA, estrategista que planeja o mês, estúdio de criativos, publicação em 7 redes, métricas em tempo real e cobrança via Pix. Tudo que sua agência de social media precisa." %>
 
-<%# ── Hero ──────────────────────────────────────────────────────── %>
-<section class="relative overflow-hidden bg-shell-gradient">
-  <div class="absolute inset-0 bg-aurora opacity-70"></div>
-  <div class="relative mx-auto max-w-6xl px-5 pb-20 pt-28 text-center sm:px-8 sm:pt-36">
-    <span class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-bold text-white/80 ring-1 ring-white/10">
+<%# ══════════════════════════════════════════════════════════════════
+    HERO
+    ══════════════════════════════════════════════════════════════════ %>
+<section class="relative overflow-hidden bg-shell-gradient" data-tilt-zone>
+  <div class="anim-aurora absolute inset-0 bg-aurora opacity-80"></div>
+  <div class="dot-bg absolute inset-0 opacity-[0.35] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000,transparent)]"></div>
+
+  <div class="relative mx-auto max-w-6xl px-5 pb-24 pt-28 text-center sm:px-8 sm:pt-36">
+    <span class="reveal inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-bold text-white/80 ring-1 ring-white/10">
       <span class="text-amber"><%= icon "zap", size: 13 %></span> O sistema operacional da sua agência
     </span>
-    <h1 class="mx-auto mt-6 max-w-3xl font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-white sm:text-6xl">
-      Clientes, projetos e conteúdo viral — <span class="text-gradient-brand">num só lugar.</span>
+
+    <h1 class="reveal mx-auto mt-6 max-w-4xl font-display text-[2.6rem] font-extrabold leading-[1.02] tracking-tight text-white sm:text-6xl lg:text-7xl">
+      Do brief ao post viral —<br class="hidden sm:block" />
+      <span class="text-gradient-brand anim-gradient-x">num só lugar.</span>
     </h1>
-    <p class="mx-auto mt-5 max-w-xl text-lg text-white/70">
-      Do brief ao post no ar: um funil de produção com IA, publicação multi-rede, métricas e cobrança.
-      Tudo que sua agência de social media precisa para escalar.
+
+    <p class="reveal mx-auto mt-6 max-w-2xl text-lg text-white/70 sm:text-xl">
+      Um funil de produção com IA, um estrategista que planeja o mês inteiro, estúdio de criativos,
+      publicação em 7 redes, métricas em tempo real e cobrança via Pix. A operação inteira da sua
+      agência, integrada e viva.
     </p>
-    <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
-      <%= link_to "/cadastro", class: "inline-flex h-12 items-center gap-2 rounded-xl bg-brand-gradient px-6 text-base font-semibold text-white shadow-[0_10px_28px_-8px_rgba(124,58,237,0.7)] transition hover:brightness-105" do %>
-        Começar grátis <%= icon "arrow-right", size: 18 %>
+
+    <div class="reveal mt-9 flex flex-wrap items-center justify-center gap-3">
+      <%= link_to "/cadastro", class: "group inline-flex h-13 items-center gap-2 rounded-2xl bg-brand-gradient px-7 py-3.5 text-base font-semibold text-white shadow-[0_14px_40px_-10px_rgba(124,58,237,0.8)] transition hover:brightness-110 hover:shadow-[0_18px_50px_-10px_rgba(124,58,237,0.9)]" do %>
+        Começar grátis <span class="transition-transform group-hover:translate-x-0.5"><%= icon "arrow-right", size: 18 %></span>
       <% end %>
-      <%= link_to "Como funciona", how_it_works_path, class: "inline-flex h-12 items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 text-base font-semibold text-white transition hover:bg-white/10" %>
+      <%= link_to how_it_works_path, class: "inline-flex h-13 items-center gap-2 rounded-2xl border border-white/20 bg-white/5 px-7 py-3.5 text-base font-semibold text-white backdrop-blur transition hover:bg-white/10" do %>
+        <%= icon "play", size: 15 %> Ver como funciona
+      <% end %>
     </div>
-    <p class="mt-4 text-xs text-white/40"><%= @trial_days %> dias de teste · cartão obrigatório · cancele quando quiser</p>
+    <p class="reveal mt-4 text-xs text-white/40"><%= @trial_days %> dias de teste · cartão obrigatório · cancele quando quiser</p>
 
     <%= render "pages/shared/board_preview", funnel: @funnel %>
   </div>
+
+  <%# curved bottom edge into the light canvas %>
+  <div class="relative h-10 sm:h-16"></div>
 </section>
 
-<%# ── Trust / logos strip ───────────────────────────────────────── %>
-<section class="border-b border-border bg-surface">
-  <div class="mx-auto max-w-6xl px-5 py-8 sm:px-8">
-    <p class="text-center text-xs font-bold uppercase tracking-[0.16em] text-ink-muted">A operação inteira da agência, integrada</p>
-    <div class="mt-5 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-ink-faint">
-      <% [["Instagram", "share-2"], ["Mercado Pago", "receipt"], ["Google Meet", "calendar-days"], ["Claude", "sparkles"], ["HeyGen", "video"], ["Stripe", "shield-check"]].each do |name, ic| %>
-        <span class="inline-flex items-center gap-1.5 font-display text-sm font-bold text-ink-muted"><%= icon ic, size: 16 %> <%= name %></span>
+<%# ══════════════════════════════════════════════════════════════════
+    LOGO MARQUEE — integrations
+    ══════════════════════════════════════════════════════════════════ %>
+<section class="border-y border-border bg-surface/70 backdrop-blur-xl py-8">
+  <p class="text-center text-xs font-bold uppercase tracking-[0.16em] text-ink-muted">A operação inteira da agência, integrada</p>
+  <div class="marquee mt-6">
+    <div class="marquee-track gap-3">
+      <% (@integrations * 2).each do |name, ic| %>
+        <span class="inline-flex shrink-0 items-center gap-2 rounded-full border border-border bg-canvas px-4 py-2 font-display text-sm font-bold text-ink-secondary">
+          <span class="text-ink-muted"><%= icon ic, size: 16 %></span> <%= name %>
+        </span>
       <% end %>
     </div>
   </div>
 </section>
 
-<%# ── The funnel ────────────────────────────────────────────────── %>
-<section class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24">
-  <div class="text-center reveal">
-    <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand">O funil</p>
-    <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">Sete etapas, do insight ao impacto</h2>
-    <p class="mx-auto mt-3 max-w-lg text-ink-muted">Cada ticket caminha por um funil colorido e auto-explicativo — você sabe onde tudo está num piscar de olhos.</p>
-  </div>
-  <div class="mt-10 flex flex-wrap items-stretch justify-center gap-3 reveal">
-    <% @funnel.each_with_index do |s, i| %>
-      <div class="flex items-center gap-3">
-        <div class="flex w-28 flex-col items-center gap-2 rounded-2xl border border-border bg-surface p-4 lift">
-          <span class="flex size-11 items-center justify-center rounded-xl" style="background: <%= soft_bg(s[:color]) %>; color: <%= s[:color] %>;">
-            <%= icon s[:icon], size: 22, stroke: 2.3 %>
-          </span>
-          <span class="text-sm font-bold text-ink"><%= s[:label] %></span>
-        </div>
-        <% if i < @funnel.length - 1 %>
-          <span class="hidden text-ink-faint sm:block"><%= icon "arrow-right", size: 16 %></span>
-        <% end %>
+<%# ══════════════════════════════════════════════════════════════════
+    STAT BAND — animated count-up
+    ══════════════════════════════════════════════════════════════════ %>
+<section class="mx-auto max-w-6xl px-5 py-14 sm:px-8">
+  <div class="grid grid-cols-2 gap-4 lg:grid-cols-4" data-reveal-group>
+    <% @stats.each do |s| %>
+      <div class="reveal reveal-scale rounded-2xl border border-border bg-surface p-6 text-center lift">
+        <span class="mx-auto flex size-11 items-center justify-center rounded-xl" style="background: <%= soft_bg(s[:color]) %>; color: <%= s[:color] %>;">
+          <%= icon s[:icon], size: 22, stroke: 2.3 %>
+        </span>
+        <p class="mt-3 font-display text-4xl font-extrabold text-ink sm:text-5xl">
+          <span data-count="<%= s[:value] %>">0</span><%= s[:suffix] %>
+        </p>
+        <p class="mt-1 text-sm font-medium text-ink-muted"><%= s[:label] %></p>
       </div>
     <% end %>
   </div>
-  <div class="mt-8 text-center">
+</section>
+
+<%# ══════════════════════════════════════════════════════════════════
+    THE FUNNEL
+    ══════════════════════════════════════════════════════════════════ %>
+<section class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24">
+  <div class="reveal text-center">
+    <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand">O funil</p>
+    <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-5xl">Sete etapas, do insight ao impacto</h2>
+    <p class="mx-auto mt-3 max-w-xl text-ink-muted">Cada ticket é uma peça de conteúdo que caminha por um funil colorido e auto-explicativo. Arraste o card e a etapa muda — o resto da operação acompanha sozinho.</p>
+  </div>
+
+  <%# connecting line that draws itself in (lg+) %>
+  <div class="relative mt-14">
+    <svg class="absolute left-0 right-0 top-7 hidden h-2 w-full lg:block" viewBox="0 0 1000 8" preserveAspectRatio="none" fill="none" aria-hidden="true">
+      <path class="draw-line" style="--len: 1000" d="M0 4 H1000" stroke="url(#funnelGrad)" stroke-width="2" stroke-dasharray="6 8" />
+      <defs>
+        <linearGradient id="funnelGrad" x1="0" y1="0" x2="1000" y2="0" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#F59E0B" /><stop offset="0.5" stop-color="#7C3AED" /><stop offset="1" stop-color="#14B8A6" />
+        </linearGradient>
+      </defs>
+    </svg>
+
+    <div class="relative grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7" data-reveal-group data-reveal-step="90">
+      <% @funnel.each do |s| %>
+        <div class="reveal group relative flex flex-col items-center gap-2.5 rounded-2xl border border-border bg-surface p-4 text-center transition-all hover:-translate-y-1 hover:shadow-xl">
+          <span class="flex size-12 items-center justify-center rounded-xl transition-transform group-hover:scale-110" style="background: <%= soft_bg(s[:color]) %>; color: <%= s[:color] %>;">
+            <%= icon s[:icon], size: 24, stroke: 2.3 %>
+          </span>
+          <span class="text-sm font-bold text-ink"><%= s[:label] %></span>
+          <span class="text-[11px] leading-tight text-ink-muted"><%= s[:summary] %></span>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="mt-10 text-center">
     <%= link_to how_it_works_path, class: "inline-flex items-center gap-1.5 text-sm font-semibold text-brand transition hover:gap-2.5" do %>
       Ver o funil em detalhe <%= icon "arrow-right", size: 16 %>
     <% end %>
   </div>
 </section>
 
-<%# ── Features ──────────────────────────────────────────────────── %>
-<section class="bg-surface py-20 sm:py-24">
-  <div class="mx-auto max-w-6xl px-5 sm:px-8">
-    <div class="text-center reveal">
-      <p class="text-xs font-bold uppercase tracking-[0.16em] text-pink">Tudo incluso</p>
-      <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">Uma plataforma, a operação inteira</h2>
-      <p class="mx-auto mt-3 max-w-lg text-ink-muted">Seis frentes que normalmente exigem seis ferramentas — reunidas e conversando entre si.</p>
+<%# ══════════════════════════════════════════════════════════════════
+    AI STRATEGIST — flagship (typewriter chat → generated tickets)
+    ══════════════════════════════════════════════════════════════════ %>
+<section class="relative overflow-hidden bg-shell-gradient py-20 text-white sm:py-28">
+  <div class="anim-aurora absolute inset-0 bg-aurora opacity-70"></div>
+  <div class="relative mx-auto grid max-w-6xl items-center gap-12 px-5 sm:px-8 lg:grid-cols-2">
+    <div class="reveal reveal-left">
+      <span class="inline-flex items-center gap-1.5 rounded-full bg-indigo/20 px-3 py-1 text-xs font-bold text-white ring-1 ring-indigo/30">
+        <%= icon "bot", size: 13 %> Estrategista de IA
+      </span>
+      <h2 class="mt-4 font-display text-3xl font-extrabold leading-tight sm:text-5xl">
+        Descreva a cadência.<br /><span class="text-gradient-brand">Ele preenche o mês.</span>
+      </h2>
+      <p class="mt-4 max-w-md text-lg text-white/70">
+        Converse com um estrategista sênior de conteúdo. Diga o objetivo e o ritmo — ele propõe um
+        plano completo, com datas, briefs e subtarefas, pronto para aplicar no quadro em um clique.
+      </p>
+      <ul class="mt-7 space-y-3 text-sm">
+        <% [
+          ["messages-square", "Uma conversa multi-turno que entende a marca e o projeto"],
+          ["workflow", "Um mês de tickets criados de uma vez, cada um já em Ideação"],
+          ["list-checks", "Briefs e subtarefas com estimativa de esforço, prontos"],
+        ].each do |ic, text| %>
+          <li class="flex items-center gap-2.5 text-white/85">
+            <span class="flex size-6 shrink-0 items-center justify-center rounded-lg bg-white/10 text-indigo"><%= icon ic, size: 14, stroke: 2.5 %></span>
+            <%= text %>
+          </li>
+        <% end %>
+      </ul>
+      <%= link_to feature_path("estrategista"), class: "mt-8 inline-flex items-center gap-1.5 rounded-xl border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10" do %>
+        Conhecer o estrategista <%= icon "arrow-right", size: 15 %>
+      <% end %>
     </div>
-    <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+
+    <%# chat mockup %>
+    <div class="reveal reveal-right rounded-3xl border border-white/10 bg-white/[0.06] p-4 shadow-2xl backdrop-blur sm:p-6" data-typewriter-root>
+      <div class="flex items-center gap-2 border-b border-white/10 pb-3">
+        <span class="flex size-8 items-center justify-center rounded-xl bg-brand-gradient text-white"><%= icon "bot", size: 16 %></span>
+        <span class="font-display text-sm font-bold">Estrategista</span>
+        <span class="ml-auto inline-flex items-center gap-1.5 text-[11px] text-white/45"><span class="size-1.5 rounded-full bg-emerald"></span> online</span>
+      </div>
+
+      <div class="space-y-3 py-4">
+        <div data-type-line hidden class="ml-auto max-w-[88%]">
+          <div class="rounded-2xl rounded-br-md bg-brand-bright/90 px-4 py-2.5 text-sm text-white shadow"><span data-typewriter="<%= @strategist[:prompt] %>"></span></div>
+        </div>
+        <div data-type-line hidden class="max-w-[92%]">
+          <div class="flex items-start gap-2">
+            <span class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg bg-white/10 text-indigo"><%= icon "sparkles", size: 13 %></span>
+            <div class="rounded-2xl rounded-bl-md bg-white/10 px-4 py-2.5 text-sm text-white/90"><span data-typewriter="<%= @strategist[:reply] %>"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <%# resulting tickets — revealed after the typing finishes %>
+      <div data-typewriter-then hidden>
+        <p class="mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-white/45">
+          <%= icon "circle-check", size: 13, css: "text-emerald" %> 12 tickets prontos para aplicar
+        </p>
+        <div class="grid grid-cols-2 gap-2">
+          <% @strategist[:tickets].each do |t| %>
+            <div class="animate-rise rounded-xl border border-white/10 bg-brand-ink2/70 p-2.5">
+              <span class="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-bold" style="background: <%= t[:color] %>22; color: <%= t[:color] %>;">
+                <%= icon "circle-dot", size: 9 %> <%= t[:status] == 'ideation' ? 'Ideação' : 'Escopo' %>
+              </span>
+              <p class="mt-1.5 text-[11px] font-medium leading-snug text-white/85"><%= t[:title] %></p>
+            </div>
+          <% end %>
+        </div>
+        <button type="button" class="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald px-4 py-2.5 text-sm font-bold text-white shadow-lg">
+          <%= icon "check", size: 15, stroke: 3 %> Aplicar no quadro
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%# ══════════════════════════════════════════════════════════════════
+    CONTEXTUAL TICKET — status switcher
+    ══════════════════════════════════════════════════════════════════ %>
+<section class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24">
+  <div class="reveal text-center">
+    <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand">Ticket contextual</p>
+    <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-5xl">Cada etapa mostra o que importa — e nada mais</h2>
+    <p class="mx-auto mt-3 max-w-xl text-ink-muted">O ticket muda de cara conforme avança: campos próprios de cada etapa e um resumo da IA que evolui junto com o conteúdo.</p>
+  </div>
+
+  <div class="reveal mx-auto mt-12 max-w-4xl overflow-hidden rounded-3xl border border-border bg-surface shadow-xl" data-ticket-demo>
+    <%# status rail (tabs) %>
+    <div class="flex gap-1 overflow-x-auto border-b border-border bg-canvas p-2 no-scrollbar">
+      <% @context_states.each do |st| %>
+        <button type="button" data-state-tab data-active="false"
+                class="group inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-ink-muted transition hover:text-ink data-[active=true]:text-white data-[active=true]:bg-[var(--c)] data-[active=true]:shadow-md"
+                style="--c: <%= st[:color] %>">
+          <span class="flex size-5 items-center justify-center rounded-md transition group-data-[active=true]:bg-white/20 group-data-[active=true]:!text-white"
+                style="background: <%= soft_bg(st[:color]) %>; color: <%= st[:color] %>;"><%= icon st[:icon], size: 12, stroke: 2.6 %></span>
+          <%= st[:label] %>
+        </button>
+      <% end %>
+    </div>
+
+    <%# panels — one per status; JS toggles `hidden` %>
+    <% @context_states.each_with_index do |st, i| %>
+      <div data-state-panel <%= 'hidden' if i.positive? %> class="grid gap-6 p-6 sm:p-8 lg:grid-cols-[1.1fr_1fr]">
+        <div>
+          <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold" style="background: <%= soft_bg(st[:color]) %>; color: <%= st[:color] %>;">
+            <%= icon st[:icon], size: 12, stroke: 2.6 %> <%= st[:label] %>
+          </span>
+          <div class="mt-4 space-y-2.5">
+            <% st[:fields].each do |field| %>
+              <div class="flex items-center gap-3 rounded-xl border border-border bg-canvas px-3.5 py-2.5">
+                <span class="size-2 rounded-full" style="background: <%= st[:color] %>;"></span>
+                <span class="text-sm font-semibold text-ink-secondary"><%= field %></span>
+                <span class="ml-auto h-2 w-16 rounded-full bg-surface-muted"></span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+        <div class="rounded-2xl border border-border bg-brand-soft/40 p-5">
+          <p class="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-brand">
+            <%= icon "sparkles", size: 13 %> Resumo da IA
+          </p>
+          <p class="mt-2.5 text-sm leading-relaxed text-ink-secondary">“<%= st[:summary] %>”</p>
+          <div class="mt-4 flex items-center gap-1.5 text-[11px] text-ink-muted">
+            <span class="pulse-ring relative flex size-1.5 rounded-full text-emerald" style="background: currentColor;"></span>
+            atualizado a cada mudança de etapa
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</section>
+
+<%# ══════════════════════════════════════════════════════════════════
+    CREATIVE STUDIO
+    ══════════════════════════════════════════════════════════════════ %>
+<section class="bg-surface/65 backdrop-blur-2xl py-20 sm:py-24">
+  <div class="mx-auto grid max-w-6xl items-center gap-12 px-5 sm:px-8 lg:grid-cols-2">
+    <%# studio mockup %>
+    <div class="reveal reveal-left order-2 lg:order-1">
+      <div class="relative rounded-3xl border border-border bg-canvas p-6 shadow-xl">
+        <div class="grid grid-cols-3 gap-4">
+          <%# carousel — fanned deck %>
+          <div class="relative flex h-40 items-center justify-center">
+            <div class="absolute size-28 -rotate-6 rounded-xl bg-brand-gradient opacity-30 anim-float-slow"></div>
+            <div class="absolute size-28 rotate-3 rounded-xl bg-pink/40 anim-float-sm"></div>
+            <div class="relative flex size-28 flex-col justify-between rounded-xl bg-brand-gradient p-2.5 text-white shadow-lg anim-float">
+              <span class="text-[9px] font-bold opacity-80">@marca</span>
+              <span class="font-display text-[11px] font-extrabold leading-tight">5 mitos que te travam</span>
+              <span class="text-[8px] opacity-70">deslize →</span>
+            </div>
+          </div>
+          <%# video render progress %>
+          <div class="flex h-40 flex-col justify-center rounded-xl border border-border bg-surface p-3">
+            <span class="flex size-9 items-center justify-center rounded-lg bg-pink/12 text-pink"><%= icon "video", size: 18 %></span>
+            <p class="mt-2 text-[11px] font-bold text-ink">Vídeo UGC</p>
+            <p class="text-[10px] text-ink-muted">renderizando…</p>
+            <div class="anim-sheen relative mt-2 h-1.5 overflow-hidden rounded-full bg-surface-muted">
+              <div class="h-full w-2/3 rounded-full bg-pink"></div>
+            </div>
+          </div>
+          <%# image shimmer-in %>
+          <div class="flex h-40 flex-col justify-center rounded-xl border border-border bg-surface p-3">
+            <span class="flex size-9 items-center justify-center rounded-lg bg-sky/12 text-sky"><%= icon "image", size: 18 %></span>
+            <p class="mt-2 text-[11px] font-bold text-ink">Imagem</p>
+            <div class="shimmer mt-2 h-14 rounded-lg bg-gradient-to-br from-sky/30 to-brand/30"></div>
+          </div>
+        </div>
+        <div class="mt-4 flex items-center gap-2 rounded-xl bg-brand-soft/50 px-3.5 py-2.5">
+          <span class="text-brand"><%= icon "palette", size: 16 %></span>
+          <span class="text-xs font-semibold text-ink-secondary">Identidade da marca aplicada automaticamente</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal reveal-right order-1 lg:order-2">
+      <span class="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-3 py-1.5 text-xs font-bold text-brand">
+        <%= icon "wand-sparkles", size: 13 %> Estúdio criativo
+      </span>
+      <h2 class="mt-4 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-5xl">Criativos gerados com a cara da marca</h2>
+      <p class="mt-4 max-w-md text-lg text-ink-muted">
+        Carrosséis virais, vídeos UGC com avatar e imagens — gerados dentro do app com o logo, as
+        cores, o @handle e o avatar do criador. Da ideia ao arquivo final sem trocar de ferramenta.
+      </p>
+      <div class="mt-7 grid gap-3 sm:grid-cols-3">
+        <% [
+          ["image", "#7C3AED", "Carrossel", "Inclusos"],
+          ["video", "#EC4899", "Vídeo UGC", "HeyGen"],
+          ["sparkles", "#0EA5E9", "Imagem", "Google Banana"],
+        ].each do |ic, cc, title, tag| %>
+          <div class="rounded-2xl border border-border bg-canvas p-4">
+            <span class="flex size-9 items-center justify-center rounded-lg" style="background: <%= soft_bg(cc) %>; color: <%= cc %>;"><%= icon ic, size: 18, stroke: 2.2 %></span>
+            <p class="mt-2.5 font-display text-sm font-bold text-ink"><%= title %></p>
+            <p class="text-xs text-ink-muted"><%= tag %></p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%# ══════════════════════════════════════════════════════════════════
+    PUBLISH & ANALYTICS — networks + animated chart
+    ══════════════════════════════════════════════════════════════════ %>
+<section class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24">
+  <div class="reveal text-center">
+    <p class="text-xs font-bold uppercase tracking-[0.16em] text-emerald">Publicação & analytics</p>
+    <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-5xl">Publique em 7 redes. Meça tudo num lugar.</h2>
+    <p class="mx-auto mt-3 max-w-xl text-ink-muted">Agende e publique com integração direta e nativa em cada rede, e acompanhe as métricas de cada post em tempo real.</p>
+  </div>
+
+  <div class="mt-12 grid gap-6 lg:grid-cols-[1fr_1.2fr]">
+    <%# networks grid %>
+    <div class="reveal reveal-left grid grid-cols-2 gap-3 rounded-3xl border border-border bg-surface p-6" data-reveal-group data-reveal-step="60">
+      <% @networks.each do |n| %>
+        <div class="reveal flex items-center gap-2.5 rounded-2xl border border-border bg-canvas px-3.5 py-3 lift">
+          <span class="flex size-9 shrink-0 items-center justify-center rounded-xl" style="background: <%= soft_bg(n[:color]) %>; color: <%= n[:color] %>;"><%= icon n[:icon], size: 18, stroke: 2.2 %></span>
+          <div class="min-w-0">
+            <p class="truncate font-display text-sm font-bold text-ink"><%= n[:name] %></p>
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-emerald">direto</p>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <%# analytics card — animated SVG area chart + count-up KPIs %>
+    <div class="reveal reveal-right rounded-3xl border border-border bg-surface p-6 shadow-lg">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="font-display text-sm font-bold text-ink">Desempenho · últimos 14 dias</p>
+          <p class="text-xs text-ink-muted">sincronizado automaticamente por rede</p>
+        </div>
+        <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald/12 px-2.5 py-1 text-[11px] font-bold text-emerald">
+          <%= icon "trending-up", size: 12, stroke: 2.5 %> +38%
+        </span>
+      </div>
+
+      <svg class="mt-4 h-40 w-full" viewBox="0 0 400 150" fill="none" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop stop-color="#7C3AED" stop-opacity="0.35" /><stop offset="1" stop-color="#7C3AED" stop-opacity="0" />
+          </linearGradient>
+        </defs>
+        <path d="M0 120 C 40 110, 60 80, 100 85 S 160 60, 200 55 S 280 40, 320 30 S 380 20, 400 12 L400 150 L0 150 Z" fill="url(#areaGrad)" opacity="0.9" />
+        <path class="draw-line" style="--len: 520" d="M0 120 C 40 110, 60 80, 100 85 S 160 60, 200 55 S 280 40, 320 30 S 380 20, 400 12" stroke="#7C3AED" stroke-width="2.5" />
+      </svg>
+
+      <div class="mt-4 grid grid-cols-4 gap-2 border-t border-border pt-4 text-center">
+        <% [["Alcance", 84, "k", "#7C3AED"], ["Curtidas", 12, "k", "#EC4899"], ["Salvos", 3, "k", "#10B981"], ["Comentários", 940, "", "#0EA5E9"]].each do |label, val, suf, cc| %>
+          <div>
+            <p class="font-display text-xl font-extrabold" style="color: <%= cc %>;"><span data-count="<%= val %>">0</span><%= suf %></p>
+            <p class="mt-0.5 text-[10px] font-medium text-ink-muted"><%= label %></p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%# ══════════════════════════════════════════════════════════════════
+    REAL-TIME + TEAM
+    ══════════════════════════════════════════════════════════════════ %>
+<section class="bg-surface/65 backdrop-blur-2xl py-20 sm:py-24">
+  <div class="mx-auto max-w-6xl px-5 sm:px-8">
+    <div class="grid gap-5 md:grid-cols-3" data-reveal-group>
+      <div class="reveal reveal-scale rounded-3xl border border-border bg-canvas p-7 lift">
+        <span class="flex size-12 items-center justify-center rounded-2xl bg-emerald/12 text-emerald"><span class="pulse-ring relative flex size-5 items-center justify-center rounded-full" style="color: currentColor;"><%= icon "radio-tower", size: 20, stroke: 2.2 %></span></span>
+        <h3 class="mt-4 font-display text-lg font-bold text-ink">Tempo real, de verdade</h3>
+        <p class="mt-1.5 text-sm leading-relaxed text-ink-muted">Cards se movem, resumos ficam prontos e métricas chegam — sem recarregar. O time inteiro vê a mesma tela, viva.</p>
+      </div>
+      <div class="reveal reveal-scale rounded-3xl border border-border bg-canvas p-7 lift">
+        <span class="flex size-12 items-center justify-center rounded-2xl bg-indigo/12 text-indigo"><%= icon "users-round", size: 24, stroke: 2.2 %></span>
+        <h3 class="mt-4 font-display text-lg font-bold text-ink">Papéis e permissões</h3>
+        <p class="mt-1.5 text-sm leading-relaxed text-ink-muted">Owner, admin, gerente, membro e convidado — cada um vê e faz exatamente o que deve. O cliente aprova; o time produz.</p>
+      </div>
+      <div class="reveal reveal-scale rounded-3xl border border-border bg-canvas p-7 lift">
+        <span class="flex size-12 items-center justify-center rounded-2xl bg-brand-soft text-brand"><%= icon "building-2", size: 24, stroke: 2.2 %></span>
+        <h3 class="mt-4 font-display text-lg font-bold text-ink">Várias agências, isoladas</h3>
+        <p class="mt-1.5 text-sm leading-relaxed text-ink-muted">Cada workspace é uma agência com seu time, clientes e dados. Gerencie todas de uma conta, sem misturar nada.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%# ══════════════════════════════════════════════════════════════════
+    AI CONNECTOR (MCP)
+    ══════════════════════════════════════════════════════════════════ %>
+<section class="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-12">
+  <div class="reveal relative overflow-hidden rounded-3xl bg-shell-gradient p-8 text-white shadow-[0_24px_60px_-30px_rgba(17,10,36,0.7)] sm:p-12">
+    <div class="anim-aurora pointer-events-none absolute inset-0 bg-aurora opacity-80"></div>
+    <div class="relative grid items-center gap-10 lg:grid-cols-2">
+      <div>
+        <span class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-white/80">
+          <%= icon "plug-zap", size: 13 %> Novo — Conector de IA
+        </span>
+        <h2 class="mt-4 font-display text-3xl font-extrabold leading-tight sm:text-4xl">
+          Opere a agência <span class="text-gradient-brand">conversando com a IA</span>
+        </h2>
+        <p class="mt-3 max-w-md text-white/75">
+          Adicione o agencios como <strong class="text-white">conector (MCP)</strong> no seu assistente de
+          IA e comande tudo por linguagem natural — crie e mova tickets, gere criativos, agende posts e
+          cobranças, sem sair da conversa.
+        </p>
+        <ul class="mt-6 space-y-2.5 text-sm text-white/85">
+          <li class="flex items-center gap-2"><span class="text-emerald"><%= icon "check", size: 16 %></span> Cola uma URL — sem login, sem OAuth</li>
+          <li class="flex items-center gap-2"><span class="text-emerald"><%= icon "check", size: 16 %></span> Respeita seu papel e permissões em cada workspace</li>
+          <li class="flex items-center gap-2"><span class="text-emerald"><%= icon "check", size: 16 %></span> Mais de 70 ações da plataforma à disposição</li>
+        </ul>
+      </div>
+      <div class="rounded-2xl border border-white/10 bg-white/[0.06] p-5 backdrop-blur" data-typewriter-root>
+        <div class="space-y-3">
+          <div data-type-line hidden class="ml-auto max-w-[85%]">
+            <div class="rounded-2xl rounded-br-md bg-brand-bright/90 px-4 py-2.5 text-sm text-white shadow"><span data-typewriter="No workspace estúdio-pulse, crie um ticket no projeto Bloom: “Reel de lançamento”."></span></div>
+          </div>
+          <div data-type-line hidden class="max-w-[90%]">
+            <div class="rounded-2xl rounded-bl-md bg-white/10 px-4 py-2.5 text-sm text-white/85"><span data-typewriter="Pronto ✅ — ticket #214 criado em Ideação, atribuído a você. Quer que eu já gere um carrossel?"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%# ══════════════════════════════════════════════════════════════════
+    REPORTS + CLIENT BILLING (two-up)
+    ══════════════════════════════════════════════════════════════════ %>
+<section class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24">
+  <div class="grid gap-6 lg:grid-cols-2">
+    <%# reports %>
+    <div class="reveal reveal-left flex flex-col rounded-3xl border border-border bg-surface p-8 shadow-lg">
+      <span class="inline-flex w-fit items-center gap-1.5 rounded-full bg-teal/12 px-3 py-1.5 text-xs font-bold text-teal">
+        <%= icon "file-text", size: 13 %> Relatórios de projeto
+      </span>
+      <h3 class="mt-4 font-display text-2xl font-extrabold tracking-tight text-ink">O fechamento vira um deck que impressiona</h3>
+      <p class="mt-3 text-ink-muted">A IA lê as métricas, o histórico e as lições e monta um relatório com KPIs, acertos, gargalos e plano de ação — pronto para apresentar ao cliente.</p>
+      <div class="mt-6 grid grid-cols-3 gap-3">
+        <% [["Alcance", "+42%", "#10B981"], ["Posts", "24", "#7C3AED"], ["Meta", "118%", "#F59E0B"]].each do |label, val, cc| %>
+          <div class="rounded-2xl border border-border bg-canvas p-3 text-center">
+            <p class="font-display text-xl font-extrabold" style="color: <%= cc %>;"><%= val %></p>
+            <p class="mt-0.5 text-[10px] font-medium text-ink-muted"><%= label %></p>
+          </div>
+        <% end %>
+      </div>
+      <div class="mt-4 space-y-2">
+        <div class="flex items-center gap-2 rounded-xl bg-emerald/8 px-3 py-2 text-xs text-ink-secondary"><span class="text-emerald"><%= icon "trophy", size: 14 %></span> Acerto: bastidores puxaram o alcance</div>
+        <div class="flex items-center gap-2 rounded-xl bg-amber/8 px-3 py-2 text-xs text-ink-secondary"><span class="text-amber"><%= icon "target", size: 14 %></span> Ajuste: publicar mais cedo às terças</div>
+      </div>
+      <%= link_to feature_path("relatorios"), class: "mt-auto pt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-teal transition hover:gap-2.5" do %>
+        Ver relatórios <%= icon "arrow-right", size: 15 %>
+      <% end %>
+    </div>
+
+    <%# client billing — Pix %>
+    <div class="reveal reveal-right flex flex-col rounded-3xl border border-border bg-surface p-8 shadow-lg">
+      <span class="inline-flex w-fit items-center gap-1.5 rounded-full bg-orange/12 px-3 py-1.5 text-xs font-bold text-orange">
+        <%= icon "receipt", size: 13 %> Cobranças
+      </span>
+      <h3 class="mt-4 font-display text-2xl font-extrabold tracking-tight text-ink">Fature seus clientes e receba via Pix</h3>
+      <p class="mt-3 text-ink-muted">Crie faturas ligadas a projetos, cobre por Pix, boleto ou cartão pelo Mercado Pago e deixe a conciliação acontecer sozinha.</p>
+      <div class="mt-6 flex items-center gap-4 rounded-2xl border border-border bg-canvas p-4">
+        <div class="grid size-20 shrink-0 place-items-center rounded-xl bg-brand-ink text-white/90 anim-float-sm">
+          <%= icon "qr-code", size: 44, stroke: 1.6 %>
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center justify-between">
+            <span class="font-display text-sm font-bold text-ink">Fatura #0182</span>
+            <span class="inline-flex items-center gap-1 rounded-full bg-emerald/12 px-2 py-0.5 text-[10px] font-bold text-emerald"><span class="size-1.5 rounded-full bg-emerald"></span> Pago</span>
+          </div>
+          <p class="mt-1 font-display text-2xl font-extrabold text-ink">R$ 2.400</p>
+          <p class="text-[11px] text-ink-muted">Pix conciliado automaticamente</p>
+        </div>
+      </div>
+      <div class="mt-4 flex flex-wrap gap-2">
+        <% ["Pix", "Boleto", "Cartão", "Multi-projeto"].each do |tag| %>
+          <span class="rounded-full bg-surface-muted px-2.5 py-1 text-[11px] font-semibold text-ink-secondary"><%= tag %></span>
+        <% end %>
+      </div>
+      <%= link_to feature_path("cobrancas"), class: "mt-auto pt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-orange transition hover:gap-2.5" do %>
+        Ver cobranças <%= icon "arrow-right", size: 15 %>
+      <% end %>
+    </div>
+  </div>
+</section>
+
+<%# ══════════════════════════════════════════════════════════════════
+    ALL FEATURES GRID
+    ══════════════════════════════════════════════════════════════════ %>
+<section class="bg-surface/65 backdrop-blur-2xl py-20 sm:py-24">
+  <div class="mx-auto max-w-6xl px-5 sm:px-8">
+    <div class="reveal text-center">
+      <p class="text-xs font-bold uppercase tracking-[0.16em] text-pink">Tudo incluso</p>
+      <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-5xl">Uma plataforma, a operação inteira</h2>
+      <p class="mx-auto mt-3 max-w-lg text-ink-muted">Oito frentes que normalmente exigem oito ferramentas — reunidas e conversando entre si.</p>
+    </div>
+    <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4" data-reveal-group data-reveal-step="60">
       <% @features.each do |f| %>
-        <%= link_to feature_path(f[:slug]), class: "group block rounded-2xl border border-border bg-canvas p-6 lift reveal" do %>
-          <span class="flex size-12 items-center justify-center rounded-2xl" style="background: <%= soft_bg(f[:color]) %>; color: <%= f[:color] %>;">
+        <%= link_to feature_path(f[:slug]), class: "reveal group block rounded-2xl border border-border bg-canvas p-6 transition-all hover:-translate-y-1 hover:border-brand/30 hover:shadow-xl" do %>
+          <span class="flex size-12 items-center justify-center rounded-2xl transition-transform group-hover:scale-110" style="background: <%= soft_bg(f[:color]) %>; color: <%= f[:color] %>;">
             <%= icon f[:icon], size: 24, stroke: 2.2 %>
           </span>
-          <h3 class="mt-4 flex items-center gap-1.5 font-display text-lg font-bold text-ink">
+          <h3 class="mt-4 flex items-center gap-1.5 font-display text-base font-bold text-ink">
             <%= f[:name] %>
-            <span class="text-ink-faint transition-all group-hover:translate-x-0.5 group-hover:text-brand"><%= icon "arrow-right", size: 16 %></span>
+            <span class="text-ink-faint transition-all group-hover:translate-x-0.5 group-hover:text-brand"><%= icon "arrow-right", size: 15 %></span>
           </h3>
           <p class="mt-1.5 text-sm leading-relaxed text-ink-muted"><%= f[:card] %></p>
         <% end %>
@@ -92,98 +528,43 @@
   </div>
 </section>
 
-<%# ── Claude connector ──────────────────────────────────────────── %>
-<section class="bg-surface pb-20 sm:pb-24">
-  <div class="mx-auto max-w-6xl px-5 sm:px-8">
-    <div class="reveal relative overflow-hidden rounded-3xl bg-shell-gradient p-8 text-white shadow-[0_24px_60px_-30px_rgba(17,10,36,0.7)] sm:p-12">
-      <div class="bg-aurora pointer-events-none absolute inset-0 opacity-80"></div>
-      <div class="relative grid items-center gap-10 lg:grid-cols-2">
-        <div>
-          <span class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-white/80">
-            <%= icon "sparkles", size: 13 %> Novo — Conector do Claude
-          </span>
-          <h2 class="mt-4 font-display text-3xl font-extrabold leading-tight sm:text-4xl">
-            Opere a agência <span class="text-gradient-brand">conversando com o Claude</span>
-          </h2>
-          <p class="mt-3 max-w-md text-white/75">
-            Adicione o agencios como <strong class="text-white">conector no Claude</strong> e comande tudo
-            por linguagem natural — crie e mova tickets, gere criativos, agende posts e cobranças, sem sair
-            da conversa.
-          </p>
-          <ul class="mt-6 space-y-2.5 text-sm text-white/85">
-            <li class="flex items-center gap-2"><span class="text-emerald"><%= icon "check", size: 16 %></span> Cola uma URL — sem login, sem OAuth</li>
-            <li class="flex items-center gap-2"><span class="text-emerald"><%= icon "check", size: 16 %></span> Respeita seu papel e permissões em cada workspace</li>
-            <li class="flex items-center gap-2"><span class="text-emerald"><%= icon "check", size: 16 %></span> Mais de 70 ações da plataforma à disposição</li>
-          </ul>
-        </div>
-        <div class="rounded-2xl border border-white/10 bg-white/[0.06] p-5 backdrop-blur">
-          <div class="space-y-3">
-            <div class="ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-brand-bright/90 px-4 py-2.5 text-sm text-white shadow">
-              No workspace estúdio-pulse, crie um ticket no projeto Bloom: “Reel de lançamento”.
-            </div>
-            <div class="max-w-[90%] rounded-2xl rounded-bl-md bg-white/10 px-4 py-2.5 text-sm text-white/85">
-              Pronto ✅ — ticket <strong class="text-white">#214</strong> criado em <strong class="text-white">Ideação</strong>, atribuído a você. Quer que eu já gere um carrossel?
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<%# ── How it works (3 steps) ────────────────────────────────────── %>
+<%# ══════════════════════════════════════════════════════════════════
+    PRICING PREVIEW
+    ══════════════════════════════════════════════════════════════════ %>
 <section class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24">
-  <div class="text-center reveal">
-    <p class="text-xs font-bold uppercase tracking-[0.16em] text-sky">Como funciona</p>
-    <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">Três passos até o post no ar</h2>
+  <div class="reveal text-center">
+    <p class="text-xs font-bold uppercase tracking-[0.16em] text-emerald">Planos</p>
+    <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-5xl">Preço que cresce com a agência</h2>
+    <p class="mx-auto mt-3 max-w-lg text-ink-muted">Comece com <%= @trial_days %> dias de teste. Vídeos e imagens usam créditos; carrosséis e legendas com IA são inclusos.</p>
   </div>
-  <div class="mt-12 grid gap-6 md:grid-cols-3">
-    <% @steps.each do |s| %>
-      <div class="relative rounded-2xl border border-border bg-surface p-7 reveal">
-        <span class="flex size-12 items-center justify-center rounded-2xl bg-brand-gradient font-display text-xl font-black text-white shadow-lg"><%= s[:n] %></span>
-        <h3 class="mt-4 font-display text-xl font-bold text-ink"><%= s[:title] %></h3>
-        <p class="mt-2 text-sm leading-relaxed text-ink-muted"><%= s[:desc] %></p>
+  <div class="mx-auto mt-12 grid max-w-4xl gap-6 md:grid-cols-3" data-reveal-group>
+    <% @plans.each do |p| %>
+      <div class="reveal <%= p[:highlight] ? 'relative rounded-3xl border-2 border-brand bg-brand-soft p-7 shadow-xl' : 'rounded-3xl border border-border bg-surface p-7' %>">
+        <% if p[:highlight] %>
+          <span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand-gradient px-3 py-1 text-xs font-bold text-white shadow-lg">Mais popular</span>
+        <% end %>
+        <h3 class="font-display text-xl font-extrabold text-ink"><%= p[:name] %></h3>
+        <p class="mt-1 text-sm text-ink-muted"><%= plan_seats_label(p[:seats]) %></p>
+        <p class="mt-4 font-display text-4xl font-extrabold text-ink"><%= brl_short(p[:price_cents]) %><span class="text-base font-semibold text-ink-muted">/mês</span></p>
+        <% if @annual_discount_percent.to_i.positive? %>
+          <p class="mt-1 text-xs font-semibold text-emerald">ou <%= brl_short(p[:annual_monthly_equivalent_cents]) %>/mês no anual · -<%= @annual_discount_percent %>%</p>
+        <% end %>
+        <ul class="mt-6 space-y-2.5">
+          <% p[:features].first(5).each do |feat| %>
+            <li class="flex items-center gap-2 text-sm text-ink-secondary">
+              <span class="text-emerald shrink-0"><%= icon "check", size: 16, stroke: 3 %></span> <%= feat %>
+            </li>
+          <% end %>
+        </ul>
+        <%= link_to p[:cta], "/cadastro",
+              class: "mt-7 inline-flex h-11 w-full items-center justify-center rounded-xl text-sm font-semibold transition " +
+                (p[:highlight] ? "bg-brand-gradient text-white shadow-lg hover:brightness-105" : "border border-border bg-surface text-ink hover:border-brand/40 hover:bg-brand-soft") %>
       </div>
     <% end %>
   </div>
-</section>
-
-<%# ── Pricing preview ───────────────────────────────────────────── %>
-<section class="bg-surface py-20 sm:py-24">
-  <div class="mx-auto max-w-6xl px-5 sm:px-8">
-    <div class="text-center reveal">
-      <p class="text-xs font-bold uppercase tracking-[0.16em] text-emerald">Planos</p>
-      <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">Preço que cresce com a agência</h2>
-    </div>
-    <div class="mx-auto mt-12 grid max-w-4xl gap-6 md:grid-cols-3">
-      <% @plans.each do |p| %>
-        <div class="<%= p[:highlight] ? 'relative rounded-3xl border-2 border-brand bg-brand-soft p-7 shadow-xl reveal' : 'rounded-3xl border border-border bg-canvas p-7 reveal' %>">
-          <% if p[:highlight] %>
-            <span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand-gradient px-3 py-1 text-xs font-bold text-white">Mais popular</span>
-          <% end %>
-          <h3 class="font-display text-xl font-extrabold text-ink"><%= p[:name] %></h3>
-          <p class="mt-1 text-sm text-ink-muted"><%= plan_seats_label(p[:seats]) %></p>
-          <p class="mt-4 font-display text-4xl font-extrabold text-ink"><%= brl_short(p[:price_cents]) %><span class="text-base font-semibold text-ink-muted">/mês</span></p>
-          <% if @annual_discount_percent.to_i.positive? %>
-            <p class="mt-1 text-xs font-semibold text-emerald">ou <%= brl_short(p[:annual_monthly_equivalent_cents]) %>/mês no anual · -<%= @annual_discount_percent %>%</p>
-          <% end %>
-          <ul class="mt-6 space-y-2.5">
-            <% p[:features].first(5).each do |feat| %>
-              <li class="flex items-center gap-2 text-sm text-ink-secondary">
-                <span class="text-emerald shrink-0"><%= icon "check", size: 16, stroke: 3 %></span> <%= feat %>
-              </li>
-            <% end %>
-          </ul>
-          <%= link_to p[:cta], "/cadastro",
-                class: "mt-7 inline-flex h-11 w-full items-center justify-center rounded-xl text-sm font-semibold transition " +
-                  (p[:highlight] ? "bg-brand-gradient text-white shadow-lg hover:brightness-105" : "border border-border bg-surface text-ink hover:border-brand/40 hover:bg-brand-soft") %>
-        </div>
-      <% end %>
-    </div>
-    <p class="mt-6 text-center text-sm">
-      <%= link_to "Ver planos e perguntas frequentes", pricing_path, class: "font-semibold text-brand hover:underline" %>
-    </p>
-  </div>
+  <p class="mt-6 text-center text-sm">
+    <%= link_to "Ver planos e perguntas frequentes", pricing_path, class: "font-semibold text-brand hover:underline" %>
+  </p>
 </section>
 
 <%= render "pages/shared/cta" %>

@@ -1,5 +1,5 @@
 <% content_for :title, "Funcionalidades — agencios" %>
-<% content_for :description, "Quadro de produção, estúdio criativo com IA, publicação multi-rede, calendário, reuniões e cobranças. Conheça todas as funcionalidades da agencios." %>
+<% content_for :description, "Quadro de produção, estrategista de IA, estúdio criativo, publicação em 7 redes, calendário, reuniões, relatórios e cobranças. Conheça todas as funcionalidades da agencios." %>
 
 <%# ── Hero ──────────────────────────────────────────────────────── %>
 <section class="relative overflow-hidden bg-shell-gradient">
@@ -12,7 +12,7 @@
       Tudo que sua agência faz, <span class="text-gradient-brand">num só sistema.</span>
     </h1>
     <p class="mx-auto mt-5 max-w-xl text-lg text-white/70">
-      Seis frentes que normalmente exigem seis ferramentas — reunidas, integradas e conversando entre si.
+      Oito frentes que normalmente exigem oito ferramentas — reunidas, integradas e conversando entre si.
       Clique em cada uma para ver em detalhe.
     </p>
   </div>
@@ -20,9 +20,9 @@
 
 <%# ── Feature grid ──────────────────────────────────────────────── %>
 <section class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24">
-  <div class="grid gap-6 md:grid-cols-2">
+  <div class="grid gap-6 md:grid-cols-2" data-reveal-group data-reveal-step="70">
     <% @features.each do |f| %>
-      <%= link_to feature_path(f[:slug]), class: "group block rounded-3xl border border-border bg-surface p-7 lift reveal" do %>
+      <%= link_to feature_path(f[:slug]), class: "group block rounded-3xl border border-border bg-surface p-7 reveal reveal-scale transition-all hover:-translate-y-1 hover:border-brand/30 hover:shadow-2xl" do %>
         <div class="flex items-start justify-between">
           <span class="flex size-14 items-center justify-center rounded-2xl shadow-sm" style="background: <%= soft_bg(f[:color]) %>; color: <%= f[:color] %>;">
             <%= icon f[:icon], size: 28, stroke: 2.1 %>

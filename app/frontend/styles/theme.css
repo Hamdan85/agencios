@@ -176,3 +176,203 @@
 .ag-sheet-panel[data-state='closed']   { animation: ag-slide-out-right 0.26s cubic-bezier(0.4, 0, 1, 1) both; }
 .ag-sheet-panel-bottom[data-state='open']   { animation: ag-slide-in-bottom 0.34s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .ag-sheet-panel-bottom[data-state='closed'] { animation: ag-slide-out-bottom 0.26s cubic-bezier(0.4, 0, 1, 1) both; }
+
+/* ╔══════════════════════════════════════════════════════════════════╗
+ * ║   MARKETING MOTION SYSTEM                                          ║
+ * ║   CSS-only animation primitives for the SSR landing pages.        ║
+ * ║   Every keyframe-driven class is gated behind                     ║
+ * ║   `prefers-reduced-motion: no-preference` so the site degrades    ║
+ * ║   to a fully static, legible page for reduced-motion + crawlers.  ║
+ * ╚══════════════════════════════════════════════════════════════════╝ */
+
+/* ── Keyframes ─────────────────────────────────────────────────────── */
+@keyframes ag-float      { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-9px) } }
+@keyframes ag-float-sm   { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-5px) } }
+@keyframes ag-marquee    { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+@keyframes ag-gradient-x { 0%,100% { background-position: 0% 50% } 50% { background-position: 100% 50% } }
+@keyframes ag-draw       { to { stroke-dashoffset: 0 } }
+@keyframes ag-shimmer    { 0% { background-position: -150% 0 } 100% { background-position: 250% 0 } }
+@keyframes ag-pulse-ring { 0% { transform: scale(.7); opacity: .7 } 100% { transform: scale(2.4); opacity: 0 } }
+@keyframes ag-travel {
+  0%,8%    { transform: translate(0,0)        rotate(-2deg); }
+  25%,33%  { transform: translate(148px,10px) rotate(1deg); }
+  50%,58%  { transform: translate(296px,-6px) rotate(-1deg); }
+  75%,83%  { transform: translate(444px,8px)  rotate(2deg); }
+  100%     { transform: translate(0,0)        rotate(-2deg); }
+}
+@keyframes ag-caret      { 0%,100% { opacity: 1 } 50% { opacity: 0 } }
+@keyframes ag-aurora-drift {
+  0%,100% { transform: translate3d(0,0,0) scale(1); }
+  33%     { transform: translate3d(3%,-2%,0) scale(1.08); }
+  66%     { transform: translate3d(-3%,2%,0) scale(1.04); }
+}
+@keyframes ag-sheen      { 0% { transform: translateX(-120%) } 60%,100% { transform: translateX(220%) } }
+@keyframes ag-fan-1      { from { transform: rotate(0) translateY(0) } to { transform: rotate(-9deg) translateX(-16px) } }
+@keyframes ag-fan-2      { from { transform: rotate(0) translateY(0) } to { transform: rotate(9deg)  translateX(16px) } }
+
+/* ── Reveal: base + staggered ──────────────────────────────────────── */
+/* (Base `.reveal` lives in marketing.css. Stagger reads an inline
+ *  `--reveal-delay` custom property applied by the group's index.) */
+.js .reveal[style*='--reveal-delay'] { transition-delay: var(--reveal-delay); }
+
+/* ── Utilities ─────────────────────────────────────────────────────── */
+.gradient-border {
+  position: relative;
+  background-clip: padding-box;
+}
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, var(--color-brand-bright), var(--color-pink), var(--color-sky));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Animated dot / grid backdrop textures */
+.dot-bg {
+  background-image: radial-gradient(color-mix(in srgb, var(--color-brand) 22%, transparent) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+.grid-bg {
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Pointer-tilt container (CSS vars set by JS; neutral fallback = flat) */
+.tilt {
+  transform: perspective(1200px) rotateX(var(--ty, 0deg)) rotateY(var(--tx, 0deg));
+  transition: transform 0.3s var(--ease-spring);
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+/* Infinite logo marquee (track holds two copies; translate -50% loops seamlessly) */
+.marquee { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.marquee-track { display: flex; width: max-content; }
+
+/* Live real-time ping */
+.pulse-ring { position: relative; }
+.pulse-ring::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+}
+
+/* Typewriter caret */
+.caret::after { content: '▋'; margin-left: 1px; color: var(--color-brand-bright); }
+
+/* Shimmer skeleton (image reveal placeholder) */
+.shimmer {
+  background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,0.55) 50%, transparent 80%);
+  background-size: 200% 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .anim-float      { animation: ag-float 6s ease-in-out infinite; }
+  .anim-float-sm   { animation: ag-float-sm 5s ease-in-out infinite; }
+  .anim-float-slow { animation: ag-float 9s ease-in-out infinite; }
+  .anim-aurora     { animation: ag-aurora-drift 22s ease-in-out infinite; }
+  .anim-gradient-x {
+    background-size: 200% 200%;
+    animation: ag-gradient-x 7s ease infinite;
+  }
+  .marquee-track   { animation: ag-marquee 42s linear infinite; }
+  .marquee:hover .marquee-track { animation-play-state: paused; }
+  .anim-travel     { animation: ag-travel 9s ease-in-out infinite; }
+  .anim-caret::after { animation: ag-caret 1s step-end infinite; }
+  .pulse-ring::after { animation: ag-pulse-ring 2.4s ease-out infinite; }
+  .shimmer         { animation: ag-shimmer 1.8s linear infinite; }
+  .draw-line       { stroke-dasharray: var(--len, 600); stroke-dashoffset: var(--len, 600); }
+  .draw-line.is-drawn { animation: ag-draw 1.4s var(--ease-spring) forwards; }
+  .anim-sheen::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.35) 50%, transparent 70%);
+    transform: translateX(-120%);
+    animation: ag-sheen 3.5s ease-in-out infinite;
+    pointer-events: none;
+  }
+}
+
+/* ── Ambient marketing background ──────────────────────────────────
+ * A fixed, page-wide decorative layer (behind all content) that warms the
+ * otherwise-white light sections: soft brand-colored flares that drift, plus
+ * a faint circuit-like grid with glowing nodes. Sits at z -10; the transparent
+ * SSR sections show it through, opaque section bands break it up for rhythm.
+ * ────────────────────────────────────────────────────────────────── */
+.marketing-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(124, 58, 237, 0.10), transparent 60%),
+    radial-gradient(80% 60% at 0% 40%, rgba(236, 72, 153, 0.07), transparent 55%),
+    radial-gradient(90% 70% at 100% 100%, rgba(14, 165, 233, 0.08), transparent 55%),
+    var(--color-canvas);
+}
+
+/* faint circuit grid + node dots, masked to fade toward the edges */
+.marketing-bg::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background-image:
+    linear-gradient(to right, rgba(124, 58, 237, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(124, 58, 237, 0.07) 1px, transparent 1px),
+    radial-gradient(rgba(124, 58, 237, 0.16) 1.5px, transparent 1.7px);
+  background-size: 54px 54px, 54px 54px, 54px 54px;
+  background-position: 0 0, 0 0, 27px 27px;
+  -webkit-mask-image: radial-gradient(ellipse 100% 80% at 50% 25%, #000 45%, transparent 100%);
+          mask-image: radial-gradient(ellipse 100% 80% at 50% 25%, #000 45%, transparent 100%);
+}
+
+.marketing-bg .flare {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(64px);
+  opacity: 0.72;
+  will-change: transform;
+}
+.marketing-bg .flare-1 { top: -8%;  left: -6%;  width: 46vw; height: 46vw; background: radial-gradient(circle, rgba(124, 58, 237, 0.62), transparent 70%); }
+.marketing-bg .flare-2 { top: 20%;  right: -10%; width: 42vw; height: 42vw; background: radial-gradient(circle, rgba(236, 72, 153, 0.52), transparent 70%); }
+.marketing-bg .flare-3 { bottom: -12%; left: 14%; width: 48vw; height: 48vw; background: radial-gradient(circle, rgba(14, 165, 233, 0.5), transparent 70%); }
+.marketing-bg .flare-4 { top: 58%; right: 20%; width: 34vw; height: 34vw; background: radial-gradient(circle, rgba(20, 184, 166, 0.44), transparent 70%); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .marketing-bg .flare-1 { animation: ag-flare-a 26s ease-in-out infinite; }
+  .marketing-bg .flare-2 { animation: ag-flare-b 32s ease-in-out infinite; }
+  .marketing-bg .flare-3 { animation: ag-flare-a 30s ease-in-out infinite reverse; }
+  .marketing-bg .flare-4 { animation: ag-flare-b 24s ease-in-out infinite reverse; }
+}
+
+@keyframes ag-flare-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33%      { transform: translate3d(6%, 4%, 0) scale(1.12); }
+  66%      { transform: translate3d(-4%, 8%, 0) scale(0.95); }
+}
+@keyframes ag-flare-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33%      { transform: translate3d(-7%, 5%, 0) scale(1.08); }
+  66%      { transform: translate3d(5%, -6%, 0) scale(1.15); }
+}
+
+/* Reduced motion: freeze everything at a sensible static state. */
+@media (prefers-reduced-motion: reduce) {
+  .anim-float, .anim-float-sm, .anim-float-slow, .anim-aurora, .anim-gradient-x,
+  .marquee-track, .anim-travel, .pulse-ring::after, .shimmer, .anim-sheen::before,
+  .marketing-bg .flare { animation: none !important; }
+  .draw-line { stroke-dashoffset: 0 !important; }
+  .tilt { transform: none !important; }
+}

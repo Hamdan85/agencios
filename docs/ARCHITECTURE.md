@@ -47,7 +47,7 @@ shell and a few public pages.
 │ (S3)          │  └───────┬───────────────────────────────────────────────────┘
 └──────────────┘          │ external APIs
                           ▼
-   Meta (IG/FB) · TikTok · YouTube · LinkedIn · X · Upload-Post (aggregator)
+   Meta (IG/FB) · Threads · TikTok · YouTube · LinkedIn · X
    HeyGen / HyperFrames (video) · image model (carousels/images)
    Google Calendar/Meet · Mercado Pago (client billing) · Stripe (SaaS billing) · Anthropic
 ```
@@ -94,7 +94,7 @@ app/
     ├── controllers/     # HTTP-layer service objects (one per action)
     ├── operations/      # domain operations (own all side effects)
     ├── vendors/         # third-party API wrappers (Client + Actions::*)
-    ├── publishers/      # SocialPublisher (direct-vs-aggregator routing)
+    ├── publishers/      # SocialPublisher (per-network direct vendor routing)
     ├── creatives/       # creative-type specs/registry (mirrors a template registry)
     └── prompts/         # AI prompt builders (status-aware ticket summary, captions, …)
 config/                  # routes.rb, sidekiq.yml, schedule.yml (cron), cable.yml, credentials/
@@ -126,7 +126,7 @@ docs/                    # ARCHITECTURE.md, SPECIFICATION.md, integrations/*
 | AI — text | **Anthropic Claude** | summaries, scope, captions, retrospectives |
 | AI — video | **HeyGen** + **HyperFrames** | UGC / avatar talking-head; metered |
 | AI — image/carousel | image model (e.g. Ideogram/Replicate/OpenAI images) | viral carousel generator + images; carousels metered |
-| Social | Meta Graph (IG/FB), TikTok, YouTube, LinkedIn, X, Upload-Post | direct-first, aggregator fallback |
+| Social | Meta Graph (IG/FB), Threads, TikTok, YouTube, LinkedIn, X | direct integration per network |
 | Calendar | **Google Calendar/Meet** | `google-apis-calendar_v3`, `google-apis-meet_v2` |
 | Client billing | **Mercado Pago** | Pix-first; boleto/card; webhooks |
 | SaaS billing | **Stripe** | subscription tiers + Billing Meters (usage) |
@@ -226,13 +226,12 @@ ones: `Tickets::ChangeStatus`, `Tickets::Create`, `Tickets::SummarizeTicket`,
 `Invoices::Create`, `Billing::RecordUsage` / `SyncSubscription`.
 
 **`Vendors::*`** — third-party wrappers, one `Client` + `Actions::*` per vendor, all external
-knowledge isolated here and documented in `docs/integrations/`. Vendors: `Meta`, `TikTok`,
-`Youtube`, `Linkedin`, `X`, `UploadPost`, `Heygen`, `Hyperframes`, the image vendor, `MercadoPago`,
+knowledge isolated here and documented in `docs/integrations/`. Vendors: `Meta`, `Threads`, `TikTok`,
+`Youtube`, `Linkedin`, `X`, `Heygen`, `Hyperframes`, the image vendor, `MercadoPago`,
 `Stripe`, `Google`, `Anthropic`.
 
-**`Publishers::*`** — `SocialPublisher`, the single publish interface; routes each network to a
-direct vendor or the aggregator per workspace config. Swapping a network's provider is a one-line
-change here.
+**`Publishers::*`** — `SocialPublisher`, the single publish interface; routes each network to its
+direct vendor. Every network integrates directly.
 
 **`Creatives::*`** — creative-type spec classes (`.type_key`, `.spec`) + registry
 (`app/services/creatives.rb`). Mirrors adv-os's `Petitions::*` registry.

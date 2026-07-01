@@ -172,8 +172,8 @@ Isolate all external API knowledge here. Each vendor has a `Client` class that w
 calls, and discrete `Actions::*` classes that delegate to the client. Each integration's exact
 endpoints, scopes, and OAuth flow are documented in `docs/integrations/<vendor>.md`.
 
-Current vendors: `Meta` (Instagram + Facebook), `TikTok`, `Youtube`, `Linkedin`, `X`,
-`UploadPost` (aggregator fallback), `Heygen` + `Hyperframes` (video), an image generator,
+Current vendors: `Meta` (Instagram + Facebook), `Threads`, `TikTok`, `Youtube`, `Linkedin`, `X`,
+`Heygen` + `Hyperframes` (video), an image generator,
 `MercadoPago` (client billing), `Stripe` (SaaS billing), `Google` (Calendar/Meet), `Anthropic`.
 
 ```ruby
@@ -184,9 +184,8 @@ Vendors::Meta::Actions::PublishMedia.call(...)                 # preferred call 
 ### `app/services/publishers/` — Cross-network publishing seam
 
 `Publishers::SocialPublisher` is the single interface used by `Operations::Posts::Publish`.
-It resolves, per network and per workspace, whether to publish **directly** (`Vendors::Meta`,
-`Vendors::TikTok`, …) or via the **aggregator** (`Vendors::UploadPost`). A network is swapped
-between direct and aggregator with a one-line route change here — callers never branch on provider.
+It resolves, per network and per workspace, the direct vendor to publish through (`Vendors::Meta`,
+`Vendors::TikTok`, …). Every network integrates directly — callers never branch on provider.
 
 ### `app/services/creatives/` — Creative type specifications
 
@@ -274,8 +273,8 @@ user avatar, optional stock imagery), `image` (Google Banana / Imagen 3). Holds 
 RecordUsage` emits a Stripe meter event (idempotent on the generation id). Image generation is
 tracked but (currently) not metered.
 
-**SocialAccount** — `belongs_to :workspace`. `provider` enum (`instagram`, `facebook`, `tiktok`,
-`youtube`, `linkedin`, `x`, `upload_post`). Encrypted OAuth tokens + external account ids. The
+**SocialAccount** — `belongs_to :workspace`. `provider` enum (`instagram`, `facebook`, `threads`,
+`tiktok`, `youtube`, `linkedin`, `x`). Encrypted OAuth tokens + external account ids. The
 exact columns per provider are defined in `docs/integrations/<provider>.md`. Token refresh runs as
 a scheduled Sidekiq job per provider.
 
@@ -312,7 +311,7 @@ Mercado Pago (`mercadopago_access_token`, `mercadopago_user_id`). Social tokens 
 ## Adapters
 
 **`SocialPublisher`** (`app/services/publishers/social_publisher.rb`) — the one way to publish a
-`Post`. Routes per network to a direct vendor or the aggregator; reads tokens from `SocialAccount`.
+`Post`. Routes per network to its direct vendor; reads tokens from `SocialAccount`.
 
 **`AiAdapter`** (`app/adapters/ai_adapter.rb`) — wraps Anthropic for ticket summaries, idea
 synthesis, scope building, caption writing, and retrospectives. Used by `SummarizeTicketJob`,
@@ -375,14 +374,12 @@ these — never pre-format dates/money on the backend.
 
 ## Publishing pipeline
 
-Direct integration is the default and preferred path (full control + deeper analytics); the
-`upload_post` aggregator is a per-network fallback to ship fast. Each network's app creation, OAuth
-scopes, publishing endpoints, and analytics endpoints are documented step-by-step in
+Every network integrates directly (full control + deeper analytics). Each network's app creation,
+OAuth scopes, publishing endpoints, and analytics endpoints are documented step-by-step in
 `docs/integrations/`:
 - `meta.md` (Instagram + Facebook — one Meta app), `tiktok.md`, `linkedin.md`,
-  `x-twitter.md`, `upload-post.md` (aggregator), `google.md` (Sign-In, Calendar, YouTube,
-  and Google Banana image generation), and `README.md` for the direct-vs-aggregator
-  decision matrix.
+  `x-twitter.md`, `google.md` (Sign-In, Calendar, YouTube,
+  and Google Banana image generation), and `README.md` for the integration overview.
 
 Each guide maps every API call to a concrete `Vendors::<Network>::Actions::*` class and the
 `SocialAccount` columns it reads — follow them exactly when implementing a vendor.

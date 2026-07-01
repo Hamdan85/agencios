@@ -15,9 +15,16 @@ class PagesController < ApplicationController
     @funnel                   = FUNNEL
     @features                 = FEATURES
     @steps                    = STEPS
+    @stats                    = STATS
+    @networks                 = NETWORKS
+    @integrations             = INTEGRATIONS
+    @context_states           = CONTEXT_STATES
+    @strategist               = STRATEGIST
     @plans                    = marketing_plans
     @trial_days               = Pricing.trial_days
     @annual_discount_percent  = Pricing.annual_discount_percent
+    @credit_packs             = Pricing.credit_packs
+    @credit_costs             = Pricing.public_catalog[:credit_costs]
   end
 
   def how_it_works
@@ -89,7 +96,7 @@ class PagesController < ApplicationController
   FUNNEL = [
     { key: 'ideation',      label: 'Ideação',   color: '#F59E0B', icon: 'lightbulb',
       summary: 'O brief vira ângulos.',
-      desc: 'Capture o brief, o objetivo e a persona. O Claude sintetiza ganchos e ideias de conteúdo prontas para escopar.' },
+      desc: 'Capture o brief, o objetivo e a persona. A IA sintetiza ganchos e ideias de conteúdo prontas para escopar.' },
     { key: 'scoping',       label: 'Escopo',    color: '#0EA5E9', icon: 'ruler',
       summary: 'A ideia vira plano.',
       desc: 'Transforme a ideia escolhida num escopo concreto, com um checklist de subtarefas gerado automaticamente.' },
@@ -123,6 +130,77 @@ class PagesController < ApplicationController
       desc: 'Agende, publique em todas as redes e acompanhe as métricas em tempo real.' }
   ].freeze
 
+  # ── Capability stats (the animated count-up band) ───────────────────
+  # Honest capability metrics — what the platform does, not fabricated
+  # customer numbers.
+  STATS = [
+    { value: 7,  suffix: '',  label: 'etapas no funil',       icon: 'workflow',    color: '#7C3AED' },
+    { value: 7,  suffix: '',  label: 'redes sociais',         icon: 'share-2',     color: '#EC4899' },
+    { value: 70, suffix: '+', label: 'ações via IA',          icon: 'sparkles',    color: '#F59E0B' },
+    { value: 6,  suffix: '',  label: 'métricas por post',     icon: 'activity',    color: '#10B981' }
+  ].freeze
+
+  # ── Supported networks (marquee + publishing section) ───────────────
+  # Direct integration for every network.
+  NETWORKS = [
+    { name: 'Instagram', icon: 'instagram', color: '#E1306C' },
+    { name: 'Facebook',  icon: 'facebook',  color: '#1877F2' },
+    { name: 'Threads',   icon: 'at-sign',   color: '#18122B' },
+    { name: 'TikTok',    icon: 'music',     color: '#18122B' },
+    { name: 'YouTube',   icon: 'youtube',   color: '#FF0000' },
+    { name: 'LinkedIn',  icon: 'linkedin',  color: '#0A66C2' },
+    { name: 'X',         icon: 'twitter-x', color: '#18122B' }
+  ].freeze
+
+  # Integrations shown in the trust marquee (product + payment + AI vendors).
+  INTEGRATIONS = [
+    ['Instagram', 'instagram'], ['Facebook', 'facebook'], ['Threads', 'at-sign'],
+    ['TikTok', 'music'], ['YouTube', 'youtube'], ['LinkedIn', 'linkedin'],
+    ['X', 'twitter-x'], ['HeyGen', 'video'],
+    ['Google Meet', 'calendar-days'], ['Mercado Pago', 'receipt'], ['Stripe', 'shield-check']
+  ].freeze
+
+  # ── The contextual ticket demo (status-aware field morph) ───────────
+  # Each of the 7 statuses shows its own field set + an AI summary.
+  # Drives the auto-cycling mockup on the home page.
+  CONTEXT_STATES = [
+    { key: 'ideation', label: 'Ideação', color: '#F59E0B', icon: 'lightbulb',
+      summary: 'O brief pede autoridade + prova social. Sugiro 3 ganchos de “bastidores” — o cliente responde bem a transparência.',
+      fields: ['Brief', 'Objetivo', 'Persona-alvo', 'Referências'] },
+    { key: 'scoping', label: 'Escopo', color: '#0EA5E9', icon: 'ruler',
+      summary: 'Escopo montado: carrossel de 6 slides para Instagram + LinkedIn. Criei 5 subtarefas com estimativa de esforço.',
+      fields: ['Tipo de criativo', 'Canais', 'Roteiro', 'Subtarefas', 'Prazo'] },
+    { key: 'production', label: 'Produção', color: '#7C3AED', icon: 'wand-sparkles',
+      summary: 'Legenda alinhada ao brief e ao tom da marca. Variação A tem o gancho mais forte para o feed.',
+      fields: ['Criativo', 'Legenda', 'Hashtags', 'Aprovação'] },
+    { key: 'scheduled', label: 'Agendado', color: '#EC4899', icon: 'calendar-clock',
+      summary: 'Melhor janela para esta conta: ter/qui 19h. Agendei o carrossel e adaptei a legenda por rede.',
+      fields: ['Horário por rede', 'Primeiro comentário', 'Link na bio'] },
+    { key: 'published', label: 'No ar', color: '#10B981', icon: 'radio',
+      summary: 'No ar há 2 dias: +38% de alcance vs. a média do projeto. Salvamentos acima da meta.',
+      fields: ['Posts ao vivo', 'Alcance', 'Salvamentos', 'Alertas'] },
+    { key: 'retrospective', label: 'Retrô', color: '#6366F1', icon: 'chart-line',
+      summary: 'Rascunho da retro pronto: o gancho de bastidores puxou o alcance. Repetir o formato no próximo ciclo.',
+      fields: ['Métricas finais', 'Acertos', 'Melhorias', 'Lições'] },
+    { key: 'done', label: 'Concluído', color: '#14B8A6', icon: 'circle-check',
+      summary: 'Arquivado com o histórico completo, os criativos e os aprendizados — pronto para virar case.',
+      fields: ['Snapshot final', 'Histórico', 'Criativos'] }
+  ].freeze
+
+  # ── The AI Strategist demo (typewriter chat → generated tickets) ────
+  STRATEGIST = {
+    prompt: '2 reels e 1 carrossel por semana para o lançamento da Bloom, focados em prova social.',
+    reply: 'Fechado. Montei um plano de 4 semanas — 12 tickets, cada um com brief, canais e subtarefas. Quer aplicar no quadro?',
+    tickets: [
+      { title: 'Reel — bastidores do produto', status: 'ideation',  color: '#F59E0B' },
+      { title: 'Carrossel — 5 mitos do nicho',  status: 'scoping',   color: '#0EA5E9' },
+      { title: 'Reel — depoimento de cliente',  status: 'ideation',  color: '#F59E0B' },
+      { title: 'Reel — antes e depois',         status: 'scoping',   color: '#0EA5E9' },
+      { title: 'Carrossel — passo a passo',     status: 'ideation',  color: '#F59E0B' },
+      { title: 'Reel — respondendo dúvidas',    status: 'ideation',  color: '#F59E0B' }
+    ]
+  }.freeze
+
   # ── Pricing FAQ ─────────────────────────────────────────────────────
   # Trial length is interpolated from the single pricing source (Pricing) so it
   # stays in sync with billing without a copy change here.
@@ -136,7 +214,7 @@ class PagesController < ApplicationController
     { q: 'Posso gerenciar mais de uma agência?',
       a: 'Sim. Você pode ter vários workspaces — cada agência fica isolada, com seu próprio time, clientes e dados.' },
     { q: 'Quais redes sociais são suportadas?',
-      a: 'Instagram, Facebook, TikTok, YouTube, LinkedIn e X — com publicação direta ou via agregador.' },
+      a: 'Instagram, Facebook, Threads, TikTok, YouTube, LinkedIn e X — com publicação direta e integração nativa em cada rede.' },
     { q: 'Como recebo dos meus clientes?',
       a: 'Pelo Mercado Pago: Pix (com QR code), boleto ou cartão, com conciliação automática do pagamento.' },
     { q: 'Posso trocar de plano depois?',
@@ -180,13 +258,13 @@ class PagesController < ApplicationController
       highlights: ['Carrossel, vídeo e imagem', 'Identidade da marca aplicada', 'Renderização assíncrona', 'Vídeo e imagem por créditos']
     },
     {
-      slug: 'inteligencia', name: 'Inteligência artificial', eyebrow: 'Claude em cada etapa', color: '#F59E0B', icon: 'sparkles',
+      slug: 'inteligencia', name: 'Inteligência artificial', eyebrow: 'IA em cada etapa', color: '#F59E0B', icon: 'sparkles',
       card: 'Resumos contextuais, síntese de ideias, escopo automático, legendas e retrospectivas.',
       headline: 'A IA que entende o contexto de cada peça de conteúdo.',
-      subhead: 'O Claude trabalha em cada etapa do funil: sintetiza o brief, monta o escopo, escreve legendas por rede e transforma métricas em aprendizado.',
+      subhead: 'A IA trabalha em cada etapa do funil: sintetiza o brief, monta o escopo, escreve legendas por rede e transforma métricas em aprendizado.',
       points: [
         { icon: 'sparkles',    title: 'Resumo contextual',
-          desc: 'Cada etapa do ticket ganha um resumo gerado pelo Claude que evolui junto com o conteúdo.' },
+          desc: 'Cada etapa do ticket ganha um resumo gerado pela IA que evolui junto com o conteúdo.' },
         { icon: 'lightbulb',   title: 'Síntese de ideias',
           desc: 'O brief vira ângulos e ganchos concretos, prontos para virar escopo.' },
         { icon: 'list-checks', title: 'Escopo automático',
@@ -198,12 +276,12 @@ class PagesController < ApplicationController
     },
     {
       slug: 'publicacao', name: 'Publicação & analytics', eyebrow: 'Multi-rede', color: '#10B981', icon: 'send',
-      card: 'Instagram, TikTok, YouTube, LinkedIn, X e Facebook — direto ou via agregador.',
+      card: 'Instagram, Facebook, Threads, TikTok, YouTube, LinkedIn e X — com integração direta.',
       headline: 'Publique em todas as redes e meça tudo num lugar só.',
-      subhead: 'Agende e publique em cada rede social — integração direta ou via agregador — e acompanhe as métricas de cada post em tempo real.',
+      subhead: 'Agende e publique em cada rede social com integração direta e nativa, e acompanhe as métricas de cada post em tempo real.',
       points: [
-        { icon: 'share-2',        title: 'Todas as redes',
-          desc: 'Instagram, Facebook, TikTok, YouTube, LinkedIn e X, com integração direta ou via agregador.' },
+        { icon: 'share-2',        title: 'Sete redes',
+          desc: 'Instagram, Facebook, Threads, TikTok, YouTube, LinkedIn e X, com integração direta e nativa em cada uma.' },
         { icon: 'calendar-clock', title: 'Agendamento',
           desc: 'Programe a publicação no melhor horário e deixe o sistema publicar por você.' },
         { icon: 'bar-chart-3',    title: 'Métricas por post',
@@ -211,7 +289,41 @@ class PagesController < ApplicationController
         { icon: 'trending-up',    title: 'Monitoramento',
           desc: 'Snapshots datados das métricas acompanham a evolução de cada conteúdo no ar.' }
       ],
-      highlights: ['6+ redes sociais', 'Direto ou via agregador', 'Métricas sincronizadas', 'Histórico de performance']
+      highlights: ['7 redes sociais', 'Integração direta e nativa', 'Métricas sincronizadas', 'Histórico de performance']
+    },
+    {
+      slug: 'estrategista', name: 'Estrategista de IA', eyebrow: 'Planejamento com IA', color: '#6366F1', icon: 'bot',
+      card: 'Converse com o estrategista e transforme uma cadência em um mês inteiro de tickets prontos.',
+      headline: 'Um estrategista de conteúdo que preenche seu quadro por você.',
+      subhead: 'Diga a cadência e o objetivo — “2 reels e 1 carrossel por semana” — e o estrategista propõe um plano completo, com datas, briefs e subtarefas, pronto para aplicar em um clique.',
+      points: [
+        { icon: 'messages-square', title: 'Conversa que planeja',
+          desc: 'Uma conversa multi-turno com um estrategista sênior que entende o contexto do projeto e da marca.' },
+        { icon: 'workflow',        title: 'Um mês em segundos',
+          desc: 'O plano vira dezenas de tickets agendados — cada um já em Ideação, com brief e canais definidos.' },
+        { icon: 'list-checks',     title: 'Subtarefas incluídas',
+          desc: 'Cada ticket proposto já traz o checklist de subtarefas com estimativa de esforço.' },
+        { icon: 'sliders-horizontal', title: 'Edite e aplique',
+          desc: 'Ajuste a proposta, aplique de uma vez ou descarte — a sessão fica salva para retomar depois.' }
+      ],
+      highlights: ['Conversa multi-turno', 'Plano de semanas em 1 clique', 'Briefs + subtarefas prontos', 'Baseado na marca e no histórico']
+    },
+    {
+      slug: 'relatorios', name: 'Relatórios de projeto', eyebrow: 'Auditoria com IA', color: '#14B8A6', icon: 'file-text',
+      card: 'Um deck de auditoria de fim de projeto: KPIs, acertos, gargalos e plano de ação, gerado pela IA.',
+      headline: 'O fechamento do projeto vira um relatório que impressiona o cliente.',
+      subhead: 'Ao concluir um projeto, a IA lê as métricas dos posts, o histórico dos tickets e as lições aprendidas e monta um relatório de performance com acertos, gargalos e próximos passos.',
+      points: [
+        { icon: 'gauge',        title: 'KPIs consolidados',
+          desc: 'Alcance, engajamento e evolução do projeto reunidos em uma visão executiva.' },
+        { icon: 'trophy',       title: 'Acertos e gargalos',
+          desc: 'A IA identifica o que funcionou e onde a operação travou, com base nos dados reais.' },
+        { icon: 'target',       title: 'Plano de ação',
+          desc: 'Recomendações concretas do que repetir e do que ajustar no próximo ciclo.' },
+        { icon: 'file-text',    title: 'Pronto para o cliente',
+          desc: 'Um deck editável que a agência revisa e apresenta — sem montar relatório na mão.' }
+      ],
+      highlights: ['KPIs automáticos', 'Análise de IA', 'Acertos + gargalos', 'Deck pronto para apresentar']
     },
     {
       slug: 'calendario', name: 'Calendário & reuniões', eyebrow: 'Agenda unificada', color: '#0EA5E9', icon: 'calendar-days',

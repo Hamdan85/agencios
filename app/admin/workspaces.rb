@@ -4,8 +4,22 @@ ActiveAdmin.register Workspace do
   menu parent: 'Tenants', label: 'Workspaces', priority: 1
 
   actions :index, :show, :edit, :update
-  # `godfathered` is the only directly-editable field (founding-user comp).
-  permit_params :godfathered
+  # The founding-user comp: the godfathered flag plus an optional monthly credit
+  # cap for generation usage (blank = unlimited).
+  permit_params :godfathered, :monthly_credit_limit
+
+  form do |f|
+    f.semantic_errors
+    f.inputs 'Cortesia (godfathered)' do
+      f.input :godfathered,
+              hint: 'Acesso vitalício grátis — ignora o paywall e os limites de assentos/clientes.'
+      f.input :monthly_credit_limit,
+              label: 'Limite de créditos mensais',
+              hint: 'Créditos de geração (vídeo/imagem) por mês para este workspace godfathered. ' \
+                    'Em branco = ilimitado. Só se aplica quando "godfathered" está ativo.'
+    end
+    f.actions
+  end
 
   filter :name_cont, label: 'Nome contém'
   filter :slug_cont, label: 'Slug contém'
@@ -31,7 +45,13 @@ ActiveAdmin.register Workspace do
     column('Acesso') do |w|
       status_tag(w.billing_active? ? 'sim' : 'bloqueado', class: w.billing_active? ? 'yes' : 'error')
     end
-    column('Créditos') { |w| w.godfathered? ? '∞' : w.credits_available }
+    column('Créditos') do |w|
+      if w.godfathered?
+        w.monthly_credit_limit ? "#{w.credits_available} / #{w.monthly_credit_limit} · mês" : '∞'
+      else
+        w.credits_available
+      end
+    end
     column('Assentos') { |w| "#{w.seat_count} / #{w.seat_limit.infinite? ? '∞' : w.seat_limit}" }
     column :created_at
     actions
@@ -43,6 +63,11 @@ ActiveAdmin.register Workspace do
       row :name
       row :slug
       row('Godfathered') { |w| w.godfathered? ? status_tag('sim', class: 'yes') : 'não' }
+      row('Limite de créditos mensais') do |w|
+        next '—' unless w.godfathered?
+
+        w.monthly_credit_limit ? "#{w.monthly_credit_limit} / mês" : 'ilimitado'
+      end
       row('Acesso liberado') { |w| w.billing_active? ? 'Sim' : 'Não (bloqueado)' }
       row('Dono') { |w| w.owner ? link_to(w.owner.email, admin_user_path(w.owner)) : '—' }
       row('Assentos') { |w| "#{w.seat_count} / #{w.seat_limit.infinite? ? '∞' : w.seat_limit}" }
@@ -73,7 +98,15 @@ ActiveAdmin.register Workspace do
       wallet = workspace.credit_wallet
       if wallet
         attributes_table_for wallet do
-          row('Disponível') { workspace.godfathered? ? '∞ (godfathered)' : wallet.available }
+          row('Disponível') do
+            if workspace.credit_limited?
+              "#{workspace.credits_available} / #{workspace.monthly_credit_limit} (godfathered, mês)"
+            elsif workspace.godfathered?
+              '∞ (godfathered)'
+            else
+              wallet.available
+            end
+          end
           row('Do plano (granted)') { wallet.live_granted }
           row('Comprados (purchased)') { wallet.purchased_balance }
           row('Granted expira em') { wallet.granted_expires_at }
@@ -105,12 +138,22 @@ ActiveAdmin.register Workspace do
     end
   end
 
-  # ── Godfathered toggle audit ──────────────────────────────────────────────
+  # ── Godfathered toggle + credit-cap audit ─────────────────────────────────
   after_save do |workspace|
     if workspace.saved_change_to_godfathered?
       AdminAuditLog.record(
         staff_user: current_staff_user, action: 'toggle_godfathered', target: workspace,
         metadata: { godfathered: workspace.godfathered? }, ip_address: request.remote_ip
+      )
+    end
+
+    if workspace.saved_change_to_monthly_credit_limit?
+      # Apply the new cap immediately (resets this cycle's allotment to the new
+      # value) rather than waiting for the next monthly refill.
+      Operations::Credits::EnsureGodfatheredGrant.call(workspace: workspace, force: true) if workspace.credit_limited?
+      AdminAuditLog.record(
+        staff_user: current_staff_user, action: 'set_monthly_credit_limit', target: workspace,
+        metadata: { monthly_credit_limit: workspace.monthly_credit_limit }, ip_address: request.remote_ip
       )
     end
   end

@@ -87,4 +87,51 @@ RSpec.describe 'Operations::Credits', type: :model do
       expect(Operations::Credits::Debit.call(workspace: workspace, amount: 999)).to eq(:godfathered)
     end
   end
+
+  describe 'Godfathered workspaces with a monthly credit cap' do
+    before { workspace.update!(godfathered: true, monthly_credit_limit: 20) }
+
+    it 'grants the monthly allotment on first debit and spends from it' do
+      Operations::Credits::Debit.call(workspace: workspace, amount: 5)
+      wallet = workspace.credit_wallet.reload
+      expect(wallet.granted_balance).to eq(15)          # 20 refilled, 5 spent
+      expect(wallet.granted_expires_at).to be_present
+      expect(workspace.credits_available).to eq(15)
+    end
+
+    it 'blocks a debit that exceeds the remaining monthly allotment' do
+      Operations::Credits::Debit.call(workspace: workspace, amount: 18)
+      expect do
+        Operations::Credits::Debit.call(workspace: workspace, amount: 5)
+      end.to raise_error(Operations::Errors::InsufficientCredits)
+      expect(workspace.credits_available).to eq(2)
+    end
+
+    it 'reports the full cap before any allotment has been granted' do
+      expect(workspace.credits_available).to eq(20)
+    end
+
+    it 'refunds a failed generation back into the allotment' do
+      gen = workspace.generations.create!(kind: :image, status: :processing, provider: 'google_banana')
+      Operations::Credits::Debit.call(workspace: workspace, amount: 3, generation: gen)
+      expect(workspace.credits_available).to eq(17)
+      Operations::Credits::Refund.call(generation: gen)
+      expect(workspace.credit_wallet.reload.available).to eq(20)
+    end
+
+    it 'refills the allotment when the previous cycle has expired' do
+      Operations::Credits::Debit.call(workspace: workspace, amount: 12)
+      workspace.credit_wallet.update!(granted_expires_at: 1.day.ago)  # simulate cycle rollover
+
+      Operations::Credits::Debit.call(workspace: workspace, amount: 4)
+      wallet = workspace.credit_wallet.reload
+      expect(wallet.granted_balance).to eq(16)          # refilled to 20, then 4 spent
+    end
+
+    it 'is idempotent within a cycle (does not top back up mid-month)' do
+      Operations::Credits::Debit.call(workspace: workspace, amount: 8)
+      Operations::Credits::EnsureGodfatheredGrant.call(workspace: workspace)
+      expect(workspace.credit_wallet.reload.granted_balance).to eq(12) # still 12, not re-granted to 20
+    end
+  end
 end

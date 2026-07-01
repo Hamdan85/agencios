@@ -30,11 +30,26 @@ module Operations
           card_on_file: false
         )
         Operations::Credits::EnsureWallet.call(workspace: workspace)
+        provision_stripe_customer(workspace)
 
         workspace
       end
 
       private
+
+      # Create the workspace's Stripe Customer up front so it exists before the
+      # owner ever reaches Checkout — the subscription + credit-pack flows reuse
+      # this id via the idempotent EnsureCustomer guard. A Stripe outage must not
+      # break signup: on failure we log and leave the customer to be lazily
+      # created at Checkout time (EnsureCustomer is idempotent either way).
+      def provision_stripe_customer(workspace)
+        Vendors::Stripe::Actions::EnsureCustomer.call(workspace: workspace)
+      rescue Vendors::Base::Error => e
+        Rails.logger.warn(
+          "[Workspaces::SetupForUser] Stripe customer provisioning failed for " \
+          "workspace ##{workspace.id}: #{e.class} #{e.message}"
+        )
+      end
 
       def workspace_name
         @name.presence || "Agência de #{@user.display_name}"

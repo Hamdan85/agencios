@@ -4,14 +4,15 @@ import { useCurrentUser } from '@/hooks/useAuth'
 
 // Compact wallet indicator in the sidebar. Reads the balance off `/me`
 // (workspace.credits_available) so it's always fresh with the session, and
-// links to /assinatura where credits can be topped up. Hidden for godfathered
-// workspaces except a small "∞" affordance (credits are unlimited there).
+// links to /assinatura where credits can be topped up. Shows "∞" only when
+// credits are truly untracked (unlimited godfathered → credits_available null);
+// capped godfathered workspaces show their remaining balance like everyone else.
 export default function CreditsBadge({ onNavigate }) {
   const { data: me } = useCurrentUser()
   const ws = me?.workspace
   if (!ws) return null
 
-  const unlimited = ws.godfathered || ws.credits_available == null
+  const unlimited = ws.credits_available == null
   const value = Number(ws.credits_available ?? 0)
   const low = !unlimited && value <= 10
 
