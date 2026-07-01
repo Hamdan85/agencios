@@ -14,6 +14,7 @@ RSpec.describe 'AI content-strategy planning' do
     @project = @workspace.projects.create!(client: @client, name: 'Camp', color: '#7C3AED')
     allow(Broadcaster).to receive(:board)
     allow(Broadcaster).to receive(:ticket)
+    allow(Broadcaster).to receive(:strategy_session)
     allow(Operations::Push::Notify).to receive(:call)
   end
 
@@ -77,12 +78,11 @@ RSpec.describe 'AI content-strategy planning' do
   end
 
   describe 'Operations::Strategy::Converse' do
-    it 'streams text, appends the transcript, and captures a proposed plan' do
+    it 'streams the reply, appends the transcript, and hands plan generation to a job' do
       session = Operations::Strategy::Start.call(project: @project, user: @user)
-      post_at = 10.days.from_now.change(hour: 10)
 
-      # The stream carries only the chat text; a SYNC forced decision then the SYNC
-      # forced plan call produce the proposal.
+      # The stream carries only the chat text; the heavy plan decision + build runs
+      # off the request (enqueued as a job), so Converse itself proposes nothing.
       fake = Vendors::Ai::StreamResult.new(
         text: 'Aqui está o plano.', tools: [],
         usage: { 'input_tokens' => 10, 'output_tokens' => 5 }, model: 'claude-sonnet-4-6'
@@ -94,39 +94,63 @@ RSpec.describe 'AI content-strategy planning' do
         blk&.call('está o plano.')
         fake
       end
+
+      chunks = []
+      result = nil
+      expect do
+        result = Operations::Strategy::Converse.call(session: session, content: '1 reel por semana') { |c| chunks << c }
+      end.to have_enqueued_job(Strategy::GeneratePlanJob).with(session.id)
+
+      expect(chunks.join).to eq('Aqui está o plano.')
+      expect(result.proposal).to be_nil
+      session.reload
+      # Converse only advances the conversation — the plan job flips the status.
+      expect(session.status).to eq('active')
+      # Leading assistant turn is the opening message from Start.
+      expect(session.messages.map { |m| m['role'] }).to eq(%w[assistant user assistant])
+    end
+  end
+
+  describe 'Operations::Strategy::GeneratePlan' do
+    it 'builds the plan, marks the session proposed, and broadcasts it' do
+      session = Operations::Strategy::Start.call(project: @project, user: @user)
+      session.push_message(role: :user, content: '1 reel por semana')
+      session.save!
+      post_at = 10.days.from_now.change(hour: 10)
+
+      client = instance_double(Vendors::OpenRouter::Client, provider_key: AiUsageLog::PROVIDER_OPENROUTER)
+      allow(Vendors::Ai).to receive(:client).and_return(client)
+      # Forced decision → ready; forced plan call → the structured plan.
       allow(client).to receive(:generate) do |**kw|
         input = kw[:tool]['name'] == Prompts::StrategyPlanner::DECISION_TOOL ? { 'ready' => true } : sample_plan(post_at)
         Vendors::Ai::Result.new(text: '', tool_input: input,
                                 usage: { 'input_tokens' => 20, 'output_tokens' => 40 }, model: 'claude-sonnet-4-6')
       end
 
-      chunks = []
-      result = Operations::Strategy::Converse.call(session: session, content: '1 reel por semana') { |c| chunks << c }
+      Operations::Strategy::GeneratePlan.call(session: session)
 
-      expect(chunks.join).to eq('Aqui está o plano.')
-      expect(result.proposal['tickets'].size).to eq(1)
       session.reload
       expect(session.status).to eq('proposed')
-      # Leading assistant turn is the opening message from Start.
-      expect(session.messages.map { |m| m['role'] }).to eq(%w[assistant user assistant])
+      expect(session.proposed_plan['tickets'].size).to eq(1)
+      expect(Broadcaster).to have_received(:strategy_session).with(session, 'plan_generating')
+      expect(Broadcaster).to have_received(:strategy_session).with(session, 'proposal_ready', hash_including(:plan))
     end
 
-    it 'keeps asking (no proposal) when the model returns only text' do
+    it 'stays active (no proposal) when the readiness gate says "not yet"' do
       session = Operations::Strategy::Start.call(project: @project, user: @user)
-      fake = Vendors::Ai::StreamResult.new(
-        text: 'Quais redes?', tools: [], usage: {}, model: 'claude-sonnet-4-6'
-      )
+      session.push_message(role: :user, content: 'quero postar')
+      session.save!
+
       client = instance_double(Vendors::OpenRouter::Client, provider_key: AiUsageLog::PROVIDER_OPENROUTER)
       allow(Vendors::Ai).to receive(:client).and_return(client)
-      allow(client).to receive(:stream).and_return(fake)
-      # The readiness gate says "not yet" → no plan generated.
       allow(client).to receive(:generate).and_return(
         Vendors::Ai::Result.new(text: '', tool_input: { 'ready' => false }, usage: {}, model: 'claude-sonnet-4-6')
       )
 
-      result = Operations::Strategy::Converse.call(session: session, content: 'quero postar')
-      expect(result.proposal).to be_nil
+      Operations::Strategy::GeneratePlan.call(session: session)
+
       expect(session.reload.status).to eq('active')
+      expect(Broadcaster).not_to have_received(:strategy_session)
     end
   end
 
@@ -219,6 +243,15 @@ RSpec.describe 'AI content-strategy planning' do
 
       ticket = Operations::Strategy::Apply.call(session: session, user: @user).first
       expect(ticket.subtasks.minimum(:due_date)).to be >= Date.current
+    end
+
+    it 'clamps a posting date beyond one month back into the horizon' do
+      session = Operations::Strategy::Start.call(project: @project, user: @user)
+      # The planner scheduled a piece two months out — past the one-month limit.
+      session.update!(status: 'proposed', proposed_plan: sample_plan(2.months.from_now.change(hour: 10)))
+
+      ticket = Operations::Strategy::Apply.call(session: session, user: @user).first
+      expect(ticket.scheduled_at).to be <= 1.month.from_now
     end
   end
 

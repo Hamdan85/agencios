@@ -2,18 +2,17 @@
 
 module Api
   module V1
-    # One chat turn of the strategy planner, streamed to the client over SSE.
-    # Text deltas arrive as `delta` events; the final structured plan (when the
-    # agent proposes one) as a `proposal` event; then `done`. Business logic lives
-    # in Operations::Strategy::Converse — this only relays its output to the stream.
+    # One chat turn of the strategy planner. Only the conversational reply streams
+    # over SSE (`delta` events, then `done`) — it returns in seconds. The heavy
+    # plan build runs off the request (Sidekiq) and is pushed to the client over
+    # Action Cable when ready, so this connection never stays open long enough for
+    # Cloudflare/QUIC to sever it mid-turn. Logic lives in
+    # Operations::Strategy::Converse — this only relays its output to the stream.
     class StrategyMessagesController < BaseController
       include ActionController::Live
 
-      # Plan generation (plan_ready? + build_plan) runs SYNC for 100–230s while the
-      # stream sits silent. The app is fronted by Cloudflare, which severs any
-      # proxied connection idle for ~100s — killing the SSE mid-turn and surfacing
-      # a spurious "Ocorreu um erro" in the UI. A comment ping on this interval
-      # keeps bytes flowing so the connection survives the silent gap.
+      # The streamed reply is short, but a slow first token can still stall the
+      # stream; a comment ping keeps bytes flowing as a cheap safety net.
       HEARTBEAT_INTERVAL = 15 # seconds
 
       # POST /api/v1/strategy_sessions/:strategy_session_id/messages
@@ -27,15 +26,13 @@ module Api
 
         start_heartbeat
 
-        result = Operations::Strategy::Converse.call(
+        Operations::Strategy::Converse.call(
           session: session,
-          content: params[:content],
-          on_generating: -> { write_sse('generating', {}) }
+          content: params[:content]
         ) do |chunk|
           write_sse('delta', text: chunk)
         end
 
-        write_sse('proposal', plan: result.proposal) if result.proposal
         write_sse('done', status: session.reload.status)
       rescue Pundit::NotAuthorizedError
         write_sse('error', message: 'Você não tem permissão para planejar este projeto.')

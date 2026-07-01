@@ -44,11 +44,19 @@ module Operations
       # ideation keys); carried into the ticket's ideation view via UpdateFields.
       IDEATION_KEYS = %w[brief objective target_persona content_pillar format_hypothesis].freeze
 
+      # The strategist may only plan content for at most one month ahead. This
+      # is the authoritative guard: any far-future posting date the planner
+      # proposes is clamped back into the horizon when the plan is materialized.
+      PLANNING_HORIZON = 1.month
+
       def build_ticket(spec)
         # Never post in the past — if the planner scheduled a date already gone,
-        # nudge it to today so the ticket (and its runway) stay sane.
+        # nudge it to today so the ticket (and its runway) stay sane. And never
+        # plan beyond the one-month horizon — clamp any far-future date back in.
         scheduled_at = parse_time(spec['scheduled_at'])
         scheduled_at = Time.current if scheduled_at&.past?
+        horizon = PLANNING_HORIZON.from_now
+        scheduled_at = horizon if scheduled_at && scheduled_at > horizon
         post_date = scheduled_at&.to_date
 
         # The ticket is born in IDEAÇÃO with its ideation content, plus the strategy

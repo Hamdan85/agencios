@@ -17,6 +17,13 @@ module Broadcaster
     broadcast("generations_#{workspace_id}", event, payload)
   end
 
+  # Per-session strategy-planning updates: plan_generating, proposal_ready,
+  # plan_failed — pushed when the async plan job settles (see
+  # Operations::Strategy::GeneratePlan).
+  def strategy_session(session, event, payload = {})
+    broadcast("strategy_session_#{session.id}", event, payload)
+  end
+
   def broadcast(stream, event, payload)
     ActionCable.server.broadcast(stream, { event: event }.merge(payload))
   rescue StandardError => e

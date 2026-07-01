@@ -1,8 +1,9 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { strategyApi } from '@/api'
 import { keys } from '@/api/queryKeys'
+import { useStrategyChannel } from './useRealtime'
 
 // The current (resumable) planning session for a project, or null when none.
 export function useStrategySession(projectId, { enabled = true } = {}) {
@@ -71,6 +72,24 @@ export function useStrategyChat(projectId, session) {
   const [pending, setPending] = useState('') // the in-progress assistant bubble
   const abortRef = useRef(null)
 
+  // The plan is built off the request and pushed over Action Cable — a turn only
+  // streams the conversational reply, then the proposal arrives here when ready.
+  // This keeps working even with the drawer closed (the hook stays mounted), and
+  // refreshing the strategy query surfaces the "plan pending" banner on the page.
+  const channelHandlers = useMemo(() => ({
+    onGenerating: () => { setProposal(null); setGenerating(true) },
+    onProposal: (plan) => {
+      if (plan?.tickets?.length) setProposal(plan)
+      setGenerating(false)
+      qc.invalidateQueries({ queryKey: keys.strategy(projectId) })
+    },
+    onFailed: () => {
+      setGenerating(false)
+      toast.error('Não consegui montar o plano agora. Tente pedir novamente.')
+    },
+  }), [qc, projectId])
+  useStrategyChannel(session?.id, channelHandlers)
+
   // Reset local state when switching to a different session (e.g. after apply).
   const reset = useCallback((s) => {
     setMessages(s?.messages || [])
@@ -82,7 +101,7 @@ export function useStrategyChat(projectId, session) {
 
   const send = useCallback(async (content, sessionId) => {
     const text = content.trim()
-    if (!text || streaming || !sessionId) return
+    if (!text || streaming || generating || !sessionId) return
 
     setMessages((m) => [...m, { role: 'user', content: text }])
     setStreaming(true)
@@ -93,20 +112,17 @@ export function useStrategyChat(projectId, session) {
     abortRef.current = controller
 
     try {
+      // Only the conversational reply streams here; the proposal (and the
+      // "building…" signal) arrive over Action Cable via channelHandlers above.
       await strategyApi.streamMessage(sessionId, text, {
         signal: controller.signal,
         onDelta: (chunk) => {
           acc += chunk
           setPending(acc)
         },
-        // A new plan is being built: drop any prior proposal so the project list
-        // clears its stale ghost rows and shows the "building…" skeletons instead
-        // of sitting on the old plan until the new one lands.
-        onGenerating: () => { setProposal(null); setGenerating(true) },
-        onProposal: (plan) => { if (plan?.tickets?.length) { setProposal(plan); setGenerating(false) } },
       })
       // Commit the finished assistant bubble into the transcript.
-      setMessages((m) => [...m, { role: 'assistant', content: acc || 'Proposta de plano atualizada.' }])
+      setMessages((m) => [...m, { role: 'assistant', content: acc || 'Certo! Deixa eu montar isso e já te trago a proposta.' }])
     } catch (err) {
       if (err?.name !== 'AbortError') {
         toast.error(err?.message || 'Erro no chat de estratégia.')
@@ -124,7 +140,7 @@ export function useStrategyChat(projectId, session) {
       qc.invalidateQueries({ queryKey: keys.project(projectId) })
       qc.invalidateQueries({ queryKey: keys.strategy(projectId) })
     }
-  }, [streaming, qc, projectId])
+  }, [streaming, generating, qc, projectId])
 
   return { messages, proposal, streaming, generating, pending, send, reset, setProposal }
 }

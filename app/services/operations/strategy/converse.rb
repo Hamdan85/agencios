@@ -2,31 +2,27 @@
 
 module Operations
   module Strategy
-    # One turn of the strategy-planning chat. The conversation is STREAMED (text
-    # relayed live to the SSE writer); the plan itself is NOT streamed. When the
-    # agent is ready it calls the lightweight `generate_plan` signal, and the
-    # structured plan is produced by a separate, reliable SYNC forced-tool call
-    # (#build_plan) — streaming the large plan JSON is what tripped connection
-    # resets, so it's deliberately kept off the stream.
+    # One turn of the strategy-planning chat. Only the CONVERSATION happens here —
+    # the assistant's reply is STREAMED live to the SSE writer and this returns in
+    # seconds. The heavy plan decision + build (100-230s) is handed off to
+    # Strategy::GeneratePlanJob and pushed back to the client over Action Cable
+    # when ready. Holding the streaming request open for the whole plan build got
+    # the connection severed by the CDN (Cloudflare/QUIC) mid-turn.
     #
-    # Returns a Result { session:, proposal: } — `proposal` is the plan hash when
-    # THIS turn produced one, else nil, so the controller can emit a proposal event.
+    # Returns a Result { session:, proposal: } — `proposal` is always nil now (the
+    # plan arrives async); the struct is kept for the controller's call shape.
     Result = Struct.new(:session, :proposal, keyword_init: true)
 
     class Converse < Operations::Base
-      # Generous caps on the SYNC calls: with reasoning on, the model spends a
-      # variable amount before the forced-tool output — too small a cap can
-      # truncate the tool JSON and yield an empty result. The conversation turn
-      # itself is short.
-      STREAM_MAX_TOKENS   = 2048
-      DECISION_MAX_TOKENS = 8000
-      PLAN_MAX_TOKENS     = 16000
+      # The conversation turn itself is short; the plan-building caps live on
+      # Strategy::GeneratePlan, which runs the forced-tool calls off the request.
+      STREAM_MAX_TOKENS = 2048
 
       def initialize(session:, content:, on_generating: nil, &on_text)
         @session = session
         @content = content.to_s.strip
         @on_text = on_text
-        @on_generating = on_generating
+        @on_generating = on_generating # kept for call-shape compat; plan progress now flows over Action Cable
       end
 
       def call
@@ -51,13 +47,14 @@ module Operations
 
         log_usage(result, 'strategy_planner', @client)
         apply_project_update(result)
+        persist_turn(result)
 
-        proposal = nil
-        if plan_ready?
-          @on_generating&.call # let the UI show ticket skeletons while the plan generates
-          proposal = build_plan
-        end
-        persist_turn(result, proposal)
+        # Decide + build the plan off the request; the proposal is broadcast over
+        # Action Cable (`strategy_session_<id>`) when it's ready. Leading `::` so the
+        # constant resolves to the top-level job, not Operations::Strategy::*.
+        ::Strategy::GeneratePlanJob.perform_later(@session.id)
+
+        Result.new(session: @session, proposal: nil)
       end
 
       private
@@ -73,72 +70,13 @@ module Operations
         end
       end
 
-      # Deterministic readiness gate: a SYNC forced-tool call decides whether to
-      # generate the plan this turn. The model emits tool calls unreliably in the
-      # streamed chat (~1/5), so we do NOT depend on a spontaneous signal — a forced
-      # tool_choice always returns a boolean. Reasoning on: it's a judgment call and
-      # not streamed, so there's no reset risk.
-      def plan_ready?
-        client = Vendors::Ai.client(model: Vendors::Ai.model_for('strategy_planner'))
-        result = client.generate(
-          system: 'Você decide se o planejamento de conteúdo já pode ser gerado a partir da conversa abaixo.',
-          prompt: conversation,
-          tool: Prompts::StrategyPlanner.decision_tool,
-          max_tokens: DECISION_MAX_TOKENS,
-          reasoning: true
-        )
-        log_usage(result, 'strategy_planner', client)
-        result.tool_input.is_a?(Hash) && result.tool_input['ready'] == true
-      rescue StandardError => e
-        Rails.logger.warn("[Strategy::Converse] readiness check failed: #{e.class}: #{e.message}")
-        false
-      end
-
-      # SYNC, non-streaming, forced-tool call — reliable structured output. The
-      # whole conversation is the context; the system prompt carries the plan rules.
-      def build_plan
-        plan_client = Vendors::Ai.client(model: Vendors::Ai.model_for('strategy_plan'))
-        result = plan_client.generate(
-          system: @planner.system,
-          prompt: "#{conversation}\n\nGere o plano de conteúdo agora, chamando a ferramenta.",
-          tool: Prompts::StrategyPlanner.plan_tool,
-          max_tokens: PLAN_MAX_TOKENS,
-          reasoning: true
-        )
-        log_usage(result, 'strategy_plan', plan_client)
-
-        plan = result.tool_input
-        plan if plan.is_a?(Hash) && Array(plan['tickets']).any?
-      rescue StandardError => e
-        Rails.logger.warn("[Strategy::Converse] plan generation failed: #{e.class}: #{e.message}")
-        nil
-      end
-
-      # The conversation flattened as context for the sync forced-tool calls.
-      def conversation
-        lines = Array(@session.messages).filter_map do |m|
-          content = m['content'].to_s.strip
-          next if content.blank?
-
-          "#{m['role'] == 'assistant' ? 'ESTRATEGISTA' : 'USUÁRIO'}: #{content}"
-        end
-        "Conversa até aqui:\n\n#{lines.join("\n\n")}"
-      end
-
-      def persist_turn(result, proposal)
+      def persist_turn(result)
+        # No streamed text means the model went straight for a tool call — leave a
+        # neutral holding line so the turn is never silent; the plan lands via cable.
         assistant_text = result.text.presence ||
-                         (proposal ? 'Proposta de plano atualizada.' : nil) ||
-                         # No text and no usable plan — never leave a silent, dead turn.
-                         'Não consegui finalizar o plano agora. Pode me dar um retorno rápido (período ou cadência) para eu propor?'
-
-        @session.push_message(role: :assistant, content: assistant_text) if assistant_text.present?
-        if proposal
-          @session.proposed_plan = proposal
-          @session.status = 'proposed'
-        end
+                         'Certo! Deixa eu montar isso e já te trago a proposta.'
+        @session.push_message(role: :assistant, content: assistant_text)
         @session.save!
-
-        Result.new(session: @session, proposal: proposal)
       end
 
       # If the agent called update_project this turn, apply it to the project.

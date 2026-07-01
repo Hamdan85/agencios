@@ -92,7 +92,9 @@ module Prompts
                   'priority' => { 'type' => 'string', 'enum' => PRIORITIES },
                   'scheduled_at' => {
                     'type' => 'string',
-                    'description' => 'Data/hora prevista de postagem, ISO 8601.'
+                    'description' => 'Data/hora prevista de postagem, ISO 8601. Deve estar dentro ' \
+                                     'do próximo mês (no máximo ~30 dias a partir de hoje); nunca ' \
+                                     'agende além desse limite.'
                   },
                   'brief' => {
                     'type' => 'string',
@@ -187,6 +189,12 @@ module Prompts
           O projeto NÃO é necessariamente mensal e pode não ter datas de início/fim;
           se o período não for dado, assuma as próximas ~4 semanas a partir de hoje.
           Não peça confirmação para propor — o usuário revisa e aprova o plano na tela.
+        - LIMITE RÍGIDO: você só pode planejar conteúdo para NO MÁXIMO UM MÊS a
+          partir de hoje (#{Date.current.iso8601}). Nenhuma peça pode ter
+          `scheduled_at` além de #{1.month.from_now.to_date.iso8601}. Se o usuário
+          pedir uma janela maior (ex.: "os próximos 3 meses"), planeje apenas este
+          primeiro mês, avise que cobriu o primeiro mês e sugira montar o restante
+          depois — não estenda as datas além do limite.
         - Preencha o resto sozinho a partir do contexto do cliente e de boas práticas:
           use as redes CONECTADAS do cliente como canais padrão; escolha dias/horários
           de bom desempenho (ex.: ter/qua/qui, manhã/começo da noite); derive os temas

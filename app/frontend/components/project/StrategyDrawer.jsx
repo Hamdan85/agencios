@@ -29,8 +29,8 @@ export function StrategyDrawer({ open, onOpenChange, projectId, session, onPropo
   // typing without reaching for the mouse. (Focus on OPEN is handled by the
   // Sheet's onOpenAutoFocus below, which fires as the drawer mounts.)
   useEffect(() => {
-    if (open && !streaming) inputRef.current?.focus()
-  }, [streaming, open])
+    if (open && !streaming && !generating) inputRef.current?.focus()
+  }, [streaming, generating, open])
 
   // Ensure a session exists whenever the drawer opens.
   useEffect(() => {
@@ -68,10 +68,14 @@ export function StrategyDrawer({ open, onOpenChange, projectId, session, onPropo
   // persisted session status hasn't refetched to `proposed` yet.
   const applied = session?.status === 'applied' && !proposal
 
+  // Block sending while a plan is being built off the request too, so a second
+  // turn can't kick off a competing plan job on the same session.
+  const busy = streaming || generating
+
   const submit = (e) => {
     e.preventDefault()
     const text = input.trim()
-    if (!text || streaming || !sessionId) return
+    if (!text || busy || !sessionId) return
     setInput('')
     send(text, sessionId)
   }
@@ -133,9 +137,10 @@ export function StrategyDrawer({ open, onOpenChange, projectId, session, onPropo
 
           {messages.map((m, i) => <Bubble key={i} role={m.role} content={m.content} />)}
           {pending && <Bubble role="assistant" content={pending} />}
-          {/* "digitando…" — bounces the whole time the agent is working (including
-              while it builds the plan tool-call, which streams no visible text). */}
-          {streaming && <TypingDots />}
+          {/* "digitando…" — bounces the whole time the agent is working: while the
+              reply streams AND while the plan builds off the request (pushed back
+              over Action Cable), which streams no visible text. */}
+          {busy && <TypingDots />}
 
           {proposal && !applied && (
             <div className="rounded-2xl border border-brand/30 bg-brand-soft/40 p-3.5 text-sm">
@@ -183,14 +188,14 @@ export function StrategyDrawer({ open, onOpenChange, projectId, session, onPropo
               maxRows={2}
               placeholder="Responda ao estrategista…  (Enter envia · Shift+Enter quebra linha)"
               className="h-[52px] flex-1 resize-none"
-              disabled={streaming}
+              disabled={busy}
             />
             <Button
               type="submit"
               className="h-auto w-[52px] shrink-0 self-stretch p-0"
-              disabled={streaming || !input.trim() || !sessionId}
+              disabled={busy || !input.trim() || !sessionId}
             >
-              {streaming ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+              {busy ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
             </Button>
           </form>
         </div>
