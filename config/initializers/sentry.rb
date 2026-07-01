@@ -11,16 +11,15 @@ sentry_dsn = ENV['SENTRY_DSN'].presence || Rails.application.credentials.dig(:se
 if sentry_dsn.present?
   Sentry.init do |config|
     config.dsn = sentry_dsn
-    config.breadcrumbs_logger = [:active_support_logger, :http_logger]
-
-    config.enabled_environments = %w[production staging]
-
-    # Add data like request headers and IP for users, see
-    # https://docs.sentry.io/platforms/ruby/data-management/data-collected/
-    config.send_default_pii = true
-
-    # Flip on with SENTRY_DEBUG=true to log the HTTP send + Sentry's response —
-    # lets you diagnose egress/DSN issues from a prod console without a re-init.
-    config.debug = ENV['SENTRY_DEBUG'] == 'true'
+    config.breadcrumbs_logger = [ :active_support_logger, :http_logger ]
+    config.send_default_pii   = false
+    config.enable_logs        = true
+    config.enabled_patches    = [ :logger ]
+    config.traces_sample_rate   = 0.2
+    config.profiles_sample_rate = 0.1
+    config.before_send = lambda do |event, _hint|
+      event.user = { id: event.user&.[](:id) }.compact
+      event
+    end
   end
 end
