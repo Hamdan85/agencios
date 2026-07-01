@@ -75,7 +75,18 @@ export const ticketsApi = {
   },
   generateCreative: (id, payload) => api.post(`/tickets/${id}/creatives/generate`, payload),
   destroyCreative: (id, creativeId) => api.delete(`/tickets/${id}/creatives/${creativeId}`),
+  // Manual upload — the file(s) become one Creative's assets.
+  uploadCreative: (id, { creativeType, caption, files } = {}) => {
+    const form = new FormData()
+    form.append('creative_type', creativeType)
+    if (caption) form.append('caption', caption)
+    Array.from(files || []).forEach((file) => form.append('assets[]', file))
+    return api.post(`/tickets/${id}/creatives`, form)
+  },
+  // Link an existing, unassigned Studio creative to this ticket.
+  attachCreative: (id, creativeId) => api.post(`/tickets/${id}/creatives/attach`, { creative_id: creativeId }),
   createPost: (id, data) => api.post(`/tickets/${id}/posts`, { post: data }),
+  unpublishPost: (id, postId) => api.post(`/tickets/${id}/posts/${postId}/unpublish`),
 }
 
 export const subtasksApi = {

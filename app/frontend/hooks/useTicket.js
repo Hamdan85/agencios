@@ -45,7 +45,19 @@ export function useTicketMutations(id) {
       (_data, payload) => analytics.track(EVENTS.CREATIVE_GENERATED, { kind: payload?.kind || payload?.creative_type, source: 'ticket' }),
     ),
     removeCreative: mk((creativeId) => ticketsApi.destroyCreative(id, creativeId), 'Criativo removido.'),
+    // Both also affect the Studio gallery's "unassigned" pool — invalidate it too.
+    uploadCreative: mk(
+      (payload) => ticketsApi.uploadCreative(id, payload),
+      'Criativo enviado!',
+      () => qc.invalidateQueries({ queryKey: ['creatives'] }),
+    ),
+    attachCreative: mk(
+      (creativeId) => ticketsApi.attachCreative(id, creativeId),
+      'Criativo adicionado ao ticket!',
+      () => qc.invalidateQueries({ queryKey: ['creatives'] }),
+    ),
     addPost: mk((data) => ticketsApi.createPost(id, data), undefined, () => analytics.track(EVENTS.POST_CREATED)),
+    unpublishPost: mk((postId) => ticketsApi.unpublishPost(id, postId), 'Post despublicado.'),
     uploadAttachments: mk(({ files, meta }) => attachmentsApi.create(id, files, meta), 'Arquivo(s) enviado(s)!'),
     updateAttachment: mk(({ attachmentId, data }) => attachmentsApi.update(id, attachmentId, data), 'Arquivo atualizado!'),
     removeAttachment: mk((attachmentId) => attachmentsApi.destroy(id, attachmentId), 'Arquivo removido.'),

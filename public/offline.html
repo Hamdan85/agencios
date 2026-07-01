@@ -1,25 +1,22 @@
 <!doctype html>
 <html lang="pt-BR">
   <head>
-    <title>Requisição inválida (422) — agencios</title>
+    <title>Sem conexão — agencios</title>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1, width=device-width">
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&display=swap">
     <link rel="stylesheet" href="/errors/base.css">
   </head>
   <body>
     <main>
       <div class="error-mark"><img src="/branding/mark.svg" width="44" height="44" alt="agencios"></div>
-      <p class="error-code">422</p>
-      <h1>Não conseguimos processar essa requisição</h1>
-      <p class="error-desc">Algo nos dados enviados não bateu com o esperado. Volte e tente de novo — se persistir, fale com o time.</p>
+      <p class="error-code">OFFLINE</p>
+      <h1>Você está sem conexão</h1>
+      <p class="error-desc">Não conseguimos falar com o agencios agora. Assim que a internet voltar, esta página tenta de novo sozinha — ou pule uns obstáculos enquanto isso.</p>
       <div class="error-actions">
-        <a class="btn btn-primary" href="/">Voltar para o início</a>
-        <button class="btn btn-ghost" type="button" onclick="location.reload()">Tentar novamente</button>
+        <button class="btn btn-primary" type="button" onclick="location.reload()">Recarregar</button>
+        <a class="btn btn-ghost" href="/painel">Ir para o painel</a>
       </div>
       <section class="dino-game">
         <canvas id="dino-canvas" width="600" height="200"></canvas>
@@ -27,5 +24,8 @@
       </section>
     </main>
     <script src="/errors/dino.js" defer></script>
+    <script>
+      window.addEventListener('online', function () { location.reload() })
+    </script>
   </body>
 </html>

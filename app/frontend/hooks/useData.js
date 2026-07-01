@@ -189,11 +189,14 @@ export function useGenerate() {
 }
 
 // ── Workspace creatives (Studio gallery) ──────────────────────
-export const useWorkspaceCreatives = (filters = {}) =>
+// `enabled` lets callers that only need this on demand (e.g. a picker dialog
+// that opens lazily) skip the fetch until then.
+export const useWorkspaceCreatives = (filters = {}, { enabled = true } = {}) =>
   useQuery({
     queryKey: keys.creatives(filters),
     queryFn: () => creativesApi.list(filters),
     placeholderData: keepPreviousData,
+    enabled,
   })
 
 export function useCreativeMutations() {

@@ -62,6 +62,11 @@ module Vendors
         handle(conn.get(path) { |req| req.params.update(params) if params.any? })
       end
 
+      def delete_json(path)
+        conn = build_connection(API_HOST, auth_token: token!)
+        handle(conn.delete(path))
+      end
+
       # --- chunked media upload (api.x.com/2/media/upload) ---------------------
 
       # INIT/FINALIZE/STATUS are form-encoded; APPEND is multipart with a binary

@@ -13,6 +13,9 @@ module Controllers
         scope = workspace.creatives.order(created_at: :desc)
         scope = scope.where(creative_type: @params[:type]) if @params[:type].present?
         scope = scope.where(status: @params[:status]) if @params[:status].present?
+        # The ticket-side "use from Studio" picker only offers creatives not yet
+        # attached to any ticket — a creative belongs to at most one ticket.
+        scope = scope.where(ticket_id: nil) if ActiveModel::Type::Boolean.new.cast(@params[:unassigned])
         scope = apply_client_filter(scope)
         scope = apply_search(scope)
         {

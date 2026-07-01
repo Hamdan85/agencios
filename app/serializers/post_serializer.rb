@@ -1,11 +1,13 @@
 # frozen_string_literal: true
 
 class PostSerializer < ActiveModel::Serializer
-  attributes :id, :status, :scheduled_at, :published_at, :caption, :permalink,
-             :external_post_id, :provider, :username, :metrics, :ticket_id, :social_account_id
+  attributes :id, :status, :scheduled_at, :published_at, :unpublished_at, :caption, :permalink,
+             :external_post_id, :provider, :username, :metrics, :ticket_id, :social_account_id,
+             :failure_reason
 
   def scheduled_at = object.scheduled_at&.iso8601
   def published_at = object.published_at&.iso8601
+  def unpublished_at = object.unpublished_at&.iso8601
   def provider = object.social_account&.provider
   def username = object.social_account&.username
 

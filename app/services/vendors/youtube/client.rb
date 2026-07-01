@@ -73,6 +73,12 @@ module Vendors
         json_get_data('/youtube/v3/channels', part: part, mine: 'true')
       end
 
+      # DELETE /youtube/v3/videos?id=... (~50 units). Success = 204, empty body.
+      def delete_video(video_id:)
+        conn = build_connection(DATA, auth_token: @access_token)
+        handle(conn.delete('/youtube/v3/videos') { |req| req.params['id'] = video_id })
+      end
+
       # POST upload/youtube/v3/thumbnails/set?videoId=... (§6.6, 50 units).
       # Requires a phone-verified channel, else 403. image_bytes raw jpeg/png.
       def set_thumbnail(video_id:, image_bytes:, content_type: 'image/jpeg')

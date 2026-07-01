@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 module Vendors
-  module Linkedin
+  module X
     module Actions
-      # Uniform seam entrypoint — DELETE /rest/posts/{urlencoded-urn} with
-      # X-RestLi-Method: DELETE. Idempotent; success = 204.
-      # See docs/integrations/linkedin.md §6 "Other ops".
+      # Uniform seam entrypoint — DELETE /2/tweets/:id (tweet.write scope, same
+      # scope already granted for CreatePost). Returns { deleted: true } on
+      # success per the X v2 API; raises on failure.
       class DeletePost
         def self.call(...) = new(...).call
 
@@ -17,8 +17,9 @@ module Vendors
         def call
           raise Vendors::Base::Error, 'Post sem external_post_id.' if @post.external_post_id.blank?
 
-          client = Vendors::Linkedin::Client.new(social_account: @social_account)
-          client.rest_delete("/rest/posts/#{Vendors::Linkedin::Client.encode_urn(@post.external_post_id)}")
+          Vendors::X::Client
+            .new(social_account: @social_account)
+            .delete_json("/2/tweets/#{@post.external_post_id}")
           true
         end
       end

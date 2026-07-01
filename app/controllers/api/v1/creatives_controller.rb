@@ -13,6 +13,9 @@ module Api
       # POST /tickets/:ticket_id/creatives/generate — body { kind, params }
       def generate = render_created(Controllers::Creatives::Generate.call(params:))
 
+      # POST /tickets/:ticket_id/creatives/attach — body { creative_id }
+      def attach = render_created(Controllers::Creatives::Attach.call(params:))
+
       # Workspace-level actions (Studio gallery)
       def workspace_index   = render_ok(Controllers::Creatives::WorkspaceIndex.call(params:))
       def update            = render_ok(Controllers::Creatives::Update.call(params:))

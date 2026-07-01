@@ -1,15 +1,25 @@
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { creativeMeta, CREATIVE_TYPE_META, GENERATION_KIND_META } from '@/lib/constants'
+import { useWorkspaceCreatives } from '@/hooks/useData'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/input'
 import { Spinner, EmptyState } from '@/components/ui/feedback'
 import { CreativeTypeChip } from '@/components/ui/iconography'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose,
 } from '@/components/ui/dialog'
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
+} from '@/components/ui/dropdown-menu'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
-import { ImagePlus, Sparkles, GalleryHorizontalEnd, Video, Image as ImageIcon, AlertCircle, CheckCircle2, Loader2, Trash2 } from 'lucide-react'
+import {
+  ImagePlus, Sparkles, GalleryHorizontalEnd, Video, Image as ImageIcon, AlertCircle, CheckCircle2,
+  Loader2, Trash2, ChevronDown, UploadCloud, LibraryBig,
+} from 'lucide-react'
 
 const MediaViewer = lazy(() => import('./MediaViewer'))
 
@@ -137,13 +147,191 @@ function CreativeCard({ creative, onClick, onDelete, deleting }) {
   )
 }
 
-export default function CreativesPanel({ creatives = [], onGenerate, generating = false, onDelete, deleting = false }) {
+// The "Adicionar criativo" split action — generate / upload / use-from-studio.
+function AddCreativeMenu({ trigger, onGenerateOpen, onUploadOpen, onPickerOpen }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-56">
+        <DropdownMenuItem onClick={onGenerateOpen}>
+          <Sparkles size={14} /> Gerar com IA
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onUploadOpen}>
+          <UploadCloud size={14} /> Enviar arquivo
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onPickerOpen}>
+          <LibraryBig size={14} /> Usar do estúdio
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+// Upload dialog — attaches an image/video file straight to the ticket as a
+// creative, picking the creative type up front (drives the network-fit spec).
+function UploadDialog({ open, onOpenChange, onUpload, uploading }) {
+  const [creativeType, setCreativeType] = useState('feed_image')
+  const [caption, setCaption] = useState('')
+  const [files, setFiles] = useState([])
+  const inputRef = useRef(null)
+
+  useEffect(() => {
+    if (open) { setCreativeType('feed_image'); setCaption(''); setFiles([]) }
+  }, [open])
+
+  const submit = (e) => {
+    e.preventDefault()
+    if (!files.length || uploading) return
+    onUpload?.({ creativeType, caption: caption.trim() || undefined, files })
+    onOpenChange(false)
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <form onSubmit={submit}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UploadCloud size={18} className="text-brand" /> Enviar arquivo
+            </DialogTitle>
+            <DialogDescription>Envie uma peça já pronta — imagem ou vídeo.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3.5 py-2">
+            <div className="space-y-1.5">
+              <Label>Tipo de criativo</Label>
+              <Select value={creativeType} onValueChange={setCreativeType}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Object.entries(CREATIVE_TYPE_META).map(([key, m]) => (
+                    <SelectItem key={key} value={key}>{m.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Arquivo</Label>
+              <input
+                ref={inputRef}
+                type="file"
+                accept="image/*,video/*"
+                multiple
+                hidden
+                onChange={(e) => setFiles(Array.from(e.target.files || []))}
+              />
+              <button
+                type="button"
+                onClick={() => inputRef.current?.click()}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border py-3 text-sm font-medium text-ink-muted transition hover:border-brand/40 hover:text-brand"
+              >
+                <UploadCloud size={15} />
+                {files.length > 0
+                  ? `${files.length} arquivo${files.length > 1 ? 's' : ''} selecionado${files.length > 1 ? 's' : ''}`
+                  : 'Selecionar imagem ou vídeo'}
+              </button>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Legenda (opcional)</Label>
+              <Textarea value={caption} onChange={(e) => setCaption(e.target.value)} rows={2} placeholder="Uma nota sobre esta peça…" />
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="ghost" size="sm">Cancelar</Button>
+            </DialogClose>
+            <Button type="submit" size="sm" disabled={!files.length || uploading}>
+              {uploading ? <Spinner size={14} className="border-white/30 border-t-white" /> : <UploadCloud size={14} />}
+              Enviar
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// Studio picker — attaches a creative already generated in the Studio (and
+// not yet used on any ticket) to this ticket.
+function StudioPickerDialog({ open, onOpenChange, onAttach, attaching }) {
+  const { data, isLoading } = useWorkspaceCreatives({ unassigned: true }, { enabled: open })
+  const items = data?.creatives || []
+
+  const select = (creative) => {
+    if (attaching) return
+    onAttach?.(creative.id)
+    onOpenChange(false)
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <LibraryBig size={18} className="text-brand" /> Usar criativo do estúdio
+          </DialogTitle>
+          <DialogDescription>Anexe a este ticket uma peça já gerada no estúdio.</DialogDescription>
+        </DialogHeader>
+        {isLoading ? (
+          <div className="flex justify-center py-10"><Spinner size={20} /></div>
+        ) : items.length === 0 ? (
+          <EmptyState
+            icon={LibraryBig}
+            title="Nada disponível"
+            description="Todo criativo do estúdio já está em uso em algum ticket, ou você ainda não gerou nenhum."
+            color="#7C3AED"
+          />
+        ) : (
+          <div className="grid max-h-96 grid-cols-3 gap-2.5 overflow-y-auto py-1 sm:grid-cols-4">
+            {items.map((c) => {
+              const m = creativeMeta(c.creative_type)
+              const thumb = c.asset_urls?.[0]
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  disabled={attaching}
+                  onClick={() => select(c)}
+                  className="group overflow-hidden rounded-xl border border-border bg-surface text-left transition-all hover:border-brand/40 disabled:opacity-50"
+                >
+                  <div className="relative w-full" style={{ paddingBottom: '100%' }}>
+                    <div className="absolute inset-0 overflow-hidden" style={{ background: `${m.color}10` }}>
+                      {thumb ? (
+                        <img src={thumb} alt={m.label} className="size-full object-cover transition-transform group-hover:scale-105" />
+                      ) : (
+                        <div className="flex size-full items-center justify-center" style={{ color: m.color }}>
+                          <m.icon size={22} strokeWidth={2.1} />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <p className="truncate px-2 py-1.5 text-[11px] font-semibold text-ink">{c.name || m.label}</p>
+                </button>
+              )
+            })}
+          </div>
+        )}
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="ghost" size="sm">Cancelar</Button>
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+export default function CreativesPanel({
+  creatives = [], onGenerate, generating = false, onUpload, uploading = false,
+  onAttach, attaching = false, onDelete, deleting = false,
+}) {
   const [open, setOpen] = useState(false)
+  const [uploadOpen, setUploadOpen] = useState(false)
+  const [pickerOpen, setPickerOpen] = useState(false)
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
   const [viewerAttachments, setViewerAttachments] = useState([])
   const [pendingDelete, setPendingDelete] = useState(null)
   const items = creatives || []
+  const busy = generating || uploading || attaching
 
   const fire = (item) => {
     onGenerate?.({ kind: item.kind, type: item.type, params: {} })
@@ -168,14 +356,22 @@ export default function CreativesPanel({ creatives = [], onGenerate, generating 
           <div>
             <h3 className="font-display text-base font-bold text-ink">Criativos</h3>
             <p className="text-xs text-ink-muted">
-              {items.length > 0 ? `${items.length} criativo${items.length > 1 ? 's' : ''}` : 'Gere ou anexe peças para este ticket.'}
+              {items.length > 0 ? `${items.length} criativo${items.length > 1 ? 's' : ''}` : 'Gere, envie ou use uma peça do estúdio.'}
             </p>
           </div>
         </div>
-        <Button size="sm" onClick={() => setOpen(true)} disabled={generating}>
-          {generating ? <Spinner size={14} className="border-white/30 border-t-white" /> : <Sparkles size={14} />}
-          Gerar criativo
-        </Button>
+        <AddCreativeMenu
+          onGenerateOpen={() => setOpen(true)}
+          onUploadOpen={() => setUploadOpen(true)}
+          onPickerOpen={() => setPickerOpen(true)}
+          trigger={(
+            <Button size="sm" disabled={busy}>
+              {busy ? <Spinner size={14} className="border-white/30 border-t-white" /> : <Sparkles size={14} />}
+              Adicionar criativo
+              <ChevronDown size={13} />
+            </Button>
+          )}
+        />
       </div>
 
       <div className="p-5">
@@ -183,9 +379,16 @@ export default function CreativesPanel({ creatives = [], onGenerate, generating 
           <EmptyState
             icon={ImagePlus}
             title="Nenhum criativo ainda"
-            description="Gere um carrossel, vídeo UGC ou imagem com IA — ou anexe um arquivo."
+            description="Gere com IA, envie um arquivo ou use uma peça já gerada no estúdio."
             color="#7C3AED"
-            action={<Button size="sm" onClick={() => setOpen(true)}><Sparkles size={14} /> Gerar criativo</Button>}
+            action={(
+              <AddCreativeMenu
+                onGenerateOpen={() => setOpen(true)}
+                onUploadOpen={() => setUploadOpen(true)}
+                onPickerOpen={() => setPickerOpen(true)}
+                trigger={<Button size="sm" disabled={busy}><Sparkles size={14} /> Adicionar criativo <ChevronDown size={13} /></Button>}
+              />
+            )}
           />
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -253,6 +456,12 @@ export default function CreativesPanel({ creatives = [], onGenerate, generating 
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Upload dialog */}
+      <UploadDialog open={uploadOpen} onOpenChange={setUploadOpen} onUpload={onUpload} uploading={uploading} />
+
+      {/* Studio picker dialog */}
+      <StudioPickerDialog open={pickerOpen} onOpenChange={setPickerOpen} onAttach={onAttach} attaching={attaching} />
 
       {/* Delete confirmation */}
       <Dialog open={!!pendingDelete} onOpenChange={(v) => { if (!v) setPendingDelete(null) }}>

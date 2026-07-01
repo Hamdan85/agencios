@@ -1,11 +1,16 @@
 import { Suspense, lazy } from 'react'
 import {
-  createBrowserRouter, createRoutesFromElements, RouterProvider, Route, Navigate, Outlet,
+  createBrowserRouter, createRoutesFromElements, RouterProvider, Route, Outlet,
 } from 'react-router-dom'
 import ProtectedRoute, { GuestRoute } from '@/components/shared/ProtectedRoute'
 import Layout from '@/components/layout/Layout'
 import AnalyticsBridge from '@/components/shared/AnalyticsBridge'
 import { PageLoader } from '@/components/ui/feedback'
+import { useOnlineStatus } from '@/hooks/useOnlineStatus'
+import NotFound from '@/pages/Errors/NotFound'
+import Forbidden from '@/pages/Errors/Forbidden'
+import ServerError from '@/pages/Errors/ServerError'
+import Offline from '@/pages/Errors/Offline'
 
 const Login = lazy(() => import('@/pages/Auth/Login'))
 const Register = lazy(() => import('@/pages/Auth/Register'))
@@ -29,25 +34,30 @@ const Settings = lazy(() => import('@/pages/Settings/Index'))
 const Billing = lazy(() => import('@/pages/Billing/Index'))
 
 function SuspenseLayout() {
+  const offline = useOnlineStatus()
   return (
     <>
       <AnalyticsBridge />
-      <Suspense fallback={<PageLoader />}>
-        <Outlet />
-      </Suspense>
+      {offline ? <Offline /> : (
+        <Suspense fallback={<PageLoader />}>
+          <Outlet />
+        </Suspense>
+      )}
     </>
   )
 }
 
 const router = createBrowserRouter(
   createRoutesFromElements(
-    <Route element={<SuspenseLayout />}>
+    <Route element={<SuspenseLayout />} errorElement={<ServerError />}>
       {/* "/" is the server-rendered marketing site (PagesController#home), not React. */}
 
       <Route element={<GuestRoute />}>
         <Route path="/login" element={<Login />} />
         <Route path="/cadastro" element={<Register />} />
       </Route>
+
+      <Route path="/erro/acesso-negado" element={<Forbidden />} />
 
       <Route element={<ProtectedRoute />}>
         <Route element={<Layout />}>
@@ -76,9 +86,10 @@ const router = createBrowserRouter(
         </Route>
       </Route>
 
-      {/* Unknown in-app paths go to the dashboard (ProtectedRoute bounces guests to /login).
-          We avoid redirecting to "/" — that path is now the SSR marketing site, not a React route. */}
-      <Route path="*" element={<Navigate to="/painel" replace />} />
+      {/* Unknown in-app paths render a real 404 (ProtectedRoute still bounces guests
+          hitting a route that requires auth). We avoid redirecting to "/" — that path
+          is now the SSR marketing site, not a React route. */}
+      <Route path="*" element={<NotFound />} />
     </Route>,
   ),
 )

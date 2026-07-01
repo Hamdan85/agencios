@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 module Vendors
-  module Linkedin
+  module Youtube
     module Actions
-      # Uniform seam entrypoint — DELETE /rest/posts/{urlencoded-urn} with
-      # X-RestLi-Method: DELETE. Idempotent; success = 204.
-      # See docs/integrations/linkedin.md §6 "Other ops".
+      # Uniform seam entrypoint — DELETE /youtube/v3/videos?id=... (§6.6-style Data
+      # API call, ~50 units; youtube.upload scope covers managing/deleting videos
+      # uploaded via the API). Raises on failure.
       class DeletePost
         def self.call(...) = new(...).call
 
@@ -17,8 +17,9 @@ module Vendors
         def call
           raise Vendors::Base::Error, 'Post sem external_post_id.' if @post.external_post_id.blank?
 
-          client = Vendors::Linkedin::Client.new(social_account: @social_account)
-          client.rest_delete("/rest/posts/#{Vendors::Linkedin::Client.encode_urn(@post.external_post_id)}")
+          Vendors::Youtube::Client
+            .new(access_token: @social_account.user_access_token)
+            .delete_video(video_id: @post.external_post_id)
           true
         end
       end

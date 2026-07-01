@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card'
 import { Input, Textarea } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Spinner } from '@/components/ui/feedback'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -18,6 +19,7 @@ import {
   Check, Link2, Target, Users, Layers, FlaskConical, Hash, ListChecks, Clock,
   MessageSquareText, ShieldCheck, FileText, ThumbsUp, AlertTriangle, Repeat,
   Eye, Heart, MessageCircle, Share2, Bookmark, BarChart3, ExternalLink, Save,
+  Ban,
 } from 'lucide-react'
 
 // ── Per-status field schema ──────────────────────────────────────────────
@@ -131,7 +133,7 @@ function MetricTiles({ metrics }) {
 }
 
 // ── Read-only view for published / done ──────────────────────────────────
-function PublishedView({ status, posts, color }) {
+function PublishedView({ status, posts, color, onUnpublish, unpublishingId }) {
   const Icon = status === 'done' ? CheckCircle2 : Radio
   return (
     <Card className="overflow-hidden animate-rise">
@@ -152,29 +154,52 @@ function PublishedView({ status, posts, color }) {
             Nenhuma publicação registrada ainda.
           </p>
         ) : (
-          posts.map((post) => (
-            <div key={post.id} className="rounded-xl border border-border bg-surface p-4">
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <ChannelIcons channels={post.provider ? [post.provider] : []} size={14} />
-                  <span className="text-sm font-semibold text-ink">{post.username || post.provider || 'Publicação'}</span>
-                  <span className="text-xs text-ink-muted">· {dt(post.published_at || post.scheduled_at)}</span>
+          posts.map((post) => {
+            const unpublished = post.status === 'unpublished'
+            return (
+              <div key={post.id} className={cn('rounded-xl border border-border bg-surface p-4', unpublished && 'opacity-60')}>
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <ChannelIcons channels={post.provider ? [post.provider] : []} size={14} />
+                    <span className="text-sm font-semibold text-ink">{post.username || post.provider || 'Publicação'}</span>
+                    <span className="text-xs text-ink-muted">· {dt(post.published_at || post.scheduled_at)}</span>
+                    {unpublished && <Badge variant="muted">Despublicado</Badge>}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {post.permalink && (
+                      <a
+                        href={post.permalink}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-xs font-bold text-brand hover:underline"
+                      >
+                        Ver post <ExternalLink size={12} />
+                      </a>
+                    )}
+                    {status !== 'done' && post.status === 'published' && onUnpublish && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-2.5 text-xs text-danger hover:border-danger/40 hover:bg-danger/5"
+                        onClick={() => onUnpublish(post.id)}
+                        disabled={unpublishingId === post.id}
+                      >
+                        {unpublishingId === post.id ? <Spinner size={12} /> : <Ban size={12} />}
+                        Despublicar
+                      </Button>
+                    )}
+                  </div>
                 </div>
-                {post.permalink && (
-                  <a
-                    href={post.permalink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 text-xs font-bold text-brand hover:underline"
-                  >
-                    Ver post <ExternalLink size={12} />
-                  </a>
+                {post.caption && <p className="mb-3 line-clamp-2 text-sm text-ink-secondary">{post.caption}</p>}
+                {unpublished && post.failure_reason && (
+                  <p className="mb-3 flex items-start gap-1.5 rounded-lg bg-warning/10 px-3 py-2 text-xs text-warning">
+                    <AlertTriangle size={13} className="mt-0.5 shrink-0" /> {post.failure_reason}
+                  </p>
                 )}
+                <MetricTiles metrics={post.metrics} />
               </div>
-              {post.caption && <p className="mb-3 line-clamp-2 text-sm text-ink-secondary">{post.caption}</p>}
-              <MetricTiles metrics={post.metrics} />
-            </div>
-          ))
+            )
+          })
         )}
       </div>
     </Card>

@@ -31,7 +31,9 @@ module Vendors
 
       # Carries the assistant text alongside the token `usage` hash and the
       # resolved model id, so callers can record AI cost (AiUsageLog).
-      Result = Struct.new(:text, :usage, :model, keyword_init: true)
+      # `tool_input` is the captured tool_use input (a Hash) when `tool:` was
+      # passed to #generate — nil otherwise.
+      Result = Struct.new(:text, :usage, :model, :tool_input, keyword_init: true)
 
       # Streaming result: the full assistant text, every captured `tool_use` block
       # (as [{ name:, input: }], possibly empty), token `usage`, and the model.
@@ -47,17 +49,26 @@ module Vendors
         generate(system: system, prompt: prompt, max_tokens: max_tokens).text
       end
 
-      # Like #messages but returns a Result { text, usage, model } so the caller
-      # can record token cost. The offline stub returns empty usage (cost 0).
+      # Like #messages but returns a Result { text, usage, model, tool_input } so
+      # the caller can record token cost. The offline stub returns empty usage
+      # (cost 0) and a nil tool_input.
       #
       # web_fetch: true enables the server-side web_fetch tool (Claude reads URLs
       # in the prompt itself) and uses a fetch-capable model.
-      def generate(system:, prompt:, max_tokens: 1024, web_fetch: false)
+      #
+      # tool: an Anthropic tool schema (name/description/input_schema) — when
+      # given, the call forces `tool_choice` to it, so the response's structured
+      # `tool_use` input (Result#tool_input) is the reliable way to get JSON back,
+      # instead of asking the model to print JSON as text and parsing it.
+      def generate(system:, prompt:, max_tokens: 1024, web_fetch: false, tool: nil)
         target = web_fetch ? fetch_model : @model
-        return Result.new(text: stub(system: system, prompt: prompt), usage: {}, model: target) if @api_key.blank?
+        if @api_key.blank?
+          return Result.new(text: stub(system: system, prompt: prompt), usage: {}, model: target, tool_input: nil)
+        end
 
         messages = [{ role: 'user', content: prompt.to_s }]
-        body  = request(model: target, system: system, messages: messages, max_tokens: max_tokens, web_fetch: web_fetch)
+        body  = request(model: target, system: system, messages: messages, max_tokens: max_tokens,
+                        web_fetch: web_fetch, tool: tool)
         usage = usage_acc(body)
 
         # Server-tool loops can pause (pause_turn); resume by re-sending.
@@ -65,13 +76,14 @@ module Vendors
         while body.is_a?(Hash) && body['stop_reason'] == 'pause_turn' && guard < MAX_TOOL_CONTINUE
           messages << { role: 'assistant', content: body['content'] }
           body = request(model: target, system: system, messages: messages, max_tokens: max_tokens,
-                         web_fetch: web_fetch)
+                         web_fetch: web_fetch, tool: tool)
           usage = usage_acc(body, into: usage)
           guard += 1
         end
 
         Result.new(
           text: extract_text(body),
+          tool_input: tool && extract_tool_input(body, tool['name']),
           usage: usage,
           model: (body.is_a?(Hash) && body['model'].presence) || target
         )
@@ -79,7 +91,7 @@ module Vendors
         # Never let an AI outage (incl. timeouts) break a status transition, a
         # caption job, or a generation; fall back to the deterministic stub.
         Rails.logger.warn("[Vendors::Anthropic] #{e.class}: #{e.message} — returning stub.")
-        Result.new(text: stub(system: system, prompt: prompt), usage: {}, model: target)
+        Result.new(text: stub(system: system, prompt: prompt), usage: {}, model: target, tool_input: nil)
       end
 
       # Multi-turn streaming completion with optional custom tool-use. Yields
@@ -262,9 +274,13 @@ module Vendors
         end
       end
 
-      def request(model:, system:, messages:, max_tokens:, web_fetch:)
+      def request(model:, system:, messages:, max_tokens:, web_fetch:, tool: nil)
         payload = { model: model, max_tokens: max_tokens, system: system, messages: messages }
         payload[:tools] = [WEB_FETCH_TOOL] if web_fetch
+        if tool
+          payload[:tools] = Array(payload[:tools]) + [tool]
+          payload[:tool_choice] = { type: 'tool', name: tool['name'] }
+        end
 
         handle(connection.post('/v1/messages') do |req|
           req.body = payload
@@ -314,6 +330,16 @@ module Vendors
           .map { |block| block['text'] }
           .join("\n")
           .presence || ''
+      end
+
+      # The structured input of the `tool_use` block named `tool_name`, if the
+      # model called it — nil otherwise (e.g. it stopped for another reason).
+      def extract_tool_input(body, tool_name)
+        content = body.is_a?(Hash) ? body['content'] : nil
+        return nil unless content.is_a?(Array)
+
+        block = content.find { |b| b.is_a?(Hash) && b['type'] == 'tool_use' && b['name'] == tool_name }
+        block && block['input']
       end
 
       # Deterministic, offline placeholder echoing the head of the prompt.

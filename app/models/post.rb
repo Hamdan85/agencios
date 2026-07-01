@@ -8,13 +8,13 @@ class Post < ApplicationRecord
   belongs_to :social_account
   has_many :post_metrics, dependent: :destroy
 
-  enum :status, { scheduled: 0, publishing: 1, published: 2, failed: 3 }, prefix: true
+  enum :status, { scheduled: 0, publishing: 1, published: 2, failed: 3, unpublished: 4 }, prefix: true
 
   scope :due, -> { status_scheduled.where(scheduled_at: ..Time.current) }
 
   def self.ransackable_attributes(_auth = nil)
     %w[id workspace_id ticket_id social_account_id status scheduled_at published_at
-       external_post_id permalink failure_reason created_at updated_at]
+       unpublished_at external_post_id permalink failure_reason created_at updated_at]
   end
 
   def self.ransackable_associations(_auth = nil)

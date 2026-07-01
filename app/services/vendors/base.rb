@@ -21,6 +21,11 @@ module Vendors
     class ServerError        < Error; end
     class NotConfiguredError < Error; end
 
+    # The network's public API has no way to remove a published post (e.g.
+    # Instagram content deletion, TikTok's Content Posting API). Callers fall
+    # back to a locally-recorded unpublish with a manual-removal note.
+    class NotSupportedError  < Error; end
+
     RETRY_STATUSES = [429, 500, 502, 503, 504].freeze
 
     private

@@ -5,4 +5,6 @@ class CreativePolicy < ApplicationPolicy
   def create? = member?
 
   def generate? = member?
+
+  def attach? = member?
 end

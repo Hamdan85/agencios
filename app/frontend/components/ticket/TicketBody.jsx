@@ -43,15 +43,29 @@ export default function TicketBody({
           onSave={saveFields}
           onPublish={(payload) => mut.publish.mutate(payload)}
           publishing={mut.publish.isPending}
+          onUnpublish={(postId) => mut.unpublishPost.mutate(postId)}
+          unpublishingId={mut.unpublishPost.isPending ? mut.unpublishPost.variables : null}
         />
       ) : (
-        <FieldGroup ticket={ticket} posts={posts} subtasks={subtasks} onSave={saveFields} saving={mut.update.isPending} />
+        <FieldGroup
+          ticket={ticket}
+          posts={posts}
+          subtasks={subtasks}
+          onSave={saveFields}
+          saving={mut.update.isPending}
+          onUnpublish={(postId) => mut.unpublishPost.mutate(postId)}
+          unpublishingId={mut.unpublishPost.isPending ? mut.unpublishPost.variables : null}
+        />
       )}
       {(showCreativesInMain || creatives.length > 0) && (
         <CreativesPanel
           creatives={creatives}
           onGenerate={(payload) => mut.generate.mutate(payload)}
           generating={mut.generate.isPending}
+          onUpload={(payload) => mut.uploadCreative.mutate(payload)}
+          uploading={mut.uploadCreative.isPending}
+          onAttach={(creativeId) => mut.attachCreative.mutate(creativeId)}
+          attaching={mut.attachCreative.isPending}
           onDelete={(creativeId) => mut.removeCreative.mutate(creativeId)}
           deleting={mut.removeCreative.isPending}
         />

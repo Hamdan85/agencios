@@ -59,8 +59,9 @@ module Publishers
       THUMBNAIL_CAPABLE.include?(provider.to_s)
     end
 
-    def self.publish(post) = new(post).publish
-    def self.sync(post)    = new(post).sync
+    def self.publish(post)   = new(post).publish
+    def self.sync(post)      = new(post).sync
+    def self.unpublish(post) = new(post).unpublish
 
     # The vendor module for a provider.
     def self.vendor_for(provider, workspace: nil)
@@ -84,6 +85,12 @@ module Publishers
 
     def sync
       actions::SyncInsights.call(@post)
+    end
+
+    # Deletes the post from the network. Raises Vendors::Base::NotSupportedError
+    # when the network's API has no delete endpoint (Instagram, Threads, TikTok).
+    def unpublish
+      actions::DeletePost.call(@post)
     end
 
     private

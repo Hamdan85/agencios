@@ -90,13 +90,16 @@ module Operations
       def build_posts
         @ticket.posts.where.not(status: Post.statuses[:published]).destroy_all
         @skipped = []
-        caption = @ticket.fields_for('production')['caption']
+        base_caption = @ticket.fields_for('production')['caption']
+        captions = @ticket.fields_for('scheduled')['captions']
+        captions = captions.is_a?(Hash) ? captions : {}
 
         client = @ticket.project.client
         @ticket.channels.flat_map do |channel|
           account = client&.social_accounts&.find_by(provider: channel)
           next [] unless account
 
+          caption = captions[channel.to_s].presence || base_caption
           plan_channel(channel).map do |media|
             Operations::Posts::Create.call(
               ticket: @ticket, social_account: account,

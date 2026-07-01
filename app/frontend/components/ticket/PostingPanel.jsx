@@ -11,23 +11,27 @@ import { creativeMeta, channelMeta, creativeMediaKind, resolvePostRouting, isCov
 import { dt } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 import {
-  Send, Clock, Zap, MessageCircle, Link2, CheckCircle2, AlertCircle, Loader2, ImagePlus, Radio,
+  Send, Clock, Zap, MessageCircle, MessageSquareText, Link2, CheckCircle2, AlertCircle, Loader2, ImagePlus, Radio, Ban,
 } from 'lucide-react'
 
 const MEDIA_LABEL = { image: 'imagem', carousel: 'carrossel', video: 'vídeo', text: 'texto' }
 
 const POST_STATUS = {
-  scheduled:  { label: 'Agendado',   variant: 'muted',   icon: Clock },
-  publishing: { label: 'Publicando…', variant: 'warning', icon: Loader2 },
-  published:  { label: 'No ar',      variant: 'success', icon: CheckCircle2 },
-  failed:     { label: 'Falhou',     variant: 'danger',  icon: AlertCircle },
+  scheduled:   { label: 'Agendado',    variant: 'muted',   icon: Clock },
+  publishing:  { label: 'Publicando…', variant: 'warning', icon: Loader2 },
+  published:   { label: 'No ar',       variant: 'success', icon: CheckCircle2 },
+  failed:      { label: 'Falhou',      variant: 'danger',  icon: AlertCircle },
+  unpublished: { label: 'Despublicado', variant: 'muted',  icon: Ban },
 }
 
 // The "Postagem" step: pick ONE creative per scoped type, choose immediate vs
 // scheduled, and publish. On publish, each creative routes to the channels that
 // support its media; a cover/thumbnail image rides the video where supported.
 // The ticket only reaches "No ar" when a post actually succeeds.
-export default function PostingPanel({ ticket, creatives = [], posts = [], onSave, onPublish, publishing = false, color = '#EC4899' }) {
+export default function PostingPanel({
+  ticket, creatives = [], posts = [], onSave, onPublish, publishing = false,
+  onUnpublish, unpublishingId, color = '#EC4899',
+}) {
   const fields = ticket?.fields?.scheduled || {}
   const channels = Array.isArray(ticket?.channels) ? ticket.channels : []
   const ready = creatives.filter((c) => c?.status === 'ready' && (c?.asset_urls?.length || 0) > 0)
@@ -48,6 +52,13 @@ export default function PostingPanel({ ticket, creatives = [], posts = [], onSav
   const [scheduledAt, setScheduledAt] = useState(fields.scheduled_at ? String(fields.scheduled_at).slice(0, 16) : '')
   const [firstComment, setFirstComment] = useState(fields.first_comment || '')
   const [linkInBio, setLinkInBio] = useState(fields.link_in_bio || '')
+  const baseCaption = ticket?.fields?.production?.caption || ''
+  const [captionByChannel, setCaptionByChannel] = useState(fields.captions || {})
+
+  useEffect(() => {
+    setCaptionByChannel(fields.captions || {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ticket?.id])
 
   // Default each type's selection to the saved one, else the only ready creative
   // of that type.
@@ -75,6 +86,8 @@ export default function PostingPanel({ ticket, creatives = [], posts = [], onSav
 
   const saveField = (key, value) => onSave?.({ [key]: value })
   const toggle = (type, id) => setSelectedByType((prev) => ({ ...prev, [type]: prev[type] === id ? undefined : id }))
+  const setChannelCaption = (channel, value) => setCaptionByChannel((prev) => ({ ...prev, [channel]: value }))
+  const saveChannelCaption = () => saveField('captions', captionByChannel)
 
   const canPublish = selectedCreatives.length > 0 && anyPost && (mode === 'immediate' || !!scheduledAt) && !publishing
 
@@ -193,6 +206,29 @@ export default function PostingPanel({ ticket, creatives = [], posts = [], onSav
           </div>
         )}
 
+        {/* per-channel caption: the exact text that goes out on each network */}
+        {channels.length > 0 && (
+          <div className="space-y-3">
+            <Label className="flex items-center gap-1.5">
+              <MessageSquareText size={13} style={{ color }} /> Legenda por canal
+            </Label>
+            {channels.map((channel) => (
+              <div key={channel} className="flex flex-col gap-1.5">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-ink-secondary">
+                  <ChannelIcons channels={[channel]} /> {channelMeta(channel).label}
+                </div>
+                <Textarea
+                  rows={3}
+                  value={captionByChannel[channel] ?? baseCaption}
+                  placeholder="Legenda deste post…"
+                  onChange={(e) => setChannelCaption(channel, e.target.value)}
+                  onBlur={saveChannelCaption}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* 2 — when */}
         <div className="space-y-2">
           <Label className="flex items-center gap-1.5"><Clock size={13} style={{ color }} /> Quando publicar</Label>
@@ -269,10 +305,24 @@ export default function PostingPanel({ ticket, creatives = [], posts = [], onSav
                       <span className="text-xs text-ink-muted">· {dt(post.scheduled_at)}</span>
                     )}
                   </div>
-                  <Badge variant={st.variant}>
-                    <StIcon size={11} className={cn('mr-0.5', post.status === 'publishing' && 'animate-spin')} />
-                    {st.label}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={st.variant}>
+                      <StIcon size={11} className={cn('mr-0.5', post.status === 'publishing' && 'animate-spin')} />
+                      {st.label}
+                    </Badge>
+                    {post.status === 'published' && onUnpublish && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2 text-xs text-danger hover:border-danger/40 hover:bg-danger/5"
+                        onClick={() => onUnpublish(post.id)}
+                        disabled={unpublishingId === post.id}
+                      >
+                        {unpublishingId === post.id ? <Spinner size={11} /> : <Ban size={11} />}
+                        Despublicar
+                      </Button>
+                    )}
+                  </div>
                 </div>
               )
             })}

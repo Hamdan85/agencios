@@ -74,6 +74,12 @@ module Vendors
         handle(connection.get(join(path), params))
       end
 
+      # DELETE {path} on the Graph API (e.g. a Page post/photo/video).
+      def delete(path, params: {}, token: access_token)
+        params = { access_token: token }.merge(params.compact) if token && !params.key?(:access_token)
+        handle(connection.delete(join(path), params))
+      end
+
       # POST {path} on the Graph API. Meta write endpoints take form params
       # (sent as the request body), so encode as www-form-urlencoded.
       def post(path, params: {}, token: access_token)

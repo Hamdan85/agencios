@@ -17,9 +17,12 @@ module Operations
     class CarryOver < Operations::Base
       # target_key => [source_status, source_key]; applied only when the target
       # is still blank.
+      # NOTE: production's `caption` is deliberately NOT seeded from scoping's
+      # `copy_brief` — copy_brief is internal messaging direction, not
+      # publish-ready copy. Leaving it blank lets Operations::Ai::FillFields
+      # write a real caption from it instead of leaking the brief verbatim.
       SEEDS = {
-        'scoping' => { 'copy_brief' => %w[ideation brief] },
-        'production' => { 'caption' => %w[scoping copy_brief] }
+        'scoping' => { 'copy_brief' => %w[ideation brief] }
       }.freeze
 
       def initialize(ticket:, status: nil)

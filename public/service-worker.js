@@ -1,7 +1,12 @@
-const CACHE = 'agencios-v1'
+const CACHE = 'agencios-v2'
+const PRECACHE_URLS = ['/offline.html', '/errors/base.css', '/errors/dino.js', '/branding/mark.svg']
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(self.skipWaiting())
+  event.waitUntil(
+    caches.open(CACHE)
+      .then((cache) => cache.addAll(PRECACHE_URLS))
+      .then(() => self.skipWaiting()),
+  )
 })
 
 self.addEventListener('activate', (event) => {
@@ -50,7 +55,11 @@ self.addEventListener('fetch', (event) => {
           }
           return response
         })
-        .catch(() => caches.match(request).then((c) => c || caches.match('/painel'))),
+        .catch(() =>
+          caches.match(request)
+            .then((c) => c || caches.match('/painel'))
+            .then((c) => c || caches.match('/offline.html')),
+        ),
     )
   }
 })

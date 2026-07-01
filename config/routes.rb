@@ -186,10 +186,13 @@ Rails.application.routes.draw do
         resources :subtasks, only: %i[create update destroy]
         resources :creatives, only: %i[index create destroy] do
           post :generate, on: :collection
+          post :attach, on: :collection
         end
         resources :attachments, only: %i[index create update destroy]
         resources :notes, only: %i[index create]
-        resources :posts, only: %i[index create update destroy]
+        resources :posts, only: %i[index create update destroy] do
+          post :unpublish, on: :member
+        end
       end
       patch 'subtasks/:id', to: 'subtasks#update_global'
 

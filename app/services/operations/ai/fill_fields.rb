@@ -21,10 +21,10 @@ module Operations
         keys = keys.reject { |k| @ticket.fields_for(@status)[k].present? } if @only_blank
         return { filled: [] } if keys.empty?
 
-        text = AiAdapter.complete(
-          build_prompt, max_tokens: 1300, operation: 'fill_fields', subject: @ticket
-        ).to_s
-        data = parse_json(text)
+        data = AiAdapter.complete_tool(
+          build_prompt, tool: Prompts::FieldFill.tool(@status, channels: @ticket.channels),
+          max_tokens: 1300, operation: 'fill_fields', subject: @ticket
+        )
         return { filled: [] } if data.blank?
 
         values = coerce(data.slice(*keys))
@@ -74,14 +74,9 @@ module Operations
         lines.join("\n")
       end
 
-      def parse_json(text)
-        raw = text[/\{.*\}/m]
-        raw && JSON.parse(raw)
-      rescue JSON::ParserError
-        nil
-      end
-
-      # Light type coercion so the persisted shape matches the field contracts.
+      # Light type coercion so the persisted shape matches the field contracts —
+      # the tool's input_schema already guarantees the JSON *shape* (array vs.
+      # string vs. object); this just trims/normalizes the values within it.
       def coerce(values)
         values.each_with_object({}) do |(key, value), out|
           out[key] =
@@ -90,6 +85,8 @@ module Operations
               Array(value).map { |v| v.to_s.strip }.reject(&:blank?)
             when 'hashtags'
               Array(value).map { |v| v.to_s.sub(/\A#/, '').strip }.reject(&:blank?)
+            when 'captions'
+              value.is_a?(Hash) ? value.transform_values { |v| v.to_s.strip }.compact_blank : nil
             when 'repeat_recommendation'
               %w[repeat iterate retire].include?(value.to_s) ? value.to_s : nil
             else
