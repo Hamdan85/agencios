@@ -64,7 +64,7 @@ module Operations
         return if title.match?(/\A(```|---|===|\#{1,6}\s*$)/) # fences / rules / empty headings
 
         title = title.sub(/\A\s*(?:[-*+•–—]\s+|\d+[.)]\s+)/, '') # leading bullet or "1." / "1)"
-        title = title.sub(/\A#{1,6}\s*/, '')               # leading markdown heading
+        title = title.sub(/\A\#{1,6}\s*/, '')               # leading markdown heading
         title = title.sub(/\A>\s*/, '')                         # blockquote
         title = title.gsub(/\*\*|__|`|~~/, '')                  # bold / code / strike markers
         title = title.gsub(/(?<!\w)[*_](?=\S)|(?<=\S)[*_](?!\w)/, '') # stray emphasis
