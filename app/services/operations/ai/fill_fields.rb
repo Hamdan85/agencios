@@ -53,6 +53,7 @@ module Operations
         lines = ["Ticket: #{@ticket.display_title}"]
         lines << "Tipo de criativo: #{@ticket.creative_type}" if @ticket.creative_type.present?
         lines << "Canais: #{Array(@ticket.channels).join(', ')}" if @ticket.channels.present?
+        lines.concat(strategy_context)
 
         current_idx = Ticket::WORKFLOW.index(@status.to_sym) || 0
         Ticket::WORKFLOW.each_with_index do |status, idx|
@@ -72,6 +73,29 @@ module Operations
         end
 
         lines.join("\n")
+      end
+
+      # A ticket born from an AI strategy plan carries only a slim card (title,
+      # format, channels) — the campaign's nuances (tone, do's & don'ts, the series
+      # concept) live ONLY in the planning chat. Feed that conversation + the plan
+      # summary in so the brief keeps them instead of guessing from the title alone.
+      def strategy_context
+        session = @ticket.strategy_session
+        return [] unless session
+
+        turns = Array(session.messages).filter_map do |m|
+          content = m['content'].to_s.strip
+          next if content.blank?
+
+          "  #{m['role'] == 'assistant' ? 'ESTRATEGISTA' : 'USUÁRIO'}: #{content}"
+        end
+        return [] if turns.empty?
+
+        out = ['[Conversa de estratégia que originou este ticket — respeite o tom e as diretrizes combinados]']
+        summary = session.proposed_plan.is_a?(Hash) ? session.proposed_plan['summary'].to_s.strip : ''
+        out << "  Resumo do plano: #{summary}" if summary.present?
+        out.concat(turns)
+        out
       end
 
       # Light type coercion so the persisted shape matches the field contracts —
