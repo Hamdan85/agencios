@@ -16,10 +16,10 @@ module Prompts
     CARD_TOOL = 'revise_ticket'
     UPDATE_PROJECT_TOOL = 'update_project'
 
+    PROJECT_STATUSES = %w[active paused archived completed].freeze
     CREATIVE_TYPES = %w[reel carousel feed_image story ugc_video ad thumbnail].freeze
     CHANNELS = Ticket::CHANNELS
     PRIORITIES = %w[low medium high].freeze
-    PROJECT_STATUSES = %w[active paused archived completed].freeze
     # A proposed ticket card carries ONLY what the approval view shows. The heavy
     # ideation brief + production checklist are generated per ticket when it's
     # created (Operations::Ai::FillFields + BuildScope), never in the plan.
@@ -120,8 +120,10 @@ module Prompts
       {
         'name' => UPDATE_PROJECT_TOOL,
         'description' => 'Atualiza os dados do PRÓPRIO projeto (não os tickets): nome, ' \
-                         'descrição, datas de início/fim e status. Use quando fizer sentido ' \
-                         'ajustar o projeto — ex.: definir a janela real da campanha.',
+                         'descrição, datas de início/fim e status. Use para ajustar o projeto — ' \
+                         'ex.: definir a janela real da campanha. REGRA DO STATUS: só inicie o ' \
+                         'projeto (status → active, tirando do rascunho) se o usuário pedir ' \
+                         'explicitamente para INICIAR/COMEÇAR; nunca inicie por conta própria.',
         'input_schema' => {
           'type' => 'object',
           'properties' => {
@@ -129,7 +131,11 @@ module Prompts
             'description' => { 'type' => 'string' },
             'starts_on' => { 'type' => 'string', 'description' => 'Data ISO (YYYY-MM-DD) ou vazio.' },
             'ends_on' => { 'type' => 'string', 'description' => 'Data ISO (YYYY-MM-DD) ou vazio.' },
-            'status' => { 'type' => 'string', 'enum' => PROJECT_STATUSES }
+            'status' => {
+              'type' => 'string', 'enum' => PROJECT_STATUSES,
+              'description' => 'Só mude para `active` (iniciar) se o usuário pedir explicitamente ' \
+                               'para iniciar/começar o projeto. Caso contrário, NÃO envie status.'
+            }
           }
         }
       }
@@ -184,6 +190,10 @@ module Prompts
         - Você também pode ajustar o PRÓPRIO projeto com a ferramenta #{UPDATE_PROJECT_TOOL}
           (nome, descrição, datas de início/fim, status) — ex.: definir a janela real da
           campanha que vocês acabaram de combinar. Pode chamá-la junto com o plano.
+        - INICIAR O PROJETO (tirar do rascunho, status → active) é decisão do usuário: só
+          mude o status para `active` se ele disser explicitamente para INICIAR/COMEÇAR o
+          projeto. Planejar, propor e revisar o plano NÃO inicia o projeto — na dúvida,
+          mantenha em rascunho.
 
         Regras do plano:
         - O ticket nasce em IDEAÇÃO, mas o plano DELIMITA a estratégia: defina
