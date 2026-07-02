@@ -30,12 +30,7 @@ export default function TicketBody({
 
   const main = (
     <div className="space-y-5">
-      <AiSummaryCard
-        status={status}
-        summary={ticket.ai_summaries?.[status]}
-        onAiAction={editable ? () => mut.aiAction.mutate() : undefined}
-        acting={mut.aiAction.isPending}
-      />
+      <AiSummaryCard status={status} summary={ticket.ai_summaries?.[status]} />
       {status === 'scheduled' ? (
         <PostingPanel
           ticket={ticket}
@@ -44,6 +39,8 @@ export default function TicketBody({
           onSave={saveFields}
           onPublish={(payload) => mut.publish.mutate(payload)}
           publishing={mut.publish.isPending}
+          onAiAction={() => mut.aiAction.mutate()}
+          acting={mut.aiAction.isPending}
           onUnpublish={(postId) => mut.unpublishPost.mutate(postId)}
           unpublishingId={mut.unpublishPost.isPending ? mut.unpublishPost.variables : null}
         />
@@ -54,6 +51,8 @@ export default function TicketBody({
           subtasks={subtasks}
           onSave={saveFields}
           saving={mut.update.isPending}
+          onAiAction={editable ? () => mut.aiAction.mutate() : undefined}
+          acting={mut.aiAction.isPending}
           onUnpublish={(postId) => mut.unpublishPost.mutate(postId)}
           unpublishingId={mut.unpublishPost.isPending ? mut.unpublishPost.variables : null}
         />

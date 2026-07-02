@@ -12,6 +12,7 @@ import { ChipsInput } from '@/components/ui/chips-input'
 import { DatePicker, DateTimePicker } from '@/components/ui/date-picker'
 import { ChannelIcons } from '@/components/ui/iconography'
 import DoneSummary from './DoneSummary'
+import AiFillButton from './AiFillButton'
 import { dt } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 import {
@@ -230,7 +231,7 @@ function PublishedView({ status, posts, color, onUnpublish, unpublishingId }) {
 }
 
 // ── The contextual editable field group ──────────────────────────────────
-export default function FieldGroup({ ticket, posts, subtasks = [], onSave, saving = false }) {
+export default function FieldGroup({ ticket, posts, subtasks = [], onSave, saving = false, onAiAction, acting = false }) {
   const status = ticket?.status
   const m = statusMeta(status)
   const schema = SCHEMAS[status]
@@ -592,7 +593,10 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
             <p className="text-xs text-ink-muted">{schema.helper}</p>
           </div>
         </div>
-        <SaveIndicator saving={saving} saved={savedFlash} />
+        <div className="flex items-center gap-1">
+          <SaveIndicator saving={saving} saved={savedFlash} />
+          {onAiAction && <AiFillButton onClick={onAiAction} acting={acting} color={m.color} />}
+        </div>
       </div>
       <div className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2">
         {schema.fields.map(renderField)}

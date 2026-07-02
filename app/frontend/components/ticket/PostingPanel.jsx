@@ -8,6 +8,7 @@ import { Spinner, EmptyState } from '@/components/ui/feedback'
 import { DateTimePicker } from '@/components/ui/date-picker'
 import { ChannelIcons } from '@/components/ui/iconography'
 import { creativeMeta, channelMeta, creativeMediaKind, resolvePostRouting, isCoverType } from '@/lib/constants'
+import AiFillButton from './AiFillButton'
 import { dt } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 import {
@@ -30,7 +31,7 @@ const POST_STATUS = {
 // The ticket only reaches "No ar" when a post actually succeeds.
 export default function PostingPanel({
   ticket, creatives = [], posts = [], onSave, onPublish, publishing = false,
-  onUnpublish, unpublishingId, color = '#EC4899',
+  onAiAction, acting = false, onUnpublish, unpublishingId, color = '#EC4899',
 }) {
   const fields = ticket?.fields?.scheduled || {}
   const channels = Array.isArray(ticket?.channels) ? ticket.channels : []
@@ -106,14 +107,17 @@ export default function PostingPanel({
 
   return (
     <Card className="overflow-hidden animate-rise">
-      <div className="flex items-center gap-2.5 border-b border-border p-5" style={{ background: `${color}0A` }}>
-        <div className="flex size-9 items-center justify-center rounded-xl" style={{ background: `${color}1A`, color }}>
-          <Send size={18} strokeWidth={2.3} />
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-5" style={{ background: `${color}0A` }}>
+        <div className="flex items-center gap-2.5">
+          <div className="flex size-9 items-center justify-center rounded-xl" style={{ background: `${color}1A`, color }}>
+            <Send size={18} strokeWidth={2.3} />
+          </div>
+          <div>
+            <h3 className="font-display text-base font-bold text-ink">Postagem</h3>
+            <p className="text-xs text-ink-muted">Escolha um criativo por tipo e publique — agora ou agendado.</p>
+          </div>
         </div>
-        <div>
-          <h3 className="font-display text-base font-bold text-ink">Postagem</h3>
-          <p className="text-xs text-ink-muted">Escolha um criativo por tipo e publique — agora ou agendado.</p>
-        </div>
+        {onAiAction && <AiFillButton onClick={onAiAction} acting={acting} color={color} />}
       </div>
 
       <div className="space-y-5 p-5">

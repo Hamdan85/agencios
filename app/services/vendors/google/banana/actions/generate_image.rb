@@ -22,19 +22,22 @@ module Vendors
             [3, 4] => '3:4'
           }.freeze
 
-          def initialize(prompt:, aspect_ratio: nil, width: nil, height: nil, negative_prompt: nil)
-            @prompt          = prompt
-            @negative_prompt = negative_prompt
-            @aspect_ratio    = aspect_ratio.presence ||
-                               derive_ratio(width.to_i, height.to_i) ||
-                               '1:1'
+          def initialize(prompt:, aspect_ratio: nil, width: nil, height: nil, negative_prompt: nil,
+                         reference_images: [])
+            @prompt            = prompt
+            @negative_prompt   = negative_prompt
+            @reference_images  = reference_images || []
+            @aspect_ratio      = aspect_ratio.presence ||
+                                 derive_ratio(width.to_i, height.to_i) ||
+                                 '1:1'
           end
 
           def call
             Vendors::Google::Banana::Client.new.generate_image(
               prompt: @prompt,
               aspect_ratio: @aspect_ratio,
-              negative_prompt: @negative_prompt
+              negative_prompt: @negative_prompt,
+              reference_images: @reference_images
             )
           end
 

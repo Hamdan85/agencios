@@ -127,6 +127,29 @@ module Tickets
     def logo   = attachment(:logo)
     def avatar = attachment(:default_creator_avatar)
 
+    # --- brand reference images (for multimodal image models) -----------------
+
+    # The brand logo + creator avatar downloaded as labeled reference payloads
+    # handed to the image model. Gemini/Banana is multimodal: it SEES these and
+    # decides — per the prompt — whether to use them (place the logo, feature the
+    # creator). Empty when neither asset is attached. Pair with
+    # REFERENCE_ASSETS_DIRECTIVE so the model knows they're optional.
+    def reference_images
+      [
+        reference_image(logo,   'MARCA (logotipo)'),
+        reference_image(avatar, 'CRIADOR (avatar/rosto do porta-voz)')
+      ].compact
+    end
+
+    # Tells the model the attached references are OPTIONAL — use them only when
+    # the requested content calls for them, never force them in.
+    REFERENCE_ASSETS_DIRECTIVE =
+      'Referências visuais anexadas (logotipo da marca e/ou avatar do criador): ' \
+      'use-as SOMENTE se o conteúdo pedido combinar com elas — aplique o logotipo ' \
+      'quando a cena pedir a presença da marca e retrate o criador quando a cena ' \
+      'tiver uma pessoa/porta-voz. Se o prompt não pedir marca nem pessoa, IGNORE ' \
+      'as referências por completo e não as force na imagem.'
+
     # --- prompt + image helpers -----------------------------------------------
 
     def prompt_context
@@ -190,6 +213,20 @@ module Tickets
         att = owner.public_send(name) if owner.respond_to?(name)
         return att if att&.attached?
       end
+      nil
+    end
+
+    # Download a brand attachment into a labeled reference payload for the image
+    # model. Returns nil (skipped) when the asset is missing or unreadable.
+    def reference_image(att, label)
+      return nil if att.nil?
+      return nil if att.respond_to?(:attached?) && !att.attached?
+
+      bytes = att.download
+      ct    = att.respond_to?(:content_type) ? att.content_type : att.blob&.content_type
+      { label: label, bytes: bytes, content_type: ct.presence || 'image/png' }
+    rescue StandardError => e
+      Rails.logger.warn("[CreativeContext] reference image read failed: #{e.message}")
       nil
     end
   end

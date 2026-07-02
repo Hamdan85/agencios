@@ -22,7 +22,11 @@ module Operations
       def call
         ctx    = ::Tickets::CreativeContext.for(@ticket, creative_type: type, client: resolve_client)
         aspect = @aspect_ratio.presence || ctx.banana_aspect_ratio
+        refs   = ctx.reference_images
         prompt = ctx.image_prompt(@prompt)
+        # Brand logo + creator avatar ride along as OPTIONAL references — the model
+        # decides, per the prompt, whether to actually use them.
+        prompt = "#{prompt}. #{::Tickets::CreativeContext::REFERENCE_ASSETS_DIRECTIVE}" if refs.any?
 
         creative = Operations::Creatives::Create.call(
           ticket: @ticket,
@@ -55,7 +59,8 @@ module Operations
         begin
           result = Vendors::Google::Banana::Actions::GenerateImage.call(
             prompt: prompt,
-            aspect_ratio: aspect
+            aspect_ratio: aspect,
+            reference_images: refs
           )
         rescue StandardError
           Operations::Credits::Refund.call(generation: generation)

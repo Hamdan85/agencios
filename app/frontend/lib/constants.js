@@ -86,10 +86,27 @@ export const PRIORITY_META = {
   high:   { label: 'Alta',   color: '#F43F5E', dot: '#F43F5E' },
 }
 
+// Generation kinds. `metered` mirrors the credit costs in the backend Pricing
+// catalog (app/models/pricing.rb DEFAULT_CONFIG): image + video consume prepaid
+// credits; carousels are included in the plan (0 credits) — see the credit gate
+// in Controllers::Creatives::Generate.
 export const GENERATION_KIND_META = {
-  carousel: { label: 'Carrossel', color: '#7C3AED', icon: GalleryHorizontalEnd },
-  video:    { label: 'Vídeo',     color: '#F43F5E', icon: Video },
-  image:    { label: 'Imagem',    color: '#0EA5E9', icon: Sparkles },
+  carousel: { label: 'Carrossel', color: '#7C3AED', icon: GalleryHorizontalEnd, metered: false },
+  video:    { label: 'Vídeo',     color: '#F43F5E', icon: Video,                metered: true },
+  image:    { label: 'Imagem',    color: '#0EA5E9', icon: Sparkles,             metered: true },
+}
+
+// A generatable creative type's generation kind — mirrors each backend spec's
+// `kind` (app/services/creatives/*.rb). `cover` is upload-only (not generatable)
+// so it is intentionally absent.
+export const GENERATION_KIND_FOR_TYPE = {
+  reel: 'video',
+  ugc_video: 'video',
+  feed_image: 'image',
+  story: 'image',
+  ad: 'image',
+  thumbnail: 'image',
+  carousel: 'carousel',
 }
 
 export const PLAN_META = {
@@ -208,6 +225,19 @@ export const uploadableTypesForTicket = (scopedTypes = [], channels = []) => {
   const scoped = (Array.isArray(scopedTypes) ? scopedTypes : []).filter(Boolean)
   const allowed = scoped.length ? scoped.filter((t) => fit.includes(t)) : fit
   return allowed.length ? allowed : fit
+}
+
+// The generation kinds a ticket can produce with AI: the generation kinds of its
+// generatable creative types — narrowed to its channels the same way uploads are.
+// A carousel-only ticket yields ['carousel'] (never video/image); a TikTok ticket
+// (video-only types) yields ['video']. Preserves GENERATION_KIND_META order.
+export const generatableKindsForTicket = (scopedTypes = [], channels = []) => {
+  const kinds = new Set(
+    uploadableTypesForTicket(scopedTypes, channels)
+      .map((t) => GENERATION_KIND_FOR_TYPE[t])
+      .filter(Boolean),
+  )
+  return Object.keys(GENERATION_KIND_META).filter((k) => kinds.has(k))
 }
 
 // ─────────────────────────────────────────────────────────────────

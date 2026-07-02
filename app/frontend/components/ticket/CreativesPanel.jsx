@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { creativeMeta, CREATIVE_TYPE_META, GENERATION_KIND_META, uploadAcceptFor, fileMatchesCreativeType, uploadableTypesForTicket } from '@/lib/constants'
+import { creativeMeta, CREATIVE_TYPE_META, GENERATION_KIND_META, uploadAcceptFor, fileMatchesCreativeType, uploadableTypesForTicket, generatableKindsForTicket } from '@/lib/constants'
 import { useWorkspaceCreatives } from '@/hooks/useData'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -340,8 +340,17 @@ export default function CreativesPanel({
   // Only offer uploading the types that make sense for this ticket (its scoped
   // types, fitting its channels) — a reel/TikTok ticket never offers a carousel.
   const uploadTypes = uploadableTypesForTicket(creativeTypes, channels)
+  // Same narrowing for AI generation: only the generation kinds this ticket can
+  // actually produce — a carousel ticket never offers video, a TikTok (video-only)
+  // ticket never offers a carousel or image.
+  const allowedKinds = generatableKindsForTicket(creativeTypes, channels)
+  const generatable = GENERATABLE.filter((g) => allowedKinds.includes(g.kind))
   const [open, setOpen] = useState(false)
   const [selectedKind, setSelectedKind] = useState(null)
+  // The type of a just-fired generation, so we can render a loading placeholder
+  // card immediately — before the ticket query refetches the real (generating)
+  // creative. Cleared once the mutation settles.
+  const [pendingType, setPendingType] = useState(null)
   const [uploadOpen, setUploadOpen] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
   const [viewerOpen, setViewerOpen] = useState(false)
@@ -350,6 +359,18 @@ export default function CreativesPanel({
   const [pendingDelete, setPendingDelete] = useState(null)
   const items = creatives || []
   const busy = generating || uploading || attaching
+
+  // Drop the optimistic placeholder once the generation call settles — the real
+  // (generating or ready) creative arrives from the refetched ticket query.
+  useEffect(() => {
+    if (!generating) setPendingType(null)
+  }, [generating])
+
+  // Show the real creatives plus, while a generation is in flight, a synthetic
+  // loading card so the field reflects the work immediately.
+  const displayItems = generating && pendingType
+    ? [{ id: '__pending__', creative_type: pendingType, status: 'generating', source: 'generated' }, ...items]
+    : items
 
   // Selecting a type is separate from firing — generation spends credits, so the
   // user picks a type first and confirms with the "Gerar" button.
@@ -361,6 +382,7 @@ export default function CreativesPanel({
   const fire = () => {
     const item = GENERATABLE.find((g) => g.kind === selectedKind)
     if (!item) return
+    setPendingType(item.type)
     onGenerate?.({ kind: item.kind, type: item.type, params: {} })
     openGenerate(false)
   }
@@ -402,7 +424,7 @@ export default function CreativesPanel({
       </div>
 
       <div className="p-5">
-        {items.length === 0 ? (
+        {displayItems.length === 0 ? (
           <EmptyState
             icon={ImagePlus}
             title="Nenhum criativo ainda"
@@ -419,15 +441,18 @@ export default function CreativesPanel({
           />
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {items.map((c) => (
-              <CreativeCard
-                key={c.id}
-                creative={c}
-                onClick={() => openViewer(c)}
-                onDelete={onDelete ? setPendingDelete : undefined}
-                deleting={deleting}
-              />
-            ))}
+            {displayItems.map((c) => {
+              const pending = c.id === '__pending__'
+              return (
+                <CreativeCard
+                  key={c.id}
+                  creative={c}
+                  onClick={pending ? undefined : () => openViewer(c)}
+                  onDelete={onDelete && !pending ? setPendingDelete : undefined}
+                  deleting={deleting}
+                />
+              )
+            })}
           </div>
         )}
       </div>
@@ -452,7 +477,12 @@ export default function CreativesPanel({
             <DialogDescription>Escolha o tipo de peça e confirme — a geração consome créditos.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-2.5">
-            {GENERATABLE.map((g) => {
+            {generatable.length === 0 && (
+              <p className="rounded-2xl border border-dashed border-border bg-surface px-4 py-6 text-center text-sm text-ink-muted">
+                Nenhum tipo de peça gerável para os canais e tipos deste ticket. Envie um arquivo ou ajuste o escopo.
+              </p>
+            )}
+            {generatable.map((g) => {
               const Icon = g.icon
               const kindMeta = GENERATION_KIND_META[g.kind]
               const active = selectedKind === g.kind
@@ -479,8 +509,10 @@ export default function CreativesPanel({
                   {active ? (
                     <CheckCircle2 size={20} className="shrink-0 text-brand" />
                   ) : (
-                    kindMeta?.label && !['image'].includes(g.kind) && (
+                    kindMeta?.metered ? (
                       <span className="rounded-full bg-amber/15 px-2 py-0.5 text-[10px] font-bold text-[#B45309]">Metrado</span>
+                    ) : (
+                      <span className="rounded-full bg-emerald/15 px-2 py-0.5 text-[10px] font-bold text-emerald">Grátis</span>
                     )
                   )}
                 </button>

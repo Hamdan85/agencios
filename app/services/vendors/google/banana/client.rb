@@ -33,13 +33,19 @@ module Vendors
         end
 
         # Generates one image. Returns { bytes: <binary String>, content_type: "image/jpeg" }.
-        def generate_image(prompt:, aspect_ratio: '1:1', negative_prompt: nil)
+        #
+        # `reference_images` — optional labeled visual references (brand logo,
+        # creator avatar, …) handed to the multimodal model. Each is a hash
+        # `{ label:, bytes:, content_type: }`; the label text precedes its inline
+        # image so the model knows what it is and can decide whether to use it.
+        def generate_image(prompt:, aspect_ratio: '1:1', negative_prompt: nil, reference_images: [])
           require_credential!(@api_key, 'google_banana.api_key')
 
           payload = {
             contents: [
               {
-                parts: [{ text: full_prompt(prompt, aspect_ratio, negative_prompt) }]
+                parts: [{ text: full_prompt(prompt, aspect_ratio, negative_prompt) }] +
+                       reference_parts(reference_images)
               }
             ],
             generationConfig: {
@@ -63,6 +69,25 @@ module Vendors
 
         def connection
           @connection ||= build_connection(BASE_URL)
+        end
+
+        # Turn labeled reference images into interleaved [text, inlineData] parts.
+        # A label part precedes each image so the model can tell them apart.
+        def reference_parts(reference_images)
+          Array(reference_images).flat_map do |ref|
+            bytes = ref && ref[:bytes]
+            next [] if bytes.blank?
+
+            parts = []
+            parts << { text: "Referência — #{ref[:label]}:" } if ref[:label].present?
+            parts << {
+              inlineData: {
+                mimeType: ref[:content_type].presence || 'image/png',
+                data: Base64.strict_encode64(bytes)
+              }
+            }
+            parts
+          end
         end
 
         # Fold aspect ratio and negative prompt into the text prompt — the
