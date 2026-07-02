@@ -23,7 +23,7 @@ module Controllers
         when 'published', 'done'
           Operations::Ai::SummarizeTicket.call(ticket: ticket, status: ticket.status)
         else
-          Operations::Ai::FillFields.call(ticket: ticket)
+          Operations::Ai::FillFields.call(ticket: ticket, instruction: @params[:instruction])
         end
       end
     end

@@ -4,11 +4,9 @@ import { creativeMeta, CREATIVE_TYPE_META, GENERATION_KIND_META, uploadAcceptFor
 import { useWorkspaceCreatives } from '@/hooks/useData'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/input'
 import { Spinner, EmptyState } from '@/components/ui/feedback'
-import { CreativeTypeChip } from '@/components/ui/iconography'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose,
 } from '@/components/ui/dialog'
@@ -23,14 +21,6 @@ import {
 } from 'lucide-react'
 
 const MediaViewer = lazy(() => import('./MediaViewer'))
-
-// Status badge per creative lifecycle state.
-const CREATIVE_STATUS = {
-  draft: { label: 'Rascunho', variant: 'muted', icon: ImageIcon },
-  generating: { label: 'Gerando…', variant: 'warning', icon: Loader2 },
-  ready: { label: 'Pronto', variant: 'success', icon: CheckCircle2 },
-  failed: { label: 'Falhou', variant: 'danger', icon: AlertCircle },
-}
 
 // The three generatable kinds, each mapped to a sensible default creative type.
 const GENERATABLE = [
@@ -69,10 +59,9 @@ function creativeToAttachments(creative) {
 // a real <button> without invalid interactive-element nesting.
 function CreativeCard({ creative, onClick, onDelete, deleting }) {
   const m = creativeMeta(creative?.creative_type)
-  const st = CREATIVE_STATUS[creative?.status] || CREATIVE_STATUS.draft
-  const StIcon = st.icon
   const thumb = creative?.asset_urls?.[0]
   const generating = creative?.status === 'generating'
+  const failed = creative?.status === 'failed'
   const hasAssets = (creative?.asset_urls?.length || 0) > 0
   const open = hasAssets ? onClick : undefined
 
@@ -97,21 +86,23 @@ function CreativeCard({ creative, onClick, onDelete, deleting }) {
               className="size-full object-cover transition-transform group-hover:scale-105"
             />
           ) : (
-            <div className="flex size-full flex-col items-center justify-center gap-2">
-              <div className="flex size-14 items-center justify-center rounded-2xl" style={{ background: `${m.color}1F`, color: m.color }}>
-                {generating ? <Loader2 size={26} className="animate-spin" /> : <m.icon size={26} strokeWidth={2.1} />}
+            // No thumbnail yet — one calm, status-aware placeholder. The type name
+            // already lives in the footer, so we never repeat it here; the state
+            // (generating / failed) is the only thing worth surfacing.
+            <div className="flex size-full flex-col items-center justify-center gap-2 px-2 text-center">
+              <div
+                className="flex size-11 items-center justify-center rounded-2xl"
+                style={failed ? { background: '#EF444414', color: '#EF4444' } : { background: `${m.color}14`, color: m.color }}
+              >
+                {generating ? <Loader2 size={20} className="animate-spin" />
+                  : failed ? <AlertCircle size={20} strokeWidth={2.1} />
+                  : <m.icon size={20} strokeWidth={2.1} />}
               </div>
-              <CreativeTypeChip type={creative?.creative_type} />
-            </div>
-          )}
-          {/* Only surface a status badge when it carries information — a "ready"
-              creative needs no label, just the thumbnail. */}
-          {(generating || creative?.status === 'failed') && (
-            <div className="absolute left-2 top-2">
-              <Badge variant={st.variant} className="shadow-sm">
-                <StIcon size={11} className={cn('mr-0.5', generating && 'animate-spin')} />
-                {st.label}
-              </Badge>
+              {(generating || failed) && (
+                <span className={cn('text-[11px] font-medium', failed ? 'text-danger' : 'text-ink-muted')}>
+                  {generating ? 'Gerando…' : 'Falhou'}
+                </span>
+              )}
             </div>
           )}
           {/* Delete — top-right, revealed on hover/focus. Stops propagation so it

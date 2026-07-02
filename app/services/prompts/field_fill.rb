@@ -120,12 +120,24 @@ module Prompts
         nas etapas anteriores (fornecido a seguir). Seja específico, acionável e
         coerente com a marca e o posicionamento acima. Não invente métricas que não
         existam no contexto.
-
+        #{instruction_block}
         Campos a preencher:
         #{task_lines}
 
         Português do Brasil.
       SYS
+    end
+
+    # An optional user steer for this regeneration ("o que deve ser mudado"). When
+    # present it OVERRIDES the default refill: honor it while keeping the fields
+    # coherent with the rest of the ticket.
+    def instruction_block
+      instruction = context[:instruction].to_s.strip
+      return '' if instruction.blank?
+
+      "\nINSTRUÇÃO PRIORITÁRIA DO USUÁRIO (tem precedência sobre o preenchimento " \
+        "padrão): #{instruction}. Aplique exatamente o que foi pedido, ajustando os " \
+        "campos afetados e mantendo coerência com o restante do contexto.\n"
     end
 
     def user_prompt

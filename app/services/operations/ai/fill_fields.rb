@@ -10,10 +10,13 @@ module Operations
       # only_blank: when true, never overwrite fields the team already filled —
       # only the empty ones are completed. Used by the automatic carry-over on
       # status advance; the manual "Gerar com IA" button refills everything.
-      def initialize(ticket:, only_blank: false)
+      # instruction: optional free-text steer from the user ("o que deve ser
+      # mudado") — takes precedence in the prompt; blank means a plain refill.
+      def initialize(ticket:, only_blank: false, instruction: nil)
         @ticket = ticket
         @status = ticket.status.to_s
         @only_blank = only_blank
+        @instruction = instruction.to_s.strip.presence
       end
 
       def call
@@ -43,7 +46,8 @@ module Operations
       def build_prompt
         Prompts::FieldFill.new(
           workspace: @ticket.workspace, client: @ticket.project.client,
-          status: @status, status_label: label, ctx: context_dump
+          status: @status, status_label: label, ctx: context_dump,
+          instruction: @instruction
         )
       end
 
