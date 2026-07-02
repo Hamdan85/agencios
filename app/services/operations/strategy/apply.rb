@@ -15,10 +15,12 @@ module Operations
       def call
         raise Operations::Errors::Invalid, 'Nenhum plano proposto para aplicar.' unless @session.proposed_plan?
 
-        # A plan is applied as a full rewrite: the proposed plan is always the
-        # COMPLETE plan, so re-applying an edited one drops the previous batch and
-        # recreates it (rather than duplicating). Hand-made tickets are untouched.
-        discard_previous_batch!
+        # A full plan is applied as a rewrite: the proposed plan is the COMPLETE
+        # plan, so re-applying an edited one drops the previous batch and recreates
+        # it (rather than duplicating). An ADDITIVE plan (mode `append`) instead
+        # carries ONLY new pieces to ACRESCENTAR — never discard the existing batch,
+        # just create the new cards beside it. Hand-made tickets are untouched either way.
+        discard_previous_batch! unless additive?
 
         tickets = Array(@session.proposed_plan['tickets']).map { |spec| build_ticket(spec) }
 
@@ -29,6 +31,11 @@ module Operations
       end
 
       private
+
+      # An additive plan only carries new pieces to append — keep the existing batch.
+      def additive?
+        @session.proposed_plan['mode'] == 'append'
+      end
 
       # Delete the tickets a previous apply of THIS session created, so an edited
       # plan replaces them instead of stacking a duplicate set. Reuses the bulk

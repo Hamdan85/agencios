@@ -82,6 +82,8 @@ export function useAiFillStatus(id) {
 //   ticket_revising→ one card is being re-generated { key }
 //   plan_ready    → the batch finished
 //   plan_failed   → the build produced nothing
+//   additions_building → new ghosts are being appended (do NOT reset the table)
+//   additions_ready    → the additive batch finished
 export function useStrategyChannel(sessionId, handlers) {
   useEffect(() => {
     if (!sessionId) return
@@ -96,6 +98,8 @@ export function useStrategyChannel(sessionId, handlers) {
             case 'ticket_revising': return handlers?.onRevising?.(d.key)
             case 'plan_ready': return handlers?.onReady?.()
             case 'plan_failed': return handlers?.onFailed?.()
+            case 'additions_building': return handlers?.onAdditionsBuilding?.()
+            case 'additions_ready': return handlers?.onAdditionsReady?.()
             default: return undefined
           }
         },

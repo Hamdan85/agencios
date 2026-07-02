@@ -67,12 +67,17 @@ const seedCards = (s) => (
     : []
 )
 
+// An ADDITIVE proposal only carries new pieces to append beside the existing
+// (real) tickets, so the table must NOT hide the reals when this is true.
+const seedAdditive = (s) => s?.status === 'proposed' && s?.proposed_plan?.mode === 'append'
+
 export function useStrategyPlan(projectId, session) {
   const qc = useQueryClient()
   const sessionId = session?.id
   const [cards, setCards] = useState(() => seedCards(session))
   const [creating, setCreating] = useState(false)
   const [generating, setGenerating] = useState(false)
+  const [additive, setAdditive] = useState(() => seedAdditive(session))
   const revisingKey = useRef(null)
 
   // Reseed only when the session identity changes (mount / switch after apply):
@@ -82,12 +87,13 @@ export function useStrategyPlan(projectId, session) {
     setCards(seedCards(session))
     setCreating(false)
     setGenerating(false)
+    setAdditive(seedAdditive(session))
     revisingKey.current = null
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId])
 
   const handlers = useMemo(() => ({
-    onStarted: () => { setCards([]); setCreating(true); setGenerating(true) },
+    onStarted: () => { setCards([]); setCreating(true); setGenerating(true); setAdditive(false) },
     onOutline: (tickets) => {
       setCreating(false)
       setCards(tickets.map((t) => ({ ...t, state: 'drafting' })))
@@ -110,6 +116,12 @@ export function useStrategyPlan(projectId, session) {
       // The persisted plan + the closed-drawer banner catch up from the query.
       qc.invalidateQueries({ queryKey: keys.strategy(projectId) })
     },
+    // Additive build: keep the existing ghosts, just append new ones as they land.
+    onAdditionsBuilding: () => { setAdditive(true); setGenerating(true) },
+    onAdditionsReady: () => {
+      setGenerating(false)
+      qc.invalidateQueries({ queryKey: keys.strategy(projectId) })
+    },
     onFailed: () => {
       setCreating(false)
       setGenerating(false)
@@ -119,7 +131,7 @@ export function useStrategyPlan(projectId, session) {
   }), [qc, projectId])
   useStrategyChannel(sessionId, handlers)
 
-  return { cards, creating, generating }
+  return { cards, creating, generating, additive }
 }
 
 // Drives the CHAT only: local transcript + streaming send. The plan/proposal is

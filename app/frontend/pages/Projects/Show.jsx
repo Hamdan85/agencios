@@ -52,6 +52,25 @@ const STATUS = {
 // filtered view is shareable / reload-safe. Stable reference — see useUrlFilters.
 const FILTER_KEYS = ['q', 'status', 'assignee_id', 'channel', 'creative_type']
 
+// A proposed (ghost) ticket row — the dimmed `proposed` variant of TicketRow fed
+// from a plan card. Shared by the full-plan preview and the additive append rows.
+function GhostTicketRow({ g }) {
+  return (
+    <TicketRow
+      proposed
+      state={g.state}
+      ticket={{
+        display_title: g.title,
+        status: 'ideation',
+        priority: g.priority,
+        creative_type: g.creative_type,
+        channels: g.channels,
+        scheduled_at: g.scheduled_at,
+      }}
+    />
+  )
+}
+
 export default function ProjectShow() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -68,7 +87,7 @@ export default function ProjectShow() {
   const { data: strategySession } = useStrategySession(id)
   // The live proposed plan (cards) + build/revise signals — owned here so the table
   // fills in live from the channel whether the chat is open or not.
-  const { cards, creating, generating } = useStrategyPlan(id, strategySession)
+  const { cards, creating, generating, additive } = useStrategyPlan(id, strategySession)
   const applyStrategy = useApplyStrategy(id)
   const discardStrategy = useDiscardStrategy(id)
   const { start, finalize, update, destroy, sendScope, autopilotEstimate, autopilot } = useProjectMutations()
@@ -134,14 +153,18 @@ export default function ProjectShow() {
   const planActive = creating || generating // a build/revise is in flight
   const showGhosts = strategyOpen && (planActive || strategySession?.status === 'proposed')
   const ghostTickets = showGhosts ? cards : []
-  // Planning hides the real tickets so the preview (or its loader) stands alone.
-  const planMode = showGhosts
+  // A full plan hides the real tickets so the preview (or its loader) stands alone;
+  // an ADDITIVE proposal instead shows the new ghosts BESIDE the existing tickets.
+  const planMode = showGhosts && !additive
+  // New ghost rows to append below the real tickets (additive proposal).
+  const additiveGhosts = showGhosts && additive && ghostTickets.length > 0
   // The table-level loader is EPHEMERAL: only between "vou começar" and the first
   // skeleton rows landing (plan_started → plan_outline).
   const tableLoading = strategyOpen && creating
   // A proposed plan awaiting a decision with the planner closed → banner to review.
   const pendingReview = !strategyOpen && strategySession?.status === 'proposed'
   const persistedPlan = strategySession?.status === 'proposed' ? strategySession.proposed_plan : null
+  const persistedAdditive = persistedPlan?.mode === 'append'
 
   const handleStart = () => start.mutate(id)
 
@@ -332,9 +355,15 @@ export default function ProjectShow() {
             </span>
             <div>
               <p className="text-sm font-semibold text-ink">
-                Plano proposto pronto · {persistedPlan.tickets.length} tickets
+                {persistedAdditive
+                  ? `${persistedPlan.tickets.length} novo(s) ticket(s) a adicionar`
+                  : `Plano proposto pronto · ${persistedPlan.tickets.length} tickets`}
               </p>
-              <p className="text-xs text-ink-muted">Revise no chat ou aplique para criar os tickets.</p>
+              <p className="text-xs text-ink-muted">
+                {persistedAdditive
+                  ? 'Revise no chat ou adicione ao projeto.'
+                  : 'Revise no chat ou aplique para criar os tickets.'}
+              </p>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -345,7 +374,7 @@ export default function ProjectShow() {
               <Sparkles size={15} /> Revisar
             </Button>
             <Button size="sm" onClick={() => applyStrategy.mutate(strategySession.id)} disabled={applyStrategy.isPending}>
-              <CheckCircle2 size={15} /> {applyStrategy.isPending ? 'Aplicando…' : 'Aplicar'}
+              <CheckCircle2 size={15} /> {applyStrategy.isPending ? 'Aplicando…' : persistedAdditive ? 'Adicionar' : 'Aplicar'}
             </Button>
           </div>
         </div>
@@ -386,24 +415,10 @@ export default function ProjectShow() {
         // `state` (drafting = skeleton, revising = glow) driven live by the channel.
         ghostTickets.length > 0 ? (
           <div className="space-y-2">
-            {ghostTickets.map((g, i) => (
-              <TicketRow
-                key={g.key || `ghost-${i}`}
-                proposed
-                state={g.state}
-                ticket={{
-                  display_title: g.title,
-                  status: 'ideation',
-                  priority: g.priority,
-                  creative_type: g.creative_type,
-                  channels: g.channels,
-                  scheduled_at: g.scheduled_at,
-                }}
-              />
-            ))}
+            {ghostTickets.map((g, i) => <GhostTicketRow key={g.key || `ghost-${i}`} g={g} />)}
           </div>
         ) : null
-      ) : tickets.length === 0 ? (
+      ) : tickets.length === 0 && !additiveGhosts ? (
         hasFilters ? (
           <EmptyState
             icon={ListChecks}
@@ -435,6 +450,11 @@ export default function ProjectShow() {
               onArchive={(tid) => archive.mutate(tid)}
               onUnarchive={(tid) => unarchive.mutate(tid)}
             />
+          ))}
+          {/* Additive proposal: the NEW ghost tickets sit below the real ones,
+              dimmed, awaiting approval in the planner drawer. */}
+          {additiveGhosts && ghostTickets.map((g, i) => (
+            <GhostTicketRow key={g.key || `ghost-${i}`} g={g} />
           ))}
         </div>
       )}
@@ -477,6 +497,7 @@ export default function ProjectShow() {
           session={strategySession}
           cards={cards}
           generating={generating}
+          additive={additive}
         />
       )}
 

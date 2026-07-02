@@ -40,6 +40,21 @@ module Operations
         "Plano atual (para revisar UM ticket, use a key):\n#{lines.join("\n")}"
       end
 
+      # The project's ALREADY-created tickets — so the router can tell a running
+      # project (→ add_tickets) from an empty one (→ generate_plan), and the add
+      # flow knows what NOT to duplicate.
+      def project_tickets_context(session)
+        tickets = session.project.tickets.order(:scheduled_at).limit(60)
+        return 'O projeto ainda não tem tickets criados.' if tickets.empty?
+
+        lines = tickets.map do |t|
+          format = t.creative_type.presence || Array(t.try(:creative_types)).join('/')
+          "- #{t.display_title} (#{format}, #{t.scheduled_at&.iso8601})"
+        end
+        "Tickets que o projeto JÁ tem (#{tickets.size}) — NÃO os recrie; para acrescentar " \
+          "novos use add_tickets:\n#{lines.join("\n")}"
+      end
+
       def log_usage(session, result, operation, client)
         Operations::Ai::LogUsage.call(
           provider: client.provider_key,

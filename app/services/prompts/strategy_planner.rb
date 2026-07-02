@@ -14,6 +14,7 @@ module Prompts
     TOOL_NAME = 'propose_content_plan'
     ACTION_TOOL = 'strategy_action'
     CARD_TOOL = 'revise_ticket'
+    ADD_TOOL = 'add_tickets'
     UPDATE_PROJECT_TOOL = 'update_project'
 
     PROJECT_STATUSES = %w[active paused archived completed].freeze
@@ -41,19 +42,50 @@ module Prompts
     def self.action_tool
       {
         'name' => ACTION_TOOL,
-        'description' => 'Decide a próxima ação a partir da conversa e (se houver) do plano já ' \
-                         'proposto: continuar conversando, gerar o plano agora, ou revisar UM ' \
-                         'ticket específico que o usuário pediu para mudar.',
+        'description' => 'Decide a próxima ação a partir da conversa, do plano já proposto (se ' \
+                         'houver) e dos tickets que o projeto já tem: continuar conversando, ' \
+                         'montar o plano inteiro, adicionar NOVOS tickets a um projeto que já ' \
+                         'tem tickets, ou revisar UM ticket específico que o usuário pediu para mudar.',
         'input_schema' => {
           'type' => 'object', 'required' => %w[action],
           'properties' => {
             'action' => {
-              'type' => 'string', 'enum' => %w[wait generate_plan revise_ticket],
-              'description' => 'wait = ainda conversando / falta algo; generate_plan = montar o ' \
-                               'plano agora; revise_ticket = o usuário pediu para mudar um ticket já proposto.'
+              'type' => 'string', 'enum' => %w[wait generate_plan add_tickets revise_ticket],
+              'description' => 'wait = ainda conversando / falta algo; ' \
+                               'generate_plan = montar o plano inteiro do zero (nenhum ticket ainda, ' \
+                               'ou refazer toda a cadência); ' \
+                               'add_tickets = o usuário pediu para ACRESCENTAR uma ou mais peças ' \
+                               'novas a um projeto que JÁ tem tickets (ex.: "crie mais um ticket de X"), ' \
+                               'sem mexer nos existentes; ' \
+                               'revise_ticket = o usuário pediu para mudar um ticket já proposto.'
             },
             'ticket_key' => { 'type' => 'string', 'description' => 'Chave (key) do ticket a revisar — só em revise_ticket.' },
-            'instruction' => { 'type' => 'string', 'description' => 'O que mudar naquele ticket — só em revise_ticket.' }
+            'instruction' => {
+              'type' => 'string',
+              'description' => 'O que fazer: em revise_ticket, o que mudar naquele ticket; em ' \
+                               'add_tickets, quais peças novas criar (formato, tema, quantidade).'
+            }
+          }
+        }
+      }
+    end
+
+    # Additive schema: propose ONLY the new tickets to append to a running project,
+    # never repeating what already exists. Same slim card shape as the batch.
+    def self.add_tool
+      {
+        'name' => ADD_TOOL,
+        'description' => 'Acrescenta NOVOS tickets a um projeto que já tem conteúdo — apenas as ' \
+                         'peças pedidas agora, sem repetir nenhum ticket existente. Cada card traz ' \
+                         'formato, canais e data de postagem, como no plano.',
+        'input_schema' => {
+          'type' => 'object', 'required' => %w[tickets],
+          'properties' => {
+            'tickets' => {
+              'type' => 'array',
+              'description' => 'Só os tickets NOVOS a adicionar (um por peça pedida).',
+              'items' => { 'type' => 'object', 'required' => CARD_REQUIRED, 'properties' => card_properties }
+            }
           }
         }
       }
@@ -189,6 +221,11 @@ module Prompts
           (tipicamente a janela ou a cadência). Se o usuário já deu ambas, proponha JÁ.
         - Se algo estiver fraco ou inviável, ajuste no plano e explique brevemente —
           não trave a conversa com perguntas.
+        - ADICIONAR peças a um projeto que JÁ tem tickets: quando o usuário pedir
+          "crie mais um ticket de X", "adiciona um post de Y" etc., NÃO refaça o
+          plano inteiro — proponha só as peças NOVAS, que aparecem como rascunho
+          esmaecido ao lado dos tickets existentes para o usuário aprovar. Nunca
+          repita nem recrie os tickets que já existem.
         - PRAZOS REALISTAS: reserve alguns dias de produção antes da primeira postagem.
           Se o pedido for apertado demais (ex.: "poste amanhã" mas a produção leva
           dias), CRITIQUE e proponha datas realistas — empurre a primeira postagem para

@@ -201,7 +201,7 @@ function SocialCard({ provider, account, mutations }) {
       </div>
       <h3 className="mt-3 font-display text-base font-bold text-ink">{meta.label}</h3>
       <p className="mt-0.5 min-h-5 truncate text-sm text-ink-muted">
-        {account ? (needsReauth ? 'Sessão expirada — reconecte.' : `@${account.username || ''}`) : 'Conecte a conta deste cliente.'}
+        {connected ? `@${account.username || ''}` : needsReauth ? 'Sessão expirada — reconecte.' : 'Conecte a conta deste cliente.'}
       </p>
       <div className="mt-4 flex gap-2">
         {connected ? (

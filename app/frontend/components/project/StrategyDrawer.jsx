@@ -13,7 +13,7 @@ import { useStartStrategy, useApplyStrategy, useStrategyChat } from '@/hooks/use
 // into real tickets on approval. Fixed height + internal scroll; mobile-first.
 // `cards` + `generating` come from the page's useStrategyPlan (the table owns the
 // live plan); the drawer is purely the chat + the approve control.
-export function StrategyDrawer({ open, onOpenChange, projectId, session, cards = [], generating = false }) {
+export function StrategyDrawer({ open, onOpenChange, projectId, session, cards = [], generating = false, additive = false }) {
   const start = useStartStrategy(projectId)
   const apply = useApplyStrategy(projectId)
   const { messages, streaming, pending, send, reset } = useStrategyChat(projectId, session)
@@ -22,8 +22,10 @@ export function StrategyDrawer({ open, onOpenChange, projectId, session, cards =
   const scrollRef = useRef(null)
   const inputRef = useRef(null)
 
-  // The plan awaiting a decision (shown inline + drives the approve button).
+  // The plan awaiting a decision (shown inline + drives the approve button). An
+  // additive proposal only carries the NEW pieces to append to the running project.
   const proposal = cards.length ? { tickets: cards, summary: session?.proposed_plan?.summary } : null
+  const isAdditive = additive || session?.proposed_plan?.mode === 'append'
 
   // Return focus to the composer whenever a turn finishes, so the user can keep
   // typing without reaching for the mouse. (Focus on OPEN is handled by the
@@ -144,11 +146,16 @@ export function StrategyDrawer({ open, onOpenChange, projectId, session, cards =
           {proposal && !applied && (
             <div className="rounded-2xl border border-brand/30 bg-brand-soft/40 p-3.5 text-sm">
               <div className="flex items-center gap-2 font-semibold text-brand">
-                <CalendarClock size={15} /> Plano pronto · {proposal.tickets.length} tickets
+                <CalendarClock size={15} />
+                {isAdditive
+                  ? `${proposal.tickets.length} novo(s) ticket(s) a adicionar`
+                  : `Plano pronto · ${proposal.tickets.length} tickets`}
               </div>
               {proposal.summary && <p className="mt-1 text-ink-secondary">{proposal.summary}</p>}
               <p className="mt-1.5 text-xs text-ink-muted">
-                Os tickets propostos aparecem na lista do projeto (esmaecidos). Revise e clique em aprovar abaixo.
+                {isAdditive
+                  ? 'Os novos tickets aparecem esmaecidos ao lado dos existentes na lista. Revise e adicione abaixo.'
+                  : 'Os tickets propostos aparecem na lista do projeto (esmaecidos). Revise e clique em aprovar abaixo.'}
               </p>
             </div>
           )}
@@ -165,7 +172,9 @@ export function StrategyDrawer({ open, onOpenChange, projectId, session, cards =
             >
               {apply.isPending
                 ? <><Loader2 size={16} className="mr-2 animate-spin" /> Criando tickets…</>
-                : <><CheckCircle2 size={16} className="mr-2" /> Aprovar e criar {proposal.tickets.length} tickets</>}
+                : isAdditive
+                  ? <><CheckCircle2 size={16} className="mr-2" /> Adicionar {proposal.tickets.length} ticket(s)</>
+                  : <><CheckCircle2 size={16} className="mr-2" /> Aprovar e criar {proposal.tickets.length} tickets</>}
             </Button>
           )}
 

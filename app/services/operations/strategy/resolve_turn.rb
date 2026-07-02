@@ -7,7 +7,8 @@ module Operations
     # dispatches it. Reliable because the decision is a forced tool_choice, not a
     # spontaneous streamed tool call.
     #
-    #   generate_plan → GeneratePlan (build the batch, stream cards over the channel)
+    #   generate_plan → GeneratePlan (build the whole batch, stream cards)
+    #   add_tickets   → AddTickets (append NEW cards to a running project)
     #   revise_ticket → ReviseTicket (regenerate ONE card in place)
     #   wait          → nothing (still conversing)
     class ResolveTurn < Operations::Base
@@ -23,6 +24,8 @@ module Operations
         case decide['action']
         when 'generate_plan'
           GeneratePlan.call(session: @session)
+        when 'add_tickets'
+          AddTickets.call(session: @session, instruction: @action['instruction'].to_s)
         when 'revise_ticket'
           revise
         end
@@ -41,8 +44,10 @@ module Operations
       def decide
         client = ai_client('strategy_action')
         result = client.generate(
-          system: 'Você decide a próxima ação do planejamento de conteúdo a partir da conversa e do plano atual.',
-          prompt: "#{conversation(@session)}\n\n#{cards_context(@session)}\n\nDecida a ação chamando a ferramenta.",
+          system: 'Você decide a próxima ação do planejamento de conteúdo a partir da conversa, ' \
+                  'do plano proposto e dos tickets que o projeto já tem.',
+          prompt: "#{conversation(@session)}\n\n#{cards_context(@session)}\n\n" \
+                  "#{project_tickets_context(@session)}\n\nDecida a ação chamando a ferramenta.",
           tool: Prompts::StrategyPlanner.action_tool,
           max_tokens: ACTION_MAX_TOKENS
         )
