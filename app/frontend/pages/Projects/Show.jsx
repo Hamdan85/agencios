@@ -53,12 +53,14 @@ const STATUS = {
 const FILTER_KEYS = ['q', 'status', 'assignee_id', 'channel', 'creative_type']
 
 // A proposed (ghost) ticket row — the dimmed `proposed` variant of TicketRow fed
-// from a plan card. Shared by the full-plan preview and the additive append rows.
+// from a plan card. Shared by the full-plan preview and the additive/ops rows
+// (create = new piece, update = edit of a real ticket, remove = its removal).
 function GhostTicketRow({ g }) {
   return (
     <TicketRow
       proposed
       state={g.state}
+      op={g.op || 'create'}
       ticket={{
         display_title: g.title,
         status: 'ideation',
@@ -68,6 +70,40 @@ function GhostTicketRow({ g }) {
         scheduled_at: g.scheduled_at,
       }}
     />
+  )
+}
+
+// Live progress of a project-level "GO mode" run: how far the batch has walked
+// its tickets. Rendered only while a batch is active; refreshes off the board
+// channel (autopilot_batch_started / step / completed → invalidate `projects`).
+function AutopilotProgress({ batch }) {
+  if (!batch) return null
+  const total = batch.total || 0
+  const done = Math.min(batch.done || 0, total)
+  const pct = total ? Math.round((done / total) * 100) : 0
+  const failed = batch.failed || 0
+  return (
+    <div className="mb-6 rounded-2xl border border-brand/25 bg-brand-soft/40 p-4">
+      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
+        <span className="inline-flex items-center gap-2 text-sm font-bold text-brand">
+          <Loader2 size={15} className="animate-spin" /> Piloto automático em andamento
+        </span>
+        <span className="text-xs font-semibold text-ink-secondary">
+          {done} de {total} {total === 1 ? 'ticket' : 'tickets'}
+          {failed > 0 && (
+            <span className="ml-2 inline-flex items-center gap-1 text-danger">
+              <AlertTriangle size={12} /> {failed} com falha
+            </span>
+          )}
+        </span>
+      </div>
+      <div className="h-2.5 w-full overflow-hidden rounded-full bg-brand/15">
+        <div
+          className="h-full rounded-full transition-all duration-500 ease-out"
+          style={{ width: `${pct}%`, background: 'linear-gradient(135deg, #7C3AED, #EC4899)' }}
+        />
+      </div>
+    </div>
   )
 }
 
@@ -132,6 +168,9 @@ export default function ProjectShow() {
 
   const project = data?.project || {}
   const tickets = data?.tickets || project?.tickets || []
+  // The project-level GO run, if one is walking the tickets right now (null once
+  // it stops — completed / failed / cancelled — so the GO button comes back).
+  const autopilotBatch = data?.autopilot || null
   const color = project.color || '#7C3AED'
   const st = STATUS[project.status] || STATUS.active
   const hasRange = project.starts_on || project.ends_on
@@ -158,6 +197,15 @@ export default function ProjectShow() {
   const planMode = showGhosts && !additive
   // New ghost rows to append below the real tickets (additive proposal).
   const additiveGhosts = showGhosts && additive && ghostTickets.length > 0
+  // Staged edits/removals target REAL tickets (op cards carry `ticket_id`); map
+  // them so each affected real row is dimmed + badged, paired with its ghost.
+  const pendingByTicket = {}
+  if (additiveGhosts) {
+    ghostTickets.forEach((g) => {
+      if (g.op === 'remove') pendingByTicket[g.ticket_id] = 'remove'
+      else if (g.op === 'update') pendingByTicket[g.ticket_id] = 'edit'
+    })
+  }
   // The table-level loader is EPHEMERAL: only between "vou começar" and the first
   // skeleton rows landing (plan_started → plan_outline).
   const tableLoading = strategyOpen && creating
@@ -165,6 +213,15 @@ export default function ProjectShow() {
   const pendingReview = !strategyOpen && strategySession?.status === 'proposed'
   const persistedPlan = strategySession?.status === 'proposed' ? strategySession.proposed_plan : null
   const persistedAdditive = persistedPlan?.mode === 'append'
+  // An additive plan can mix creates/edits/removals — summarize what applying does.
+  const opsSummary = (() => {
+    if (!persistedAdditive) return null
+    const t = persistedPlan.tickets || []
+    const n = (op) => t.filter((c) => (c.op || 'create') === op).length
+    return [[n('create'), 'a adicionar'], [n('update'), 'a editar'], [n('remove'), 'a remover']]
+      .filter(([c]) => c > 0).map(([c, label]) => `${c} ${label}`).join(' · ')
+  })()
+  const hasRemoval = persistedAdditive && (persistedPlan.tickets || []).some((c) => c.op === 'remove')
 
   const handleStart = () => start.mutate(id)
 
@@ -275,6 +332,7 @@ export default function ProjectShow() {
             )}
             {!isCompleted && (
               <AutopilotButton
+                run={autopilotBatch}
                 estimating={autopilotEstimate.isPending}
                 starting={autopilot.isPending}
                 onEstimate={() => autopilotEstimate.mutateAsync(id).then((d) => d?.estimate)}
@@ -346,6 +404,9 @@ export default function ProjectShow() {
         </div>
       </Card>
 
+      {/* GO mode walking the project — live progress bar (hides while none runs). */}
+      <AutopilotProgress batch={autopilotBatch} />
+
       {/* A proposed plan is waiting (survived a reload) — review / apply / discard. */}
       {pendingReview && (
         <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-brand/30 bg-brand-soft/40 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
@@ -356,12 +417,12 @@ export default function ProjectShow() {
             <div>
               <p className="text-sm font-semibold text-ink">
                 {persistedAdditive
-                  ? `${persistedPlan.tickets.length} novo(s) ticket(s) a adicionar`
+                  ? `Alterações propostas · ${opsSummary || 'nenhuma'}`
                   : `Plano proposto pronto · ${persistedPlan.tickets.length} tickets`}
               </p>
               <p className="text-xs text-ink-muted">
                 {persistedAdditive
-                  ? 'Revise no chat ou adicione ao projeto.'
+                  ? (hasRemoval ? 'Revise no chat ou aplique — inclui remoção de ticket.' : 'Revise no chat ou aplique ao projeto.')
                   : 'Revise no chat ou aplique para criar os tickets.'}
               </p>
             </div>
@@ -374,7 +435,7 @@ export default function ProjectShow() {
               <Sparkles size={15} /> Revisar
             </Button>
             <Button size="sm" onClick={() => applyStrategy.mutate(strategySession.id)} disabled={applyStrategy.isPending}>
-              <CheckCircle2 size={15} /> {applyStrategy.isPending ? 'Aplicando…' : persistedAdditive ? 'Adicionar' : 'Aplicar'}
+              <CheckCircle2 size={15} /> {applyStrategy.isPending ? 'Aplicando…' : 'Aplicar'}
             </Button>
           </div>
         </div>
@@ -449,11 +510,13 @@ export default function ProjectShow() {
               onOpen={setDrawerId}
               onArchive={(tid) => archive.mutate(tid)}
               onUnarchive={(tid) => unarchive.mutate(tid)}
+              pendingChange={pendingByTicket[t.id] || null}
             />
           ))}
-          {/* Additive proposal: the NEW ghost tickets sit below the real ones,
-              dimmed, awaiting approval in the planner drawer. */}
-          {additiveGhosts && ghostTickets.map((g, i) => (
+          {/* Additive proposal: NEW pieces (create) and EDITS (update, shown as the
+              proposed "after") sit below the real ones, dimmed, awaiting approval.
+              Removals aren't repeated here — their real row above is already flagged. */}
+          {additiveGhosts && ghostTickets.filter((g) => g.op !== 'remove').map((g, i) => (
             <GhostTicketRow key={g.key || `ghost-${i}`} g={g} />
           ))}
         </div>

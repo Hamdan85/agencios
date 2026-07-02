@@ -61,6 +61,30 @@ RSpec.describe 'Autopilot (GO mode) API', type: :request do
     expect(@ticket.reload.autopilot_runs.count).to eq(1)
   end
 
+  it 'exposes the live batch progress on the project show while GO runs' do
+    credit_workspace(@workspace, 50)
+    post "/api/v1/projects/#{@project.id}/autopilot_start", params: { mode: 'scheduled' }, as: :json
+    expect(response).to have_http_status(:ok)
+
+    get "/api/v1/projects/#{@project.id}", as: :json
+    expect(response).to have_http_status(:ok)
+    ap = JSON.parse(response.body)['autopilot']
+    expect(ap).to be_present
+    expect(ap['active']).to be(true)
+    expect(ap['total']).to eq(1)
+    expect(ap['done']).to eq(0)
+  end
+
+  it 'drops the batch progress once the run reaches a terminal state' do
+    credit_workspace(@workspace, 50)
+    post "/api/v1/projects/#{@project.id}/autopilot_start", params: { mode: 'scheduled' }, as: :json
+    batch = AutopilotRun.batches.last
+    batch.update!(state: 'completed', finished_at: Time.current)
+
+    get "/api/v1/projects/#{@project.id}", as: :json
+    expect(JSON.parse(response.body)['autopilot']).to be_nil
+  end
+
   it 'blocks a project GO (422) when a ticket needs manual creatives' do
     build_ticket(%w[cover]) # not auto-generatable
     credit_workspace(@workspace, 50)

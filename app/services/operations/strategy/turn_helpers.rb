@@ -41,18 +41,51 @@ module Operations
       end
 
       # The project's ALREADY-created tickets — so the router can tell a running
-      # project (→ add_tickets) from an empty one (→ generate_plan), and the add
-      # flow knows what NOT to duplicate.
+      # project (→ add_tickets) from an empty one (→ generate_plan), knows what NOT
+      # to duplicate, and can target one for edit/remove by its `#<id>` reference.
       def project_tickets_context(session)
         tickets = session.project.tickets.order(:scheduled_at).limit(60)
         return 'O projeto ainda não tem tickets criados.' if tickets.empty?
 
         lines = tickets.map do |t|
           format = t.creative_type.presence || Array(t.try(:creative_types)).join('/')
-          "- #{t.display_title} (#{format}, #{t.scheduled_at&.iso8601})"
+          "- ##{t.id}: #{t.display_title} (#{format}, #{t.scheduled_at&.iso8601})"
         end
-        "Tickets que o projeto JÁ tem (#{tickets.size}) — NÃO os recrie; para acrescentar " \
-          "novos use add_tickets:\n#{lines.join("\n")}"
+        "Tickets que o projeto JÁ tem (#{tickets.size}) — NÃO os recrie. Para acrescentar " \
+          "novos use add_tickets; para editar/remover UM, use revise_ticket/remove_ticket com " \
+          "ticket_key no formato \"#<id>\":\n#{lines.join("\n")}"
+      end
+
+      # The pending additive/ops cards to stack onto (when the user is stacking
+      # changes onto an already-proposed append plan that hasn't been applied), or
+      # [] for a fresh set. In every other case (applied plan, or a full proposed
+      # plan) we start fresh so we never re-propose already-materialized tickets.
+      def pending_append_cards(session)
+        plan = session.proposed_plan
+        return [] unless session.status_proposed? && plan.is_a?(Hash) && plan['mode'] == 'append'
+
+        Array(plan['tickets'])
+      end
+
+      # Persist an append plan (mode `append`) — the additive/ops proposal that lands
+      # as ghosts beside the real tickets and is materialized by Apply without
+      # discarding the existing batch.
+      def persist_append(session, cards)
+        summary = session.proposed_plan.is_a?(Hash) ? session.proposed_plan['summary'] : nil
+        session.proposed_plan = { 'summary' => summary, 'tickets' => cards, 'mode' => 'append' }.compact
+        session.status = 'proposed'
+        session.save!
+      end
+
+      # Stage ONE op card (an update/remove targeting a real ticket) into the append
+      # plan and stream it as a ghost. Replaces any prior pending op on the same
+      # ticket so stacking edits on one ticket never duplicates its ghost.
+      def stage_op_card(session, card)
+        Broadcaster.strategy_session(session, 'additions_building')
+        base = pending_append_cards(session).reject { |c| c['ticket_id'] == card['ticket_id'] }
+        persist_append(session, base + [card])
+        Broadcaster.strategy_session(session, 'ticket_drafted', key: card['key'], card: card)
+        Broadcaster.strategy_session(session, 'additions_ready')
       end
 
       def log_usage(session, result, operation, client)

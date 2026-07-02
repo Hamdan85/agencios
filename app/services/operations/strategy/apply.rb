@@ -17,24 +17,56 @@ module Operations
 
         # A full plan is applied as a rewrite: the proposed plan is the COMPLETE
         # plan, so re-applying an edited one drops the previous batch and recreates
-        # it (rather than duplicating). An ADDITIVE plan (mode `append`) instead
-        # carries ONLY new pieces to ACRESCENTAR — never discard the existing batch,
-        # just create the new cards beside it. Hand-made tickets are untouched either way.
+        # it (rather than duplicating). An ADDITIVE/OPS plan (mode `append`) instead
+        # carries only the changes to ACRESCENTAR — new pieces (`create`), edits
+        # (`update`) and removals (`remove`) of specific tickets — and never discards
+        # the existing batch. Hand-made tickets are untouched either way.
         discard_previous_batch! unless additive?
 
-        tickets = Array(@session.proposed_plan['tickets']).map { |spec| build_ticket(spec) }
+        created = []
+        Array(@session.proposed_plan['tickets']).each do |spec|
+          case spec['op']
+          when 'remove' then remove_ticket(spec)
+          when 'update' then update_ticket(spec)
+          else created << build_ticket(spec)
+          end
+        end
 
         @session.update!(status: 'applied')
         Broadcaster.board(@session.workspace.id, 'strategy_applied',
-                          project_id: @session.project_id, count: tickets.size)
-        tickets
+                          project_id: @session.project_id, count: created.size)
+        created
       end
 
       private
 
-      # An additive plan only carries new pieces to append — keep the existing batch.
+      # An additive/ops plan only carries changes to apply — keep the existing batch.
       def additive?
         @session.proposed_plan['mode'] == 'append'
+      end
+
+      # Materialize a staged edit onto the real ticket (scoped to this project, so a
+      # stale/foreign id is silently ignored). Status is never touched here.
+      def update_ticket(spec)
+        ticket = @session.project.tickets.find_by(id: spec['ticket_id'])
+        return unless ticket
+
+        # Only overwrite fields the staged card actually carries — a missing/blank
+        # field keeps the ticket's current value (never wipe channels to []).
+        params = { title: spec['title'].presence, creative_type: spec['creative_type'].presence,
+                   priority: spec['priority'].presence }.compact
+        params[:channels] = Array(spec['channels']).compact_blank if Array(spec['channels']).compact_blank.any?
+        params[:scheduled_at] = parse_time(spec['scheduled_at']) if spec['scheduled_at'].present?
+
+        Operations::Tickets::Update.call(ticket: ticket, params: params)
+      end
+
+      # Materialize a staged removal — hard-delete the ticket via the canonical op.
+      def remove_ticket(spec)
+        id = spec['ticket_id']
+        return if id.blank?
+
+        Operations::Tickets::BulkDestroy.call(@session.workspace, [id], user: @user)
       end
 
       # Delete the tickets a previous apply of THIS session created, so an edited

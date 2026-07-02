@@ -28,11 +28,11 @@ module Operations
       def call
         Broadcaster.strategy_session(@session, 'additions_building')
 
-        base = pending_additive_cards
+        base = pending_append_cards(@session)
         new_cards = build_additions(base)
         return Broadcaster.strategy_session(@session, 'plan_failed') if new_cards.blank?
 
-        persist(base + new_cards)
+        persist_append(@session, base + new_cards)
         new_cards.each do |card|
           sleep STAGGER
           Broadcaster.strategy_session(@session, 'ticket_drafted', key: card['key'], card: card)
@@ -41,17 +41,6 @@ module Operations
       end
 
       private
-
-      # If the user is stacking additions onto an already-proposed additive plan
-      # (not yet applied), keep those pending cards and append after them. In every
-      # other case (applied plan, or a full proposed plan) start a fresh additive
-      # set so we never re-propose already-materialized tickets.
-      def pending_additive_cards
-        plan = @session.proposed_plan
-        return [] unless @session.status_proposed? && plan.is_a?(Hash) && plan['mode'] == 'append'
-
-        Array(plan['tickets'])
-      end
 
       def build_additions(base)
         client = ai_client('strategy_plan')
@@ -75,22 +64,16 @@ module Operations
         []
       end
 
-      # Fresh keys that don't collide with the pending additive cards, so row-level
-      # patch/revise stays unambiguous.
+      # Fresh `t<n>` keys that don't collide with the pending create cards (only
+      # `t`-prefixed keys count — op cards use `r<id>`), so row-level revise stays
+      # unambiguous. Each new card is a `create` op, additive.
       def with_new_keys(tickets, base)
-        offset = base.filter_map { |c| c['key'].to_s[/\d+/]&.to_i }.max.to_i
+        offset = base.filter_map { |c| c['key'].to_s[/\At(\d+)\z/, 1]&.to_i }.max.to_i
         tickets.each_with_index.filter_map do |card, i|
           next unless card.is_a?(Hash) && card['title'].to_s.present?
 
-          card.merge('key' => "t#{offset + i + 1}", 'state' => 'ready', 'additive' => true)
+          card.merge('key' => "t#{offset + i + 1}", 'op' => 'create', 'state' => 'ready', 'additive' => true)
         end
-      end
-
-      def persist(cards)
-        summary = @session.proposed_plan.is_a?(Hash) ? @session.proposed_plan['summary'] : nil
-        @session.proposed_plan = { 'summary' => summary, 'tickets' => cards, 'mode' => 'append' }.compact
-        @session.status = 'proposed'
-        @session.save!
       end
     end
   end

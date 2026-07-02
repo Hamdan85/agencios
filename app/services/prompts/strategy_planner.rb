@@ -44,22 +44,32 @@ module Prompts
         'name' => ACTION_TOOL,
         'description' => 'Decide a próxima ação a partir da conversa, do plano já proposto (se ' \
                          'houver) e dos tickets que o projeto já tem: continuar conversando, ' \
-                         'montar o plano inteiro, adicionar NOVOS tickets a um projeto que já ' \
-                         'tem tickets, ou revisar UM ticket específico que o usuário pediu para mudar.',
+                         'montar o plano inteiro do zero, acrescentar NOVOS tickets, editar UM ' \
+                         'ticket específico, ou remover UM ticket que o usuário pediu para tirar.',
         'input_schema' => {
           'type' => 'object', 'required' => %w[action],
           'properties' => {
             'action' => {
-              'type' => 'string', 'enum' => %w[wait generate_plan add_tickets revise_ticket],
-              'description' => 'wait = ainda conversando / falta algo; ' \
-                               'generate_plan = montar o plano inteiro do zero (nenhum ticket ainda, ' \
-                               'ou refazer toda a cadência); ' \
-                               'add_tickets = o usuário pediu para ACRESCENTAR uma ou mais peças ' \
-                               'novas a um projeto que JÁ tem tickets (ex.: "crie mais um ticket de X"), ' \
-                               'sem mexer nos existentes; ' \
-                               'revise_ticket = o usuário pediu para mudar um ticket já proposto.'
+              'type' => 'string', 'enum' => %w[wait generate_plan add_tickets revise_ticket remove_ticket],
+              'description' => 'wait = ainda conversando, falta algo, ou já executou o que foi pedido ' \
+                               '(não repita a ação num turno de confirmação como "ok"/"pode ser"); ' \
+                               'generate_plan = montar o plano inteiro do zero — USE SOMENTE quando o ' \
+                               'projeto AINDA NÃO TEM nenhum ticket. NUNCA use num projeto que já tem ' \
+                               'tickets (isso apagaria o trabalho existente); ali, para mudanças, use ' \
+                               'add_tickets / revise_ticket / remove_ticket; ' \
+                               'add_tickets = ACRESCENTAR uma ou mais peças NOVAS (ex.: "crie mais um ' \
+                               'ticket de X"), sem mexer nos existentes; ' \
+                               'revise_ticket = EDITAR um ticket específico (um card proposto OU um ticket ' \
+                               'que já existe no projeto) que o usuário pediu para mudar; ' \
+                               'remove_ticket = REMOVER um ticket específico que já existe. É uma ação ' \
+                               'DESTRUTIVA: só escolha quando o usuário pedir claramente para remover/excluir/tirar.'
             },
-            'ticket_key' => { 'type' => 'string', 'description' => 'Chave (key) do ticket a revisar — só em revise_ticket.' },
+            'ticket_key' => {
+              'type' => 'string',
+              'description' => 'Qual ticket a ação atinge (em revise_ticket e remove_ticket). Use a key ' \
+                               'do card proposto (ex.: "t3") OU a referência do ticket já existente no ' \
+                               'formato "#123" (o número mostrado na lista de tickets do projeto).'
+            },
             'instruction' => {
               'type' => 'string',
               'description' => 'O que fazer: em revise_ticket, o que mudar naquele ticket; em ' \
@@ -221,11 +231,17 @@ module Prompts
           (tipicamente a janela ou a cadência). Se o usuário já deu ambas, proponha JÁ.
         - Se algo estiver fraco ou inviável, ajuste no plano e explique brevemente —
           não trave a conversa com perguntas.
-        - ADICIONAR peças a um projeto que JÁ tem tickets: quando o usuário pedir
-          "crie mais um ticket de X", "adiciona um post de Y" etc., NÃO refaça o
-          plano inteiro — proponha só as peças NOVAS, que aparecem como rascunho
-          esmaecido ao lado dos tickets existentes para o usuário aprovar. Nunca
-          repita nem recrie os tickets que já existem.
+        - MEXER num projeto que JÁ tem tickets: você pode fazer o que o usuário pedir,
+          mas NUNCA refaça o plano inteiro (isso apagaria o trabalho existente).
+          * ADICIONAR ("crie mais um ticket de X", "adiciona um post de Y"): proponha
+            só as peças NOVAS.
+          * EDITAR ("muda o título do ticket X", "adianta a data desse post"): ajuste
+            só aquele ticket.
+          * REMOVER ("apaga o ticket X", "tira esse post"): marque só aquele ticket
+            para remoção. Remover é DESTRUTIVO — só faça quando o pedido for claro.
+          Toda mudança aparece como um rascunho esmaecido (ghost) ao lado dos tickets
+          reais; nada é criado, alterado ou apagado de verdade até o usuário APLICAR —
+          é a aplicação que confirma a ação. Nunca repita nem recrie tickets que já existem.
         - PRAZOS REALISTAS: reserve alguns dias de produção antes da primeira postagem.
           Se o pedido for apertado demais (ex.: "poste amanhã" mas a produção leva
           dias), CRITIQUE e proponha datas realistas — empurre a primeira postagem para

@@ -44,6 +44,57 @@ RSpec.describe Operations::Strategy::Apply do
     expect(session.status).to eq('applied')
   end
 
+  it 'OPS plan removes a ticket and keeps the rest, without discarding' do
+    a, b = seed_applied_batch('Keep', 'Remove me')
+    session.update!(status: 'proposed', proposed_plan: {
+      'mode' => 'append',
+      'tickets' => [{ 'key' => "r#{b.id}", 'op' => 'remove', 'ticket_id' => b.id, 'title' => 'Remove me' }]
+    })
+
+    created = described_class.call(session: session, user: user)
+
+    expect(created).to be_empty
+    expect(Ticket.exists?(a.id)).to be(true)
+    expect(Ticket.exists?(b.id)).to be(false)
+    expect(session.reload.status).to eq('applied')
+  end
+
+  it 'OPS plan edits an existing ticket in place (no new ticket, no discard)' do
+    a, = seed_applied_batch('Old title')
+    session.update!(status: 'proposed', proposed_plan: {
+      'mode' => 'append',
+      'tickets' => [{ 'key' => "r#{a.id}", 'op' => 'update', 'ticket_id' => a.id,
+                      'title' => 'New title', 'creative_type' => 'carousel', 'channels' => ['instagram'],
+                      'priority' => 'high', 'scheduled_at' => 3.days.from_now.iso8601 }]
+    })
+
+    expect { described_class.call(session: session, user: user) }
+      .not_to change { workspace.tickets.count }
+    a.reload
+    expect(a.title).to eq('New title')
+    expect(a.creative_type).to eq('carousel')
+    expect(a.priority).to eq('high')
+  end
+
+  it 'OPS plan mixes create + update + remove in one apply' do
+    keep, gone = seed_applied_batch('Keep & edit', 'Delete')
+    session.update!(status: 'proposed', proposed_plan: {
+      'mode' => 'append',
+      'tickets' => [
+        { 'key' => 't1', 'op' => 'create', 'title' => 'Brand new', 'creative_type' => 'feed_image',
+          'channels' => ['instagram'], 'scheduled_at' => 2.days.from_now.iso8601, 'additive' => true },
+        { 'key' => "r#{keep.id}", 'op' => 'update', 'ticket_id' => keep.id, 'title' => 'Edited' },
+        { 'key' => "r#{gone.id}", 'op' => 'remove', 'ticket_id' => gone.id, 'title' => 'Delete' }
+      ]
+    })
+
+    created = described_class.call(session: session, user: user)
+
+    expect(created.map(&:title)).to eq(['Brand new'])
+    expect(keep.reload.title).to eq('Edited')
+    expect(Ticket.exists?(gone.id)).to be(false)
+  end
+
   it 'FULL (non-additive) plan discards the previous batch and rewrites it' do
     seed_applied_batch('Old 1', 'Old 2')
     session.update!(status: 'proposed', proposed_plan: {

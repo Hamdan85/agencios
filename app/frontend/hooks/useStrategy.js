@@ -35,7 +35,9 @@ export function useApplyStrategy(projectId) {
       qc.invalidateQueries({ queryKey: ['board'] })
       qc.invalidateQueries({ queryKey: keys.project(projectId) })
       qc.invalidateQueries({ queryKey: ['projects'] })
-      toast.success(`${d.count} ticket(s) criado(s) a partir da estratégia ✨`)
+      toast.success(d.count > 0
+        ? `${d.count} ticket(s) criado(s) a partir da estratégia ✨`
+        : 'Alterações aplicadas ao projeto ✨')
     },
     onError: (err) => toast.error(err?.error || 'Erro ao aplicar o plano.'),
   })

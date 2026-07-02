@@ -12,11 +12,33 @@ module Controllers
         authorize!(project, :show?)
         {
           project: serialize(project, ProjectSerializer),
-          tickets: serialize_collection(filtered_tickets(project), TicketRowSerializer)
+          tickets: serialize_collection(filtered_tickets(project), TicketRowSerializer),
+          autopilot: autopilot_state(project)
         }
       end
 
       private
+
+      # The project-level "GO mode" progress, or nil when no batch is running.
+      # Aggregates the child ticket-runs so the project view can render a live
+      # progress bar and hide the GO button while it walks.
+      def autopilot_state(project)
+        batch = project.active_autopilot_batch
+        return nil unless batch
+
+        children = AutopilotRun.ticket_runs.where(batch_id: batch.id)
+        by_state = children.group(:state).count
+        finished = %w[completed failed cancelled].sum { |s| by_state[s].to_i }
+        {
+          id: batch.id,
+          state: batch.state,
+          active: batch.active?,
+          total: children.count,
+          done: finished,
+          completed: by_state['completed'].to_i,
+          failed: by_state['failed'].to_i
+        }
+      end
 
       # Tickets for this project, optionally narrowed by the page's filter set
       # (status, assignee, channel, creative type). Project/client filters are

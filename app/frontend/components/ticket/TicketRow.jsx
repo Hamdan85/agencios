@@ -28,7 +28,8 @@ const TONE = {
 // in place of the assignee / menu.
 export function TicketRow({
   ticket, onOpen, manager, onArchive, onUnarchive, busy,
-  selected, onToggleSelect, proposed = false, state = 'ready',
+  selected, onToggleSelect, proposed = false, state = 'ready', op = 'create',
+  pendingChange = null,
 }) {
   const project = ticket.project
   const title = ticket.display_title || ticket.title
@@ -38,6 +39,13 @@ export function TicketRow({
   // `revising` (a single card being re-generated → glow); `ready` is the default.
   const drafting = proposed && state === 'drafting'
   const revising = proposed && state === 'revising'
+  // A ghost's op decides how it reads: a NEW card (create), an EDIT of an existing
+  // ticket (update), or a REMOVAL of one (remove — struck-through, in danger tone).
+  const removing = (proposed && op === 'remove') || pendingChange === 'remove'
+  // A real row targeted by a staged edit/removal is dimmed with a pending badge.
+  const GHOST_BADGE = { create: ['Proposto', 'text-brand border-brand/50'], update: ['Editar', 'text-amber-600 border-amber-500/50'], remove: ['Remover', 'text-danger border-danger/50'] }
+  const PENDING_BADGE = { edit: ['A editar', 'text-amber-600 border-amber-500/50'], remove: ['A remover', 'text-danger border-danger/50'] }
+  const [ghostLabel, ghostCls] = GHOST_BADGE[op] || GHOST_BADGE.create
 
   // The title block is identical whether it's a clickable button or a static
   // (proposed) row — factor it so both branches share the exact same markup.
@@ -49,7 +57,7 @@ export function TicketRow({
   ) : (
     <span className="min-w-0 flex-1">
       <span className="flex items-center gap-2">
-        <span className="truncate font-display text-[15px] font-semibold text-ink">{title}</span>
+        <span className={cn('truncate font-display text-[15px] font-semibold text-ink', removing && 'text-ink-muted line-through')}>{title}</span>
         {ticket.archived && (
           <span className="shrink-0 rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ink-muted">
             Arquivado
@@ -72,10 +80,14 @@ export function TicketRow({
     <div className={cn(
       'group flex items-center gap-3 rounded-xl border bg-surface px-3.5 py-2.5 transition-all',
       proposed
-        ? 'border-dashed border-brand/40 opacity-60'
+        ? cn('border-dashed opacity-60', removing ? 'border-danger/40' : op === 'update' ? 'border-amber-500/40' : 'border-brand/40')
         : selected
           ? 'border-brand/60 bg-brand/[0.04]'
           : 'border-border hover:border-brand/40 hover:shadow-[0_10px_24px_-18px_rgba(24,18,43,0.32)]',
+      // A real row with a staged (ghost) edit/removal awaiting apply — dim it so the
+      // pairing with its ghost below is obvious.
+      !proposed && pendingChange && 'opacity-70',
+      !proposed && pendingChange === 'remove' && 'border-danger/40',
       // A card being revised glows and stays fully opaque so it stands out as the
       // one thing updating; the rest of the proposed list stays dimmed.
       revising && 'border-brand/60 opacity-100 shadow-[0_0_0_3px_rgba(124,58,237,0.16)]',
@@ -116,11 +128,16 @@ export function TicketRow({
       <PriorityDot priority={ticket.priority} />
 
       {proposed ? (
-        <span className="shrink-0 rounded-full border border-dashed border-brand/50 px-2 py-0.5 text-[11px] font-bold text-brand">
-          Proposto
+        <span className={cn('shrink-0 rounded-full border border-dashed px-2 py-0.5 text-[11px] font-bold', ghostCls)}>
+          {ghostLabel}
         </span>
       ) : (
         <>
+          {pendingChange && (
+            <span className={cn('shrink-0 rounded-full border border-dashed px-2 py-0.5 text-[11px] font-bold', PENDING_BADGE[pendingChange]?.[1])}>
+              {PENDING_BADGE[pendingChange]?.[0]}
+            </span>
+          )}
           {ticket.assignee
             ? <Avatar name={ticket.assignee.name} src={ticket.assignee.avatar_url} size={26} />
             : <span className="size-[26px] shrink-0 rounded-full border border-dashed border-border" />}

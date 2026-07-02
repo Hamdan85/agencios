@@ -9,7 +9,8 @@ module Operations
     #
     #   generate_plan → GeneratePlan (build the whole batch, stream cards)
     #   add_tickets   → AddTickets (append NEW cards to a running project)
-    #   revise_ticket → ReviseTicket (regenerate ONE card in place)
+    #   revise_ticket → ReviseTicket (edit ONE card / existing ticket)
+    #   remove_ticket → RemoveTicket (stage a real ticket's removal as a ghost)
     #   wait          → nothing (still conversing)
     class ResolveTurn < Operations::Base
       include TurnHelpers
@@ -23,22 +24,42 @@ module Operations
       def call
         case decide['action']
         when 'generate_plan'
-          GeneratePlan.call(session: @session)
+          generate_plan
         when 'add_tickets'
           AddTickets.call(session: @session, instruction: @action['instruction'].to_s)
         when 'revise_ticket'
           revise
+        when 'remove_ticket'
+          remove
         end
       end
 
       private
 
+      # A full (re)plan is only ever built for an EMPTY project. On a project that
+      # already has real tickets, `generate_plan` would replace the whole plan and
+      # its Apply would DISCARD the existing (possibly scheduled/published) tickets —
+      # so we refuse it here (the safety net behind the router prompt) and let the
+      # user make changes with add/revise/remove instead. A not-yet-applied proposed
+      # plan on an empty project is still safe to regenerate.
+      def generate_plan
+        return if @session.project.tickets.exists?
+
+        GeneratePlan.call(session: @session)
+      end
+
       def revise
-        action = @action
-        key = action['ticket_key'].to_s
+        key = @action['ticket_key'].to_s
         return if key.blank?
 
-        ReviseTicket.call(session: @session, key: key, instruction: action['instruction'].to_s)
+        ReviseTicket.call(session: @session, key: key, instruction: @action['instruction'].to_s)
+      end
+
+      def remove
+        key = @action['ticket_key'].to_s
+        return if key.blank?
+
+        RemoveTicket.call(session: @session, key: key)
       end
 
       def decide

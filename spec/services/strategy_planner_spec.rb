@@ -186,6 +186,23 @@ RSpec.describe 'AI content-strategy planning' do
       expect(Operations::Strategy::ReviseTicket).not_to receive(:call)
       Operations::Strategy::ResolveTurn.call(session: session)
     end
+
+    it 'dispatches remove_ticket to RemoveTicket with the key' do
+      session = Operations::Strategy::Start.call(project: @project, user: @user)
+      stub_action('action' => 'remove_ticket', 'ticket_key' => '#42')
+      expect(Operations::Strategy::RemoveTicket).to receive(:call).with(session: session, key: '#42')
+      Operations::Strategy::ResolveTurn.call(session: session)
+    end
+
+    it 'REFUSES generate_plan on a project that already has tickets (never wipes it)' do
+      session = Operations::Strategy::Start.call(project: @project, user: @user)
+      Operations::Tickets::Create.call(
+        workspace: @workspace, user: @user, params: { project_id: @project.id, title: 'Já existe' }
+      )
+      stub_action('action' => 'generate_plan')
+      expect(Operations::Strategy::GeneratePlan).not_to receive(:call)
+      Operations::Strategy::ResolveTurn.call(session: session)
+    end
   end
 
   describe 'Operations::Strategy::ReviseTicket' do
