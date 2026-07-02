@@ -28,7 +28,7 @@ module Controllers
       end
 
       def filtered_scope
-        scope = workspace.tickets.active.includes(:project, :assignee, :subtasks, :creatives)
+        scope = workspace.tickets.active.includes(:project, :assignee, :subtasks, :creatives, :autopilot_runs)
         ::Tickets::Filters.apply(scope, @params)
       end
     end

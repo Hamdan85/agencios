@@ -9,7 +9,15 @@ export function useBoardChannel(workspaceId) {
     if (!workspaceId) return
     const sub = consumer.subscriptions.create(
       { channel: 'BoardChannel', workspace_id: workspaceId },
-      { received: () => qc.invalidateQueries({ queryKey: ['board'] }) },
+      {
+        received: () => {
+          // Board events (card moves, autopilot start/step/done) also affect the
+          // project list rows — refresh both so the "working" indicator and card
+          // positions stay live on the board AND on a project page.
+          qc.invalidateQueries({ queryKey: ['board'] })
+          qc.invalidateQueries({ queryKey: ['projects'] })
+        },
+      },
     )
     return () => sub.unsubscribe()
   }, [workspaceId, qc])

@@ -24,6 +24,10 @@ module Operations
         tickets = eligible_tickets
         raise Operations::Errors::Invalid, 'Nenhum ticket elegível para iniciar.' if tickets.empty?
 
+        # Clicking GO is an explicit user action — the "GO mode": it starts a draft
+        # project (→ active) and executes its tickets. Planning alone never does this.
+        Operations::Projects::Start.call(project: @project, user: @user) if @project.status_draft?
+
         batch = create_batch(tickets)
         runs = tickets.map do |ticket|
           Operations::Autopilot::Start.call(ticket: ticket, user: @user, mode: @mode, batch: batch)

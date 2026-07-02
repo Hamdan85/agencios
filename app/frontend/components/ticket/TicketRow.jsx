@@ -12,6 +12,7 @@ import {
   StatusPill, StatusDot, CreativeTypeChip, ChannelIcons, PriorityDot,
 } from '@/components/ui/iconography'
 import { Avatar } from '@/components/ui/avatar'
+import { WorkingBadge } from '@/components/ticket/WorkingBadge'
 
 const TONE = {
   danger: 'bg-danger/12 text-danger',
@@ -77,6 +78,8 @@ export function TicketRow({
       // A card being revised glows and stays fully opaque so it stands out as the
       // one thing updating; the rest of the proposed list stays dimmed.
       revising && 'border-brand/60 opacity-100 shadow-[0_0_0_3px_rgba(124,58,237,0.16)]',
+      // Executing on autopilot → steady brand ring so the "working" row stands out.
+      !proposed && ticket.autopilot_running && 'border-brand/50 ring-1 ring-brand/40',
       !proposed && ticket.archived && 'opacity-75',
     )}>
       {manager && !proposed && (
@@ -96,6 +99,8 @@ export function TicketRow({
         {ticket.creative_type && <CreativeTypeChip type={ticket.creative_type} />}
         {ticket.channels?.length > 0 && <ChannelIcons channels={ticket.channels} size={12} max={4} />}
       </div>
+
+      {!proposed && ticket.autopilot_running && <WorkingBadge />}
 
       {due && (
         <span className={cn('hidden items-center gap-1 rounded-md px-1.5 py-0.5 text-[10.5px] font-bold lg:inline-flex', TONE[due.tone] || TONE.muted)}>

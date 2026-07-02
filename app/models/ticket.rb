@@ -107,6 +107,13 @@ class Ticket < ApplicationRecord
     autopilot_runs.ticket_runs.active.order(created_at: :desc).first
   end
 
+  # Is this ticket executing on autopilot right now? Reads the loaded association
+  # in Ruby (preload `:autopilot_runs`) so the board/list can flag "working" cards
+  # without an N+1. Surfaced to cards/rows via TicketCardSerializer.
+  def autopilot_running?
+    autopilot_runs.any? { |r| r.ticket_scope? && r.active? }
+  end
+
   # Status-namespaced structured field bag (see Tickets::Fields).
   def fields_for(some_status)
     fields[some_status.to_s] || {}
