@@ -46,9 +46,25 @@ export function useTicketChannel(ticketId, onEvent) {
 // flips a `filling` flag on the ai_fill_started/done/failed broadcasts, adopting
 // the new fields (invalidate) + toasting when the job settles. Returns
 // [filling, setFilling] so the initiating click can shimmer optimistically too.
+//
+// Watchdog: if the job dies without broadcasting (worker down, hard crash), the
+// shimmer must not spin forever — after a generous window it clears itself and
+// tells the user to retry.
+const AI_FILL_TIMEOUT_MS = 150_000
+
 export function useAiFillStatus(id) {
   const qc = useQueryClient()
   const [filling, setFilling] = useState(false)
+
+  useEffect(() => {
+    if (!filling) return undefined
+    const t = setTimeout(() => {
+      setFilling(false)
+      toast.error('A IA está demorando mais que o normal. Tente atualizar novamente.')
+    }, AI_FILL_TIMEOUT_MS)
+    return () => clearTimeout(t)
+  }, [filling])
+
   useEffect(() => {
     if (!id) return undefined
     const sub = consumer.subscriptions.create(
@@ -84,6 +100,9 @@ export function useAiFillStatus(id) {
 //   plan_failed   → the build produced nothing
 //   additions_building → new ghosts are being appended (do NOT reset the table)
 //   additions_ready    → the additive batch finished
+//   turn_resolving → the off-request router is deciding what to do (keep "typing…")
+//   turn_wait      → the turn resolved into nothing — settle the waiting state
+//   assistant_note → an off-request assistant message { content } (append to chat)
 export function useStrategyChannel(sessionId, handlers) {
   useEffect(() => {
     if (!sessionId) return
@@ -100,6 +119,9 @@ export function useStrategyChannel(sessionId, handlers) {
             case 'plan_failed': return handlers?.onFailed?.()
             case 'additions_building': return handlers?.onAdditionsBuilding?.()
             case 'additions_ready': return handlers?.onAdditionsReady?.()
+            case 'turn_resolving': return handlers?.onResolving?.()
+            case 'turn_wait': return handlers?.onWait?.()
+            case 'assistant_note': return handlers?.onNote?.(d.content)
             default: return undefined
           }
         },

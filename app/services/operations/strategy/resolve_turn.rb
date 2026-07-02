@@ -31,33 +31,43 @@ module Operations
           revise
         when 'remove_ticket'
           remove
+        else
+          # Nothing to do this turn — tell the drawer so the "digitando…" state
+          # (armed by PlanTurnJob's turn_resolving) settles instead of spinning.
+          Broadcaster.strategy_session(@session, 'turn_wait')
         end
       end
 
       private
 
-      # A full (re)plan is only ever built for an EMPTY project. On a project that
-      # already has real tickets, `generate_plan` would replace the whole plan and
-      # its Apply would DISCARD the existing (possibly scheduled/published) tickets —
-      # so we refuse it here (the safety net behind the router prompt) and let the
-      # user make changes with add/revise/remove instead. A not-yet-applied proposed
-      # plan on an empty project is still safe to regenerate.
+      # A full (re)plan is only ever built for an EMPTY campaign. On a campaign
+      # that already has real tickets, `generate_plan` would replace the whole plan
+      # and its Apply would DISCARD the existing (possibly scheduled/published)
+      # tickets — so we refuse it here (the safety net behind the router prompt).
+      # The refusal is NEVER silent: the user asked for something, so the agent
+      # answers in the chat with what it can do instead (add / edit / remove).
       def generate_plan
-        return if @session.project.tickets.exists?
+        return GeneratePlan.call(session: @session) unless @session.project.tickets.exists?
 
-        GeneratePlan.call(session: @session)
+        note = 'Esta campanha já tem tickets em andamento, então não vou refazer o plano do zero ' \
+               '(isso apagaria o trabalho existente). Posso **adicionar** peças novas, **editar** ' \
+               'ou **remover** tickets específicos — me diga o que ajustar. Se quiser mesmo um plano ' \
+               'novo, crie uma nova campanha.'
+        @session.push_message(role: :assistant, content: note)
+        @session.save!
+        Broadcaster.strategy_session(@session, 'assistant_note', content: note)
       end
 
       def revise
         key = @action['ticket_key'].to_s
-        return if key.blank?
+        return Broadcaster.strategy_session(@session, 'turn_wait') if key.blank?
 
         ReviseTicket.call(session: @session, key: key, instruction: @action['instruction'].to_s)
       end
 
       def remove
         key = @action['ticket_key'].to_s
-        return if key.blank?
+        return Broadcaster.strategy_session(@session, 'turn_wait') if key.blank?
 
         RemoveTicket.call(session: @session, key: key)
       end
@@ -66,7 +76,7 @@ module Operations
         client = ai_client('strategy_action')
         result = client.generate(
           system: 'Você decide a próxima ação do planejamento de conteúdo a partir da conversa, ' \
-                  'do plano proposto e dos tickets que o projeto já tem.',
+                  'do plano proposto e dos tickets que a campanha já tem.',
           prompt: "#{conversation(@session)}\n\n#{cards_context(@session)}\n\n" \
                   "#{project_tickets_context(@session)}\n\nDecida a ação chamando a ferramenta.",
           tool: Prompts::StrategyPlanner.action_tool,

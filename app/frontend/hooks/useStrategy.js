@@ -37,7 +37,7 @@ export function useApplyStrategy(projectId) {
       qc.invalidateQueries({ queryKey: ['projects'] })
       toast.success(d.count > 0
         ? `${d.count} ticket(s) criado(s) a partir da estratégia ✨`
-        : 'Alterações aplicadas ao projeto ✨')
+        : 'Alterações aplicadas à campanha ✨')
     },
     onError: (err) => toast.error(err?.error || 'Erro ao aplicar o plano.'),
   })
@@ -128,6 +128,16 @@ export function useStrategyPlan(projectId, session) {
       setGenerating(false)
       qc.invalidateQueries({ queryKey: keys.strategy(projectId) })
     },
+    // The off-request router is deciding what to do with the turn — keep the
+    // "digitando…" state alive so the gap after the streamed reply is never a
+    // silent void; turn_wait / assistant_note settle it when nothing builds.
+    onResolving: () => setGenerating(true),
+    onWait: () => setGenerating(false),
+    onNote: () => {
+      setGenerating(false)
+      // The note is persisted in the transcript — refresh so a reopen has it.
+      qc.invalidateQueries({ queryKey: keys.strategy(projectId) })
+    },
     onFailed: () => {
       setCreating(false)
       setGenerating(false)
@@ -154,6 +164,14 @@ export function useStrategyChat(projectId, session) {
     setMessages(s?.messages || [])
     setPending('')
     setStreaming(false)
+  }, [])
+
+  // Append an assistant bubble that arrived OFF the request (an `assistant_note`
+  // pushed by the router — e.g. the refusal to rebuild a running campaign's plan).
+  // The note is also persisted server-side, so a reload shows it in the transcript.
+  const appendAssistant = useCallback((content) => {
+    if (!content) return
+    setMessages((m) => [...m, { role: 'assistant', content }])
   }, [])
 
   const send = useCallback(async (content, sessionId) => {
@@ -193,5 +211,5 @@ export function useStrategyChat(projectId, session) {
     }
   }, [streaming, qc, projectId])
 
-  return { messages, streaming, pending, send, reset }
+  return { messages, streaming, pending, send, reset, appendAssistant }
 }

@@ -1,10 +1,11 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Sparkles, Send, CalendarClock, CheckCircle2, Loader2, X } from 'lucide-react'
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/input'
 import { Markdown } from '@/components/ui/markdown'
 import { useStartStrategy, useApplyStrategy, useStrategyChat } from '@/hooks/useStrategy'
+import { useStrategyChannel } from '@/hooks/useRealtime'
 
 // A senior social-media agent that chats to turn a content cadence into
 // scheduled tickets. Docked as a NON-MODAL right drawer so the project's list
@@ -16,11 +17,17 @@ import { useStartStrategy, useApplyStrategy, useStrategyChat } from '@/hooks/use
 export function StrategyDrawer({ open, onOpenChange, projectId, session, cards = [], generating = false, additive = false }) {
   const start = useStartStrategy(projectId)
   const apply = useApplyStrategy(projectId)
-  const { messages, streaming, pending, send, reset } = useStrategyChat(projectId, session)
+  const { messages, streaming, pending, send, reset, appendAssistant } = useStrategyChat(projectId, session)
   const [input, setInput] = useState('')
   const [sessionId, setSessionId] = useState(session?.id || null)
   const scrollRef = useRef(null)
   const inputRef = useRef(null)
+
+  // Off-request assistant notes (e.g. the router refusing to rebuild a running
+  // campaign's plan) land as live chat bubbles — the page's useStrategyPlan
+  // subscription owns the plan events; this one only feeds the transcript.
+  const noteHandlers = useMemo(() => ({ onNote: appendAssistant }), [appendAssistant])
+  useStrategyChannel(sessionId, noteHandlers)
 
   // The plan awaiting a decision (shown inline + drives the approve button). An
   // additive proposal only carries the NEW pieces to append to the running project.
@@ -157,7 +164,7 @@ export function StrategyDrawer({ open, onOpenChange, projectId, session, cards =
               <p className="mt-1.5 text-xs text-ink-muted">
                 {isAdditive
                   ? 'Os novos tickets aparecem esmaecidos ao lado dos existentes na lista. Revise e adicione abaixo.'
-                  : 'Os tickets propostos aparecem na lista do projeto (esmaecidos). Revise e clique em aprovar abaixo.'}
+                  : 'Os tickets propostos aparecem na lista da campanha (esmaecidos). Revise e clique em aprovar abaixo.'}
               </p>
             </div>
           )}
@@ -182,7 +189,7 @@ export function StrategyDrawer({ open, onOpenChange, projectId, session, cards =
 
           {applied && (
             <p className="mb-3 rounded-xl bg-emerald/12 p-3 text-center text-sm font-medium text-emerald">
-              Plano aplicado — veja os tickets aparecendo no projeto.
+              Plano aplicado — veja os tickets aparecendo na campanha.
             </p>
           )}
 

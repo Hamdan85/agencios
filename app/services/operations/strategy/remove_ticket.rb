@@ -23,7 +23,9 @@ module Operations
         return drop_proposed_card if proposed_card_key?
 
         ticket = target_ticket
-        return unless ticket
+        # Unknown/stale reference → settle the drawer's waiting state instead of
+        # ending the turn silently.
+        return Broadcaster.strategy_session(@session, 'turn_wait') unless ticket
 
         stage_op_card(@session, {
                         'key' => "r#{ticket.id}", 'op' => 'remove', 'ticket_id' => ticket.id,
@@ -47,10 +49,10 @@ module Operations
       # Dropping a still-proposed (never-created) card just removes it from the plan.
       def drop_proposed_card
         plan = @session.proposed_plan
-        return unless plan.is_a?(Hash)
+        return Broadcaster.strategy_session(@session, 'turn_wait') unless plan.is_a?(Hash)
 
         remaining = Array(plan['tickets']).reject { |c| c['key'] == @key }
-        return if remaining.size == Array(plan['tickets']).size
+        return Broadcaster.strategy_session(@session, 'turn_wait') if remaining.size == Array(plan['tickets']).size
 
         persist_append(@session, remaining)
         Broadcaster.strategy_session(@session, 'additions_ready')

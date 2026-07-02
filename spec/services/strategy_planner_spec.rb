@@ -208,12 +208,13 @@ RSpec.describe 'AI content-strategy planning' do
       Operations::Strategy::ResolveTurn.call(session: session)
     end
 
-    it 'does nothing on wait' do
+    it 'settles the waiting UI on wait (turn_wait), building nothing' do
       session = Operations::Strategy::Start.call(project: @project, user: @user)
       stub_action('action' => 'wait')
       expect(Operations::Strategy::GeneratePlan).not_to receive(:call)
       expect(Operations::Strategy::ReviseTicket).not_to receive(:call)
       Operations::Strategy::ResolveTurn.call(session: session)
+      expect(Broadcaster).to have_received(:strategy_session).with(session, 'turn_wait')
     end
 
     it 'dispatches remove_ticket to RemoveTicket with the key' do
@@ -223,7 +224,7 @@ RSpec.describe 'AI content-strategy planning' do
       Operations::Strategy::ResolveTurn.call(session: session)
     end
 
-    it 'REFUSES generate_plan on a project that already has tickets (never wipes it)' do
+    it 'REFUSES generate_plan on a campaign that already has tickets — with a LIVE explanation, never silently' do
       session = Operations::Strategy::Start.call(project: @project, user: @user)
       Operations::Tickets::Create.call(
         workspace: @workspace, user: @user, params: { project_id: @project.id, title: 'Já existe' }
@@ -231,6 +232,11 @@ RSpec.describe 'AI content-strategy planning' do
       stub_action('action' => 'generate_plan')
       expect(Operations::Strategy::GeneratePlan).not_to receive(:call)
       Operations::Strategy::ResolveTurn.call(session: session)
+
+      # The refusal reaches the user: an assistant note in the transcript + live.
+      expect(session.reload.messages.last['content']).to include('não vou refazer o plano')
+      expect(Broadcaster).to have_received(:strategy_session)
+        .with(session, 'assistant_note', hash_including(:content))
     end
   end
 
