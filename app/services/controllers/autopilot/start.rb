@@ -43,7 +43,7 @@ module Controllers
         estimate = Operations::Autopilot::Estimate.call(tickets: tickets, workspace: workspace)
         unless estimate[:eligible]
           raise Operations::Errors::Invalid,
-                'Há tickets que exigem criativos manuais. Resolva-os antes de iniciar o projeto.'
+                'Há tickets que exigem criativos manuais. Resolva-os antes de iniciar a campanha.'
         end
 
         ensure_credits!(tickets)

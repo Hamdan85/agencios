@@ -115,7 +115,7 @@ export default function Layout() {
             <AlertTriangle size={16} className="shrink-0" />
             <span>
               Este workspace tem mais membros do que o plano atual permite — novos tickets e
-              projetos estão bloqueados.
+              campanhas estão bloqueados.
             </span>
             {me.workspace.role === 'owner' && (
               <Link to="/assinatura" className="font-semibold underline">Gerenciar plano</Link>

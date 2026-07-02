@@ -52,13 +52,13 @@ module Operations
       # to duplicate, and can target one for edit/remove by its `#<id>` reference.
       def project_tickets_context(session)
         tickets = session.project.tickets.order(:scheduled_at).limit(60)
-        return 'O projeto ainda não tem tickets criados.' if tickets.empty?
+        return 'A campanha ainda não tem tickets criados.' if tickets.empty?
 
         lines = tickets.map do |t|
           format = t.creative_type.presence || Array(t.try(:creative_types)).join('/')
           "- ##{t.id}: #{t.display_title} (#{format}, #{t.scheduled_at&.iso8601})"
         end
-        "Tickets que o projeto JÁ tem (#{tickets.size}) — NÃO os recrie. Para acrescentar " \
+        "Tickets que a campanha JÁ tem (#{tickets.size}) — NÃO os recrie. Para acrescentar " \
           "novos use add_tickets; para editar/remover UM, use revise_ticket/remove_ticket com " \
           "ticket_key no formato \"#<id>\":\n#{lines.join("\n")}"
       end

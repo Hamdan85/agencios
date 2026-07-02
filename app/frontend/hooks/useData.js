@@ -138,12 +138,12 @@ export function useProjectMutations() {
   const qc = useQueryClient()
   const inv = () => qc.invalidateQueries({ queryKey: ['projects'] })
   return {
-    create: useMutation({ mutationFn: projectsApi.create, onSuccess: () => { inv(); analytics.track(EVENTS.PROJECT_CREATED); toast.success('Projeto criado!') }, onError: onErr('Erro ao criar projeto.') }),
+    create: useMutation({ mutationFn: projectsApi.create, onSuccess: () => { inv(); analytics.track(EVENTS.PROJECT_CREATED); toast.success('Campanha criada!') }, onError: onErr('Erro ao criar campanha.') }),
     update: useMutation({ mutationFn: ({ id, data }) => projectsApi.update(id, data), onSuccess: inv, onError: onErr('Erro.') }),
-    start: useMutation({ mutationFn: projectsApi.start, onSuccess: () => { inv(); toast.success('Projeto iniciado!') }, onError: onErr('Erro ao iniciar o projeto.') }),
-    finalize: useMutation({ mutationFn: projectsApi.finalize, onSuccess: () => { inv(); toast.success('Projeto finalizado! Gerando o relatório…') }, onError: onErr('Erro ao finalizar o projeto.') }),
+    start: useMutation({ mutationFn: projectsApi.start, onSuccess: () => { inv(); toast.success('Campanha iniciada!') }, onError: onErr('Erro ao iniciar a campanha.') }),
+    finalize: useMutation({ mutationFn: projectsApi.finalize, onSuccess: () => { inv(); toast.success('Campanha finalizada! Gerando o relatório…') }, onError: onErr('Erro ao finalizar a campanha.') }),
     sendScope: useMutation({ mutationFn: ({ id, recipients }) => projectsApi.sendScope(id, recipients), onSuccess: () => toast.success('Escopo enviado ao cliente!'), onError: onErr('Erro ao enviar o escopo.') }),
-    destroy: useMutation({ mutationFn: projectsApi.destroy, onSuccess: () => { inv(); toast.success('Projeto excluído.') }, onError: onErr('Erro ao excluir o projeto.') }),
+    destroy: useMutation({ mutationFn: projectsApi.destroy, onSuccess: () => { inv(); toast.success('Campanha excluída.') }, onError: onErr('Erro ao excluir a campanha.') }),
     // Autopilot ("GO mode") over the whole project.
     autopilotEstimate: useMutation({ mutationFn: projectsApi.autopilotEstimate, onError: onErr('Erro ao estimar os créditos.') }),
     autopilot: useMutation({ mutationFn: ({ id, payload }) => projectsApi.autopilotStart(id, payload), onSuccess: () => { inv(); qc.invalidateQueries({ queryKey: ['board'] }); toast.success('Piloto automático iniciado 🚀') }, onError: onErr('Erro ao iniciar o piloto automático.') }),

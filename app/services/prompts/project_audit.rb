@@ -12,7 +12,7 @@ module Prompts
     def system
       <<~SYS
         Você é um(a) auditor(a) sênior de redes sociais de uma agência. A partir dos
-        DADOS REAIS de um projeto (métricas agregadas + contexto dos tickets),
+        DADOS REAIS de uma campanha (métricas agregadas + contexto dos tickets),
         escreva uma auditoria estratégica honesta e acionável, no estilo de um
         relatório de consultoria.
         #{brand_block}
@@ -70,7 +70,7 @@ module Prompts
 
     def user_prompt
       <<~TXT
-        Projeto: #{context[:project_name]}
+        Campanha: #{context[:project_name]}
         Cliente: #{client&.name}
         Período: #{context[:period_label]}
 

@@ -59,7 +59,7 @@ export default ConfirmDialog
 // mounted once by `<ConfirmProvider>`. This replaces every `window.confirm`.
 //
 //   const confirm = useConfirm()
-//   if (await confirm({ title: 'Excluir projeto?', destructive: true })) …
+//   if (await confirm({ title: 'Excluir campanha?', destructive: true })) …
 const ConfirmContext = createContext(null)
 
 export function ConfirmProvider({ children }) {

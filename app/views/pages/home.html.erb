@@ -136,7 +136,7 @@
       </p>
       <ul class="mt-7 space-y-3 text-sm">
         <% [
-          ["messages-square", "Uma conversa multi-turno que entende a marca e o projeto"],
+          ["messages-square", "Uma conversa multi-turno que entende a marca e a campanha"],
           ["workflow", "Um mês de tickets criados de uma vez, cada um já em Ideação"],
           ["list-checks", "Briefs e subtarefas com estimativa de esforço, prontos"],
         ].each do |ic, text| %>
@@ -429,7 +429,7 @@
       <div class="rounded-2xl border border-white/10 bg-white/[0.06] p-5 backdrop-blur" data-typewriter-root>
         <div class="space-y-3">
           <div data-type-line hidden class="ml-auto max-w-[85%]">
-            <div class="rounded-2xl rounded-br-md bg-brand-bright/90 px-4 py-2.5 text-sm text-white shadow"><span data-typewriter="No workspace estúdio-pulse, crie um ticket no projeto Bloom: “Reel de lançamento”."></span></div>
+            <div class="rounded-2xl rounded-br-md bg-brand-bright/90 px-4 py-2.5 text-sm text-white shadow"><span data-typewriter="No workspace estúdio-pulse, crie um ticket na campanha Bloom: “Reel de lançamento”."></span></div>
           </div>
           <div data-type-line hidden class="max-w-[90%]">
             <div class="rounded-2xl rounded-bl-md bg-white/10 px-4 py-2.5 text-sm text-white/85"><span data-typewriter="Pronto ✅ — ticket #214 criado em Ideação, atribuído a você. Quer que eu já gere um carrossel?"></span></div>
@@ -448,7 +448,7 @@
     <%# reports %>
     <div class="reveal reveal-left flex flex-col rounded-3xl border border-border bg-surface p-8 shadow-lg">
       <span class="inline-flex w-fit items-center gap-1.5 rounded-full bg-teal/12 px-3 py-1.5 text-xs font-bold text-teal">
-        <%= icon "file-text", size: 13 %> Relatórios de projeto
+        <%= icon "file-text", size: 13 %> Relatórios de campanha
       </span>
       <h3 class="mt-4 font-display text-2xl font-extrabold tracking-tight text-ink">O fechamento vira um deck que impressiona</h3>
       <p class="mt-3 text-ink-muted">A IA lê as métricas, o histórico e as lições e monta um relatório com KPIs, acertos, gargalos e plano de ação — pronto para apresentar ao cliente.</p>
@@ -475,7 +475,7 @@
         <%= icon "receipt", size: 13 %> Cobranças
       </span>
       <h3 class="mt-4 font-display text-2xl font-extrabold tracking-tight text-ink">Fature seus clientes e receba via Pix</h3>
-      <p class="mt-3 text-ink-muted">Crie faturas ligadas a projetos, cobre por Pix, boleto ou cartão pelo Mercado Pago e deixe a conciliação acontecer sozinha.</p>
+      <p class="mt-3 text-ink-muted">Crie faturas ligadas a campanhas, cobre por Pix, boleto ou cartão pelo Mercado Pago e deixe a conciliação acontecer sozinha.</p>
       <div class="mt-6 flex items-center gap-4 rounded-2xl border border-border bg-canvas p-4">
         <div class="grid size-20 shrink-0 place-items-center rounded-xl bg-brand-ink text-white/90 anim-float-sm">
           <%= icon "qr-code", size: 44, stroke: 1.6 %>
@@ -490,7 +490,7 @@
         </div>
       </div>
       <div class="mt-4 flex flex-wrap gap-2">
-        <% ["Pix", "Boleto", "Cartão", "Multi-projeto"].each do |tag| %>
+        <% ["Pix", "Boleto", "Cartão", "Multi-campanha"].each do |tag| %>
           <span class="rounded-full bg-surface-muted px-2.5 py-1 text-[11px] font-semibold text-ink-secondary"><%= tag %></span>
         <% end %>
       </div>

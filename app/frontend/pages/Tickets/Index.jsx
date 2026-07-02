@@ -91,7 +91,7 @@ export default function TicketsList() {
   })
 
   const filterSpec = [
-    { key: 'project_id', type: 'project', label: 'Projeto' },
+    { key: 'project_id', type: 'project', label: 'Campanha' },
     { key: 'client_id', type: 'client', label: 'Cliente' },
     { key: 'assignee_id', type: 'assignee', label: 'Responsável' },
     { key: 'status', type: 'options', label: 'Etapa', options: statusOptions },

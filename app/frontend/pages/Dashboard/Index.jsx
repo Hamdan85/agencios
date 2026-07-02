@@ -63,7 +63,7 @@ export default function Dashboard() {
   const statCards = [
     { label: 'Tickets ativos', value: stats.active_tickets ?? 0, icon: Ticket, color: '#EC4899', sub: 'em produção agora', to: '/quadro' },
     { label: 'Clientes', value: stats.clients ?? 0, icon: Users, color: '#10B981', sub: 'na carteira', to: '/clientes' },
-    { label: 'Projetos', value: stats.projects ?? 0, icon: FolderKanban, color: '#7C3AED', sub: 'em andamento', to: '/projetos' },
+    { label: 'Campanhas', value: stats.projects ?? 0, icon: FolderKanban, color: '#7C3AED', sub: 'em andamento', to: '/campanhas' },
     { label: 'Posts agendados', value: stats.scheduled_posts ?? 0, icon: CalendarClock, color: '#0EA5E9', sub: 'na fila', to: '/calendario' },
     { label: 'Cobranças abertas', value: stats.open_invoices ?? 0, icon: Receipt, color: '#F59E0B', sub: 'aguardando', to: '/cobrancas' },
     { label: 'Receita', value: brl(stats.revenue_cents), icon: TrendingUp, color: '#14B8A6', sub: 'recebido', to: '/cobrancas' },

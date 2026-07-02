@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 // through this on mobile — so this whole thing is meant to live under `lg:hidden`.
 //
 //   <FilterSheet count={n} onClear={...}>
-//     <FilterField label="Projeto"><AsyncCombobox variant="field" …/></FilterField>
+//     <FilterField label="Campanha"><AsyncCombobox variant="field" …/></FilterField>
 //     …
 //   </FilterSheet>
 export function FilterSheet({ count = 0, onClear, children, title = 'Filtros', className }) {

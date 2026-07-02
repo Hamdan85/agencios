@@ -39,7 +39,7 @@ module Operations
       def opening_message
         client = @project.client
         who = client&.name.presence
-        greeting = who ? "Vou planejar o conteúdo de **#{who}** com você." : 'Vou planejar o conteúdo deste projeto com você.'
+        greeting = who ? "Vou planejar o conteúdo de **#{who}** com você." : 'Vou planejar o conteúdo desta campanha com você.'
 
         "Oi! Sou seu estrategista de conteúdo. #{greeting} " \
           'Me diga a **cadência** (ex.: 1 reel e 2 carrosséis por semana) e o **período** ' \

@@ -154,7 +154,7 @@ export function InvoiceFormDialog({ open, onOpenChange, initialClientId = '', in
           </div>
           {form.client_id && clientProjects.length > 0 && (
             <div className="space-y-1.5">
-              <Label>Projetos (opcional)</Label>
+              <Label>Campanhas (opcional)</Label>
               <div className="flex flex-wrap gap-2">
                 {clientProjects.map((p) => {
                   const active = form.project_ids.includes(p.id)

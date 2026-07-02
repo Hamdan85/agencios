@@ -1,6 +1,6 @@
 import { Suspense, lazy } from 'react'
 import {
-  createBrowserRouter, createRoutesFromElements, RouterProvider, Route, Outlet,
+  createBrowserRouter, createRoutesFromElements, RouterProvider, Route, Outlet, Navigate, useParams,
 } from 'react-router-dom'
 import ProtectedRoute, { GuestRoute } from '@/components/shared/ProtectedRoute'
 import Layout from '@/components/layout/Layout'
@@ -11,6 +11,12 @@ import NotFound from '@/pages/Errors/NotFound'
 import Forbidden from '@/pages/Errors/Forbidden'
 import ServerError from '@/pages/Errors/ServerError'
 import Offline from '@/pages/Errors/Offline'
+
+// Old /projetos/:id links redirect to the renamed /campanhas/:id (entity rename).
+function LegacyProjectRedirect() {
+  const { id } = useParams()
+  return <Navigate to={`/campanhas/${id}`} replace />
+}
 
 const Login = lazy(() => import('@/pages/Auth/Login'))
 const Register = lazy(() => import('@/pages/Auth/Register'))
@@ -73,8 +79,12 @@ const router = createBrowserRouter(
           <Route path="/quadro" element={<Board />} />
           <Route path="/calendario" element={<Calendar />} />
           <Route path="/tarefas" element={<Tasks />} />
-          <Route path="/projetos" element={<Projects />} />
-          <Route path="/projetos/:id" element={<ProjectShow />} />
+          <Route path="/campanhas" element={<Projects />} />
+          <Route path="/campanhas/:id" element={<ProjectShow />} />
+          {/* Legacy URLs — the entity was renamed Projeto → Campanha; old
+              bookmarks/links keep working. */}
+          <Route path="/projetos" element={<Navigate to="/campanhas" replace />} />
+          <Route path="/projetos/:id" element={<LegacyProjectRedirect />} />
           <Route path="/relatorios/:id" element={<ReportShow />} />
           <Route path="/clientes" element={<Clients />} />
           <Route path="/clientes/:id" element={<ClientShow />} />

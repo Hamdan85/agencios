@@ -28,10 +28,10 @@ const PALETTE = ['#7C3AED', '#EC4899', '#0EA5E9', '#10B981', '#F59E0B', '#6366F1
 
 const STATUS_OPTIONS = [
   { value: 'draft', label: 'Rascunho', variant: 'muted' },
-  { value: 'active', label: 'Ativo', variant: 'success' },
-  { value: 'paused', label: 'Pausado', variant: 'warning' },
-  { value: 'archived', label: 'Arquivado', variant: 'muted' },
-  { value: 'completed', label: 'Finalizado', variant: 'soft' },
+  { value: 'active', label: 'Ativa', variant: 'success' },
+  { value: 'paused', label: 'Pausada', variant: 'warning' },
+  { value: 'archived', label: 'Arquivada', variant: 'muted' },
+  { value: 'completed', label: 'Finalizada', variant: 'soft' },
 ]
 const statusMeta = (s) => STATUS_OPTIONS.find((o) => o.value === s) || STATUS_OPTIONS[1]
 
@@ -69,8 +69,8 @@ function ProjectFormDialog({ open, onOpenChange, mutation, onCreated }) {
           <div className="mb-1 flex size-11 items-center justify-center rounded-2xl" style={{ background: '#10B98116', color: '#10B981' }}>
             <Sparkles size={22} strokeWidth={2.2} />
           </div>
-          <DialogTitle>Novo projeto</DialogTitle>
-          <DialogDescription>Agrupe tickets sob um projeto de um cliente.</DialogDescription>
+          <DialogTitle>Nova campanha</DialogTitle>
+          <DialogDescription>Agrupe tickets sob uma campanha de um cliente.</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-3.5">
           <div className="space-y-1.5">
@@ -88,7 +88,7 @@ function ProjectFormDialog({ open, onOpenChange, mutation, onCreated }) {
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="pj-desc">Descrição</Label>
-            <Textarea id="pj-desc" value={form.description} onChange={(e) => set('description')(e.target.value)} placeholder="Objetivo e escopo do projeto…" />
+            <Textarea id="pj-desc" value={form.description} onChange={(e) => set('description')(e.target.value)} placeholder="Objetivo e escopo da campanha…" />
           </div>
           <div className="space-y-2">
             <Label>Cor</Label>
@@ -138,7 +138,7 @@ function ProjectFormDialog({ open, onOpenChange, mutation, onCreated }) {
           <DialogFooter>
             <DialogClose asChild><Button type="button" variant="ghost">Cancelar</Button></DialogClose>
             <Button type="submit" disabled={mutation.isPending || !form.client_id}>
-              {mutation.isPending ? 'Salvando…' : 'Criar projeto'}
+              {mutation.isPending ? 'Salvando…' : 'Criar campanha'}
             </Button>
           </DialogFooter>
         </form>
@@ -157,8 +157,8 @@ function ProjectCard({ project }) {
     <div
       role="button"
       tabIndex={0}
-      onClick={() => navigate(`/projetos/${project.id}`)}
-      onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/projetos/${project.id}`) }}
+      onClick={() => navigate(`/campanhas/${project.id}`)}
+      onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/campanhas/${project.id}`) }}
       className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-border bg-surface lift animate-rise"
     >
       <div className="h-2 w-full" style={{ background: color }} />
@@ -238,11 +238,11 @@ export default function ProjectsIndex() {
     <Page>
       <PageHeader
         eyebrow="Trabalho"
-        title="Projetos"
+        title="Campanhas"
         icon={FolderKanban}
         color="#10B981"
-        description="Cada projeto agrupa os tickets de um cliente."
-        actions={<Button onClick={() => setOpen(true)}><Plus size={18} /> Novo projeto</Button>}
+        description="Cada campanha agrupa os tickets de um cliente."
+        actions={<Button onClick={() => setOpen(true)}><Plus size={18} /> Nova campanha</Button>}
       />
 
       {/* Search + filters — search always visible; filters inline on desktop,
@@ -251,7 +251,7 @@ export default function ProjectsIndex() {
         <SearchInput
           value={search}
           onChange={setSearch}
-          placeholder="Buscar projeto…"
+          placeholder="Buscar campanha…"
           className="min-w-0 flex-1 lg:w-64 lg:flex-none"
         />
         <div className="hidden flex-wrap items-center gap-3 lg:flex">
@@ -268,9 +268,9 @@ export default function ProjectsIndex() {
         <EmptyState
           icon={FolderKanban}
           color="#10B981"
-          title={list.length === 0 ? 'Nenhum projeto ainda' : 'Nada por aqui'}
-          description={list.length === 0 ? 'Crie o primeiro projeto para organizar o trabalho da agência.' : 'Ajuste os filtros para ver projetos.'}
-          action={list.length === 0 ? <Button onClick={() => setOpen(true)}><Plus size={18} /> Novo projeto</Button> : null}
+          title={list.length === 0 ? 'Nenhuma campanha ainda' : 'Nada por aqui'}
+          description={list.length === 0 ? 'Crie a primeira campanha para organizar o trabalho da agência.' : 'Ajuste os filtros para ver campanhas.'}
+          action={list.length === 0 ? <Button onClick={() => setOpen(true)}><Plus size={18} /> Nova campanha</Button> : null}
         />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -282,7 +282,7 @@ export default function ProjectsIndex() {
         open={open}
         onOpenChange={setOpen}
         mutation={create}
-        onCreated={(project) => { if (project?.id) navigate(`/projetos/${project.id}?planejar=1`) }}
+        onCreated={(project) => { if (project?.id) navigate(`/campanhas/${project.id}?planejar=1`) }}
       />
     </Page>
   )

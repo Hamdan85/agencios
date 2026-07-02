@@ -8,7 +8,7 @@ import { projectsApi, clientsApi, workspaceApi } from '@/api'
 // inherit every AsyncCombobox prop: pass `variant="field"` for forms (default
 // `pill` for filter bars), `initialOption` to show a label before fetch, etc.
 
-export function ProjectSelect({ placeholder = 'Projeto', listParams, ...props }) {
+export function ProjectSelect({ placeholder = 'Campanha', listParams, ...props }) {
   return (
     <AsyncCombobox
       placeholder={placeholder}

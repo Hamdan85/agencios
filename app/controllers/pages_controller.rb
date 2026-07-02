@@ -177,7 +177,7 @@ class PagesController < ApplicationController
       summary: 'Melhor janela para esta conta: ter/qui 19h. Agendei o carrossel e adaptei a legenda por rede.',
       fields: ['Horário por rede', 'Primeiro comentário', 'Link na bio'] },
     { key: 'published', label: 'No ar', color: '#10B981', icon: 'radio',
-      summary: 'No ar há 2 dias: +38% de alcance vs. a média do projeto. Salvamentos acima da meta.',
+      summary: 'No ar há 2 dias: +38% de alcance vs. a média da campanha. Salvamentos acima da meta.',
       fields: ['Posts ao vivo', 'Alcance', 'Salvamentos', 'Alertas'] },
     { key: 'retrospective', label: 'Retrô', color: '#6366F1', icon: 'chart-line',
       summary: 'Rascunho da retro pronto: o gancho de bastidores puxou o alcance. Repetir o formato no próximo ciclo.',
@@ -225,14 +225,14 @@ class PagesController < ApplicationController
   FEATURES = [
     {
       slug: 'quadro', name: 'Quadro de produção', eyebrow: 'O funil', color: '#EC4899', icon: 'square-kanban',
-      card: 'Kanban de 7 etapas com arrastar-e-soltar, chips por projeto e filtros poderosos.',
+      card: 'Kanban de 7 etapas com arrastar-e-soltar, chips por campanha e filtros poderosos.',
       headline: 'Seu conteúdo, do insight ao impacto — num quadro vivo.',
       subhead: 'Um Kanban de sete etapas onde cada ticket é uma peça de conteúdo. Arraste entre as colunas e a etapa muda; o resto da operação acompanha sozinho.',
       points: [
         { icon: 'square-kanban', title: 'Sete etapas coloridas',
           desc: 'Ideação, Escopo, Produção, Agendado, Postado, Retrô e Concluído — cada uma com sua cor e seus campos.' },
-        { icon: 'folder',        title: 'Chips por projeto',
-          desc: 'Cada card mostra o projeto e o cliente. Filtre por projeto, cliente, responsável, rede ou tipo de criativo.' },
+        { icon: 'folder',        title: 'Chips por campanha',
+          desc: 'Cada card mostra a campanha e o cliente. Filtre por campanha, cliente, responsável, rede ou tipo de criativo.' },
         { icon: 'zap',           title: 'Arrastar é uma ação',
           desc: 'Mover um card dispara a transição de status, registra o histórico e atualiza o resumo de IA — automaticamente.' },
         { icon: 'list-checks',   title: 'Subtarefas e responsáveis',
@@ -298,7 +298,7 @@ class PagesController < ApplicationController
       subhead: 'Diga a cadência e o objetivo — “2 reels e 1 carrossel por semana” — e o estrategista propõe um plano completo, com datas, briefs e subtarefas, pronto para aplicar em um clique.',
       points: [
         { icon: 'messages-square', title: 'Conversa que planeja',
-          desc: 'Uma conversa multi-turno com um estrategista sênior que entende o contexto do projeto e da marca.' },
+          desc: 'Uma conversa multi-turno com um estrategista sênior que entende o contexto da campanha e da marca.' },
         { icon: 'workflow',        title: 'Um mês em segundos',
           desc: 'O plano vira dezenas de tickets agendados — cada um já em Ideação, com brief e canais definidos.' },
         { icon: 'list-checks',     title: 'Subtarefas incluídas',
@@ -309,13 +309,13 @@ class PagesController < ApplicationController
       highlights: ['Conversa multi-turno', 'Plano de semanas em 1 clique', 'Briefs + subtarefas prontos', 'Baseado na marca e no histórico']
     },
     {
-      slug: 'relatorios', name: 'Relatórios de projeto', eyebrow: 'Auditoria com IA', color: '#14B8A6', icon: 'file-text',
-      card: 'Um deck de auditoria de fim de projeto: KPIs, acertos, gargalos e plano de ação, gerado pela IA.',
-      headline: 'O fechamento do projeto vira um relatório que impressiona o cliente.',
-      subhead: 'Ao concluir um projeto, a IA lê as métricas dos posts, o histórico dos tickets e as lições aprendidas e monta um relatório de performance com acertos, gargalos e próximos passos.',
+      slug: 'relatorios', name: 'Relatórios de campanha', eyebrow: 'Auditoria com IA', color: '#14B8A6', icon: 'file-text',
+      card: 'Um deck de auditoria de fim de campanha: KPIs, acertos, gargalos e plano de ação, gerado pela IA.',
+      headline: 'O fechamento da campanha vira um relatório que impressiona o cliente.',
+      subhead: 'Ao concluir uma campanha, a IA lê as métricas dos posts, o histórico dos tickets e as lições aprendidas e monta um relatório de performance com acertos, gargalos e próximos passos.',
       points: [
         { icon: 'gauge',        title: 'KPIs consolidados',
-          desc: 'Alcance, engajamento e evolução do projeto reunidos em uma visão executiva.' },
+          desc: 'Alcance, engajamento e evolução da campanha reunidos em uma visão executiva.' },
         { icon: 'trophy',       title: 'Acertos e gargalos',
           desc: 'A IA identifica o que funcionou e onde a operação travou, com base nos dados reais.' },
         { icon: 'target',       title: 'Plano de ação',
@@ -346,10 +346,10 @@ class PagesController < ApplicationController
       slug: 'cobrancas', name: 'Cobranças', eyebrow: 'Financeiro', color: '#F97316', icon: 'receipt',
       card: 'Fature seus clientes via Mercado Pago (Pix, boleto, cartão) com conciliação automática.',
       headline: 'Fature seus clientes e receba via Pix — sem planilha.',
-      subhead: 'Crie faturas ligadas a projetos, cobre por Pix, boleto ou cartão pelo Mercado Pago e deixe a conciliação acontecer sozinha.',
+      subhead: 'Crie faturas ligadas a campanhas, cobre por Pix, boleto ou cartão pelo Mercado Pago e deixe a conciliação acontecer sozinha.',
       points: [
-        { icon: 'receipt',      title: 'Faturas por projeto',
-          desc: 'Uma fatura pode cobrir um projeto, vários ou nenhum — com status claro do rascunho ao pago.' },
+        { icon: 'receipt',      title: 'Faturas por campanha',
+          desc: 'Uma fatura pode cobrir uma campanha, várias ou nenhuma — com status claro do rascunho ao pago.' },
         { icon: 'zap',          title: 'Pix em primeiro lugar',
           desc: 'Cobrança Pix com QR code, além de boleto e cartão, tudo via Mercado Pago.' },
         { icon: 'repeat',       title: 'Conciliação automática',
@@ -357,7 +357,7 @@ class PagesController < ApplicationController
         { icon: 'shield-check', title: 'Status confiável',
           desc: 'O pagamento só é dado como pago após a reconciliação direta com o Mercado Pago.' }
       ],
-      highlights: ['Pix, boleto e cartão', 'Conciliação automática', 'Faturas multi-projeto', 'Mercado Pago nativo']
+      highlights: ['Pix, boleto e cartão', 'Conciliação automática', 'Faturas multi-campanha', 'Mercado Pago nativo']
     }
   ].freeze
 end

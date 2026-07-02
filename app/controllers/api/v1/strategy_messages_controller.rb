@@ -35,7 +35,7 @@ module Api
 
         write_sse('done', status: session.reload.status)
       rescue Pundit::NotAuthorizedError
-        write_sse('error', message: 'Você não tem permissão para planejar este projeto.')
+        write_sse('error', message: 'Você não tem permissão para planejar esta campanha.')
       rescue Operations::Errors::Invalid => e
         write_sse('error', message: e.message)
       rescue ActiveRecord::RecordNotFound

@@ -25,7 +25,7 @@ class AiConfig < ApplicationRecord
     'synthesize_positioning' => 'Sintetizar posicionamento',
     'extract_client_from_url' => 'Extrair cliente de URL',
     'carousel_copy' => 'Copy de carrossel',
-    'project_audit' => 'Auditoria de projeto',
+    'project_audit' => 'Auditoria de campanha',
     'draft_retrospective' => 'Rascunho de retrospectiva',
     'strategy_planner' => 'Planejador de estratégia (chat)',
     'strategy_plan' => 'Planejador de estratégia (gerar plano)'

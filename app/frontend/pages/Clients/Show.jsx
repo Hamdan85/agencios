@@ -21,9 +21,9 @@ import { brl, date } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 
 const PROJECT_STATUS = {
-  active: { label: 'Ativo', variant: 'success' },
-  paused: { label: 'Pausado', variant: 'warning' },
-  archived: { label: 'Arquivado', variant: 'muted' },
+  active: { label: 'Ativa', variant: 'success' },
+  paused: { label: 'Pausada', variant: 'warning' },
+  archived: { label: 'Arquivada', variant: 'muted' },
 }
 const INVOICE_STATUS = {
   draft: { label: 'Rascunho', variant: 'muted' },
@@ -141,7 +141,7 @@ function PositioningSection({ client, onEdit }) {
           icon={Sparkles}
           color="#6366F1"
           title="Sem posicionamento"
-          description="Descreva a marca e deixe a IA montar o posicionamento — vira contexto da IA em todos os tickets dos seus projetos."
+          description="Descreva a marca e deixe a IA montar o posicionamento — vira contexto da IA em todos os tickets das suas campanhas."
           action={<Button onClick={onEdit}><Sparkles size={16} /> Definir posicionamento</Button>}
         />
       ) : (
@@ -270,7 +270,7 @@ function SocialSection({ clientId, accounts }) {
       </Card>
 
       <p className="mb-4 max-w-2xl text-sm text-ink-muted">
-        Ou conecte as redes deste cliente você mesmo. Os tickets dos projetos publicam nestas contas.
+        Ou conecte as redes deste cliente você mesmo. Os tickets das campanhas publicam nestas contas.
       </p>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {Object.keys(CHANNEL_META).map((provider) => (
@@ -285,14 +285,14 @@ function SocialSection({ clientId, accounts }) {
 function ProjectsSection({ projects }) {
   return (
     <section>
-      <SectionHead icon={FolderKanban} color="#10B981" title="Projetos" />
+      <SectionHead icon={FolderKanban} color="#10B981" title="Campanhas" />
       {projects.length === 0 ? (
         <EmptyState
           icon={FolderKanban}
           color="#10B981"
-          title="Nenhum projeto"
-          description="Este cliente ainda não tem projetos."
-          action={<Button asChild variant="outline"><Link to="/projetos"><Plus size={16} /> Novo projeto</Link></Button>}
+          title="Nenhuma campanha"
+          description="Este cliente ainda não tem campanhas."
+          action={<Button asChild variant="outline"><Link to="/campanhas"><Plus size={16} /> Nova campanha</Link></Button>}
         />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -300,7 +300,7 @@ function ProjectsSection({ projects }) {
             const color = p.color || '#7C3AED'
             const st = PROJECT_STATUS[p.status] || PROJECT_STATUS.active
             return (
-              <Link key={p.id} to={`/projetos/${p.id}`} className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-surface lift">
+              <Link key={p.id} to={`/campanhas/${p.id}`} className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-surface lift">
                 <div className="h-1.5 w-full" style={{ background: color }} />
                 <div className="flex flex-1 flex-col p-4">
                   <div className="flex items-start justify-between gap-2">
@@ -394,7 +394,7 @@ function BasicColumn({ client, projects, invoices, totalPaid, archived, onEdit }
         )}
 
         <div className="mt-5 grid grid-cols-3 gap-2 border-t border-border pt-4 text-center">
-          <Stat icon={FolderKanban} color="#10B981" label="Projetos" value={projects.length} />
+          <Stat icon={FolderKanban} color="#10B981" label="Campanhas" value={projects.length} />
           <Stat icon={Receipt} color="#F97316" label="Faturas" value={invoices.length} />
           <Stat icon={Wallet} color="#7C3AED" label="Faturado" value={brl(totalPaid)} />
         </div>
@@ -414,8 +414,9 @@ function Stat({ icon: Icon, color, label, value }) {
 }
 
 // Each tab is its own URL (Portuguese segment); "branding" is the base path.
-const TAB_TO_SEG = { branding: '', config: 'configuracoes', projects: 'projetos', invoices: 'faturas' }
-const SEG_TO_TAB = { configuracoes: 'config', projetos: 'projects', faturas: 'invoices' }
+const TAB_TO_SEG = { branding: '', config: 'configuracoes', projects: 'campanhas', invoices: 'faturas' }
+// `projetos` kept as a legacy alias — the entity was renamed to Campanha.
+const SEG_TO_TAB = { configuracoes: 'config', campanhas: 'projects', projetos: 'projects', faturas: 'invoices' }
 
 export default function ClientShow() {
   const { id, tab: seg } = useParams()
@@ -464,7 +465,7 @@ export default function ClientShow() {
           <TabsList className="mb-5">
             <TabsTrigger value="branding"><Palette size={15} /> Posicionamento & Marca</TabsTrigger>
             <TabsTrigger value="config"><Plug size={15} /> Configurações</TabsTrigger>
-            <TabsTrigger value="projects"><FolderKanban size={15} /> Projetos</TabsTrigger>
+            <TabsTrigger value="projects"><FolderKanban size={15} /> Campanhas</TabsTrigger>
             <TabsTrigger value="invoices"><Receipt size={15} /> Faturas</TabsTrigger>
           </TabsList>
 

@@ -25,7 +25,7 @@ export default function AuthShell({ title, subtitle, children, footer }) {
             <Sparkles size={13} /> O SO da sua agência
           </span>
           <h2 className="mt-4 font-display text-4xl font-extrabold leading-tight text-white">
-            Clientes, projetos e conteúdo viral — <span className="text-gradient-brand">num só lugar.</span>
+            Clientes, campanhas e conteúdo viral — <span className="text-gradient-brand">num só lugar.</span>
           </h2>
           <div className="mt-8 space-y-4">
             {HIGHLIGHTS.map((h) => (

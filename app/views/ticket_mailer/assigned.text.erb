@@ -3,7 +3,7 @@ Olá, <%= @assignee.display_name %>!
 <% if @actor_name %><%= @actor_name %> atribuiu<% else %>Foi atribuído<% end %> um ticket a você:
 
 <%= @ticket.display_title %>
-<% if @project %>Projeto: <%= @project.name %>
+<% if @project %>Campanha: <%= @project.name %>
 <% end %>Status: <%= status_label(@ticket.status) %>
 <% if @ticket.due_date %>Prazo: <%= email_date(@ticket.due_date) %>
 <% end %>

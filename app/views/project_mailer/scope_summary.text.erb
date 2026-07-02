@@ -8,6 +8,6 @@ Segue o panorama do conteúdo planejado para <%= @project.name %>.
   <%= ticket.creative_types_list.map { |t| creative_type_label(t) }.join(" · ").presence || "—" %> · <%= status_label(ticket.status) %> · <%= ticket.scheduled_at ? email_date(ticket.scheduled_at) : "Data a definir" %>
 <% end %>
 <% else %>
-Nenhum ticket criado neste projeto ainda.
+Nenhum ticket criado nesta campanha ainda.
 <% end %>
 Datas sujeitas a ajustes durante a produção.

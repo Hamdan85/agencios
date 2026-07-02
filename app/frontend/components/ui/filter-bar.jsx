@@ -27,7 +27,7 @@ function Control({ ctrl, value, onChange, variant }) {
 // only declares WHAT to filter, never re-implements the layout or the pickers.
 //
 //   filters = [
-//     { key: 'project_id', type: 'project', label: 'Projeto' },
+//     { key: 'project_id', type: 'project', label: 'Campanha' },
 //     { key: 'status', type: 'options', label: 'Status', options: [...] },
 //   ]
 //

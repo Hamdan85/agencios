@@ -128,7 +128,7 @@
         // sent. The manual $pageview is already masked by the JS facade
         // (maskPath.js), but autocapture / $pageleave / $exception and the
         // $set_once person props ($initial_current_url) read the RAW browser URL
-        // at send time — without this, /projetos/1 and /projetos/2 would shatter
+        // at send time — without this, /campanhas/1 and /campanhas/2 would shatter
         // into distinct paths and a record id would stick to the person forever.
         // Self-contained (no bundle dependency) so it runs from the first event.
         before_send: phBeforeSend

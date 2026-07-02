@@ -42,10 +42,10 @@ import { brl, date, shortDt, compact } from '@/lib/formatters'
 
 const STATUS = {
   draft: { label: 'Rascunho', variant: 'muted' },
-  active: { label: 'Ativo', variant: 'success' },
-  paused: { label: 'Pausado', variant: 'warning' },
-  archived: { label: 'Arquivado', variant: 'muted' },
-  completed: { label: 'Finalizado', variant: 'soft' },
+  active: { label: 'Ativa', variant: 'success' },
+  paused: { label: 'Pausada', variant: 'warning' },
+  archived: { label: 'Arquivada', variant: 'muted' },
+  completed: { label: 'Finalizada', variant: 'soft' },
 }
 
 // Ticket filters live in the URL (?status=…&channel=…&q=…) so a project's
@@ -141,7 +141,7 @@ export default function ProjectShow() {
   const { clear: clearSelection } = selection
   useEffect(() => { clearSelection() }, [JSON.stringify(filters), clearSelection])
 
-  // Opened straight from project creation (…/projetos/:id?planejar=1) → jump into
+  // Opened straight from project creation (…/campanhas/:id?planejar=1) → jump into
   // the strategy planner, then drop the flag so a refresh doesn't reopen it.
   useEffect(() => {
     if (searchParams.get('planejar') === '1') {
@@ -227,8 +227,8 @@ export default function ProjectShow() {
 
   const handleFinalize = async () => {
     const ok = await confirm({
-      title: 'Finalizar projeto?',
-      description: 'Vamos encerrar o projeto e gerar o relatório de auditoria com o resumo da produção.',
+      title: 'Finalizar campanha?',
+      description: 'Vamos encerrar a campanha e gerar o relatório de auditoria com o resumo da produção.',
       confirmLabel: 'Finalizar',
       icon: CheckCircle2,
       tone: '#10B981',
@@ -243,19 +243,19 @@ export default function ProjectShow() {
   const handleArchiveToggle = () => {
     update.mutate(
       { id, data: { status: isArchived ? 'active' : 'archived' } },
-      { onSuccess: () => toast.success(isArchived ? 'Projeto reativado.' : 'Projeto arquivado.') },
+      { onSuccess: () => toast.success(isArchived ? 'Campanha reativada.' : 'Campanha arquivada.') },
     )
   }
 
   const handleDelete = async () => {
     const ok = await confirm({
-      title: 'Excluir projeto?',
-      description: 'Isso remove o projeto e todos os seus tickets. Esta ação não pode ser desfeita.',
-      confirmLabel: 'Excluir projeto',
+      title: 'Excluir campanha?',
+      description: 'Isso remove a campanha e todos os seus tickets. Esta ação não pode ser desfeita.',
+      confirmLabel: 'Excluir campanha',
       destructive: true,
     })
     if (!ok) return
-    destroy.mutate(id, { onSuccess: () => navigate('/projetos') })
+    destroy.mutate(id, { onSuccess: () => navigate('/campanhas') })
   }
 
   const confirmBulkDelete = () => {
@@ -270,8 +270,8 @@ export default function ProjectShow() {
 
   return (
     <Page>
-      <Link to="/projetos" className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-muted transition hover:text-brand">
-        <ArrowLeft size={16} /> Projetos
+      <Link to="/campanhas" className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-muted transition hover:text-brand">
+        <ArrowLeft size={16} /> Campanhas
       </Link>
 
       {/* Hero */}
@@ -284,7 +284,7 @@ export default function ProjectShow() {
             </div>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="font-display text-xl font-extrabold tracking-tight text-ink sm:text-2xl">{project.name || 'Projeto'}</h1>
+                <h1 className="font-display text-xl font-extrabold tracking-tight text-ink sm:text-2xl">{project.name || 'Campanha'}</h1>
                 <Badge variant={st.variant}>{st.label}</Badge>
                 {reportGenerating && (
                   <Badge variant="soft"><Loader2 size={11} className="animate-spin" /> Gerando auditoria…</Badge>
@@ -326,8 +326,8 @@ export default function ProjectShow() {
               </Button>
             )}
             {isDraft && (
-              <Button className="w-10 justify-center px-0 sm:w-auto sm:justify-start sm:px-4" aria-label="Iniciar projeto" onClick={handleStart} disabled={start.isPending}>
-                <Play size={16} /> <span className="hidden sm:inline">Iniciar projeto</span>
+              <Button className="w-10 justify-center px-0 sm:w-auto sm:justify-start sm:px-4" aria-label="Iniciar campanha" onClick={handleStart} disabled={start.isPending}>
+                <Play size={16} /> <span className="hidden sm:inline">Iniciar campanha</span>
               </Button>
             )}
             {!isCompleted && (
@@ -340,8 +340,8 @@ export default function ProjectShow() {
               />
             )}
             {!isCompleted && !isDraft && (
-              <Button className="w-10 justify-center px-0 sm:w-auto sm:justify-start sm:px-4" aria-label="Finalizar projeto" onClick={handleFinalize} disabled={finalize.isPending}>
-                <CheckCircle2 size={16} /> <span className="hidden sm:inline">Finalizar projeto</span>
+              <Button className="w-10 justify-center px-0 sm:w-auto sm:justify-start sm:px-4" aria-label="Finalizar campanha" onClick={handleFinalize} disabled={finalize.isPending}>
+                <CheckCircle2 size={16} /> <span className="hidden sm:inline">Finalizar campanha</span>
               </Button>
             )}
             {isCompleted && (
@@ -422,7 +422,7 @@ export default function ProjectShow() {
               </p>
               <p className="text-xs text-ink-muted">
                 {persistedAdditive
-                  ? (hasRemoval ? 'Revise no chat ou aplique — inclui remoção de ticket.' : 'Revise no chat ou aplique ao projeto.')
+                  ? (hasRemoval ? 'Revise no chat ou aplique — inclui remoção de ticket.' : 'Revise no chat ou aplique à campanha.')
                   : 'Revise no chat ou aplique para criar os tickets.'}
               </p>
             </div>
@@ -485,15 +485,15 @@ export default function ProjectShow() {
             icon={ListChecks}
             color={color}
             title="Nenhum ticket corresponde aos filtros"
-            description="Ajuste ou limpe os filtros para ver mais tickets deste projeto."
+            description="Ajuste ou limpe os filtros para ver mais tickets desta campanha."
             action={<Button variant="outline" onClick={() => setFilters({})}>Limpar filtros</Button>}
           />
         ) : (
           <EmptyState
             icon={KanbanSquare}
             color={color}
-            title="Sem tickets neste projeto"
-            description="Crie o primeiro ticket deste projeto para começar a produção."
+            title="Sem tickets nesta campanha"
+            description="Crie o primeiro ticket desta campanha para começar a produção."
             action={<Button onClick={() => setTicketOpen(true)}><Plus size={16} /> Novo ticket</Button>}
           />
         )

@@ -136,7 +136,7 @@ export default function ReportShow() {
   if (isLoading) return <PageLoader />
   if (!report) return <Page><EmptyState icon={FileBarChart} title="Relatório não encontrado" /></Page>
 
-  const back = report.project_id ? `/projetos/${report.project_id}` : '/projetos'
+  const back = report.project_id ? `/campanhas/${report.project_id}` : '/campanhas'
 
   if (report.status === 'generating') {
     return (
@@ -145,7 +145,7 @@ export default function ReportShow() {
         <Card className="flex flex-col items-center gap-3 p-12 text-center">
           <Loader2 size={32} className="animate-spin text-brand" />
           <h1 className="font-display text-xl font-bold text-ink">Gerando a auditoria…</h1>
-          <p className="text-sm text-ink-secondary">Estamos agregando as métricas e a análise estratégica do projeto. Isso atualiza sozinho.</p>
+          <p className="text-sm text-ink-secondary">Estamos agregando as métricas e a análise estratégica da campanha. Isso atualiza sozinho.</p>
         </Card>
       </Page>
     )
@@ -155,7 +155,7 @@ export default function ReportShow() {
     return (
       <Page>
         <BackLink to={back} />
-        <EmptyState icon={AlertTriangle} color="#EF4444" title="Não foi possível gerar o relatório" description="Tente finalizar o projeto novamente." />
+        <EmptyState icon={AlertTriangle} color="#EF4444" title="Não foi possível gerar o relatório" description="Tente finalizar a campanha novamente." />
       </Page>
     )
   }
@@ -188,7 +188,7 @@ export default function ReportShow() {
           </p>
           {d.ai_ok === false && (
             <p className="mt-3 rounded-lg bg-amber/15 px-3 py-2 text-xs font-medium text-[#B45309]">
-              A análise textual não pôde ser gerada agora — os números abaixo refletem os dados reais do projeto.
+              A análise textual não pôde ser gerada agora — os números abaixo refletem os dados reais da campanha.
             </p>
           )}
         </div>
@@ -325,7 +325,7 @@ export default function ReportShow() {
 function BackLink({ to }) {
   return (
     <Link to={to} className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-muted transition hover:text-brand">
-      <ArrowLeft size={16} /> Voltar ao projeto
+      <ArrowLeft size={16} /> Voltar à campanha
     </Link>
   )
 }

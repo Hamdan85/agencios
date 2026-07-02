@@ -18,7 +18,7 @@ export const NAV_ITEMS = [
   { to: '/tickets', label: 'Tickets', icon: Rows3, color: '#06B6D4' },
   { to: '/calendario', label: 'Calendário', icon: CalendarDays, color: '#0EA5E9' },
   { to: '/tarefas', label: 'Tarefas', icon: ListChecks, color: '#F59E0B' },
-  { to: '/projetos', label: 'Projetos', icon: FolderKanban, color: '#10B981' },
+  { to: '/campanhas', label: 'Campanhas', icon: FolderKanban, color: '#10B981' },
   { to: '/clientes', label: 'Clientes', icon: Users, color: '#6366F1' },
   { to: '/estudio', label: 'Estúdio', icon: Sparkles, color: '#F43F5E' },
   { to: '/reunioes', label: 'Reuniões', icon: Video, color: '#14B8A6' },

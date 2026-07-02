@@ -69,7 +69,7 @@ export function TicketCard({ ticket, dragging = false, overlay = false, onOpen }
             <span className="truncate">{project.name}</span>
           </span>
         ) : (
-          <span className="text-[11px] font-bold text-ink-faint">Sem projeto</span>
+          <span className="text-[11px] font-bold text-ink-faint">Sem campanha</span>
         )}
         <PriorityDot priority={ticket.priority} />
       </div>

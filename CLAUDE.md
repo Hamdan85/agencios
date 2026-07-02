@@ -22,7 +22,7 @@ constant names, symbol names, hash keys, file names, comments, and git messages.
 Examples of what IS allowed in Portuguese: JSX label text, button labels, placeholder
 text, toast/flash messages rendered to the user, email body copy, WhatsApp/message copy sent to
 clients, **URL path segments in the frontend React Router** (these are visible to the user in the
-browser address bar — e.g. `/quadro`, `/projetos`, `/clientes`, `/calendario`, `/painel`).
+browser address bar — e.g. `/quadro`, `/campanhas`, `/clientes`, `/calendario`, `/painel`).
 
 Examples of what is NEVER allowed in Portuguese: column names (`agendado_em` → `scheduled_at`),
 enum keys (`ideacao` → `ideation`, `concluido` → `done`), Ruby symbols (`:carrossel`),
@@ -123,13 +123,13 @@ Authorization is enforced with Pundit policies keyed on the membership role.
 
 Backend API routes all live under `/api/v1/` with **English** resource names
 (`/api/v1/tickets`, `/api/v1/projects`, `/api/v1/board`). The React Router routes use **Portuguese**
-URL segments (`/quadro`, `/calendario`, `/projetos`, `/clientes`, `/painel`). Never confuse the two.
+URL segments (`/quadro`, `/calendario`, `/campanhas`, `/clientes`, `/painel`). Never confuse the two.
 
 The catch-all `get "*path", to: "spa#index"` serves the React SPA for all HTML GETs.
 
 **Frontend route map (React Router, Portuguese segments):**
 `/painel` (dashboard), `/quadro` (board), `/calendario` (calendar), `/tarefas` (my subtasks),
-`/projetos` · `/projetos/:id`, `/clientes` · `/clientes/:id`, `/tickets/:id` · `/tickets/:id/:tab`
+`/campanhas` · `/campanhas/:id`, `/clientes` · `/clientes/:id`, `/tickets/:id` · `/tickets/:id/:tab`
 (ticket detail — "ticket" is an accepted PT-BR product term), `/estudio` (creative studio),
 `/reunioes` (meetings), `/cobrancas` (client invoices), `/configuracoes` (settings),
 `/assinatura` (the workspace's own Stripe plan).

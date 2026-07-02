@@ -42,7 +42,7 @@ export default function Show() {
   // Return to wherever the ticket was opened from (board or project); fall back to the board.
   const back = useMemo(() => {
     const from = location.state?.from
-    if (from?.startsWith('/projetos/')) return { to: from, label: 'Voltar ao projeto' }
+    if (from?.startsWith('/campanhas/')) return { to: from, label: 'Voltar à campanha' }
     return { to: '/quadro', label: 'Voltar ao quadro' }
   }, [location.state])
 
@@ -82,7 +82,7 @@ export default function Show() {
           <div className="min-w-0">
             <div className="mb-2 flex flex-wrap items-center gap-2">
               {ticket.project && (
-                <Link to={`/projetos/${ticket.project.id}`} className="min-w-0 max-w-[60vw] sm:max-w-[240px]">
+                <Link to={`/campanhas/${ticket.project.id}`} className="min-w-0 max-w-[60vw] sm:max-w-[240px]">
                   <ColorBadge color={ticket.project.color || m.color} solid className="max-w-full gap-1.5 lift">
                     <Folder size={11} className="shrink-0" /> <span className="truncate">{ticket.project.name}</span>
                   </ColorBadge>

@@ -11,7 +11,7 @@ export function BoardFilters({ filters, onChange }) {
   const creativeOptions = Object.entries(CREATIVE_TYPE_META).map(([k, m]) => ({ value: k, label: m.label, icon: m.icon, color: m.color }))
 
   const spec = [
-    { key: 'project_id', type: 'project', label: 'Projeto' },
+    { key: 'project_id', type: 'project', label: 'Campanha' },
     { key: 'client_id', type: 'client', label: 'Cliente' },
     { key: 'assignee_id', type: 'assignee', label: 'Responsável' },
     { key: 'channel', type: 'options', label: 'Canal', options: channelOptions },

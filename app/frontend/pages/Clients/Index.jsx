@@ -88,7 +88,7 @@ function ClientCard({ client, onEdit, onArchive }) {
 
       <div className="mt-4 flex items-center justify-between border-t border-border pt-3.5">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-2.5 py-1 text-xs font-bold text-brand">
-          <FolderKanban size={13} /> {client.projects_count ?? 0} {(client.projects_count ?? 0) === 1 ? 'projeto' : 'projetos'}
+          <FolderKanban size={13} /> {client.projects_count ?? 0} {(client.projects_count ?? 0) === 1 ? 'campanha' : 'campanhas'}
         </span>
         <div className="flex items-center gap-2">
           {client.has_positioning && (

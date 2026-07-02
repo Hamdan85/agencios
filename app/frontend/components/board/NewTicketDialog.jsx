@@ -79,14 +79,14 @@ export function NewTicketDialog({ open, onOpenChange, create, defaultProjectId }
         <form onSubmit={submit} className="space-y-4">
           {/* project */}
           <div className="space-y-1.5">
-            <Label htmlFor="nt-project">Projeto</Label>
+            <Label htmlFor="nt-project">Campanha</Label>
             <ProjectSelect
               id="nt-project"
               variant="field"
               value={form.project_id}
               onChange={(v) => set('project_id', v || '')}
-              placeholder="Selecione um projeto"
-              emptyMessage="Crie um projeto primeiro para abrir tickets."
+              placeholder="Selecione uma campanha"
+              emptyMessage="Crie uma campanha primeiro para abrir tickets."
               listParams={{ exclude_archived: true }}
             />
           </div>

@@ -74,7 +74,7 @@ module Operations
 
         Operations::Push::Notify.call(
           user: @run.user,
-          title: 'Projeto no piloto automático ✅',
+          title: 'Campanha no piloto automático ✅',
           body: "#{@ticket.display_title}: criativos gerados e posts agendados.",
           path: "/tickets/#{@ticket.id}"
         )

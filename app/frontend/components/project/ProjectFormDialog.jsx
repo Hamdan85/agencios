@@ -16,10 +16,10 @@ import { cn } from '@/lib/utils'
 const PALETTE = ['#7C3AED', '#EC4899', '#0EA5E9', '#10B981', '#F59E0B', '#6366F1', '#F43F5E', '#14B8A6']
 const STATUS_OPTIONS = [
   { value: 'draft', label: 'Rascunho' },
-  { value: 'active', label: 'Ativo' },
-  { value: 'paused', label: 'Pausado' },
-  { value: 'archived', label: 'Arquivado' },
-  { value: 'completed', label: 'Finalizado' },
+  { value: 'active', label: 'Ativa' },
+  { value: 'paused', label: 'Pausada' },
+  { value: 'archived', label: 'Arquivada' },
+  { value: 'completed', label: 'Finalizada' },
 ]
 const EMPTY = { client_id: '', name: '', description: '', color: PALETTE[0], status: 'draft', starts_on: '', ends_on: '', budget: '' }
 
@@ -75,8 +75,8 @@ export function ProjectFormDialog({ open, onOpenChange, project = null, onSaved 
           <div className="mb-1 flex size-11 items-center justify-center rounded-2xl" style={{ background: '#10B98116', color: '#10B981' }}>
             <Sparkles size={22} strokeWidth={2.2} />
           </div>
-          <DialogTitle>{editing ? 'Editar projeto' : 'Novo projeto'}</DialogTitle>
-          <DialogDescription>Agrupe tickets sob um projeto de um cliente.</DialogDescription>
+          <DialogTitle>{editing ? 'Editar campanha' : 'Nova campanha'}</DialogTitle>
+          <DialogDescription>Agrupe tickets sob uma campanha de um cliente.</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-3.5">
           <div className="space-y-1.5">
@@ -89,7 +89,7 @@ export function ProjectFormDialog({ open, onOpenChange, project = null, onSaved 
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="pj-desc">Descrição</Label>
-            <Textarea id="pj-desc" value={form.description} onChange={(e) => set('description')(e.target.value)} placeholder="Objetivo e escopo do projeto…" />
+            <Textarea id="pj-desc" value={form.description} onChange={(e) => set('description')(e.target.value)} placeholder="Objetivo e escopo da campanha…" />
           </div>
           <div className="space-y-2">
             <Label>Cor</Label>
@@ -136,7 +136,7 @@ export function ProjectFormDialog({ open, onOpenChange, project = null, onSaved 
           <DialogFooter>
             <DialogClose asChild><Button type="button" variant="ghost">Cancelar</Button></DialogClose>
             <Button type="submit" disabled={mutation.isPending || !form.client_id}>
-              {mutation.isPending ? 'Salvando…' : editing ? 'Salvar' : 'Criar projeto'}
+              {mutation.isPending ? 'Salvando…' : editing ? 'Salvar' : 'Criar campanha'}
             </Button>
           </DialogFooter>
         </form>

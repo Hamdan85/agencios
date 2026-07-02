@@ -563,7 +563,7 @@ export default function BillingIndex() {
           <p className="flex items-center gap-2 text-sm font-semibold text-danger">
             <AlertTriangle size={18} />
             O workspace tem {me.workspace.seat_count} membros, e o plano atual permite até{' '}
-            {me.workspace.seat_limit}. Remova membros ou faça upgrade — novos tickets e projetos
+            {me.workspace.seat_limit}. Remova membros ou faça upgrade — novos tickets e campanhas
             estão bloqueados enquanto isso.
           </p>
         </div>

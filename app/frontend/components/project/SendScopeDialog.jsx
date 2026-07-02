@@ -37,7 +37,7 @@ export function SendScopeDialog({ open, onOpenChange, project, mutation }) {
           </div>
           <DialogTitle>Enviar escopo ao cliente</DialogTitle>
           <DialogDescription>
-            Envia por e-mail um resumo dos tickets do projeto (nomes, tipos e datas) — sem detalhes internos.
+            Envia por e-mail um resumo dos tickets da campanha (nomes, tipos e datas) — sem detalhes internos.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-3.5">

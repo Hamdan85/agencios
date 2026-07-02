@@ -63,7 +63,7 @@ module Controllers
 
       raise Operations::Errors::SeatLimitReached,
             'O workspace tem mais membros do que o plano atual permite. ' \
-              'Remova membros ou faça upgrade para continuar criando tickets e projetos.'
+              'Remova membros ou faça upgrade para continuar criando tickets e campanhas.'
     end
 
     # Preflight prepaid-credit check for a metered generation (video/image).
