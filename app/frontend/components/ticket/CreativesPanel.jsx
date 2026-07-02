@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
-import { creativeMeta, CREATIVE_TYPE_META, GENERATION_KIND_META } from '@/lib/constants'
+import { toast } from 'sonner'
+import { creativeMeta, CREATIVE_TYPE_META, GENERATION_KIND_META, uploadAcceptFor, fileMatchesCreativeType } from '@/lib/constants'
 import { useWorkspaceCreatives } from '@/hooks/useData'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -199,7 +200,8 @@ function UploadDialog({ open, onOpenChange, onUpload, uploading }) {
           <div className="grid gap-3.5 py-2">
             <div className="space-y-1.5">
               <Label>Tipo de criativo</Label>
-              <Select value={creativeType} onValueChange={setCreativeType}>
+              {/* Switching type may make already-picked files incompatible — clear them. */}
+              <Select value={creativeType} onValueChange={(v) => { setCreativeType(v); setFiles([]) }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {Object.entries(CREATIVE_TYPE_META).map(([key, m]) => (
@@ -213,10 +215,18 @@ function UploadDialog({ open, onOpenChange, onUpload, uploading }) {
               <input
                 ref={inputRef}
                 type="file"
-                accept="image/*,video/*"
+                accept={uploadAcceptFor(creativeType)}
                 multiple
                 hidden
-                onChange={(e) => setFiles(Array.from(e.target.files || []))}
+                onChange={(e) => {
+                  const picked = Array.from(e.target.files || [])
+                  const ok = picked.filter((f) => fileMatchesCreativeType(f, creativeType))
+                  if (ok.length < picked.length) {
+                    const label = CREATIVE_TYPE_META[creativeType]?.label || 'esse tipo'
+                    toast.error(`Arquivo incompatível: ${label} não aceita esse formato.`)
+                  }
+                  setFiles(ok)
+                }}
               />
               <button
                 type="button"

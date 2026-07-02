@@ -58,6 +58,28 @@ export const CREATIVE_TYPE_META = {
   cover:      { label: 'Capa',         color: '#14B8A6', icon: Camera,               networks: ['instagram', 'facebook', 'linkedin', 'youtube'] },
 }
 
+// Which media a manual upload accepts per creative type — mirrors
+// Creatives.accepted_upload_media (backend). Video types take video; image/
+// carousel types take images; a story takes either; a cover is an image.
+export const CREATIVE_UPLOAD_MEDIA = {
+  reel: ['video'],
+  ugc_video: ['video'],
+  feed_image: ['image'],
+  carousel: ['image'],
+  ad: ['image'],
+  thumbnail: ['image'],
+  cover: ['image'],
+  story: ['image', 'video'],
+}
+
+// The <input accept> string for a creative type's upload (e.g. "video/*").
+export const uploadAcceptFor = (type) =>
+  (CREATIVE_UPLOAD_MEDIA[type] || ['image', 'video']).map((m) => `${m}/*`).join(',')
+
+// True when a picked File's media matches the creative type.
+export const fileMatchesCreativeType = (file, type) =>
+  (CREATIVE_UPLOAD_MEDIA[type] || ['image', 'video']).includes((file?.type || '').split('/')[0])
+
 export const PRIORITY_META = {
   low:    { label: 'Baixa',  color: '#8B86A3', dot: '#B6B1C9' },
   medium: { label: 'Média',  color: '#0EA5E9', dot: '#0EA5E9' },

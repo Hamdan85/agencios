@@ -35,6 +35,17 @@ module Creatives
     self.for(type_key)&.spec
   end
 
+  # The media kinds a MANUAL UPLOAD accepts for a creative type (the top-level of
+  # the file content type). Derived from the type's spec `kind`: video types take
+  # video, everything else takes images — except a story, which takes either
+  # (IG/FB stories can be image or video). The upload guard + the frontend's
+  # `accept` both read this so a file can't mismatch the ticket's media type.
+  def accepted_upload_media(type_key)
+    return %w[image video] if type_key.to_s == 'story'
+
+    spec_for(type_key)&.dig(:kind) == 'video' ? %w[video] : %w[image]
+  end
+
   # Every registered type's spec — used by the studio to render the type picker.
   def all_specs
     registry.values.map(&:spec)

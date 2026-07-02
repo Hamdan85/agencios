@@ -10,9 +10,15 @@ module Controllers
 
       def call
         ticket = workspace.tickets.find(@params[:ticket_id])
+        creative_type = @params.require(:creative_type)
+        # Only accept files compatible with the creative type's media (an image
+        # can't be a reel; a video can't be a feed image). Validate BEFORE creating
+        # the record so a rejected upload leaves nothing behind.
+        validate_media!(creative_type, @params[:assets])
+
         creative = Operations::Creatives::Create.call(
           ticket: ticket,
-          creative_type: @params.require(:creative_type),
+          creative_type: creative_type,
           source: :uploaded,
           caption: @params[:caption],
           metadata: @params[:metadata]&.permit!.to_h
@@ -28,6 +34,25 @@ module Controllers
         return if files.blank?
 
         creative.assets.attach(files)
+      end
+
+      def validate_media!(creative_type, files)
+        allowed = ::Creatives.accepted_upload_media(creative_type)
+        Array(files).each do |file|
+          next unless file.respond_to?(:content_type)
+
+          kind = file.content_type.to_s.split('/').first
+          next if allowed.include?(kind)
+
+          raise Operations::Errors::Invalid,
+                "Este tipo de criativo aceita apenas #{media_label(allowed)}. Envie um arquivo compatível."
+        end
+      end
+
+      def media_label(allowed)
+        return 'imagens ou vídeos' if allowed.sort == %w[image video]
+
+        allowed.include?('video') ? 'vídeos' : 'imagens'
       end
     end
   end
