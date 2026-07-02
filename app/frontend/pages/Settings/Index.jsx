@@ -2,19 +2,17 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Settings, Palette, Users2, Plug, Save, AtSign, Sparkles, UserPlus,
-  Link2, Check, Calendar, Wallet, Copy, ShieldCheck, Bot, Trash2, RefreshCw,
+  Link2, Check, Calendar, Wallet, Copy, ShieldCheck,
   Image as ImageIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   useSettings, useSettingsMutation, useSettingsBrandAssetsMutation,
   useWorkspaceMembers, useWorkspaceMutations,
-  useConnections, useRevokeConnection, useMcpConnector, useRotateMcpConnector,
   useGoogleCalendarMutations,
 } from '@/hooks/useData'
 import { PageHeader } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
-import { useConfirm } from '@/components/ui/confirm-dialog'
 import { Input, Textarea } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
@@ -374,137 +372,10 @@ function IntegrationsTab() {
   )
 }
 
-// ── Connections tab (MCP connectors like Claude) ───────────────
-function ConnectionsTab() {
-  const { data: connections, isLoading } = useConnections()
-  const revoke = useRevokeConnection()
-  const { data: connector, isLoading: loadingConnector } = useMcpConnector()
-  const rotate = useRotateMcpConnector()
-  const confirm = useConfirm()
-  const navigate = useNavigate()
-  const [copied, setCopied] = useState(false)
-  const [revealed, setRevealed] = useState(false)
-  // Agência+ feature — Solo gets an upgrade hook instead of the URL.
-  const locked = connector && connector.enabled === false
-  const url = connector?.url || ''
-  // Mask the token in the displayed URL until revealed (it's a credential).
-  const masked = url.replace(/\/mcp\/c\/.+$/, '/mcp/c/••••••••••••')
-
-  const copy = () => {
-    if (!url) return
-    navigator.clipboard?.writeText(url)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
-  }
-
-  const onRotate = async () => {
-    const ok = await confirm({
-      title: 'Gerar nova URL?',
-      description: 'A URL atual deixa de funcionar no Claude. Você precisará reconectar o conector com a nova URL.',
-      confirmLabel: 'Gerar nova URL',
-      destructive: true,
-    })
-    if (ok) rotate.mutate()
-  }
-
-  return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-      <div className="space-y-6 lg:col-span-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Bot size={18} /> Conector do Claude</CardTitle>
-            <CardDescription>
-              Copie sua URL pessoal e adicione no Claude em <strong>Configurações → Conectores → Adicionar
-              conector personalizado</strong>. A URL já contém sua credencial — não precisa de login nem OAuth.
-            </CardDescription>
-          </CardHeader>
-          {locked ? (
-            <CardContent className="space-y-3">
-              <div className="flex items-start gap-3 rounded-xl border border-brand/30 bg-brand-soft/40 p-4">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand/15 text-brand"><Sparkles size={18} /></span>
-                <div>
-                  <p className="text-sm font-semibold text-ink">Disponível nos planos Agência e Enterprise</p>
-                  <p className="mt-0.5 text-sm text-ink-muted">
-                    Conecte o agencios ao Claude e opere seus workspaces por linguagem natural.
-                    Faça upgrade para desbloquear o conector.
-                  </p>
-                </div>
-              </div>
-              <Button type="button" onClick={() => navigate('/assinatura')}>
-                <Sparkles size={16} /> Fazer upgrade
-              </Button>
-            </CardContent>
-          ) : (
-            <CardContent className="space-y-2.5">
-              <Label>URL do conector</Label>
-              <div className="flex flex-wrap items-center gap-2">
-                <Input
-                  readOnly
-                  value={loadingConnector ? 'Carregando…' : (revealed ? url : masked)}
-                  className="min-w-0 flex-1 font-mono text-sm"
-                  onFocus={(e) => e.target.select()}
-                />
-                <Button type="button" variant="outline" onClick={() => setRevealed((v) => !v)}>
-                  {revealed ? 'Ocultar' : 'Revelar'}
-                </Button>
-                <Button type="button" variant="outline" onClick={copy} disabled={!url}>
-                  {copied ? <Check size={16} /> : <Copy size={16} />} {copied ? 'Copiado' : 'Copiar'}
-                </Button>
-              </div>
-              <div className="flex items-center justify-between gap-2 pt-1">
-                <p className="text-xs text-ink-faint">
-                  A URL é um segredo: quem a tiver opera seus workspaces com as suas permissões.
-                </p>
-                <Button type="button" variant="ghost" size="sm" className="shrink-0 text-ink-muted" onClick={onRotate} disabled={rotate.isPending}>
-                  <RefreshCw size={14} /> Gerar nova URL
-                </Button>
-              </div>
-              <p className="text-xs text-ink-faint">
-                No Claude: <strong className="text-ink-muted">Configurações → Conectores → Adicionar conector
-                personalizado</strong> e cole a URL. Não pede login.
-              </p>
-            </CardContent>
-          )}
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><ShieldCheck size={18} /> Apps autorizados</CardTitle>
-            <CardDescription>Aplicativos com acesso à sua conta via OAuth.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {isLoading ? (
-              <p className="text-sm text-ink-faint">Carregando…</p>
-            ) : !connections?.length ? (
-              <p className="text-sm text-ink-faint">Nenhum app conectado ainda.</p>
-            ) : (
-              connections.map((c) => (
-                <div key={c.id} className="flex items-center justify-between rounded-lg border border-line p-3">
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-2 font-semibold">
-                      {c.name}
-                      {c.dynamically_registered && <Badge variant="muted">auto</Badge>}
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {c.scopes.map((s) => <Badge key={s} variant="outline">{s}</Badge>)}
-                    </div>
-                  </div>
-                  <Button type="button" variant="ghost" className="text-danger" onClick={() => revoke.mutate(c.id)} disabled={revoke.isPending}>
-                    <Trash2 size={16} /> Revogar
-                  </Button>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  )
-}
-
 // Each tab is its own URL (Portuguese segment); "brand" is the base path.
-const TAB_TO_SEG = { brand: '', team: 'equipe', integrations: 'integracoes', connections: 'conexoes' }
-const SEG_TO_TAB = { equipe: 'team', integracoes: 'integrations', conexoes: 'connections' }
+// (Personal connections — the Claude connector + OAuth apps — moved to /conta.)
+const TAB_TO_SEG = { brand: '', team: 'equipe', integrations: 'integracoes' }
+const SEG_TO_TAB = { equipe: 'team', integracoes: 'integrations' }
 
 export default function SettingsIndex() {
   const { tab: seg } = useParams()
@@ -523,7 +394,7 @@ export default function SettingsIndex() {
   return (
     <Page>
       <PageHeader
-        eyebrow="Conta"
+        eyebrow="Workspace"
         title="Configurações"
         icon={Settings}
         color="#7C3AED"
@@ -535,7 +406,6 @@ export default function SettingsIndex() {
           <TabsTrigger value="brand"><Palette size={15} /> Marca</TabsTrigger>
           <TabsTrigger value="team"><Users2 size={15} /> Equipe</TabsTrigger>
           <TabsTrigger value="integrations"><Plug size={15} /> Integrações</TabsTrigger>
-          <TabsTrigger value="connections"><Bot size={15} /> Conexões</TabsTrigger>
         </TabsList>
 
         <TabsContent value="brand" className="animate-rise">
@@ -546,9 +416,6 @@ export default function SettingsIndex() {
         </TabsContent>
         <TabsContent value="integrations" className="animate-rise">
           <IntegrationsTab />
-        </TabsContent>
-        <TabsContent value="connections" className="animate-rise">
-          <ConnectionsTab />
         </TabsContent>
       </Tabs>
     </Page>

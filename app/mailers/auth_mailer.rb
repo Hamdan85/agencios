@@ -18,6 +18,16 @@ class AuthMailer < ApplicationMailer
     mail(to: @user.email, subject: 'Confirme seu e-mail na agencios')
   end
 
+  # Confirm-your-new-address link for an e-mail change. Sent TO the new address
+  # (that's the whole point — proving the user owns it). `token` from
+  # generates_token_for(:email_change).
+  def confirm_email_change(user:, token:, new_email:)
+    @user = user
+    @new_email = new_email
+    @confirm_url = app_host("/confirmar-troca-email/#{token}")
+    mail(to: new_email, subject: 'Confirme seu novo e-mail na agencios')
+  end
+
   # Password reset link. `token` from generates_token_for(:password_reset) (20 min).
   def password_reset(user:, token:)
     @user = user

@@ -12,7 +12,13 @@ module Controllers
 
       def call
         payload = {
-          user: serialize(user, UserSerializer),
+          # Own-account fields (pending e-mail change, confirmation state) are
+          # merged here rather than on UserSerializer so they never leak through
+          # member listings, which serialize other users.
+          user: serialize(user, UserSerializer).merge(
+            pending_email: user.pending_email,
+            email_confirmed: user.email_confirmed?
+          ),
           workspace: workspace && serialize(workspace, WorkspaceSerializer),
           workspaces: serialize_collection(user.workspaces.order(:created_at), WorkspaceSerializer),
           # Whether the user may still create another workspace (per-user limit).

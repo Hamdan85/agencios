@@ -20,25 +20,32 @@ import {
   Check, Link2, Target, Users, Layers, FlaskConical, Hash, ListChecks, Clock,
   MessageSquareText, ShieldCheck, FileText, ThumbsUp, AlertTriangle, Repeat,
   Eye, Heart, MessageCircle, Share2, Bookmark, BarChart3, ExternalLink,
-  Ban, Cloud,
+  Ban,
 } from 'lucide-react'
 
 // How long after the last change we wait before the autosave fires.
 const AUTOSAVE_MS = 800
 
-// The unobtrusive autosave status — icon only, so it never reflows the header.
-// Resting: a still grey cloud. Saving: a blue spinner. Just-saved: a green check
-// that settles back to grey on its own. No manual save button — edits persist.
+// The unobtrusive autosave status — a single icon that only speaks up when it
+// has something to say. Saving: a soft spinner. Just-saved: a green check that
+// settles in, then the whole thing fades away. At rest it shows nothing, so the
+// header never carries a persistent badge. The slot keeps a fixed size (matching
+// the regenerate button) so that button never shifts as the icon comes and goes.
 function SaveIndicator({ saving, saved }) {
+  const show = saving || saved
   return (
-    <span className="inline-flex size-[22px] items-center justify-center" aria-hidden="true">
+    <span
+      className={cn(
+        'inline-flex size-8 items-center justify-center transition-opacity duration-200',
+        show ? 'opacity-100' : 'opacity-0',
+      )}
+      aria-hidden={!show}
+    >
       {saving ? (
         <Spinner size={15} className="border-sky/25 border-t-sky" />
       ) : saved ? (
-        <Check size={15} strokeWidth={2.8} className="text-success animate-rise" />
-      ) : (
-        <Cloud size={15} strokeWidth={2.3} className="text-ink-muted/60" />
-      )}
+        <Check size={16} strokeWidth={2.8} className="text-success animate-rise" />
+      ) : null}
     </span>
   )
 }

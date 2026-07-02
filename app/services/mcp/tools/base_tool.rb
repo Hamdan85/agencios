@@ -32,10 +32,13 @@ module Mcp
         raise Mcp::ForbiddenScope, scope
       end
 
-      def run_workspace_service(service, workspace_ref, params)
+      def run_workspace_service(service, workspace_ref, params, media: nil)
         Mcp::ToolContext.for(user: actor, workspace_ref: workspace_ref) do
           @invoked_workspace_id = Current.workspace&.id
-          invoke(service, params)
+          result = invoke(service, params)
+          next result unless media
+
+          Mcp::ToolResult.new(data: result, blocks: media_blocks(media, result, params))
         end
       end
 
@@ -50,6 +53,16 @@ module Mcp
         return klass.call if params.nil?
 
         klass.call(params: ActionController::Parameters.new(params.deep_stringify_keys))
+      end
+
+      # Resolve the creatives a media-bearing tool wants to render (inside the
+      # tenant context) and turn their attachments into MCP content blocks.
+      # Media is best-effort: a failure here must never fail the tool call.
+      def media_blocks(media, result, params)
+        Mcp::Media.blocks_for(media.call(result, params))
+      rescue StandardError => e
+        Rails.logger.warn("[mcp] media rendering failed: #{e.class}: #{e.message}")
+        []
       end
     end
   end

@@ -12,6 +12,10 @@ module Mcp
 
     SERVER_INFO = { name: 'agencios', version: '1.0.0' }.freeze
 
+    # Read-only introspection tools that stay usable even without a paid
+    # workspace, so the assistant can explain the account state + upgrade path.
+    BILLING_EXEMPT_TOOLS = %w[me list_workspaces].freeze
+
     def initialize(actor:, granted_scopes:, application_id: nil)
       @actor = actor
       @granted_scopes = granted_scopes
@@ -73,6 +77,8 @@ module Mcp
       klass = Catalog.find(name)
       return error(id, -32_602, "Unknown tool: #{name}") unless klass
 
+      return result(id, tool_failure(billing_required_message)) unless billing_ok?(name)
+
       spec = klass.mcp_spec
       args = symbolize(params['arguments'] || {})
       tool = klass.new(actor: @actor, granted_scopes: @granted_scopes)
@@ -87,11 +93,30 @@ module Mcp
       end
     end
 
+    # Whole-account gate: acting over MCP requires at least one workspace on a
+    # paid Agência+ subscription. Introspection tools stay open so the assistant
+    # can still report status and point the user to checkout.
+    def billing_ok?(tool_name)
+      BILLING_EXEMPT_TOOLS.include?(tool_name) || @actor&.mcp_available?
+    end
+
+    def billing_required_message
+      "Para usar o agencios no Claude você precisa de um workspace com assinatura ativa " \
+        "(plano Agência ou Enterprise). Ative sua assinatura em #{SystemConfig.app_host}/assinatura " \
+        'e conecte novamente.'
+    end
+
     # --- Tool result envelopes (MCP tools/call result shape) -----------------
+    # A tool may return a plain value or an Mcp::ToolResult carrying extra content
+    # blocks (images / resource links). Either way the JSON stays the text +
+    # structuredContent; ToolResult blocks are appended so the client can render
+    # the media.
     def tool_success(value)
+      result = value.is_a?(Mcp::ToolResult) ? value : Mcp::ToolResult.new(data: value)
+      data = result.data
       {
-        content: [{ type: 'text', text: stringify(value) }],
-        structuredContent: value.is_a?(Hash) ? value : { result: value },
+        content: [{ type: 'text', text: stringify(data) }, *result.blocks],
+        structuredContent: data.is_a?(Hash) ? data : { result: data },
         isError: false
       }
     end

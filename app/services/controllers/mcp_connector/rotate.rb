@@ -6,9 +6,9 @@ module Controllers
     # have leaked.
     class Rotate < Base
       def call
-        unless workspace&.mcp_enabled?
+        unless user.mcp_available?
           raise Operations::Errors::Forbidden,
-                'O conector do Claude requer o plano Agência ou Enterprise.'
+                'O conector do Claude requer um workspace no plano Agência ou Enterprise com assinatura ativa.'
         end
 
         user.rotate_mcp_connector_token!

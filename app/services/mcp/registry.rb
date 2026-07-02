@@ -16,24 +16,36 @@ module Mcp
   #   side_effect      persisted to the audit log; reads are only logged
   #   cost             real money (Stripe-metered generation) — flagged loudly
   #   destructive      irreversible delete/cancel
+  #   media            a `->(result, params) { creatives }` proc (run inside the
+  #                    tenant context) whose creatives' attachments are appended
+  #                    to the tool result as MCP image / resource_link blocks so
+  #                    the client can display them
   module Registry
     Spec = Struct.new(
       :name, :description, :service, :scope, :workspace_scoped, :params_arg,
-      :wrap, :top_level, :side_effect, :destructive, :cost, :args,
+      :wrap, :top_level, :side_effect, :destructive, :cost, :args, :media,
       keyword_init: true
     )
 
     DEFAULT_TOP_LEVEL = %i[id ticket_id].freeze
 
+    # Media resolvers: given the built params, load the creatives whose media the
+    # tool should render (scoped to the current workspace).
+    TICKET_CREATIVES     = ->(_result, params) { Current.workspace.creatives.where(ticket_id: params[:id]) }
+    LIST_TICKET_CREATIVES = ->(_result, params) { Current.workspace.creatives.where(ticket_id: params[:ticket_id]) }
+    GENERATION_CREATIVE  = lambda do |_result, params|
+      Array(Current.workspace.generations.find_by(id: params[:id])&.creative)
+    end
+
     # Helper to build a spec with defaults.
     def self.t(name, service, description, scope: :read, workspace_scoped: true, params_arg: true,
                wrap: nil, top_level: DEFAULT_TOP_LEVEL, side_effect: false, destructive: false,
-               cost: false, &args)
+               cost: false, media: nil, &args)
       Spec.new(
         name: name, service: service, description: description, scope: scope,
         workspace_scoped: workspace_scoped, params_arg: params_arg, wrap: wrap,
         top_level: top_level, side_effect: side_effect, destructive: destructive,
-        cost: cost, args: args
+        cost: cost, media: media, args: args
       )
     end
 
@@ -167,7 +179,9 @@ module Mcp
         s.optional(:project_id).filled(:integer)
       end,
       t('get_ticket', 'Controllers::Tickets::Show',
-        'Fetch one ticket (status-contextual view, subtasks, creatives, notes). Read-only.') do |s|
+        'Fetch one ticket (status-contextual view, subtasks, creatives, notes). Read-only. ' \
+        "Ready creatives' media is attached so you can display it.",
+        media: TICKET_CREATIVES) do |s|
         s.required(:id).filled(:integer)
       end,
       t('create_ticket', 'Controllers::Tickets::Create',
@@ -300,7 +314,8 @@ module Mcp
 
       # ── Creatives & generation ───────────────────────────────────────
       t('list_creatives', 'Controllers::Creatives::Index',
-        "List a ticket's creatives. Read-only.") { |s| s.required(:ticket_id).filled(:integer) },
+        "List a ticket's creatives. Read-only. Ready creatives' media is attached so you can display it.",
+        media: LIST_TICKET_CREATIVES) { |s| s.required(:ticket_id).filled(:integer) },
       t('create_creative', 'Controllers::Creatives::Create',
         'Register a creative on a ticket (metadata only; file upload is not available over MCP). WRITE.',
         scope: :write, side_effect: true) do |s|
@@ -331,7 +346,9 @@ module Mcp
       t('list_generations', 'Controllers::Generations::Index',
         'List generation runs (usage history). Read-only.') { |s| s.optional(:kind).filled(:string) },
       t('get_generation', 'Controllers::Generations::Show',
-        'Fetch one generation run. Read-only.') { |s| s.required(:id).filled(:integer) },
+        "Fetch one generation run. Read-only. When it has finished, the resulting creative's media " \
+        'is attached so you can display it (poll this after generate_creative).',
+        media: GENERATION_CREATIVE) { |s| s.required(:id).filled(:integer) },
       t('studio_generate', 'Controllers::Studio::Generate',
         "Generate a creative from the standalone studio. WRITE. WARNING: 'carousel'/'video' kinds " \
         "are BILLED to the workspace's plan. Confirm with the user first.",

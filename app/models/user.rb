@@ -20,6 +20,7 @@ class User < ApplicationRecord
   encrypts :google_access_token, :google_refresh_token
 
   normalizes :email, with: ->(value) { value.to_s.strip.downcase }
+  normalizes :pending_email, with: ->(value) { value.to_s.strip.downcase.presence }
 
   validates :email, presence: true, uniqueness: { case_sensitive: false }
 
@@ -27,7 +28,11 @@ class User < ApplicationRecord
     password_salt&.last(10)
   end
   generates_token_for :email_confirmation, expires_in: 24.hours
-  generates_token_for :email_change, expires_in: 24.hours
+  # Bound to `pending_email`: the token stops resolving once the change is
+  # applied (pending_email cleared) or a new change is requested.
+  generates_token_for :email_change, expires_in: 24.hours do
+    pending_email
+  end
 
   # ── Tenancy resolution ───────────────────────────────────────────
   def default_workspace
@@ -87,6 +92,14 @@ class User < ApplicationRecord
   def rotate_mcp_connector_token!
     update!(mcp_connector_token: "agc_#{SecureRandom.urlsafe_base64(32)}")
     mcp_connector_token
+  end
+
+  # The connector is personal (one token, all the user's workspaces) but only
+  # usable while at least one of those workspaces can be operated over MCP
+  # (Agência+ plan with an active subscription). Drives the connector gate + the
+  # MCP server's "subscribe first" response.
+  def mcp_available?
+    workspaces.includes(:subscription).any?(&:mcp_available?)
   end
 
   # Feeds the My Tasks (`/tarefas`) screen across all workspaces.

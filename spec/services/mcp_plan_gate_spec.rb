@@ -24,6 +24,30 @@ RSpec.describe 'MCP connector plan gate' do
     end
   end
 
+  describe 'Workspace#mcp_available?' do
+    it 'requires both the plan AND an active subscription' do
+      ws = Workspace.create!(name: 'W', slug: "w-#{SecureRandom.hex(4)}")
+      Subscription.create!(workspace: ws, plan: :agencia, seats: 1, status: 'canceled')
+      expect(ws.mcp_enabled?).to be(true)      # right plan…
+      expect(ws.mcp_available?).to be(false)   # …but not paying
+    end
+  end
+
+  describe 'User#mcp_available?' do
+    let(:user) { User.create!(email: "u-#{SecureRandom.hex(3)}@x.com", password: 'secret123') }
+
+    it 'is false when every workspace is Solo' do
+      Membership.create!(workspace: workspace_with_plan(:solo), user: user, role: :owner)
+      expect(user.mcp_available?).to be(false)
+    end
+
+    it 'is true when ANY workspace is an active Agência+' do
+      Membership.create!(workspace: workspace_with_plan(:solo), user: user, role: :member)
+      Membership.create!(workspace: workspace_with_plan(:agencia), user: user, role: :owner)
+      expect(user.mcp_available?).to be(true)
+    end
+  end
+
   describe 'Mcp::ToolContext.for' do
     let(:user) { User.create!(email: "u-#{SecureRandom.hex(3)}@x.com", password: 'secret123') }
 

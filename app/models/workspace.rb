@@ -93,6 +93,11 @@ class Workspace < ApplicationRecord
   # Godfathered workspaces get everything.
   def mcp_enabled? = godfathered? || plan_at_least?(:agencia)
 
+  # Whether this workspace can actually be operated over MCP right now: the right
+  # plan AND a live subscription (an Agência workspace with lapsed billing is
+  # paywalled everywhere, so the connector must respect that too).
+  def mcp_available? = mcp_enabled? && billing_active?
+
   def self.ransackable_attributes(_auth = nil)
     %w[id name slug godfathered monthly_credit_limit over_seat_limit timezone locale created_at updated_at]
   end

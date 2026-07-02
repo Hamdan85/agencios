@@ -1,0 +1,8 @@
+Olá, <%= @user.display_name %>!
+
+Recebemos um pedido para alterar o e-mail da sua conta na agencios para <%= @new_email %>.
+Confirme a troca aqui:
+
+<%= @confirm_url %>
+
+Este link expira em 24 horas. Se você não solicitou, ignore este e-mail — seu e-mail atual permanece o mesmo.

@@ -32,9 +32,10 @@ module Mcp
       workspace  = resolve_workspace(user, workspace_ref)
       membership = user.membership_for(workspace)
       raise NotAMember, "You are not a member of '#{workspace_ref}'." if membership.nil?
-      unless workspace.mcp_enabled?
-        raise PlanRequired, 'O conector do Claude está disponível nos planos Agência e Enterprise. ' \
-                            "Faça upgrade do workspace '#{workspace.slug}' para usá-lo."
+      unless workspace.mcp_available?
+        raise PlanRequired,
+              "O workspace '#{workspace.slug}' precisa de um plano Agência ou Enterprise com assinatura " \
+              "ativa para ser operado pelo Claude. Ative em #{SystemConfig.app_host}/assinatura."
       end
 
       with_current(actor: user, workspace: workspace, membership: membership, &block)

@@ -14,6 +14,8 @@ import Offline from '@/pages/Errors/Offline'
 
 const Login = lazy(() => import('@/pages/Auth/Login'))
 const Register = lazy(() => import('@/pages/Auth/Register'))
+const ConfirmEmailChange = lazy(() => import('@/pages/Auth/ConfirmEmailChange'))
+const Account = lazy(() => import('@/pages/Account/Index'))
 const Dashboard = lazy(() => import('@/pages/Dashboard/Index'))
 const Board = lazy(() => import('@/pages/Board/Index'))
 const Calendar = lazy(() => import('@/pages/Calendar/Index'))
@@ -57,6 +59,9 @@ const router = createBrowserRouter(
         <Route path="/cadastro" element={<Register />} />
       </Route>
 
+      {/* Public: the link mailed to a user's new address to confirm an e-mail change. */}
+      <Route path="/confirmar-troca-email/:token" element={<ConfirmEmailChange />} />
+
       <Route path="/erro/acesso-negado" element={<Forbidden />} />
 
       <Route element={<ProtectedRoute />}>
@@ -80,6 +85,8 @@ const router = createBrowserRouter(
           <Route path="/estudio" element={<Studio />} />
           <Route path="/reunioes" element={<Meetings />} />
           <Route path="/cobrancas" element={<Invoices />} />
+          <Route path="/conta" element={<Account />} />
+          <Route path="/conta/:tab" element={<Account />} />
           <Route path="/configuracoes" element={<Settings />} />
           <Route path="/configuracoes/:tab" element={<Settings />} />
           <Route path="/assinatura" element={<Billing />} />

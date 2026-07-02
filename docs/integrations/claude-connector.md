@@ -18,7 +18,7 @@ URL pessoal** — a credencial já vai embutida na URL, então **não há login 
 
 ## Passo 1 — Copie sua URL do conector no agencios
 
-1. Abra o agencios e vá em **Configurações** (`/configuracoes`).
+1. Abra o agencios e vá em **Minha conta** (`/conta`) — no menu do seu usuário, canto inferior.
 2. Aba **Conexões** → cartão **Conector do Claude**.
 3. Clique em **Revelar** e depois **Copiar**. A URL tem este formato:
 
@@ -29,6 +29,10 @@ URL pessoal** — a credencial já vai embutida na URL, então **não há login 
 > ⚠️ **Essa URL é um segredo.** Quem tiver a URL opera seus workspaces com as **suas permissões**.
 > Não compartilhe nem cole em lugares públicos. Se vazar, clique em **Gerar nova URL** (a anterior
 > deixa de funcionar imediatamente).
+
+> A URL é **pessoal do usuário** (uma só, para todos os seus workspaces) e fica disponível quando
+> você tem **ao menos um workspace no plano Agência ou Enterprise com assinatura ativa**. Sem isso, o
+> servidor MCP responde com um link para você assinar em `/assinatura`.
 
 ---
 

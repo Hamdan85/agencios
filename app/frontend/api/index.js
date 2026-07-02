@@ -9,6 +9,19 @@ export const authApi = {
   resetPassword: (token, password) => api.put(`/password_resets/${token}`, { password }),
 }
 
+// The signed-in user's own account (profile, avatar, password, e-mail change).
+export const accountApi = {
+  update: (data) => api.patch('/account', { user: data }),
+  updatePassword: (data) => api.patch('/account/password', data),
+  updateAvatar: (file) => {
+    const form = new FormData()
+    form.append('avatar', file)
+    return api.patch('/account/avatar', form)
+  },
+  changeEmail: (data) => api.post('/account/email', data),
+  confirmEmailChange: (token) => api.post(`/account/email/confirm/${token}`),
+}
+
 export const pushApi = {
   subscribe: (data) => api.post('/push_subscriptions', data),
   unsubscribe: (endpoint) => api.delete(`/push_subscriptions/${encodeURIComponent(endpoint)}`),

@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { NavLink, Link } from 'react-router-dom'
-import { ChevronsUpDown, LogOut, Check, Plus } from 'lucide-react'
+import { NavLink, Link, useNavigate } from 'react-router-dom'
+import { ChevronsUpDown, LogOut, Check, Plus, UserRound } from 'lucide-react'
 import { BrandMark } from '@/components/brand/BrandMark'
 import { PERSONAL_NAV, NAV_ITEMS, FOOTER_NAV } from './navItems'
 import { useLogout } from '@/hooks/useAuth'
@@ -47,6 +47,7 @@ function SectionLabel({ children }) {
 
 export default function Sidebar({ me, onNavigate }) {
   const logout = useLogout()
+  const navigate = useNavigate()
   const { switch: switchWs } = useWorkspaceMutations()
   const [createOpen, setCreateOpen] = useState(false)
   const workspace = me?.workspace
@@ -128,6 +129,10 @@ export default function Sidebar({ me, onNavigate }) {
             </span>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" side="top" className="w-56">
+            <DropdownMenuItem onSelect={() => { navigate('/conta'); onNavigate?.() }}>
+              <UserRound size={15} /> Minha conta
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => logout.mutate()} className="text-danger data-[highlighted]:text-danger">
               <LogOut size={15} /> Sair
             </DropdownMenuItem>

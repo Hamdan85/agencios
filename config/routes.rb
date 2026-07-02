@@ -103,6 +103,14 @@ Rails.application.routes.draw do
       resources :password_resets, only: %i[create update]
       get 'me', to: 'me#show'
 
+      # The signed-in user's own account (personal, not workspace-scoped).
+      resource :account, only: %i[update], controller: 'accounts' do
+        patch :password
+        patch :avatar
+        post  :email                                  # request an e-mail change
+        post  'email/confirm/:token', action: :confirm_email # public confirm link
+      end
+
       # Web Push subscriptions (id is the URL-encoded endpoint)
       resources :push_subscriptions, only: %i[create destroy], constraints: { id: %r{[^/]+} }
 

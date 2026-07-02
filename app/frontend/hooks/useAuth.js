@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { authApi } from '@/api'
+import { toast } from 'sonner'
+import { authApi, accountApi } from '@/api'
 import { keys } from '@/api/queryKeys'
 import analytics, { EVENTS } from '@/lib/analytics'
 
@@ -46,5 +47,54 @@ export function useLogout() {
       qc.clear()
       window.location.href = '/login'
     },
+  })
+}
+
+// ── Account (the signed-in user's own profile) ────────────────────────
+// Profile + avatar mutations return the full `/me` payload, so we prime the
+// cache with it directly (no refetch needed).
+export function useUpdateAccount() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => accountApi.update(data),
+    onSuccess: (data) => { qc.setQueryData(keys.me(), data); toast.success('Perfil atualizado.') },
+    onError: (e) => toast.error(e?.error || 'Erro ao atualizar o perfil.'),
+  })
+}
+
+export function useUpdateAvatar() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (file) => accountApi.updateAvatar(file),
+    onSuccess: (data) => { qc.setQueryData(keys.me(), data); toast.success('Foto atualizada.') },
+    onError: (e) => toast.error(e?.error || 'Erro ao enviar a foto.'),
+  })
+}
+
+export function useUpdatePassword() {
+  return useMutation({
+    mutationFn: (data) => accountApi.updatePassword(data),
+    onSuccess: () => toast.success('Senha alterada.'),
+    onError: (e) => toast.error(e?.error || 'Erro ao alterar a senha.'),
+  })
+}
+
+export function useRequestEmailChange() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => accountApi.changeEmail(data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.me() })
+      toast.success('Enviamos um link de confirmação para o novo e-mail.')
+    },
+    onError: (e) => toast.error(e?.error || 'Erro ao solicitar a troca de e-mail.'),
+  })
+}
+
+export function useConfirmEmailChange() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (token) => accountApi.confirmEmailChange(token),
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.me() }),
   })
 }

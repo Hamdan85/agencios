@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_01_260000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_02_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -734,6 +734,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_01_260000) do
     t.string "mcp_connector_token"
     t.string "name"
     t.string "password_digest"
+    t.string "pending_email"
     t.boolean "staff", default: false, null: false
     t.datetime "updated_at", null: false
     t.index "lower((email)::text)", name: "index_users_on_lower_email", unique: true

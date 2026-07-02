@@ -30,7 +30,7 @@ module Mcp
           params = Mcp::ToolBuilder.build_params(spec, args)
 
           if spec.workspace_scoped
-            run_workspace_service(spec.service, args[:workspace], params)
+            run_workspace_service(spec.service, args[:workspace], params, media: spec.media)
           else
             run_account_service(spec.service, params)
           end

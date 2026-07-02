@@ -85,15 +85,41 @@ RSpec.describe 'MCP server endpoint', type: :request do
   end
 
   it 'refuses a workspace the user is not a member of (tenant isolation)' do
-    other_user = Operations::Users::Register.call(
+    other_user, other_workspace = Operations::Users::Register.call(
       email: 'other@agencios.app', password: 'secret123', name: 'Other', workspace_name: 'Other Agency'
-    ).first
+    )
     Current.reset
+    # Give the other user a paid workspace so the account-level billing gate
+    # passes and the request actually exercises the tenant-isolation check.
+    other_workspace.subscription.update!(plan: :agencia, status: 'active')
     token = token_for(other_user)
 
     result = call_tool('get_board', { workspace: setup[:workspace].slug }, token: token)
     expect(result['isError']).to be(true)
     expect(result.dig('content', 0, 'text')).to match(/not found among your workspaces/i)
+  end
+
+  it "embeds a ready creative's image as an MCP image content block" do
+    token = token_for(setup[:user])
+    ws = setup[:workspace]
+    created = call_tool('create_ticket',
+                        { workspace: ws.slug, project_id: setup[:project].id, title: 'Art', creative_type: 'feed_image' },
+                        token: token)
+    ticket_id = created.dig('structuredContent', 'ticket', 'id')
+
+    creative = ws.creatives.create!(ticket: Ticket.find(ticket_id), creative_type: 'feed_image',
+                                    source: :generated, status: :ready)
+    png = Base64.decode64('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==')
+    creative.assets.attach(io: StringIO.new(png), filename: 'art.png', content_type: 'image/png')
+
+    result = call_tool('list_creatives', { workspace: ws.slug, ticket_id: ticket_id }, token: token)
+    image = result['content'].find { |c| c['type'] == 'image' }
+    expect(image).to be_present
+    expect(image['mimeType']).to eq('image/png')
+    expect(image['data']).to be_present
+    expect(image.dig('annotations', 'audience')).to eq(['user'])
+    # The structured JSON still carries the blob URL as a fallback.
+    expect(result.dig('structuredContent', 'creatives', 0, 'asset_urls')).to be_present
   end
 
   it 'rejects a revoked token' do
