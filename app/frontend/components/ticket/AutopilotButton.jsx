@@ -112,7 +112,7 @@ export default function AutopilotButton({ run, estimating, starting, onEstimate,
 
               <div className="flex items-center justify-between text-xs text-ink-muted">
                 <span className="inline-flex items-center gap-1.5"><Wallet size={13} /> Saldo disponível</span>
-                <span className="font-semibold">{estimate.available} créditos</span>
+                <span className="font-semibold">{estimate.unlimited ? 'Ilimitado' : `${estimate.available} créditos`}</span>
               </div>
 
               {blocked && (

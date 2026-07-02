@@ -21,13 +21,19 @@ module Operations
         rows = @tickets.map { |ticket| ticket_row(ticket) }
         blocking = rows.reject { |r| r[:eligible] }
         total = rows.sum { |r| r[:subtotal] }
+        # Unlimited godfathered workspaces never debit (see Operations::Credits::Debit,
+        # Controllers::Base#require_credits!, WorkspaceSerializer) — treat their balance
+        # as infinite so the GO estimate never shows a false shortfall. `available: nil`
+        # mirrors the serializer's "nil = unlimited" convention.
+        unlimited = @workspace.godfathered? && !@workspace.credit_limited?
         available = @workspace.credits_available.to_i
-        shortfall = [total - available, 0].max
+        shortfall = unlimited ? 0 : [total - available, 0].max
 
         {
           eligible: blocking.empty?,
+          unlimited: unlimited,
           total_credits: total,
-          available: available,
+          available: unlimited ? nil : available,
           shortfall: shortfall,
           packs_suggestion: shortfall.positive? ? suggested_packs(shortfall) : [],
           tickets: rows,

@@ -64,6 +64,19 @@ RSpec.describe 'Operations::Autopilot eligibility + estimate' do
       expect(est[:packs_suggestion]).not_to be_empty
     end
 
+    it 'treats an unlimited godfathered workspace as infinite (no shortfall, available nil)' do
+      workspace.update!(godfathered: true, monthly_credit_limit: nil)
+      ticket = ticket_with(%w[ugc_video]) # 16 credits, but wallet is empty / absent
+
+      est = described_class.call(tickets: [ticket], workspace: workspace)
+
+      expect(est[:total_credits]).to eq(16)
+      expect(est[:unlimited]).to be(true)
+      expect(est[:available]).to be_nil
+      expect(est[:shortfall]).to eq(0)
+      expect(est[:packs_suggestion]).to be_empty
+    end
+
     it 'flags blocking tickets so a project GO can be refused' do
       good = ticket_with(%w[carousel])
       bad = ticket_with(%w[cover])
