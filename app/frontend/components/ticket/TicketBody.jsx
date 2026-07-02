@@ -60,6 +60,8 @@ export default function TicketBody({
       {(showCreativesInMain || creatives.length > 0) && (
         <CreativesPanel
           creatives={creatives}
+          creativeTypes={ticket.creative_types}
+          channels={ticket.channels}
           onGenerate={(payload) => mut.generate.mutate(payload)}
           generating={mut.generate.isPending}
           onUpload={(payload) => mut.uploadCreative.mutate(payload)}

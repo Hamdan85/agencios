@@ -199,6 +199,17 @@ export const creativeTypesForChannels = (channels) => {
   return keys.filter((key) => CREATIVE_TYPE_META[key].networks?.some((n) => chosen.includes(n)))
 }
 
+// The creative types a manual UPLOAD should offer for a ticket: the types it
+// scoped, kept only if they fit the ticket's channels — so a reel or a TikTok
+// ticket never offers a carousel. Falls back to the channel-fit set when the
+// ticket hasn't scoped types yet, and never returns empty.
+export const uploadableTypesForTicket = (scopedTypes = [], channels = []) => {
+  const fit = creativeTypesForChannels(channels)
+  const scoped = (Array.isArray(scopedTypes) ? scopedTypes : []).filter(Boolean)
+  const allowed = scoped.length ? scoped.filter((t) => fit.includes(t)) : fit
+  return allowed.length ? allowed : fit
+}
+
 // ─────────────────────────────────────────────────────────────────
 // Client positioning wizard. Keys stay English (they map 1:1 to
 // Client::POSITIONING_KEYS on the backend); labels/placeholders are

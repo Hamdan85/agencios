@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { creativeMeta, CREATIVE_TYPE_META, GENERATION_KIND_META, uploadAcceptFor, fileMatchesCreativeType } from '@/lib/constants'
+import { creativeMeta, CREATIVE_TYPE_META, GENERATION_KIND_META, uploadAcceptFor, fileMatchesCreativeType, uploadableTypesForTicket } from '@/lib/constants'
 import { useWorkspaceCreatives } from '@/hooks/useData'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -170,14 +170,17 @@ function AddCreativeMenu({ trigger, onGenerateOpen, onUploadOpen, onPickerOpen }
 
 // Upload dialog — attaches an image/video file straight to the ticket as a
 // creative, picking the creative type up front (drives the network-fit spec).
-function UploadDialog({ open, onOpenChange, onUpload, uploading }) {
-  const [creativeType, setCreativeType] = useState('feed_image')
+function UploadDialog({ open, onOpenChange, onUpload, uploading, types = [] }) {
+  // Only the types that make sense for this ticket; fall back to feed_image.
+  const options = types.length ? types : ['feed_image']
+  const [creativeType, setCreativeType] = useState(options[0])
   const [caption, setCaption] = useState('')
   const [files, setFiles] = useState([])
   const inputRef = useRef(null)
 
   useEffect(() => {
-    if (open) { setCreativeType('feed_image'); setCaption(''); setFiles([]) }
+    if (open) { setCreativeType(options[0]); setCaption(''); setFiles([]) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
   const submit = (e) => {
@@ -204,8 +207,8 @@ function UploadDialog({ open, onOpenChange, onUpload, uploading }) {
               <Select value={creativeType} onValueChange={(v) => { setCreativeType(v); setFiles([]) }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {Object.entries(CREATIVE_TYPE_META).map(([key, m]) => (
-                    <SelectItem key={key} value={key}>{m.label}</SelectItem>
+                  {options.map((key) => (
+                    <SelectItem key={key} value={key}>{CREATIVE_TYPE_META[key]?.label || key}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -332,7 +335,11 @@ function StudioPickerDialog({ open, onOpenChange, onAttach, attaching }) {
 export default function CreativesPanel({
   creatives = [], onGenerate, generating = false, onUpload, uploading = false,
   onAttach, attaching = false, onDelete, deleting = false,
+  creativeTypes = [], channels = [],
 }) {
+  // Only offer uploading the types that make sense for this ticket (its scoped
+  // types, fitting its channels) — a reel/TikTok ticket never offers a carousel.
+  const uploadTypes = uploadableTypesForTicket(creativeTypes, channels)
   const [open, setOpen] = useState(false)
   const [uploadOpen, setUploadOpen] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -468,7 +475,7 @@ export default function CreativesPanel({
       </Dialog>
 
       {/* Upload dialog */}
-      <UploadDialog open={uploadOpen} onOpenChange={setUploadOpen} onUpload={onUpload} uploading={uploading} />
+      <UploadDialog open={uploadOpen} onOpenChange={setUploadOpen} onUpload={onUpload} uploading={uploading} types={uploadTypes} />
 
       {/* Studio picker dialog */}
       <StudioPickerDialog open={pickerOpen} onOpenChange={setPickerOpen} onAttach={onAttach} attaching={attaching} />
