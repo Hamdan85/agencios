@@ -17,6 +17,8 @@ module Prompts
     # property descriptions and to build `system`'s task framing.
     SPECS = {
       'ideation' => {
+        'brief' => 'Brief da ideia: contexto, mensagem central e tom desejado, em 2 a 4 frases. ' \
+                   'É o coração do ticket — costure o ângulo, o gancho e a diretriz de marca.',
         'objective' => 'Objetivo claro do conteúdo, em uma frase',
         'target_persona' => 'Persona-alvo específica (quem queremos impactar), em uma frase',
         'content_pillar' => 'Pilar de conteúdo em poucas palavras (ex.: bastidores, educacional)',

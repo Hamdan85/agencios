@@ -47,4 +47,12 @@ RSpec.describe Operations::Ai::FillFields do
     )
     expect(described_class.new(ticket: ticket).send(:context_dump)).not_to include('Conversa de estratégia')
   end
+
+  # The brief is the flagship ideation field — the "Atualizar campos com IA" action
+  # must be able to fill it (it was silently excluded, so AI-created tickets always
+  # landed with an empty brief and regenerate never touched it).
+  it 'makes the ideation brief AI-fillable' do
+    expect(Prompts::FieldFill.fillable_keys('ideation')).to include('brief')
+    expect(Prompts::FieldFill.tool('ideation')['input_schema']['properties']).to have_key('brief')
+  end
 end

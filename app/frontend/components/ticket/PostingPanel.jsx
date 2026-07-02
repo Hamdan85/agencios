@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input, Textarea } from '@/components/ui/input'
@@ -88,10 +88,28 @@ export default function PostingPanel({
   }
   const toggleCaption = (channel) => setExpandedCaptions((prev) => ({ ...prev, [channel]: !prev[channel] }))
 
+  // Re-seed the text drafts when switching to a different ticket (the panel may
+  // not remount, so the useState initializers alone would go stale).
   useEffect(() => {
     setCaptionByChannel(fields.captions || {})
+    setFirstComment(fields.first_comment || '')
+    setLinkInBio(fields.link_in_bio || '')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ticket?.id])
+
+  // An explicit "Atualizar campos com IA" must WIN over the local drafts: the fill
+  // writes captions/first_comment server-side and broadcasts done — without this,
+  // the fresh values land in `fields` but the state above never adopts them, so
+  // the regenerate looks like it did nothing (same fix as FieldGroup's).
+  const adoptAfterFill = useRef(false)
+  useEffect(() => { if (filling) adoptAfterFill.current = true }, [filling])
+  useEffect(() => {
+    if (!adoptAfterFill.current) return
+    adoptAfterFill.current = false
+    setCaptionByChannel(fields.captions || {})
+    setFirstComment(fields.first_comment || '')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(fields.captions), fields.first_comment])
 
   // Default each type's selection to the saved one, else the only ready creative
   // of that type.

@@ -279,6 +279,13 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
   const dirtyRef = useRef(dirty); dirtyRef.current = dirty
   const savingRef = useRef(saving); savingRef.current = saving
 
+  // An explicit "Atualizar campos com IA" must WIN over the local draft: while a
+  // fill is running we arm a one-shot so the values it produces are adopted on the
+  // next server update, even if the user had unsaved edits (e.g. a pasted brief) —
+  // otherwise the regenerated fields land server-side but never show ("nada fez").
+  const adoptAfterFill = useRef(false)
+  useEffect(() => { if (filling) adoptAfterFill.current = true }, [filling])
+
   // Hard reset when navigating to a different ticket / status. The cleanup runs
   // on a ticket/status switch AND on unmount (closing the drawer or leaving the
   // page). We flush any pending draft on the way out — an edit made inside the
@@ -301,11 +308,15 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ticket?.id, status])
 
-  // Adopt server values that land while we have no unsaved edits — e.g. an AI
-  // "Atualizar com IA" fill or a realtime update. Skipped mid-edit so in-flight
-  // keystrokes are never clobbered by a background refetch.
+  // Adopt server values that land while we have no unsaved edits — e.g. a realtime
+  // update. Skipped mid-edit so in-flight keystrokes are never clobbered by a
+  // background refetch — UNLESS a fill just ran (adoptAfterFill), where the user
+  // explicitly asked the AI to rewrite the fields, so its result must win.
   useEffect(() => {
-    if (!dirtyRef.current) setDraft(serverValues)
+    if (adoptAfterFill.current || !dirtyRef.current) {
+      setDraft(serverValues)
+      adoptAfterFill.current = false
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(serverValues)])
 
