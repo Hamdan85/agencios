@@ -82,9 +82,9 @@ export default function Show() {
           <div className="min-w-0">
             <div className="mb-2 flex flex-wrap items-center gap-2">
               {ticket.project && (
-                <Link to={`/projetos/${ticket.project.id}`}>
-                  <ColorBadge color={ticket.project.color || m.color} solid className="gap-1.5 lift">
-                    <Folder size={11} /> {ticket.project.name}
+                <Link to={`/projetos/${ticket.project.id}`} className="min-w-0 max-w-[60vw] sm:max-w-[240px]">
+                  <ColorBadge color={ticket.project.color || m.color} solid className="max-w-full gap-1.5 lift">
+                    <Folder size={11} className="shrink-0" /> <span className="truncate">{ticket.project.name}</span>
                   </ColorBadge>
                 </Link>
               )}

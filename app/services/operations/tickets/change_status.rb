@@ -108,9 +108,20 @@ module Operations
       # `published` therefore has no publish side effect here (avoids re-posting).
       def fire_side_effects(_from_status)
         case @to_status
+        when 'published'     then close_open_subtasks
         when 'retrospective' then draft_retrospective
         when 'done'          then spawn_follow_ups
         end
+      end
+
+      # Reaching "No ar" means the production work shipped — auto-close any still-open
+      # subtasks so they stop lingering on assignees' My Tasks after the ticket is live.
+      def close_open_subtasks
+        @ticket.subtasks.open.find_each do |subtask|
+          Operations::Subtasks::Update.call(subtask, done: true)
+        end
+      rescue StandardError => e
+        Rails.logger.warn("[ChangeStatus] close_open_subtasks failed: #{e.message}")
       end
 
       # On completion, if the retrospective recommends iterating/repeating, spawn a

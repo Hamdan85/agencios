@@ -74,7 +74,9 @@ export default function TicketBody({
           unpublishingId={mut.unpublishPost.isPending ? mut.unpublishPost.variables : null}
         />
       )}
-      {(showCreativesInMain || creatives.length > 0) && (
+      {/* In "Postagem" (scheduled) the PostingPanel already surfaces the creatives
+          to post, so the full Criativos panel is hidden to avoid duplication. */}
+      {status !== 'scheduled' && (showCreativesInMain || creatives.length > 0) && (
         <CreativesPanel
           creatives={creatives}
           creativeTypes={ticket.creative_types}

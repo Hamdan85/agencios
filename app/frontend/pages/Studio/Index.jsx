@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState, useMemo, useCallback } from 'react'
 import {
   Sparkles, GalleryHorizontalEnd, Video, Image as ImageIcon,
-  Loader2, Images, Search, Filter, Pencil, Trash2, Check, X,
+  Loader2, Images, Pencil, Trash2, Check, X,
 } from 'lucide-react'
 import { useStudio, useGenerate, useWorkspaceCreatives, useCreativeMutations } from '@/hooks/useData'
 import { useCurrentUser } from '@/hooks/useAuth'
@@ -19,6 +19,7 @@ import {
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/components/ui/select'
+import { FilterBar } from '@/components/ui/filter-bar'
 import { CREATIVE_TYPE_META, creativeMeta } from '@/lib/constants'
 import { GeneratorCard } from '@/components/studio/GeneratorCard'
 import { GenerateDialog } from '@/components/studio/GenerateDialog'
@@ -120,45 +121,34 @@ function CreativesGallery() {
     setViewerOpen(true)
   }, [])
 
+  const typeOptions = Object.entries(CREATIVE_TYPE_META).map(([key, m]) => ({ value: key, label: m.label, icon: m.icon, color: m.color }))
+  const filterSpec = [
+    { key: 'type', type: 'options', label: 'Tipo', options: typeOptions },
+    ...(clients.length > 0
+      ? [{ key: 'client_id', type: 'options', label: 'Cliente', options: clients.map((c) => ({ value: String(c.id), label: c.name })) }]
+      : []),
+  ]
+  const filterValues = { type: typeFilter || undefined, client_id: clientFilter || undefined }
+  const onFilterChange = (key, value) => {
+    if (key === 'type') setTypeFilter(value || '')
+    else if (key === 'client_id') setClientFilter(value || '')
+  }
+  const clearFilters = () => { setTypeFilter(''); setClientFilter('') }
+
   return (
     <div className="space-y-5">
-      {/* Filters bar */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative min-w-50 flex-1">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
-          <Input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Buscar por nome ou legenda…"
-            className="pl-9"
-          />
-        </div>
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-44">
-            <Filter size={14} className="mr-1 text-ink-faint" />
-            <SelectValue placeholder="Tipo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">Todos os tipos</SelectItem>
-            {Object.entries(CREATIVE_TYPE_META).map(([key, m]) => (
-              <SelectItem key={key} value={key}>{m.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {clients.length > 0 && (
-          <Select value={clientFilter} onValueChange={setClientFilter}>
-            <SelectTrigger className="w-44">
-              <SelectValue placeholder="Cliente" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">Todos os clientes</SelectItem>
-              {clients.map((c) => (
-                <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-      </div>
+      {/* Filters bar — shared FilterBar (search inline, filters collapse to a
+          bottom sheet on mobile), consistent with the board/tickets listings. */}
+      <FilterBar
+        search
+        searchValue={q}
+        onSearch={(v) => setQ(v || '')}
+        searchPlaceholder="Buscar por nome ou legenda…"
+        filters={filterSpec}
+        values={filterValues}
+        onChange={onFilterChange}
+        onClear={clearFilters}
+      />
 
       {/* Grid */}
       {isLoading ? (
@@ -284,7 +274,7 @@ function GalleryCard({ creative, onClick, onEdit, onDelete }) {
         )}
       </div>
 
-      <div className="absolute bottom-13 right-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="absolute bottom-13 right-2 flex gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onEdit() }}

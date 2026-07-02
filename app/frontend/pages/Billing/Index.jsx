@@ -188,7 +188,7 @@ function CreditsSection() {
         </div>
 
         {/* Per-action costs */}
-        <CardContent className="grid grid-cols-2 gap-3 p-5 sm:grid-cols-4">
+        <CardContent className="grid grid-cols-1 gap-2.5 p-4 sm:grid-cols-2 sm:gap-3 sm:p-5 lg:grid-cols-4">
           {COST_META.map((c) => (
             <div key={c.key + c.suffix} className="flex items-center gap-3 rounded-xl border border-border bg-canvas px-3 py-2.5">
               <span className="flex size-9 shrink-0 items-center justify-center rounded-lg" style={{ background: `${c.color}16`, color: c.color }}>
@@ -681,19 +681,19 @@ export default function BillingIndex() {
 
       {/* Actions */}
       <Card className="mt-8">
-        <CardContent className="flex flex-wrap items-center justify-between gap-4 p-5">
-          <div>
+        <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <p className="font-display text-base font-bold text-ink">Gerenciar pagamento</p>
             <p className="text-sm text-ink-muted">Atualize forma de pagamento e veja faturas no portal Stripe.</p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => portal.mutate()} disabled={portal.isPending}>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => portal.mutate()} disabled={portal.isPending}>
               <ExternalLink size={16} /> Gerenciar no portal
             </Button>
             {!sub.cancel_at && sub.status !== 'canceled' && (
               <Button
                 variant="ghost"
-                className="text-danger hover:bg-danger/10 hover:text-danger"
+                className="w-full text-danger hover:bg-danger/10 hover:text-danger sm:w-auto"
                 onClick={async () => {
                   const ok = await confirm({
                     title: 'Cancelar assinatura?',

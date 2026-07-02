@@ -333,18 +333,18 @@ function InvoicesSection({ invoices }) {
           {invoices.map((inv) => {
             const st = INVOICE_STATUS[inv.status] || INVOICE_STATUS.draft
             return (
-              <div key={inv.id} className="flex items-center justify-between gap-4 p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-10 items-center justify-center rounded-xl bg-orange/12 text-orange">
+              <div key={inv.id} className="flex items-center justify-between gap-3 p-4">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-orange/12 text-orange">
                     <Receipt size={18} />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="font-display text-base font-bold text-ink">{brl(inv.amount_cents)}</p>
-                    {inv.description && <p className="text-xs text-ink-muted">{inv.description}</p>}
+                    {inv.description && <p className="truncate text-xs text-ink-muted">{inv.description}</p>}
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-medium text-ink-muted">Venc. {date(inv.due_date)}</span>
+                <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3">
+                  <span className="whitespace-nowrap text-xs font-medium text-ink-muted">Venc. {date(inv.due_date)}</span>
                   <Badge variant={st.variant}>{st.label}</Badge>
                 </div>
               </div>

@@ -608,17 +608,17 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
   const Heading = schema.icon
   return (
     <Card className="overflow-hidden animate-rise">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-5" style={{ background: `${m.color}08` }}>
-        <div className="flex items-center gap-2.5">
-          <div className="flex size-9 items-center justify-center rounded-xl" style={{ background: `${m.color}18`, color: m.color }}>
+      <div className="flex items-center justify-between gap-3 border-b border-border p-5" style={{ background: `${m.color}08` }}>
+        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl" style={{ background: `${m.color}18`, color: m.color }}>
             <Heading size={18} strokeWidth={2.3} />
           </div>
-          <div>
-            <h3 className="font-display text-base font-bold text-ink">{schema.title}</h3>
-            <p className="text-xs text-ink-muted">{schema.helper}</p>
+          <div className="min-w-0">
+            <h3 className="truncate font-display text-base font-bold text-ink">{schema.title}</h3>
+            <p className="truncate text-xs text-ink-muted">{schema.helper}</p>
           </div>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex shrink-0 items-center gap-1">
           <SaveIndicator saving={saving} saved={savedFlash} />
           {onAiAction && <AiFillButton onClick={onAiAction} acting={acting} color={m.color} />}
         </div>

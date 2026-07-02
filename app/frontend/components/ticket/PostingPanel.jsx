@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input, Textarea } from '@/components/ui/input'
@@ -12,10 +12,30 @@ import AiFillButton from './AiFillButton'
 import { dt } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 import {
-  Send, Clock, Zap, MessageCircle, MessageSquareText, Link2, CheckCircle2, AlertCircle, Loader2, ImagePlus, Radio, Ban,
+  Send, Clock, Zap, MessageCircle, MessageSquareText, Link2, CheckCircle2, AlertCircle, Loader2, ImagePlus, Radio, Ban, Eye, ChevronDown, ChevronUp,
 } from 'lucide-react'
 
+const MediaViewer = lazy(() => import('./MediaViewer'))
+
 const MEDIA_LABEL = { image: 'imagem', carousel: 'carrossel', video: 'vídeo', text: 'texto' }
+
+// Turn a creative's asset_urls into MediaViewer attachment objects so a creative
+// in the posting bundle can be previewed full-size, not just selected.
+function creativeToAttachments(creative) {
+  const m = creativeMeta(creative?.creative_type)
+  return (creative?.asset_urls || []).map((url, i) => {
+    const isVideo = /\.(mp4|mov|webm|avi)(\?|$)/i.test(url)
+    return {
+      id: `${creative.id}-${i}`,
+      url,
+      filename: `${m.label}-${creative.id}-${i + 1}`,
+      display_name: creative.name || m.label,
+      kind: isVideo ? 'video' : 'image',
+      content_type: isVideo ? 'video/mp4' : 'image/jpeg',
+      description: creative.caption || undefined,
+    }
+  })
+}
 
 const POST_STATUS = {
   scheduled:   { label: 'Agendado',    variant: 'muted',   icon: Clock },
@@ -59,6 +79,14 @@ export default function PostingPanel({
   const [linkInBio, setLinkInBio] = useState(fields.link_in_bio || '')
   const baseCaption = ticket?.fields?.production?.caption || ''
   const [captionByChannel, setCaptionByChannel] = useState(fields.captions || {})
+  const [expandedCaptions, setExpandedCaptions] = useState({})
+  const [viewer, setViewer] = useState({ open: false, attachments: [] })
+
+  const openViewer = (creative) => {
+    const atts = creativeToAttachments(creative)
+    if (atts.length) setViewer({ open: true, attachments: atts })
+  }
+  const toggleCaption = (channel) => setExpandedCaptions((prev) => ({ ...prev, [channel]: !prev[channel] }))
 
   useEffect(() => {
     setCaptionByChannel(fields.captions || {})
@@ -107,17 +135,17 @@ export default function PostingPanel({
 
   return (
     <Card className="overflow-hidden animate-rise">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-5" style={{ background: `${color}0A` }}>
-        <div className="flex items-center gap-2.5">
-          <div className="flex size-9 items-center justify-center rounded-xl" style={{ background: `${color}1A`, color }}>
+      <div className="flex items-center justify-between gap-3 border-b border-border p-5" style={{ background: `${color}0A` }}>
+        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl" style={{ background: `${color}1A`, color }}>
             <Send size={18} strokeWidth={2.3} />
           </div>
-          <div>
-            <h3 className="font-display text-base font-bold text-ink">Postagem</h3>
-            <p className="text-xs text-ink-muted">Escolha um criativo por tipo e publique — agora ou agendado.</p>
+          <div className="min-w-0">
+            <h3 className="truncate font-display text-base font-bold text-ink">Postagem</h3>
+            <p className="truncate text-xs text-ink-muted">Escolha um criativo por tipo e publique — agora ou agendado.</p>
           </div>
         </div>
-        {onAiAction && <AiFillButton onClick={onAiAction} acting={acting} color={color} />}
+        {onAiAction && <div className="shrink-0"><AiFillButton onClick={onAiAction} acting={acting} color={color} /></div>}
       </div>
 
       <AiRewritingOverlay active={filling} color={color}>
@@ -154,14 +182,17 @@ export default function PostingPanel({
                       {group.map((c) => {
                         const active = selectedByType[type] === String(c.id)
                         const thumb = c.asset_urls?.[0]
+                        const hasAssets = (c.asset_urls?.length || 0) > 0
                         return (
-                          <button
+                          <div
                             key={c.id}
-                            type="button"
+                            role="button"
+                            tabIndex={0}
                             onClick={() => toggle(type, String(c.id))}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(type, String(c.id)) } }}
                             aria-pressed={active}
                             className={cn(
-                              'group relative overflow-hidden rounded-xl border-2 text-left transition-all',
+                              'group relative cursor-pointer overflow-hidden rounded-xl border-2 text-left transition-all',
                               active ? 'border-brand ring-2 ring-brand/20' : 'border-border hover:border-brand/40',
                             )}
                           >
@@ -177,12 +208,24 @@ export default function PostingPanel({
                                     <CheckCircle2 size={13} />
                                   </div>
                                 )}
+                                {/* View full-size — stops propagation so it never toggles selection.
+                                    Always visible on touch, hover-revealed on desktop. */}
+                                {hasAssets && (
+                                  <button
+                                    type="button"
+                                    aria-label="Visualizar criativo"
+                                    onClick={(e) => { e.stopPropagation(); openViewer(c) }}
+                                    className="absolute left-1.5 top-1.5 z-10 grid size-6 place-items-center rounded-full bg-white/90 text-ink-muted shadow-sm backdrop-blur transition hover:bg-white hover:text-ink focus:outline-none sm:opacity-0 sm:group-hover:opacity-100"
+                                  >
+                                    <Eye size={13} />
+                                  </button>
+                                )}
                                 <span className="absolute bottom-1.5 left-1.5 rounded-full bg-white/85 px-2 py-0.5 text-[10px] font-bold text-ink shadow-sm backdrop-blur">
                                   {MEDIA_LABEL[creativeMediaKind(c)] || tm.label}
                                 </span>
                               </div>
                             </div>
-                          </button>
+                          </div>
                         )
                       })}
                     </div>
@@ -221,20 +264,34 @@ export default function PostingPanel({
             <Label className="flex items-center gap-1.5">
               <MessageSquareText size={13} style={{ color }} /> Legenda por canal
             </Label>
-            {channels.map((channel) => (
-              <div key={channel} className="flex flex-col gap-1.5">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-ink-secondary">
-                  <ChannelIcons channels={[channel]} /> {channelMeta(channel).label}
+            {channels.map((channel) => {
+              const expanded = !!expandedCaptions[channel]
+              return (
+                <div key={channel} className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between gap-1.5">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-ink-secondary">
+                      <ChannelIcons channels={[channel]} /> {channelMeta(channel).label}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => toggleCaption(channel)}
+                      className="inline-flex items-center gap-1 rounded-lg px-1.5 py-0.5 text-[11px] font-semibold text-ink-muted transition hover:text-brand"
+                    >
+                      {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                      {expanded ? 'Recolher' : 'Expandir'}
+                    </button>
+                  </div>
+                  <Textarea
+                    rows={expanded ? 8 : 3}
+                    maxRows={expanded ? 100 : 6}
+                    value={captionByChannel[channel] ?? baseCaption}
+                    placeholder="Legenda deste post…"
+                    onChange={(e) => setChannelCaption(channel, e.target.value)}
+                    onBlur={saveChannelCaption}
+                  />
                 </div>
-                <Textarea
-                  rows={3}
-                  value={captionByChannel[channel] ?? baseCaption}
-                  placeholder="Legenda deste post…"
-                  onChange={(e) => setChannelCaption(channel, e.target.value)}
-                  onBlur={saveChannelCaption}
-                />
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
 
@@ -339,6 +396,15 @@ export default function PostingPanel({
         )}
       </div>
       </AiRewritingOverlay>
+
+      <Suspense fallback={null}>
+        <MediaViewer
+          attachments={viewer.attachments}
+          index={0}
+          open={viewer.open}
+          onClose={() => setViewer((v) => ({ ...v, open: false }))}
+        />
+      </Suspense>
     </Card>
   )
 }

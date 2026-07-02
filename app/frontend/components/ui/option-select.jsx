@@ -11,7 +11,7 @@ const ALL = '__all__'
 export function OptionSelect({ value, onChange, placeholder, options = [], fullWidth, className }) {
   return (
     <Select value={value || ALL} onValueChange={(v) => onChange(v === ALL ? undefined : v)}>
-      <SelectTrigger className={cn('h-9 shrink-0 gap-1.5 rounded-xl text-[13px]', fullWidth ? 'w-full' : 'w-auto min-w-[124px]', className)}>
+      <SelectTrigger className={cn('h-9 shrink-0 gap-1.5 rounded-xl text-[13px] font-semibold text-ink-secondary data-[placeholder]:text-ink-secondary', fullWidth ? 'w-full' : 'w-auto min-w-[124px]', className)}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>

@@ -12,8 +12,8 @@ import { Page } from '@/components/ui/page'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 import {
-  WEEKDAY_LABELS, monthMatrix, monthRangeIso, weekRangeIso, weekDays,
-  monthLabel, weekLabel, addMonths, addDays, isSameDay, groupEventsByDay, dayKey, startOfDay,
+  WEEKDAY_LABELS, monthMatrix, monthRangeIso, weekRangeIso, dayRangeIso, weekDays,
+  monthLabel, weekLabel, dayLabel, addMonths, addDays, isSameDay, groupEventsByDay, dayKey, startOfDay,
 } from '@/components/calendar/calendarUtils'
 import { EventChip } from '@/components/calendar/EventChip'
 import { MeetingDialog } from '@/components/calendar/MeetingDialog'
@@ -47,7 +47,7 @@ export default function CalendarIndex({ scope } = {}) {
   // View (month/week), the navigated date, and the open ticket all live in the
   // URL so the calendar is shareable / reload-safe (?view=week&date=2026-07-02&ticket=42).
   const [searchParams, setSearchParams] = useSearchParams()
-  const view = searchParams.get('view') === 'week' ? 'week' : 'month'
+  const view = ['day', 'week', 'month'].includes(searchParams.get('view')) ? searchParams.get('view') : 'month'
   const cursor = useMemo(
     () => startOfDay(fromDateParam(searchParams.get('date')) || new Date()),
     [searchParams],
@@ -79,7 +79,7 @@ export default function CalendarIndex({ scope } = {}) {
   )
 
   const range = useMemo(
-    () => (view === 'month' ? monthRangeIso(cursor) : weekRangeIso(cursor)),
+    () => (view === 'month' ? monthRangeIso(cursor) : view === 'day' ? dayRangeIso(cursor) : weekRangeIso(cursor)),
     [view, cursor],
   )
 
@@ -90,7 +90,7 @@ export default function CalendarIndex({ scope } = {}) {
   const today = startOfDay(new Date())
   const goToday = () => setCursor(startOfDay(new Date()))
   const step = (dir) =>
-    setCursor((c) => (view === 'month' ? addMonths(c, dir) : addDays(c, dir * 7)))
+    setCursor((c) => (view === 'month' ? addMonths(c, dir) : addDays(c, view === 'day' ? dir : dir * 7)))
 
   const handleEventClick = (ev) => {
     if (ev?.type === 'post' && ev?.ticket_id) {
@@ -107,7 +107,7 @@ export default function CalendarIndex({ scope } = {}) {
     setSelected(ev)
   }
 
-  const label = view === 'month' ? monthLabel(cursor) : weekLabel(cursor)
+  const label = view === 'month' ? monthLabel(cursor) : view === 'day' ? dayLabel(cursor) : weekLabel(cursor)
 
   return (
     <Page wide className="flex min-h-0 flex-1 flex-col animate-rise">
@@ -123,8 +123,9 @@ export default function CalendarIndex({ scope } = {}) {
         actions={
           <Tabs value={view} onValueChange={setView}>
             <TabsList>
-              <TabsTrigger value="month">Mês</TabsTrigger>
+              <TabsTrigger value="day">Dia</TabsTrigger>
               <TabsTrigger value="week">Semana</TabsTrigger>
+              <TabsTrigger value="month">Mês</TabsTrigger>
             </TabsList>
           </Tabs>
         }
@@ -154,6 +155,14 @@ export default function CalendarIndex({ scope } = {}) {
           <PageLoader />
         ) : view === 'month' ? (
           <MonthGrid
+            cursor={cursor}
+            today={today}
+            byDay={byDay}
+            showWorkspace={global}
+            onEventClick={handleEventClick}
+          />
+        ) : view === 'day' ? (
+          <DayView
             cursor={cursor}
             today={today}
             byDay={byDay}
@@ -276,11 +285,14 @@ function DayCell({ day, inMonth, isToday, events, showWorkspace, onEventClick })
 }
 
 // ── Week strip ─────────────────────────────────────────────────────
+// Days render as columns, exactly like the Kanban board: a single horizontal
+// row you scroll through (fixed-width, snapped columns on mobile; flexing to
+// share the width on desktop), never a wrapping grid.
 function WeekStrip({ cursor, today, byDay, showWorkspace, onEventClick }) {
   const days = useMemo(() => weekDays(cursor), [cursor])
 
   return (
-    <div className="grid min-h-0 flex-1 grid-cols-2 gap-3 overflow-y-auto p-1.5 sm:grid-cols-4 lg:grid-cols-7 lg:overflow-hidden">
+    <div className="scrollbar-subtle flex min-h-0 flex-1 snap-x snap-mandatory items-stretch gap-3 overflow-x-auto overflow-y-hidden p-1.5 sm:snap-none">
       {days.map((day) => {
         const events = byDay.get(dayKey(day)) || []
         const isToday = isSameDay(day, today)
@@ -290,7 +302,7 @@ function WeekStrip({ cursor, today, byDay, showWorkspace, onEventClick }) {
           <div
             key={dayKey(day)}
             className={cn(
-              'flex min-h-[12rem] flex-col overflow-hidden rounded-2xl border border-border bg-surface lift lg:min-h-0',
+              'flex w-[80vw] max-w-[22rem] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-border bg-surface lift sm:w-0 sm:min-w-[13rem] sm:max-w-none sm:flex-1 sm:snap-align-none',
               isToday && 'ring-2 ring-sky/40',
             )}
           >
@@ -326,6 +338,49 @@ function WeekStrip({ cursor, today, byDay, showWorkspace, onEventClick }) {
           </div>
         )
       })}
+    </div>
+  )
+}
+
+// ── Day view ───────────────────────────────────────────────────────
+// A single day as one wide agenda column, centered like a focused list.
+function DayView({ cursor, today, byDay, showWorkspace, onEventClick }) {
+  const events = byDay.get(dayKey(cursor)) || []
+  const isToday = isSameDay(cursor, today)
+  const wd = cursor.toLocaleDateString('pt-BR', { weekday: 'long' })
+
+  return (
+    <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_1px_2px_rgba(24,18,43,0.04),0_8px_24px_-16px_rgba(24,18,43,0.12)]">
+      <div
+        className={cn(
+          'flex shrink-0 items-center justify-between border-b border-border px-4 py-3',
+          isToday ? 'bg-sky/10' : 'bg-surface-muted/30',
+        )}
+      >
+        <div className="flex items-center gap-3">
+          <span
+            className={cn(
+              'grid size-11 place-items-center rounded-2xl font-display text-lg font-extrabold tabular-nums',
+              isToday ? 'bg-sky text-white shadow-sm' : 'bg-surface text-ink',
+            )}
+          >
+            {cursor.getDate()}
+          </span>
+          <p className={cn('text-sm font-bold capitalize', isToday ? 'text-sky' : 'text-ink-secondary')}>{wd}</p>
+        </div>
+        <span className="text-xs font-semibold text-ink-muted">
+          {events.length > 0 ? `${events.length} ${events.length > 1 ? 'itens' : 'item'}` : 'Livre'}
+        </span>
+      </div>
+      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-3">
+        {events.length === 0 ? (
+          <p className="px-1 pt-4 text-center text-sm font-medium text-ink-faint">Nenhum post ou reunião neste dia.</p>
+        ) : (
+          events.map((ev) => (
+            <EventChip key={`${ev.type}-${ev.id}`} event={ev} onClick={onEventClick} showWorkspace={showWorkspace} />
+          ))
+        )}
+      </div>
     </div>
   )
 }

@@ -75,8 +75,19 @@ export function weekRangeIso(viewDate) {
   return { from: startOfDay(days[0]).toISOString(), to: startOfDay(addDays(days[6], 1)).toISOString() }
 }
 
+// The ISO window for a single day (start of day → start of next day, end exclusive).
+export function dayRangeIso(viewDate) {
+  const start = startOfDay(viewDate)
+  return { from: start.toISOString(), to: startOfDay(addDays(start, 1)).toISOString() }
+}
+
 export function monthLabel(date) {
   const raw = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+  return raw.charAt(0).toUpperCase() + raw.slice(1)
+}
+
+export function dayLabel(date) {
+  const raw = date.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
   return raw.charAt(0).toUpperCase() + raw.slice(1)
 }
 

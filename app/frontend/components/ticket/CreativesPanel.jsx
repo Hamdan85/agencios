@@ -113,7 +113,7 @@ function CreativeCard({ creative, onClick, onDelete, deleting }) {
               aria-label="Excluir criativo"
               disabled={deleting}
               onClick={(e) => { e.stopPropagation(); onDelete(creative) }}
-              className="absolute right-2 top-2 z-10 grid size-7 place-items-center rounded-full bg-white/90 text-ink-muted opacity-0 shadow-sm backdrop-blur transition focus:opacity-100 focus:outline-none group-hover:opacity-100 hover:bg-danger hover:text-white disabled:opacity-50"
+              className="absolute right-2 top-2 z-10 grid size-7 place-items-center rounded-full bg-white/90 text-ink-muted opacity-100 shadow-sm backdrop-blur transition focus:opacity-100 focus:outline-none hover:bg-danger hover:text-white disabled:opacity-50 sm:opacity-0 sm:group-hover:opacity-100"
             >
               <Trash2 size={14} />
             </button>

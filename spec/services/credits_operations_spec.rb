@@ -81,10 +81,31 @@ RSpec.describe 'Operations::Credits', type: :model do
     end
   end
 
-  describe 'Godfathered workspaces never debit' do
-    it 'is a no-op debit' do
-      workspace.update!(godfathered: true)
+  describe 'Godfathered workspaces never draw down a balance' do
+    before { workspace.update!(godfathered: true) }
+
+    it 'returns :godfathered and does not touch any wallet balance' do
       expect(Operations::Credits::Debit.call(workspace: workspace, amount: 999)).to eq(:godfathered)
+      # No wallet is created/drawn down — the balance stays unlimited.
+      expect(workspace.credit_wallet).to be_nil
+    end
+
+    it 'records a notional debit (for the usage chart + cost analysis) with no bucket movement' do
+      gen = workspace.generations.create!(kind: :video, status: :processing, provider: 'heygen')
+      expect do
+        Operations::Credits::Debit.call(workspace: workspace, amount: 16, generation: gen)
+      end.to change { workspace.credit_transactions.debits.count }.by(1)
+
+      tx = workspace.credit_transactions.debits.order(:created_at).last
+      expect(tx.amount).to eq(-16)                 # what the generation WOULD have cost
+      expect(tx.generation_id).to eq(gen.id)
+      expect(tx.granted_delta).to eq(0)            # no real bucket moved
+      expect(tx.purchased_delta).to eq(0)
+    end
+
+    it 'skips the notional debit for 0-credit generations (carousels)' do
+      expect(Operations::Credits::Debit.call(workspace: workspace, amount: 0)).to eq(:free)
+      expect(workspace.credit_transactions.debits.count).to eq(0)
     end
   end
 

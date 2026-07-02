@@ -21,10 +21,15 @@ module Operations
 
       def call
         return :free if @amount <= 0
-        # Unlimited godfathered workspaces never debit; capped ones (a
-        # monthly_credit_limit is set) spend from the refilled monthly allotment
-        # exactly like a paying workspace.
-        return :godfathered if @workspace.godfathered? && !@workspace.credit_limited?
+        # Unlimited godfathered workspaces never deduct from a balance (they have
+        # none) — but they DO consume real vendor cost, so we still record a
+        # notional debit (no bucket movement) for the usage chart + cost analysis.
+        # Capped godfathered ones (a monthly_credit_limit is set) spend from the
+        # refilled monthly allotment exactly like a paying workspace.
+        if @workspace.godfathered? && !@workspace.credit_limited?
+          record_notional_debit
+          return :godfathered
+        end
 
         Operations::Credits::EnsureGodfatheredGrant.call(workspace: @workspace) if @workspace.credit_limited?
 
@@ -80,6 +85,21 @@ module Operations
           balance_after: wallet.granted_balance + wallet.purchased_balance,
           description: @description || default_description
         )
+      end
+
+      # A godfathered "spend" with no wallet behind it: the ledger records what the
+      # generation WOULD have cost (for the usage chart + cost math), but no bucket
+      # moves and there's no balance to draw down (granted/purchased deltas are 0).
+      def record_notional_debit
+        @workspace.credit_transactions.create!(
+          generation: @generation, user: @user,
+          kind: 'debit', bucket: 'granted',
+          amount: -@amount, granted_delta: 0, purchased_delta: 0,
+          balance_after: 0,
+          description: @description || default_description
+        )
+      rescue StandardError => e
+        Rails.logger.warn("[Credits::Debit] notional godfathered debit failed: #{e.message}")
       end
 
       def default_description
