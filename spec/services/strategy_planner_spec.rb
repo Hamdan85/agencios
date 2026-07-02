@@ -132,6 +132,10 @@ RSpec.describe 'AI content-strategy planning' do
       session.reload
       expect(session.status).to eq('proposed')
       expect(session.proposed_plan['tickets'].size).to eq(1)
+      # Every card gets a stable key + a shimmer state so the table can patch one row.
+      card = session.proposed_plan['tickets'].first
+      expect(card['key']).to eq('t1')
+      expect(card['state']).to eq('ready')
       expect(Broadcaster).to have_received(:strategy_session).with(session, 'plan_generating')
       expect(Broadcaster).to have_received(:strategy_session).with(session, 'proposal_ready', hash_including(:plan))
     end

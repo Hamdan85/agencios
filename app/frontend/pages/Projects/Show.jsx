@@ -122,13 +122,13 @@ export default function ProjectShow() {
   const reportFailed = latestReport?.status === 'failed'
   const reportReady = latestReport?.status === 'ready'
   const reportKpis = reportReady ? (latestReport.data?.kpis || {}) : {}
-  // The plan to preview as ghost rows: the drawer's live proposal, falling back
-  // to the persisted `proposed` plan — so a proposed plan SURVIVES a reload and
-  // keeps showing on the project (drawer open or not) until it's applied/discarded.
+  // Ghost rows preview the plan ONLY while the chat is open — a proposed plan with
+  // the chat closed shows the real tickets instead (with the banner below to
+  // reopen/approve). Live drawer proposal first, then the persisted `proposed` plan.
   // Never mid-generation, where the loader takes over instead.
   const persistedPlan = strategySession?.status === 'proposed' ? strategySession.proposed_plan : null
   const buildingPlan = strategyOpen && generating
-  const previewPlan = strategyOpen ? (proposedPlan || persistedPlan) : persistedPlan
+  const previewPlan = strategyOpen ? (proposedPlan || persistedPlan) : null
   const ghostTickets = !buildingPlan ? (previewPlan?.tickets || []) : []
   // While planning (building or reviewing a plan), the list shows ONLY the plan —
   // the existing tickets are hidden so the preview is clean.
@@ -381,7 +381,7 @@ export default function ProjectShow() {
           <div className="space-y-2">
             {ghostTickets.map((g, i) => (
               <TicketRow
-                key={`ghost-${i}`}
+                key={g.key || `ghost-${i}`}
                 proposed
                 ticket={{
                   display_title: g.title,

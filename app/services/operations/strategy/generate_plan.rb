@@ -36,16 +36,26 @@ module Operations
 
         plan = build_plan
         if plan
-          @session.proposed_plan = plan
+          @session.proposed_plan = with_card_keys(plan)
           @session.status = 'proposed'
           @session.save!
-          Broadcaster.strategy_session(@session, 'proposal_ready', plan: plan)
+          Broadcaster.strategy_session(@session, 'proposal_ready', plan: @session.proposed_plan)
         else
           Broadcaster.strategy_session(@session, 'plan_failed')
         end
       end
 
       private
+
+      # Give every card a stable `key` (so the table can patch a single row and, in
+      # later slices, stream/revise it) and a `state` the UI shimmers on. Generation
+      # is still all-at-once here, so cards land `ready`.
+      def with_card_keys(plan)
+        cards = Array(plan['tickets']).each_with_index.map do |card, i|
+          card.merge('key' => card['key'].presence || "t#{i + 1}", 'state' => 'ready')
+        end
+        plan.merge('tickets' => cards)
+      end
 
       # Deterministic readiness gate: a forced-tool call decides whether to generate
       # the plan this turn. The model emits tool calls unreliably in free chat, so we
