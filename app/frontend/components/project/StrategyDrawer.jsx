@@ -11,19 +11,19 @@ import { useStartStrategy, useApplyStrategy, useStrategyChat } from '@/hooks/use
 // stays visible behind it — the proposed tickets show up there as dimmed
 // previews (kept OUT of the chat, which stays purely conversational), and turn
 // into real tickets on approval. Fixed height + internal scroll; mobile-first.
-export function StrategyDrawer({ open, onOpenChange, projectId, session, onProposalChange, onGeneratingChange }) {
+// `cards` + `generating` come from the page's useStrategyPlan (the table owns the
+// live plan); the drawer is purely the chat + the approve control.
+export function StrategyDrawer({ open, onOpenChange, projectId, session, cards = [], generating = false }) {
   const start = useStartStrategy(projectId)
   const apply = useApplyStrategy(projectId)
-  const { messages, proposal, streaming, generating, pending, send, reset, setProposal } = useStrategyChat(projectId, session)
+  const { messages, streaming, pending, send, reset } = useStrategyChat(projectId, session)
   const [input, setInput] = useState('')
   const [sessionId, setSessionId] = useState(session?.id || null)
   const scrollRef = useRef(null)
   const inputRef = useRef(null)
 
-  // Lift the proposed plan + "building the plan" signal up so the project list
-  // can preview ghost tickets and show skeletons while the agent works.
-  useEffect(() => { onProposalChange?.(proposal) }, [proposal, onProposalChange])
-  useEffect(() => { onGeneratingChange?.(generating) }, [generating, onGeneratingChange])
+  // The plan awaiting a decision (shown inline + drives the approve button).
+  const proposal = cards.length ? { tickets: cards, summary: session?.proposed_plan?.summary } : null
 
   // Return focus to the composer whenever a turn finishes, so the user can keep
   // typing without reaching for the mouse. (Focus on OPEN is handled by the
@@ -61,12 +61,11 @@ export function StrategyDrawer({ open, onOpenChange, projectId, session, onPropo
     const t = setTimeout(() => jumpToBottom(false), 320) // after the slide-in
     return () => { cancelAnimationFrame(r1); clearTimeout(t) }
   }, [open])
-  useEffect(() => { if (open) jumpToBottom(true) }, [messages, pending, proposal, streaming, open])
+  useEffect(() => { if (open) jumpToBottom(true) }, [messages, pending, cards.length, streaming, open])
 
-  // Applied only counts while there's no pending proposal: editing an applied
-  // plan streams a fresh proposal that must reopen the approval flow, even if the
-  // persisted session status hasn't refetched to `proposed` yet.
-  const applied = session?.status === 'applied' && !proposal
+  // Once applied, the plan is materialized into real tickets — the approval flow
+  // closes (a fresh proposal flips the session back to `proposed` and reopens it).
+  const applied = session?.status === 'applied'
 
   // Block sending while a plan is being built off the request too, so a second
   // turn can't kick off a competing plan job on the same session.
@@ -162,9 +161,7 @@ export function StrategyDrawer({ open, onOpenChange, projectId, session, onPropo
               type="button"
               className="mb-3 w-full"
               disabled={apply.isPending}
-              onClick={() => apply.mutate(sessionId, {
-                onSuccess: () => { setProposal(null); onProposalChange?.(null) },
-              })}
+              onClick={() => apply.mutate(sessionId)}
             >
               {apply.isPending
                 ? <><Loader2 size={16} className="mr-2 animate-spin" /> Criando tickets…</>

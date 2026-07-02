@@ -55,65 +55,103 @@ export function useDiscardStrategy(projectId) {
   })
 }
 
-// Drives the chat: local transcript + streaming send. Seeds from the persisted
-// session and appends each turn as it streams in.
-// A stored plan is "pending approval" only while the session is `proposed` — an
-// `applied` session keeps its `proposed_plan` on record, but it must NOT reopen
-// the approval flow (that would let it be applied twice → duplicate tickets).
-const pendingProposal = (s) =>
-  (s?.status === 'proposed' && s?.proposed_plan?.tickets?.length ? s.proposed_plan : null)
+// The live proposed plan, owned by the PAGE (the table is the canvas). Seeds from
+// the persisted `proposed_plan` and is patched by the Action Cable events as the
+// plan builds/revises off the request — card by card, so the table fills in live.
+//   cards      — [{ key, title?, creative_type?, channels?, scheduled_at, state }]
+//   creating   — ephemeral: the batch started but the skeleton rows haven't landed
+//   generating — a batch build OR a single-card revise is in flight
+const seedCards = (s) => (
+  s?.status === 'proposed' && Array.isArray(s?.proposed_plan?.tickets)
+    ? s.proposed_plan.tickets.map((t) => ({ ...t, state: 'ready' }))
+    : []
+)
 
-export function useStrategyChat(projectId, session) {
+export function useStrategyPlan(projectId, session) {
   const qc = useQueryClient()
-  const [messages, setMessages] = useState(() => session?.messages || [])
-  const [proposal, setProposal] = useState(() => pendingProposal(session))
-  const [streaming, setStreaming] = useState(false)
-  const [generating, setGenerating] = useState(false) // agent is building the plan
-  const [pending, setPending] = useState('') // the in-progress assistant bubble
-  const abortRef = useRef(null)
+  const sessionId = session?.id
+  const [cards, setCards] = useState(() => seedCards(session))
+  const [creating, setCreating] = useState(false)
+  const [generating, setGenerating] = useState(false)
+  const revisingKey = useRef(null)
 
-  // The plan is built off the request and pushed over Action Cable — a turn only
-  // streams the conversational reply, then the proposal arrives here when ready.
-  // This keeps working even with the drawer closed (the hook stays mounted), and
-  // refreshing the strategy query surfaces the "plan pending" banner on the page.
-  const channelHandlers = useMemo(() => ({
-    onGenerating: () => { setProposal(null); setGenerating(true) },
-    onProposal: (plan) => {
-      if (plan?.tickets?.length) setProposal(plan)
+  // Reseed only when the session identity changes (mount / switch after apply):
+  // within a session the live events own the cards, so a reseed can't clobber a
+  // build in progress.
+  useEffect(() => {
+    setCards(seedCards(session))
+    setCreating(false)
+    setGenerating(false)
+    revisingKey.current = null
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId])
+
+  const handlers = useMemo(() => ({
+    onStarted: () => { setCards([]); setCreating(true); setGenerating(true) },
+    onOutline: (tickets) => {
+      setCreating(false)
+      setCards(tickets.map((t) => ({ ...t, state: 'drafting' })))
+    },
+    onDrafted: (key, card) => {
+      setCards((cs) => {
+        const next = { ...card, key, state: 'ready' }
+        return cs.some((c) => c.key === key) ? cs.map((c) => (c.key === key ? next : c)) : [...cs, next]
+      })
+      // A revise ends on its card's draft (no plan_ready follows) — release the UI.
+      if (revisingKey.current === key) { revisingKey.current = null; setGenerating(false) }
+    },
+    onRevising: (key) => {
+      revisingKey.current = key
+      setGenerating(true)
+      setCards((cs) => cs.map((c) => (c.key === key ? { ...c, state: 'revising' } : c)))
+    },
+    onReady: () => {
       setGenerating(false)
+      // The persisted plan + the closed-drawer banner catch up from the query.
       qc.invalidateQueries({ queryKey: keys.strategy(projectId) })
     },
     onFailed: () => {
+      setCreating(false)
       setGenerating(false)
+      revisingKey.current = null
       toast.error('Não consegui montar o plano agora. Tente pedir novamente.')
     },
   }), [qc, projectId])
-  useStrategyChannel(session?.id, channelHandlers)
+  useStrategyChannel(sessionId, handlers)
 
-  // Reset local state when switching to a different session (e.g. after apply).
+  return { cards, creating, generating }
+}
+
+// Drives the CHAT only: local transcript + streaming send. The plan/proposal is
+// owned by useStrategyPlan (the table), fed by the same channel.
+export function useStrategyChat(projectId, session) {
+  const qc = useQueryClient()
+  const [messages, setMessages] = useState(() => session?.messages || [])
+  const [streaming, setStreaming] = useState(false)
+  const [pending, setPending] = useState('') // the in-progress assistant bubble
+  const abortRef = useRef(null)
+
+  // Reset the transcript when switching to a different session (e.g. after apply).
   const reset = useCallback((s) => {
     setMessages(s?.messages || [])
-    setProposal(pendingProposal(s))
     setPending('')
     setStreaming(false)
-    setGenerating(false)
   }, [])
 
   const send = useCallback(async (content, sessionId) => {
     const text = content.trim()
-    if (!text || streaming || generating || !sessionId) return
+    if (!text || streaming || !sessionId) return
 
     setMessages((m) => [...m, { role: 'user', content: text }])
     setStreaming(true)
-    setGenerating(false)
     setPending('')
     let acc = ''
     const controller = new AbortController()
     abortRef.current = controller
 
     try {
-      // Only the conversational reply streams here; the proposal (and the
-      // "building…" signal) arrive over Action Cable via channelHandlers above.
+      // Only the conversational reply streams here; the plan (and the "building…"
+      // signal) arrive over Action Cable, handled by useStrategyPlan.
       await strategyApi.streamMessage(sessionId, text, {
         signal: controller.signal,
         onDelta: (chunk) => {
@@ -121,7 +159,6 @@ export function useStrategyChat(projectId, session) {
           setPending(acc)
         },
       })
-      // Commit the finished assistant bubble into the transcript.
       setMessages((m) => [...m, { role: 'assistant', content: acc || 'Certo! Deixa eu montar isso e já te trago a proposta.' }])
     } catch (err) {
       if (err?.name !== 'AbortError') {
@@ -131,16 +168,12 @@ export function useStrategyChat(projectId, session) {
     } finally {
       setPending('')
       setStreaming(false)
-      setGenerating(false)
       abortRef.current = null
-      // The turn may have updated the project itself (update_project tool) —
-      // refresh the project so its header/dates reflect immediately. Also refresh
-      // the session: a turn can flip its status (applied → proposed after an
-      // edit), which the approval gate reads on the next open.
+      // The turn may have updated the project itself (update_project tool) — refresh
+      // the project so its header/dates reflect immediately.
       qc.invalidateQueries({ queryKey: keys.project(projectId) })
-      qc.invalidateQueries({ queryKey: keys.strategy(projectId) })
     }
-  }, [streaming, generating, qc, projectId])
+  }, [streaming, qc, projectId])
 
-  return { messages, proposal, streaming, generating, pending, send, reset, setProposal }
+  return { messages, streaming, pending, send, reset }
 }

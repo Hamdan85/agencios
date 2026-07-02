@@ -32,21 +32,31 @@ export function useTicketChannel(ticketId, onEvent) {
   }, [ticketId, qc, onEvent])
 }
 
-// Per-session strategy-planning updates. The plan is built off the request and
-// pushed here: `plan_generating` (a plan is being built → show skeletons),
-// `proposal_ready` (the finished plan), `plan_failed` (readiness said yes but the
-// build produced nothing). `handlers` is an object of { onGenerating, onProposal,
-// onFailed } callbacks.
+// Per-session strategy-planning updates, pushed as the plan is built/revised off
+// the request. `handlers` is { onStarted, onOutline(tickets), onDrafted(key, card),
+// onRevising(key), onReady, onFailed } — each optional.
+//   plan_started  → a batch build began (table loading)
+//   plan_outline  → the empty skeleton rows [{ key, scheduled_at }]
+//   ticket_drafted→ one card filled/updated { key, card }
+//   ticket_revising→ one card is being re-generated { key }
+//   plan_ready    → the batch finished
+//   plan_failed   → the build produced nothing
 export function useStrategyChannel(sessionId, handlers) {
   useEffect(() => {
     if (!sessionId) return
     const sub = consumer.subscriptions.create(
       { channel: 'StrategyChannel', session_id: sessionId },
       {
-        received: (data) => {
-          if (data?.event === 'plan_generating') handlers?.onGenerating?.()
-          else if (data?.event === 'proposal_ready') handlers?.onProposal?.(data.plan)
-          else if (data?.event === 'plan_failed') handlers?.onFailed?.()
+        received: (d) => {
+          switch (d?.event) {
+            case 'plan_started': return handlers?.onStarted?.()
+            case 'plan_outline': return handlers?.onOutline?.(d.tickets || [])
+            case 'ticket_drafted': return handlers?.onDrafted?.(d.key, d.card)
+            case 'ticket_revising': return handlers?.onRevising?.(d.key)
+            case 'plan_ready': return handlers?.onReady?.()
+            case 'plan_failed': return handlers?.onFailed?.()
+            default: return undefined
+          }
         },
       },
     )

@@ -12,133 +12,104 @@ module Prompts
   # call captured by Vendors::Anthropic::Client (→ StrategySession#proposed_plan).
   class StrategyPlanner < Base
     TOOL_NAME = 'propose_content_plan'
-    DECISION_TOOL = 'plan_readiness'
+    ACTION_TOOL = 'strategy_action'
+    CARD_TOOL = 'revise_ticket'
     UPDATE_PROJECT_TOOL = 'update_project'
 
     CREATIVE_TYPES = %w[reel carousel feed_image story ugc_video ad thumbnail].freeze
     CHANNELS = Ticket::CHANNELS
     PRIORITIES = %w[low medium high].freeze
     PROJECT_STATUSES = %w[active paused archived completed].freeze
+    # A proposed ticket card carries ONLY what the approval view shows. The heavy
+    # ideation brief + production checklist are generated per ticket when it's
+    # created (Operations::Ai::FillFields + BuildScope), never in the plan.
+    CARD_REQUIRED = %w[title creative_type channels scheduled_at].freeze
 
     # Tools available DURING the streamed conversation. The plan is NOT streamed
-    # (streaming the big JSON tripped connection resets) and — because the model
-    # emits tool calls unreliably mid-conversation — readiness is NOT left to a
-    # spontaneous tool call either. Instead Operations::Strategy::Converse makes a
-    # separate SYNC forced-tool call (#decision_tool → #plan_tool). The stream only
-    # keeps update_project (a nice-to-have the model may or may not call).
+    # and — because the model emits tool calls unreliably mid-conversation — the
+    # ACTION (generate / revise / wait) is not left to a spontaneous tool call
+    # either: a job runs a separate forced-tool router (#action_tool) off the
+    # request. The stream only keeps update_project (a nice-to-have).
     def self.stream_tools
       [update_project_tool]
     end
 
-    # Forced-tool schema (deterministic): decide whether to generate the plan now.
-    def self.decision_tool
+    # Forced-tool router (deterministic): after each turn, decide what to DO —
+    # keep talking, generate the batch, or revise ONE proposed ticket the user
+    # asked to change. Runs off the request (in the job), so streamed tool-call
+    # flakiness never gates the action.
+    def self.action_tool
       {
-        'name' => DECISION_TOOL,
-        'description' => 'Decide se JÁ dá para gerar o plano de conteúdo agora (o usuário pediu e há o ' \
-                         'mínimo — período/cadência, ou pediu para não perguntar) ou se ainda falta ' \
-                         'algo essencial e você deve continuar perguntando.',
+        'name' => ACTION_TOOL,
+        'description' => 'Decide a próxima ação a partir da conversa e (se houver) do plano já ' \
+                         'proposto: continuar conversando, gerar o plano agora, ou revisar UM ' \
+                         'ticket específico que o usuário pediu para mudar.',
         'input_schema' => {
-          'type' => 'object', 'required' => %w[ready],
+          'type' => 'object', 'required' => %w[action],
           'properties' => {
-            'ready' => { 'type' => 'boolean', 'description' => 'true se o plano pode ser gerado agora' },
-            'reason' => { 'type' => 'string', 'description' => 'Justificativa curta.' }
+            'action' => {
+              'type' => 'string', 'enum' => %w[wait generate_plan revise_ticket],
+              'description' => 'wait = ainda conversando / falta algo; generate_plan = montar o ' \
+                               'plano agora; revise_ticket = o usuário pediu para mudar um ticket já proposto.'
+            },
+            'ticket_key' => { 'type' => 'string', 'description' => 'Chave (key) do ticket a revisar — só em revise_ticket.' },
+            'instruction' => { 'type' => 'string', 'description' => 'O que mudar naquele ticket — só em revise_ticket.' }
           }
         }
       }
     end
 
-    # The full structured-plan schema, used by the SYNC forced-tool call.
+    # The batch schema (slim): the planner only produces what the approval card
+    # shows — title, format, channels, priority, posting date. Brief + checklist
+    # come per ticket at creation, never here.
     def self.plan_tool
-      tool
-    end
-
-    # Anthropic tool schema for the final structured plan. Kept here next to the
-    # prompt so the contract and the instructions evolve together.
-    def self.tool
       {
         'name' => TOOL_NAME,
-        'description' => 'Propõe o plano de conteúdo final: os tickets a criar, cada um ' \
-                         'com data de postagem e uma checklist de produção estimada e ' \
-                         'retro-agendada. Chame SOMENTE quando a estratégia estiver ' \
-                         'completa, factível e validada com o usuário.',
+        'description' => 'Propõe o plano de conteúdo: os tickets a criar, cada um com formato, ' \
+                         'canais e data de postagem. Chame SOMENTE quando a estratégia estiver ' \
+                         'completa e factível.',
         'input_schema' => {
-          'type' => 'object',
-          'required' => %w[summary tickets],
+          'type' => 'object', 'required' => %w[summary tickets],
           'properties' => {
-            'summary' => {
-              'type' => 'string',
-              'description' => 'Resumo curto da estratégia (cadência, janela, foco).'
-            },
+            'summary' => { 'type' => 'string', 'description' => 'Resumo curto da estratégia (cadência, janela, foco).' },
             'tickets' => {
               'type' => 'array',
-              'description' => 'Um item por peça de conteúdo a produzir na janela. Definem a ' \
-                               'estratégia: tipo de criativo, canais, data de postagem e o ' \
-                               'conteúdo de ideação de cada peça.',
-              'items' => {
-                'type' => 'object',
-                'required' => %w[title creative_type channels scheduled_at brief objective
-                                 target_persona content_pillar format_hypothesis subtasks],
-                'properties' => {
-                  'title' => { 'type' => 'string' },
-                  'creative_type' => {
-                    'type' => 'string', 'enum' => CREATIVE_TYPES,
-                    'description' => 'Formato da peça (delimita a estratégia).'
-                  },
-                  'channels' => {
-                    'type' => 'array',
-                    'items' => { 'type' => 'string', 'enum' => CHANNELS },
-                    'description' => 'Redes onde a peça será postada.'
-                  },
-                  'priority' => { 'type' => 'string', 'enum' => PRIORITIES },
-                  'scheduled_at' => {
-                    'type' => 'string',
-                    'description' => 'Data/hora prevista de postagem, ISO 8601. Deve estar dentro ' \
-                                     'do próximo mês (no máximo ~30 dias a partir de hoje); nunca ' \
-                                     'agende além desse limite.'
-                  },
-                  'brief' => {
-                    'type' => 'string',
-                    'description' => 'Briefing de ideação: contexto e direção da peça (2-3 frases).'
-                  },
-                  'objective' => {
-                    'type' => 'string',
-                    'description' => 'Objetivo do conteúdo em uma frase.'
-                  },
-                  'target_persona' => {
-                    'type' => 'string',
-                    'description' => 'Persona-alvo específica desta peça, em uma frase.'
-                  },
-                  'content_pillar' => {
-                    'type' => 'string',
-                    'description' => 'Pilar de conteúdo (ex.: educacional, bastidores, prova social).'
-                  },
-                  'format_hypothesis' => {
-                    'type' => 'string',
-                    'description' => 'Hipótese de formato (ex.: Reel narrativo de 30s).'
-                  },
-                  'subtasks' => {
-                    'type' => 'array',
-                    'description' => 'Checklist de produção, retro-agendada a partir do post.',
-                    'items' => {
-                      'type' => 'object',
-                      'required' => %w[title estimate_hours lead_offset_days],
-                      'properties' => {
-                        'title' => { 'type' => 'string' },
-                        'estimate_hours' => {
-                          'type' => 'number',
-                          'description' => 'Esforço estimado em horas.'
-                        },
-                        'lead_offset_days' => {
-                          'type' => 'integer',
-                          'description' => 'Dias ANTES da postagem em que a tarefa deve estar pronta.'
-                        }
-                      }
-                    }
-                  }
-                }
-              }
+              'description' => 'Um item por peça de conteúdo na janela — define a estratégia: ' \
+                               'formato, canais e data de postagem.',
+              'items' => { 'type' => 'object', 'required' => CARD_REQUIRED, 'properties' => card_properties }
             }
           }
+        }
+      }
+    end
+
+    # Single-card schema for revising ONE proposed ticket in place.
+    def self.card_tool
+      {
+        'name' => CARD_TOOL,
+        'description' => 'Reescreve UM ticket proposto conforme o pedido do usuário, mantendo o ' \
+                         'formato de card (título, formato, canais, prioridade, data).',
+        'input_schema' => { 'type' => 'object', 'required' => CARD_REQUIRED, 'properties' => card_properties }
+      }
+    end
+
+    def self.tool = plan_tool
+
+    # The approval-visible fields of one ticket card — shared by plan_tool (array)
+    # and card_tool (single, for revision).
+    def self.card_properties
+      {
+        'title' => { 'type' => 'string' },
+        'creative_type' => { 'type' => 'string', 'enum' => CREATIVE_TYPES, 'description' => 'Formato da peça (delimita a estratégia).' },
+        'channels' => {
+          'type' => 'array', 'items' => { 'type' => 'string', 'enum' => CHANNELS },
+          'description' => 'Redes onde a peça será postada.'
+        },
+        'priority' => { 'type' => 'string', 'enum' => PRIORITIES },
+        'scheduled_at' => {
+          'type' => 'string',
+          'description' => 'Data/hora prevista de postagem, ISO 8601. Dentro do próximo mês ' \
+                           "(no máximo #{1.month.from_now.to_date.iso8601}); nunca além."
         }
       }
     end
@@ -203,13 +174,12 @@ module Prompts
           (tipicamente a janela ou a cadência). Se o usuário já deu ambas, proponha JÁ.
         - Se algo estiver fraco ou inviável, ajuste no plano e explique brevemente —
           não trave a conversa com perguntas.
-        - PRAZOS REALISTAS: some o lead time da checklist (a maior antecedência) de cada
-          peça. A primeira postagem NUNCA pode exigir tarefas no passado. Se o pedido
-          for apertado demais (ex.: "poste amanhã" mas a produção leva 5 dias), CRITIQUE
-          e proponha datas realistas — empurre a primeira postagem para dar tempo de
-          produzir com qualidade. Nunca gere tarefas com prazo anterior a hoje.
+        - PRAZOS REALISTAS: reserve alguns dias de produção antes da primeira postagem.
+          Se o pedido for apertado demais (ex.: "poste amanhã" mas a produção leva
+          dias), CRITIQUE e proponha datas realistas — empurre a primeira postagem para
+          dar tempo de produzir com qualidade.
         - Quando a estratégia estiver pronta, escreva UMA frase curta avisando que vai
-          montar (ex.: "Fechado, montando o plano — dá uma olhada nos tickets à esquerda.").
+          montar (ex.: "Fechado, vou montar o plano — dá uma olhada nos tickets à esquerda.").
           Os tickets são gerados automaticamente e aparecem na lista — NÃO os descreva em texto.
         - Você também pode ajustar o PRÓPRIO projeto com a ferramenta #{UPDATE_PROJECT_TOOL}
           (nome, descrição, datas de início/fim, status) — ex.: definir a janela real da
@@ -217,20 +187,18 @@ module Prompts
 
         Regras do plano:
         - O ticket nasce em IDEAÇÃO, mas o plano DELIMITA a estratégia: defina
-          `creative_type` (formato) e `channels` (redes) de cada peça — são o que
+          `creative_type` (formato) e `channels` (redes) de cada peça — é o que
           torna a cadência concreta ("1 reel no Instagram", "2 carrosséis"…).
         - Distribua os tickets ao longo da janela conforme a cadência; defina
-          `scheduled_at` (data/hora de postagem) coerente com bons horários e com lead
-          time suficiente (a primeira peça precisa de dias de produção ANTES de postar).
+          `scheduled_at` (data/hora de postagem) coerente com bons horários e com
+          dias de produção suficientes antes de postar.
         - Canais padrão = redes conectadas do cliente (a menos que o usuário peça outras).
-        - Preencha SEMPRE todos os campos de ideação de cada ticket: `brief`, `objective`,
-          `target_persona`, `content_pillar` e `format_hypothesis` — específicos por peça,
-          coerentes com a marca e o posicionamento. Não deixe nenhum em branco.
         - `creative_type` deve ser um de: #{CREATIVE_TYPES.join(', ')}.
         - `channels` devem ser um subconjunto de: #{CHANNELS.join(', ')}.
-        - Cada ticket tem uma checklist ENXUTA de 3 a 4 subtarefas com `estimate_hours`
-          (esforço) e `lead_offset_days` (dias de antecedência), garantindo que o post
-          fique pronto antes de `scheduled_at`. Não passe de 4 subtarefas por ticket.
+        - NÃO escreva brief, roteiro nem checklist aqui. O briefing de ideação e as
+          subtarefas de produção de cada ticket são gerados automaticamente QUANDO o
+          ticket é criado — o plano é só o esqueleto: título, formato, canais,
+          prioridade e data.
 
         Responda sempre em português do Brasil, de forma direta e profissional.
       SYS

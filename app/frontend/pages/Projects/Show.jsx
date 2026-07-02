@@ -11,7 +11,7 @@ import {
   useProject, useProjectMutations, useTicketArchiveMutations, useTicketBulkDelete,
   useReport,
 } from '@/hooks/useData'
-import { useStrategySession, useApplyStrategy, useDiscardStrategy } from '@/hooks/useStrategy'
+import { useStrategySession, useStrategyPlan, useApplyStrategy, useDiscardStrategy } from '@/hooks/useStrategy'
 import { useCurrentUser } from '@/hooks/useAuth'
 import { useSelection } from '@/hooks/useSelection'
 import { canManage } from '@/lib/roles'
@@ -58,11 +58,12 @@ export default function ProjectShow() {
   const [billingOpen, setBillingOpen] = useState(false)
   const [scopeOpen, setScopeOpen] = useState(false)
   const [drawerId, setDrawerId] = useState(null)
-  const [proposedPlan, setProposedPlan] = useState(null)
-  const [generating, setGenerating] = useState(false)
   const { data, isLoading } = useProject(id, filters)
   const { data: latestReport } = useReport(data?.project?.latest_report_id)
   const { data: strategySession } = useStrategySession(id)
+  // The live proposed plan (cards) + build/revise signals — owned here so the table
+  // fills in live from the channel whether the chat is open or not.
+  const { cards, creating, generating } = useStrategyPlan(id, strategySession)
   const applyStrategy = useApplyStrategy(id)
   const discardStrategy = useDiscardStrategy(id)
   const { start, finalize, update, destroy, sendScope, autopilotEstimate, autopilot } = useProjectMutations()
@@ -122,20 +123,20 @@ export default function ProjectShow() {
   const reportFailed = latestReport?.status === 'failed'
   const reportReady = latestReport?.status === 'ready'
   const reportKpis = reportReady ? (latestReport.data?.kpis || {}) : {}
-  // Ghost rows preview the plan ONLY while the chat is open — a proposed plan with
-  // the chat closed shows the real tickets instead (with the banner below to
-  // reopen/approve). Live drawer proposal first, then the persisted `proposed` plan.
-  // Never mid-generation, where the loader takes over instead.
+  // Ghost rows preview the plan ONLY while the chat is open (§ visibility rule) —
+  // a proposed plan with the chat closed shows the real tickets, with the banner
+  // below to reopen/approve. The cards come live from useStrategyPlan.
+  const planActive = creating || generating // a build/revise is in flight
+  const showGhosts = strategyOpen && (planActive || strategySession?.status === 'proposed')
+  const ghostTickets = showGhosts ? cards : []
+  // Planning hides the real tickets so the preview (or its loader) stands alone.
+  const planMode = showGhosts
+  // The table-level loader is EPHEMERAL: only between "vou começar" and the first
+  // skeleton rows landing (plan_started → plan_outline).
+  const tableLoading = strategyOpen && creating
+  // A proposed plan awaiting a decision with the planner closed → banner to review.
+  const pendingReview = !strategyOpen && strategySession?.status === 'proposed'
   const persistedPlan = strategySession?.status === 'proposed' ? strategySession.proposed_plan : null
-  const buildingPlan = strategyOpen && generating
-  const previewPlan = strategyOpen ? (proposedPlan || persistedPlan) : null
-  const ghostTickets = !buildingPlan ? (previewPlan?.tickets || []) : []
-  // While planning (building or reviewing a plan), the list shows ONLY the plan —
-  // the existing tickets are hidden so the preview is clean.
-  const planMode = buildingPlan || ghostTickets.length > 0
-  // A proposed plan waiting for a decision, with the planner closed → show a
-  // banner so the user can review / apply / discard it after a reload.
-  const pendingReview = !strategyOpen && !!persistedPlan
 
   const handleStart = () => start.mutate(id)
 
@@ -371,18 +372,20 @@ export default function ProjectShow() {
         <TicketFilters filters={filters} onChange={setFilters} />
       )}
 
-      {buildingPlan && <PlanBuildingLoader className="mb-3" />}
+      {tableLoading && <PlanBuildingLoader className="mb-3" />}
 
       {planMode ? (
         // Planning: show ONLY the proposed (dimmed) plan — old tickets are hidden.
-        // While still building, the loader above is the sole content. The rows use
-        // the same TicketRow as the real list, in its `proposed` variant.
+        // While the batch is still building, the loader above is the sole content.
+        // Rows use the same TicketRow, in its `proposed` variant, with a per-card
+        // `state` (drafting = skeleton, revising = glow) driven live by the channel.
         ghostTickets.length > 0 ? (
           <div className="space-y-2">
             {ghostTickets.map((g, i) => (
               <TicketRow
                 key={g.key || `ghost-${i}`}
                 proposed
+                state={g.state}
                 ticket={{
                   display_title: g.title,
                   status: 'ideation',
@@ -467,8 +470,8 @@ export default function ProjectShow() {
           onOpenChange={setStrategyOpen}
           projectId={project.id}
           session={strategySession}
-          onProposalChange={setProposedPlan}
-          onGeneratingChange={setGenerating}
+          cards={cards}
+          generating={generating}
         />
       )}
 

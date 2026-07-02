@@ -26,16 +26,25 @@ const TONE = {
 // in place of the assignee / menu.
 export function TicketRow({
   ticket, onOpen, manager, onArchive, onUnarchive, busy,
-  selected, onToggleSelect, proposed = false,
+  selected, onToggleSelect, proposed = false, state = 'ready',
 }) {
   const project = ticket.project
   const title = ticket.display_title || ticket.title
   const accent = project?.color || statusMeta(ticket.status).color
   const due = relativeDay(ticket.due_date || ticket.scheduled_at)
+  // Ghost rows carry a live state: `drafting` (still filling → skeleton) and
+  // `revising` (a single card being re-generated → glow); `ready` is the default.
+  const drafting = proposed && state === 'drafting'
+  const revising = proposed && state === 'revising'
 
   // The title block is identical whether it's a clickable button or a static
   // (proposed) row — factor it so both branches share the exact same markup.
-  const body = (
+  const body = drafting ? (
+    <span className="min-w-0 flex-1">
+      <span className="block h-4 w-40 max-w-[60%] animate-pulse rounded bg-ink/10" />
+      <span className="mt-1.5 block h-3 w-24 animate-pulse rounded bg-ink/[0.07]" />
+    </span>
+  ) : (
     <span className="min-w-0 flex-1">
       <span className="flex items-center gap-2">
         <span className="truncate font-display text-[15px] font-semibold text-ink">{title}</span>
@@ -65,6 +74,9 @@ export function TicketRow({
         : selected
           ? 'border-brand/60 bg-brand/[0.04]'
           : 'border-border hover:border-brand/40 hover:shadow-[0_10px_24px_-18px_rgba(24,18,43,0.32)]',
+      // A card being revised glows and stays fully opaque so it stands out as the
+      // one thing updating; the rest of the proposed list stays dimmed.
+      revising && 'border-brand/60 opacity-100 shadow-[0_0_0_3px_rgba(124,58,237,0.16)]',
       !proposed && ticket.archived && 'opacity-75',
     )}>
       {manager && !proposed && (

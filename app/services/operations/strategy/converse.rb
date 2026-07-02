@@ -5,7 +5,7 @@ module Operations
     # One turn of the strategy-planning chat. Only the CONVERSATION happens here —
     # the assistant's reply is STREAMED live to the SSE writer and this returns in
     # seconds. The heavy plan decision + build (100-230s) is handed off to
-    # Strategy::GeneratePlanJob and pushed back to the client over Action Cable
+    # Strategy::PlanTurnJob and pushed back to the client over Action Cable
     # when ready. Holding the streaming request open for the whole plan build got
     # the connection severed by the CDN (Cloudflare/QUIC) mid-turn.
     #
@@ -49,10 +49,10 @@ module Operations
         apply_project_update(result)
         persist_turn(result)
 
-        # Decide + build the plan off the request; the proposal is broadcast over
-        # Action Cable (`strategy_session_<id>`) when it's ready. Leading `::` so the
-        # constant resolves to the top-level job, not Operations::Strategy::*.
-        ::Strategy::GeneratePlanJob.perform_later(@session.id)
+        # Resolve the turn off the request (decide → generate plan / revise ticket /
+        # wait); results stream over Action Cable (`strategy_session_<id>`). Leading
+        # `::` so the constant resolves to the top-level job, not Operations::Strategy::*.
+        ::Strategy::PlanTurnJob.perform_later(@session.id)
 
         Result.new(session: @session, proposal: nil)
       end

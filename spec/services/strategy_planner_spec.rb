@@ -99,7 +99,7 @@ RSpec.describe 'AI content-strategy planning' do
       result = nil
       expect do
         result = Operations::Strategy::Converse.call(session: session, content: '1 reel por semana') { |c| chunks << c }
-      end.to have_enqueued_job(Strategy::GeneratePlanJob).with(session.id)
+      end.to have_enqueued_job(Strategy::PlanTurnJob).with(session.id)
 
       expect(chunks.join).to eq('Aqui está o plano.')
       expect(result.proposal).to be_nil
@@ -111,8 +111,18 @@ RSpec.describe 'AI content-strategy planning' do
     end
   end
 
+  # A slim proposed card — only the approval-visible fields the planner produces.
+  def slim_card(key, post_at, title: 'Reel semanal', type: 'reel', channels: %w[instagram])
+    { 'key' => key, 'title' => title, 'creative_type' => type, 'channels' => channels,
+      'priority' => 'high', 'scheduled_at' => post_at.iso8601, 'state' => 'ready' }
+  end
+
+  def proposed_with(*cards)
+    { 'summary' => 'Plano de teste', 'tickets' => cards }
+  end
+
   describe 'Operations::Strategy::GeneratePlan' do
-    it 'builds the plan, marks the session proposed, and broadcasts it' do
+    it 'streams the batch card by card, keys each card, and marks the session proposed' do
       session = Operations::Strategy::Start.call(project: @project, user: @user)
       session.push_message(role: :user, content: '1 reel por semana')
       session.save!
@@ -120,74 +130,118 @@ RSpec.describe 'AI content-strategy planning' do
 
       client = instance_double(Vendors::OpenRouter::Client, provider_key: AiUsageLog::PROVIDER_OPENROUTER)
       allow(Vendors::Ai).to receive(:client).and_return(client)
-      # Forced decision → ready; forced plan call → the structured plan.
-      allow(client).to receive(:generate) do |**kw|
-        input = kw[:tool]['name'] == Prompts::StrategyPlanner::DECISION_TOOL ? { 'ready' => true } : sample_plan(post_at)
-        Vendors::Ai::Result.new(text: '', tool_input: input,
-                                usage: { 'input_tokens' => 20, 'output_tokens' => 40 }, model: 'claude-sonnet-4-6')
-      end
+      # Slim plan tool → one card (no brief/subtasks; those come at ticket creation).
+      allow(client).to receive(:generate).and_return(
+        Vendors::Ai::Result.new(
+          text: '', tool_input: { 'summary' => 'Plano', 'tickets' => [slim_card(nil, post_at).except('key', 'state')] },
+          usage: { 'input_tokens' => 20, 'output_tokens' => 40 }, model: 'claude-sonnet-4-6'
+        )
+      )
+      stub_const('Operations::Strategy::GeneratePlan::STAGGER', 0) # no per-card sleep in tests
 
       Operations::Strategy::GeneratePlan.call(session: session)
 
       session.reload
       expect(session.status).to eq('proposed')
-      expect(session.proposed_plan['tickets'].size).to eq(1)
-      # Every card gets a stable key + a shimmer state so the table can patch one row.
       card = session.proposed_plan['tickets'].first
       expect(card['key']).to eq('t1')
       expect(card['state']).to eq('ready')
-      expect(Broadcaster).to have_received(:strategy_session).with(session, 'plan_generating')
-      expect(Broadcaster).to have_received(:strategy_session).with(session, 'proposal_ready', hash_including(:plan))
+      # The live sequence the table renders: loading → empty rows → each row fills → done.
+      expect(Broadcaster).to have_received(:strategy_session).with(session, 'plan_started')
+      expect(Broadcaster).to have_received(:strategy_session).with(session, 'plan_outline', hash_including(:tickets))
+      expect(Broadcaster).to have_received(:strategy_session).with(session, 'ticket_drafted', hash_including(key: 't1'))
+      expect(Broadcaster).to have_received(:strategy_session).with(session, 'plan_ready')
+    end
+  end
+
+  describe 'Operations::Strategy::ResolveTurn' do
+    def stub_action(action)
+      client = instance_double(Vendors::OpenRouter::Client, provider_key: AiUsageLog::PROVIDER_OPENROUTER)
+      allow(Vendors::Ai).to receive(:client).and_return(client)
+      allow(client).to receive(:generate).and_return(
+        Vendors::Ai::Result.new(text: '', tool_input: action, usage: {}, model: 'm')
+      )
+      client
     end
 
-    it 'stays active (no proposal) when the readiness gate says "not yet"' do
+    it 'dispatches generate_plan to GeneratePlan' do
       session = Operations::Strategy::Start.call(project: @project, user: @user)
-      session.push_message(role: :user, content: 'quero postar')
-      session.save!
+      stub_action('action' => 'generate_plan')
+      expect(Operations::Strategy::GeneratePlan).to receive(:call).with(session: session)
+      Operations::Strategy::ResolveTurn.call(session: session)
+    end
+
+    it 'dispatches revise_ticket to ReviseTicket with the key + instruction' do
+      session = Operations::Strategy::Start.call(project: @project, user: @user)
+      stub_action('action' => 'revise_ticket', 'ticket_key' => 't2', 'instruction' => 'mais leve')
+      expect(Operations::Strategy::ReviseTicket).to receive(:call)
+        .with(session: session, key: 't2', instruction: 'mais leve')
+      Operations::Strategy::ResolveTurn.call(session: session)
+    end
+
+    it 'does nothing on wait' do
+      session = Operations::Strategy::Start.call(project: @project, user: @user)
+      stub_action('action' => 'wait')
+      expect(Operations::Strategy::GeneratePlan).not_to receive(:call)
+      expect(Operations::Strategy::ReviseTicket).not_to receive(:call)
+      Operations::Strategy::ResolveTurn.call(session: session)
+    end
+  end
+
+  describe 'Operations::Strategy::ReviseTicket' do
+    it 'regenerates only the targeted card and broadcasts revising → drafted' do
+      session = Operations::Strategy::Start.call(project: @project, user: @user)
+      post_at = 10.days.from_now.change(hour: 10)
+      session.update!(status: 'proposed',
+                      proposed_plan: proposed_with(slim_card('t1', post_at, title: 'Rinoceronte'),
+                                                   slim_card('t2', post_at, title: 'Tartaruga')))
 
       client = instance_double(Vendors::OpenRouter::Client, provider_key: AiUsageLog::PROVIDER_OPENROUTER)
       allow(Vendors::Ai).to receive(:client).and_return(client)
       allow(client).to receive(:generate).and_return(
-        Vendors::Ai::Result.new(text: '', tool_input: { 'ready' => false }, usage: {}, model: 'claude-sonnet-4-6')
+        Vendors::Ai::Result.new(text: '', model: 'm', usage: {},
+                                tool_input: slim_card('ignored', post_at, title: 'Rinoceronte gentil').except('key', 'state'))
       )
 
-      Operations::Strategy::GeneratePlan.call(session: session)
+      Operations::Strategy::ReviseTicket.call(session: session, key: 't1', instruction: 'mais gentil')
 
-      expect(session.reload.status).to eq('active')
+      cards = session.reload.proposed_plan['tickets']
+      # Only t1 changed; t2 untouched; keys preserved.
+      expect(cards.find { |c| c['key'] == 't1' }['title']).to eq('Rinoceronte gentil')
+      expect(cards.find { |c| c['key'] == 't2' }['title']).to eq('Tartaruga')
+      expect(Broadcaster).to have_received(:strategy_session).with(session, 'ticket_revising', key: 't1')
+      expect(Broadcaster).to have_received(:strategy_session).with(session, 'ticket_drafted', hash_including(key: 't1'))
+    end
+
+    it 'ignores an unknown key' do
+      session = Operations::Strategy::Start.call(project: @project, user: @user)
+      session.update!(status: 'proposed', proposed_plan: proposed_with(slim_card('t1', 5.days.from_now)))
+      Operations::Strategy::ReviseTicket.call(session: session, key: 'nope', instruction: 'x')
       expect(Broadcaster).not_to have_received(:strategy_session)
     end
   end
 
   describe 'Operations::Strategy::Apply' do
-    it 'creates scheduled tickets with back-scheduled, estimated subtasks' do
+    it 'materializes each SLIM card and defers the brief/checklist to a per-ticket job' do
       session = Operations::Strategy::Start.call(project: @project, user: @user)
       post_at = Time.zone.parse('2026-07-15 10:00')
-      session.update!(status: 'proposed', proposed_plan: sample_plan(post_at))
+      session.update!(status: 'proposed', proposed_plan: proposed_with(slim_card('t1', post_at)))
 
       tickets = nil
       expect { tickets = Operations::Strategy::Apply.call(session: session, user: @user) }
         .to change { @workspace.tickets.count }.by(1)
 
       ticket = tickets.first
-      # The plan delimits the strategy: creative type + channels come from it.
+      # The plan delimits the strategy: creative type + channels + date come from it.
       expect(ticket.creative_type).to eq('reel')
       expect(ticket.channels).to eq(%w[instagram])
       expect(ticket.priority).to eq('high')
       expect(ticket.scheduled_at).to eq(post_at)
-      # due_date is a scoping field — left blank; the posting date lives on scheduled_at.
-      expect(ticket.due_date).to be_nil
       expect(ticket.status).to eq('ideation')
-      ideation = ticket.fields_for('ideation')
-      expect(ideation['brief']).to eq('Foco em educação.')
-      expect(ideation['objective']).to eq('Educar sobre o produto.')
-      expect(ideation['target_persona']).to eq('Jovens 18-24.')
-      expect(ideation['content_pillar']).to eq('educacional')
-      expect(ideation['format_hypothesis']).to eq('Reel de 30s.')
-
-      subs = ticket.subtasks.ordered.to_a
-      expect(subs.map(&:title)).to eq(%w[Roteiro Gravação])
-      expect(subs.first.due_date).to eq(post_at.to_date - 5) # lead_offset_days
-      expect(subs.first.estimate_hours).to eq(2)
+      # The brief + checklist are NOT in the plan — they're filled at creation, async.
+      expect(ticket.fields_for('ideation')['brief']).to be_blank
+      expect(ticket.subtasks).to be_empty
+      expect(Strategy::FillTicketJob).to have_been_enqueued.with(ticket.id)
       expect(session.reload.status).to eq('applied')
     end
 
@@ -239,14 +293,15 @@ RSpec.describe 'AI content-strategy planning' do
         .to raise_error(Operations::Errors::Invalid)
     end
 
-    it 'never back-schedules a task into the past' do
+    it 'enqueues a fill job for every materialized ticket' do
       session = Operations::Strategy::Start.call(project: @project, user: @user)
-      # Posting in 2 days but a task needs 5 days of lead time → would land behind.
-      plan = sample_plan(2.days.from_now.change(hour: 10))
-      session.update!(status: 'proposed', proposed_plan: plan)
+      post_at = 10.days.from_now.change(hour: 10)
+      session.update!(status: 'proposed',
+                      proposed_plan: proposed_with(slim_card('t1', post_at), slim_card('t2', post_at)))
 
-      ticket = Operations::Strategy::Apply.call(session: session, user: @user).first
-      expect(ticket.subtasks.minimum(:due_date)).to be >= Date.current
+      tickets = Operations::Strategy::Apply.call(session: session, user: @user)
+      expect(tickets.size).to eq(2)
+      tickets.each { |t| expect(Strategy::FillTicketJob).to have_been_enqueued.with(t.id) }
     end
 
     it 'clamps a posting date beyond one month back into the horizon' do
