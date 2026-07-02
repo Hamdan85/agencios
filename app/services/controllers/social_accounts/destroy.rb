@@ -10,7 +10,8 @@ module Controllers
       def call
         require_manager!
         client = workspace.clients.find(@params[:client_id])
-        client.social_accounts.find(@params[:id]).destroy!
+        account = client.social_accounts.find(@params[:id])
+        Operations::Social::Disconnect.call(account: account)
         { message: 'Conta desconectada.' }
       end
     end

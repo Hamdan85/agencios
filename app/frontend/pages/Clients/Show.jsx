@@ -221,8 +221,13 @@ function SocialCard({ provider, account, mutations }) {
 function SocialSection({ clientId, accounts }) {
   const mutations = useSocialAccountMutations(clientId)
   const [linking, setLinking] = useState(false)
+  // One card per network. A client may have several accounts on the same network
+  // (one active, others revoked from earlier), so prefer the connected one.
   const byProvider = {}
-  for (const a of accounts || []) byProvider[a.provider] = a
+  for (const a of accounts || []) {
+    const cur = byProvider[a.provider]
+    if (!cur || a.status === 'connected') byProvider[a.provider] = a
+  }
 
   async function copyConnectLink() {
     setLinking(true)
