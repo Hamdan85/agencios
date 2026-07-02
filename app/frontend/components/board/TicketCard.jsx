@@ -5,6 +5,7 @@ import { relativeDay } from '@/lib/formatters'
 import { CreativeTypeChip, ChannelIcons, PriorityDot } from '@/components/ui/iconography'
 import { Avatar } from '@/components/ui/avatar'
 import { WorkingBadge } from '@/components/ticket/WorkingBadge'
+import { AlertBadge } from '@/components/ticket/AlertBadge'
 
 // A single, graphic ticket card on the Kanban board.
 // Lifts on hover; clicking (when not dragging) opens the ticket — in the side
@@ -50,6 +51,8 @@ export function TicketCard({ ticket, dragging = false, overlay = false, onOpen }
         overlay && 'rotate-2 scale-[1.02] shadow-[0_24px_50px_-18px_rgba(24,18,43,0.45)] ring-1 ring-brand/20',
         // Executing on autopilot → a steady brand ring so it stands out as "working".
         ticket.autopilot_running && 'border-brand/50 ring-1 ring-brand/40',
+        // Something broke at posting time → a danger ring (takes precedence).
+        ticket.in_alert && 'border-danger/50 ring-1 ring-danger/40',
       )}
     >
       {/* left accent bar in the project color */}
@@ -104,6 +107,7 @@ export function TicketCard({ ticket, dragging = false, overlay = false, onOpen }
       {/* footer */}
       <div className="flex items-center justify-between gap-2 pl-1.5 pt-0.5">
         <div className="flex items-center gap-1.5">
+          {ticket.in_alert && <AlertBadge reason={ticket.alert_reason} />}
           {ticket.autopilot_running && <WorkingBadge />}
           {ticket.overdue && (
             <span className="inline-flex items-center gap-1 rounded-md bg-danger/12 px-1.5 py-0.5 text-[10.5px] font-bold text-danger">

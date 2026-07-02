@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/iconography'
 import { Avatar } from '@/components/ui/avatar'
 import { WorkingBadge } from '@/components/ticket/WorkingBadge'
+import { AlertBadge } from '@/components/ticket/AlertBadge'
 
 const TONE = {
   danger: 'bg-danger/12 text-danger',
@@ -80,6 +81,8 @@ export function TicketRow({
       revising && 'border-brand/60 opacity-100 shadow-[0_0_0_3px_rgba(124,58,237,0.16)]',
       // Executing on autopilot → steady brand ring so the "working" row stands out.
       !proposed && ticket.autopilot_running && 'border-brand/50 ring-1 ring-brand/40',
+      // In alert (posting failed) → danger ring (takes precedence).
+      !proposed && ticket.in_alert && 'border-danger/50 ring-1 ring-danger/40',
       !proposed && ticket.archived && 'opacity-75',
     )}>
       {manager && !proposed && (
@@ -100,6 +103,7 @@ export function TicketRow({
         {ticket.channels?.length > 0 && <ChannelIcons channels={ticket.channels} size={12} max={4} />}
       </div>
 
+      {!proposed && ticket.in_alert && <AlertBadge reason={ticket.alert_reason} />}
       {!proposed && ticket.autopilot_running && <WorkingBadge />}
 
       {due && (

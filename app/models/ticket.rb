@@ -114,6 +114,12 @@ class Ticket < ApplicationRecord
     autopilot_runs.any? { |r| r.ticket_scope? && r.active? }
   end
 
+  # A ticket in "alert" needs human attention — something broke at posting time
+  # (a failed publish). `alert_reason` holds the why; cleared on a clean publish.
+  def in_alert?
+    alert_reason.present?
+  end
+
   # Status-namespaced structured field bag (see Tickets::Fields).
   def fields_for(some_status)
     fields[some_status.to_s] || {}

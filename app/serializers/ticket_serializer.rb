@@ -7,10 +7,11 @@ class TicketSerializer < ActiveModel::Serializer
              :ai_summaries, :fields, :workflow_step, :next_status,
              :project, :assignee, :created_by, :allowed_field_keys, :created_at,
              :archived, :archived_at, :relations, :connected_channels, :overdue,
-             :autopilot_eligible, :autopilot_run
+             :autopilot_eligible, :autopilot_run, :in_alert, :alert_reason
 
   def display_title = object.display_title
   def overdue = object.overdue?
+  def in_alert = object.in_alert?
   def due_date = object.due_date&.iso8601
   def scheduled_at = object.scheduled_at&.iso8601
   def published_at = object.published_at&.iso8601

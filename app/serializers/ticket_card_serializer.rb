@@ -5,7 +5,7 @@ class TicketCardSerializer < ActiveModel::Serializer
   attributes :id, :title, :display_title, :status, :priority, :position,
              :due_date, :scheduled_at, :channels, :creative_type,
              :project, :assignee, :subtasks_count, :subtasks_done, :creatives_count,
-             :overdue, :autopilot_running
+             :overdue, :autopilot_running, :in_alert, :alert_reason
 
   def display_title = object.display_title
   def due_date = object.due_date&.iso8601
@@ -14,6 +14,8 @@ class TicketCardSerializer < ActiveModel::Serializer
   # True while the ticket is walking itself in GO mode — drives the card/row
   # "working" indicator.
   def autopilot_running = object.autopilot_running?
+  # Something broke at posting time — drives the "Em alerta" badge (+ reason tip).
+  def in_alert = object.in_alert?
 
   def project
     p = object.project
