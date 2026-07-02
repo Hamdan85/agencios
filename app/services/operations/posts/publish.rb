@@ -5,6 +5,13 @@ module Operations
     # Publishes one Post through the SocialPublisher seam, recording the result
     # and broadcasting. Called by PublishPostJob (enqueued when a ticket enters
     # `published`).
+    #
+    # This owns ONLY the happy path. On error it simply re-raises: the job decides
+    # whether the error is transient (retry silently, keeping the post in
+    # `publishing`) or terminal (hand off to Operations::Posts::MarkPublishFailed).
+    # This is what stops a mid-retry attempt from prematurely marking the post
+    # failed and spamming an alert + failure email while it is still going to
+    # succeed on a later attempt.
     class Publish < Operations::Base
       def initialize(post:)
         @post = post
@@ -20,6 +27,7 @@ module Operations
         @post.update!(
           status: :published,
           published_at: Time.current,
+          failure_reason: nil,
           external_post_id: result[:external_post_id] || result['external_post_id'],
           permalink: result[:permalink] || result['permalink']
         )
@@ -29,23 +37,6 @@ module Operations
         clear_alert_if_resolved
         advance_ticket_if_all_published
         @post
-      rescue StandardError => e
-        provider = @post.social_account.provider
-        @post.update!(status: :failed, failure_reason: e.message.to_s[0, 500])
-        Operations::Notes::Create.call(
-          ticket: @post.ticket, user: nil, kind: :system,
-          body: "Falha ao publicar em #{provider}: #{e.message}"
-        )
-        # Put the ticket in alert + generate a task carrying the failure context.
-        Operations::Tickets::RaiseAlert.call(
-          ticket: @post.ticket,
-          reason: "Falha ao publicar em #{provider}: #{e.message.to_s[0, 160]}",
-          task_title: "Resolver publicação em #{provider}"
-        )
-        Broadcaster.ticket(@post.ticket, 'post_failed', post_id: @post.id)
-        notify("Falha ao publicar em #{provider}", @post.ticket.title)
-        email { |to| PostMailer.failed(post: @post, recipient: to, reason: e.message) }
-        raise
       end
 
       private

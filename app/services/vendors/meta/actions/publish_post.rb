@@ -50,6 +50,11 @@ module Vendors
               build_single_image_container
             end
 
+          # Container processing is async on Meta's side (reel transcode, carousel
+          # child ingestion, image fetch). Publishing before the container is
+          # FINISHED returns "Media ID is not available" — wait for it, exactly as
+          # the Reel path already did (instagram.md §6c).
+          poll_ig_container!(creation_id)
           media = PublishMedia.call(social_account: @social_account, creation_id:)
           media_id = media['id']
           reshare_to_story if share_to_story?
@@ -102,24 +107,24 @@ module Vendors
         end
 
         def build_reel_container
-          creation_id = CreateReelsContainer.call(
+          CreateReelsContainer.call(
             social_account: @social_account, video_url:, caption: @post.caption, cover_url:
           ).fetch('id')
-          poll_ig_container!(creation_id)
-          creation_id
         end
 
         # Poll the container until FINISHED (publishable); raise on ERROR/EXPIRED.
+        # Used for every IG container type — reel, carousel and single image — since
+        # all of them ingest/process asynchronously before they can be published.
         def poll_ig_container!(creation_id)
           POLL_ATTEMPTS.times do
             status = GetContainerStatus.call(social_account: @social_account, creation_id:)
             code = status['status_code']
             return if %w[FINISHED PUBLISHED].include?(code)
-            raise Vendors::Base::Error, "Container do Reel falhou: #{code}" if %w[ERROR EXPIRED].include?(code)
+            raise Vendors::Base::Error, "O processamento da mídia falhou: #{code}" if %w[ERROR EXPIRED].include?(code)
 
             sleep(POLL_INTERVAL)
           end
-          raise Vendors::Base::Error, 'Tempo esgotado aguardando o processamento do Reel.'
+          raise Vendors::Base::Error, 'Tempo esgotado aguardando o processamento da mídia.'
         end
 
         def ig_permalink(media_id)
