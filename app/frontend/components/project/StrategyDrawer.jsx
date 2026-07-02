@@ -65,9 +65,11 @@ export function StrategyDrawer({ open, onOpenChange, projectId, session, cards =
   }, [open])
   useEffect(() => { if (open) jumpToBottom(true) }, [messages, pending, cards.length, streaming, open])
 
-  // Once applied, the plan is materialized into real tickets — the approval flow
-  // closes (a fresh proposal flips the session back to `proposed` and reopens it).
-  const applied = session?.status === 'applied'
+  // Once applied, the plan is materialized into real tickets and the (eternal)
+  // session returns to `active` — the ghosts clear, so `proposal` empties and the
+  // approval flow closes. The confirmation note rides the mutation state until
+  // the next proposal shows up (which resets `apply` via a new mutate cycle).
+  const applied = apply.isSuccess && !proposal
 
   // Block sending while a plan is being built off the request too, so a second
   // turn can't kick off a competing plan job on the same session.

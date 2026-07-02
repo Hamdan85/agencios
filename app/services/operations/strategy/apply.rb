@@ -13,7 +13,12 @@ module Operations
       end
 
       def call
-        raise Operations::Errors::Invalid, 'Nenhum plano proposto para aplicar.' unless @session.proposed_plan?
+        # Only a plan AWAITING DECISION is appliable. The session is eternal (one
+        # per project), so a stale plan kept on an `active` session must never be
+        # re-runnable — a second POST /apply after the flow settled would re-run
+        # side effects (including the full-plan batch discard).
+        raise Operations::Errors::Invalid, 'Nenhum plano proposto para aplicar.' unless
+          @session.status_proposed? && @session.proposed_plan?
 
         # A full plan is applied as a rewrite: the proposed plan is the COMPLETE
         # plan, so re-applying an edited one drops the previous batch and recreates
@@ -32,7 +37,10 @@ module Operations
           end
         end
 
-        @session.update!(status: 'applied')
+        # The session is eternal — applying returns it to `active` (conversing),
+        # keeping the plan as a record of what was materialized. The status_proposed
+        # guard above is what makes the kept plan inert.
+        @session.update!(status: 'active')
         Broadcaster.board(@session.workspace.id, 'strategy_applied',
                           project_id: @session.project_id, count: created.size)
         created

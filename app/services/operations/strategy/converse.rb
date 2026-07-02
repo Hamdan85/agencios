@@ -60,9 +60,11 @@ module Operations
       private
 
       # The stored transcript rendered as the Messages API expects, dropping any
-      # blank-content turns (the API rejects empty content).
+      # blank-content turns (the API rejects empty content). The session is
+      # eternal, so the stream context is windowed to the same recent slice the
+      # forced-tool calls use — the DB keeps the full history.
       def api_messages
-        Array(@session.messages).filter_map do |m|
+        Array(@session.messages).last(TurnHelpers::CONTEXT_MESSAGES).filter_map do |m|
           content = m['content'].to_s
           next if content.blank?
 

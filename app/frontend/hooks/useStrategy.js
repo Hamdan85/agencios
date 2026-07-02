@@ -82,9 +82,13 @@ export function useStrategyPlan(projectId, session) {
   const [additive, setAdditive] = useState(() => seedAdditive(session))
   const revisingKey = useRef(null)
 
-  // Reseed only when the session identity changes (mount / switch after apply):
-  // within a session the live events own the cards, so a reseed can't clobber a
-  // build in progress.
+  // Reseed when the session identity OR its status changes. The session is
+  // eternal (one per project, its id never rotates), so the status flip is what
+  // marks a cycle boundary: apply/discard turns `proposed` → `active` and the
+  // reseed clears the stale ghosts (otherwise a later additive cycle's fresh
+  // `t1` keys would collide with the previous plan's). Within a cycle the live
+  // events own the cards — the session query only refetches on ready/apply/
+  // discard, so a reseed can't clobber a build in progress.
   useEffect(() => {
     setCards(seedCards(session))
     setCreating(false)
@@ -92,7 +96,7 @@ export function useStrategyPlan(projectId, session) {
     setAdditive(seedAdditive(session))
     revisingKey.current = null
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId])
+  }, [sessionId, session?.status])
 
   const handlers = useMemo(() => ({
     onStarted: () => { setCards([]); setCreating(true); setGenerating(true); setAdditive(false) },

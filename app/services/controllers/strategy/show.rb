@@ -13,10 +13,9 @@ module Controllers
         project = workspace.projects.find(@params[:project_id])
         authorize!(project, :show?)
 
-        # Prefer a PROPOSED session (a plan awaiting a decision) over a newer
-        # active one, so a pending plan always surfaces after a reload.
-        sessions = project.strategy_sessions.where.not(status: 'discarded')
-        session = sessions.status_proposed.recent.first || sessions.recent.first
+        # A project has exactly ONE (eternal) session — surface it whatever its
+        # state; a pending proposal is just its `proposed` status.
+        session = project.strategy_sessions.recent.first
         { strategy_session: session && serialize(session, StrategySessionSerializer) }
       end
     end

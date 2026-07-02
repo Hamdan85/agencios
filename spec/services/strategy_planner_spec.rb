@@ -61,19 +61,48 @@ RSpec.describe 'AI content-strategy planning' do
       expect(resumed.id).to eq(session.id)
       expect(@project.strategy_sessions.count).to eq(1)
     end
+
+    it 'is ETERNAL: resumes the same session (with its memory) after a legacy applied/discarded state' do
+      session = Operations::Strategy::Start.call(project: @project, user: @user)
+      session.push_message(role: :user, content: 'lembra: tom fofo, nada polêmico')
+      session.update!(status: 'applied')
+
+      resumed = Operations::Strategy::Start.call(project: @project, user: @user)
+      expect(resumed.id).to eq(session.id)
+      expect(resumed.status).to eq('active')
+      expect(resumed.messages.map { |m| m['content'] }).to include('lembra: tom fofo, nada polêmico')
+      expect(@project.strategy_sessions.count).to eq(1)
+    end
   end
 
   describe 'Controllers::Strategy::Show' do
-    it 'surfaces a proposed plan even when a newer active session exists' do
-      proposed = Operations::Strategy::Start.call(project: @project, user: @user)
-      proposed.update!(status: 'proposed', proposed_plan: sample_plan(10.days.from_now.change(hour: 10)))
-      # A stray newer active session (the pre-fix bug) must not mask the plan.
-      @project.strategy_sessions.create!(workspace: @workspace, user: @user, status: 'active')
+    it 'surfaces THE (single) session with its pending proposal' do
+      session = Operations::Strategy::Start.call(project: @project, user: @user)
+      session.update!(status: 'proposed', proposed_plan: sample_plan(10.days.from_now.change(hour: 10)))
 
       params = ActionController::Parameters.new(project_id: @project.id)
       result = Controllers::Strategy::Show.call(params: params)
+      expect(result[:strategy_session][:id]).to eq(session.id)
       expect(result[:strategy_session][:status]).to eq('proposed')
       expect(result[:strategy_session][:proposed_plan]['tickets'].size).to eq(1)
+    end
+  end
+
+  describe 'Controllers::Strategy::Discard' do
+    it 'drops the pending proposal but keeps the session alive (eternal)' do
+      session = Operations::Strategy::Start.call(project: @project, user: @user)
+      session.push_message(role: :user, content: 'contexto importante')
+      session.update!(status: 'proposed', proposed_plan: sample_plan(10.days.from_now.change(hour: 10)))
+
+      params = ActionController::Parameters.new(id: session.id)
+      Controllers::Strategy::Discard.call(params: params)
+
+      session.reload
+      expect(session.status).to eq('active')
+      expect(session.proposed_plan).to eq({})
+      expect(session.messages.map { |m| m['content'] }).to include('contexto importante')
+      # The next open resumes this same session, memory intact.
+      expect(Operations::Strategy::Start.call(project: @project, user: @user).id).to eq(session.id)
     end
   end
 
@@ -259,7 +288,8 @@ RSpec.describe 'AI content-strategy planning' do
       expect(ticket.fields_for('ideation')['brief']).to be_blank
       expect(ticket.subtasks).to be_empty
       expect(Strategy::FillTicketJob).to have_been_enqueued.with(ticket.id)
-      expect(session.reload.status).to eq('applied')
+      # The session is eternal — applying returns it to `active` (conversing).
+      expect(session.reload.status).to eq('active')
     end
 
     it 'links created tickets to the session' do

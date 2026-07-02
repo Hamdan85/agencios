@@ -6,6 +6,12 @@ module Operations
     # GeneratePlan, ReviseTicket): the planner prompt, the AI client, the flattened
     # conversation + current-cards context, and usage logging.
     module TurnHelpers
+      # The session is eternal, so the stored transcript grows without bound. The
+      # DB keeps everything; the AI context gets the most recent window — generous
+      # enough to hold months of planning turns, bounded enough to keep the
+      # forced-tool calls fast and affordable.
+      CONTEXT_MESSAGES = 200
+
       private
 
       def planner(session)
@@ -18,9 +24,10 @@ module Operations
         Vendors::Ai.client(model: Vendors::Ai.model_for(operation))
       end
 
-      # The stored transcript flattened as context for the forced-tool calls.
+      # The stored transcript flattened as context for the forced-tool calls
+      # (windowed to the last CONTEXT_MESSAGES turns — see above).
       def conversation(session)
-        lines = Array(session.messages).filter_map do |m|
+        lines = Array(session.messages).last(CONTEXT_MESSAGES).filter_map do |m|
           content = m['content'].to_s.strip
           next if content.blank?
 

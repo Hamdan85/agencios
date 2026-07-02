@@ -41,7 +41,8 @@ RSpec.describe Operations::Strategy::Apply do
     expect(created.map(&:title)).to eq(['Tartaruga lenta'])
     expect(existing.all? { |t| Ticket.exists?(t.id) }).to be(true)
     expect(session.reload.tickets.pluck(:title)).to contain_exactly('Existing A', 'Existing B', 'Tartaruga lenta')
-    expect(session.status).to eq('applied')
+    # The session is eternal — applying returns it to `active` (conversing).
+    expect(session.status).to eq('active')
   end
 
   it 'OPS plan removes a ticket and keeps the rest, without discarding' do
@@ -56,7 +57,18 @@ RSpec.describe Operations::Strategy::Apply do
     expect(created).to be_empty
     expect(Ticket.exists?(a.id)).to be(true)
     expect(Ticket.exists?(b.id)).to be(false)
-    expect(session.reload.status).to eq('applied')
+    expect(session.reload.status).to eq('active')
+  end
+
+  it 'refuses to re-apply a plan kept on an already-settled (active) session' do
+    seed_applied_batch('Keep')
+    session.update!(status: 'active', proposed_plan: {
+      'tickets' => [{ 'key' => 't1', 'title' => 'Stale', 'creative_type' => 'reel',
+                      'channels' => ['instagram'], 'scheduled_at' => 1.week.from_now.iso8601 }]
+    })
+
+    expect { described_class.call(session: session, user: user) }
+      .to raise_error(Operations::Errors::Invalid)
   end
 
   it 'OPS plan edits an existing ticket in place (no new ticket, no discard)' do

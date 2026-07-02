@@ -2,10 +2,11 @@
 
 module Operations
   module Strategy
-    # Find (or create) the ongoing planning session for a project. A session is
-    # "ongoing" while active OR proposed (a plan awaiting a decision) — we RESUME
-    # it rather than starting a fresh one, so a proposed plan is never orphaned by
-    # a new empty session. A proposed session wins over an active one.
+    # Find (or create) THE planning session for a project. A project has exactly
+    # ONE strategist conversation, forever (unique index on project_id) — applying
+    # or discarding a plan never retires it, so every open resumes the same chat
+    # with its full memory. Legacy `applied`/`discarded` rows (from when sessions
+    # rotated per plan cycle) are folded back to `active` on resume.
     class Start < Operations::Base
       def initialize(project:, user: nil)
         @project = project
@@ -13,10 +14,9 @@ module Operations
       end
 
       def call
-        sessions = @project.strategy_sessions
-        sessions.status_proposed.recent.first ||
-          sessions.status_active.recent.first ||
-          create_session
+        session = @project.strategy_sessions.recent.first || create_session
+        session.update!(status: 'active') if session.status_applied? || session.status_discarded?
+        session
       end
 
       private
@@ -28,6 +28,10 @@ module Operations
         session.push_message(role: :assistant, content: opening_message)
         session.save!
         session
+      rescue ActiveRecord::RecordNotUnique
+        # Two concurrent opens raced past the find — the unique index kept one;
+        # resume the winner.
+        @project.strategy_sessions.recent.first
       end
 
       # A warm, concrete opener so the drawer never starts empty — sets the client

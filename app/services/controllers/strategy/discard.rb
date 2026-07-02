@@ -2,9 +2,9 @@
 
 module Controllers
   module Strategy
-    # Discard a proposed plan without applying it — the session is marked
-    # `discarded` so it no longer surfaces on the project. A fresh planner run
-    # starts a new session.
+    # Discard a proposed plan without applying it. The session is ETERNAL (one per
+    # project) — discarding only drops the pending proposal and returns the chat to
+    # `active`; the conversation and its memory continue.
     class Discard < Base
       def initialize(params:)
         @params = params
@@ -14,7 +14,7 @@ module Controllers
         session = workspace.strategy_sessions.find(@params[:id])
         authorize!(session.project, :update?)
 
-        session.update!(status: 'discarded')
+        session.update!(status: 'active', proposed_plan: {})
         { strategy_session: serialize(session, StrategySessionSerializer) }
       end
     end
