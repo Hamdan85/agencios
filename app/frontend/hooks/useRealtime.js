@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { consumer } from '@/lib/cable'
 import { keys } from '@/api/queryKeys'
 
@@ -38,6 +39,38 @@ export function useTicketChannel(ticketId, onEvent) {
     )
     return () => sub.unsubscribe()
   }, [ticketId, qc, onEvent])
+}
+
+// Tracks the async "Atualizar campos com IA" rewrite for a ticket. The action is
+// fire-and-forget (Tickets::AiFillJob); this subscribes to the ticket channel and
+// flips a `filling` flag on the ai_fill_started/done/failed broadcasts, adopting
+// the new fields (invalidate) + toasting when the job settles. Returns
+// [filling, setFilling] so the initiating click can shimmer optimistically too.
+export function useAiFillStatus(id) {
+  const qc = useQueryClient()
+  const [filling, setFilling] = useState(false)
+  useEffect(() => {
+    if (!id) return undefined
+    const sub = consumer.subscriptions.create(
+      { channel: 'TicketChannel', ticket_id: id },
+      {
+        received: (d) => {
+          if (d?.event === 'ai_fill_started') setFilling(true)
+          else if (d?.event === 'ai_fill_done') {
+            setFilling(false)
+            qc.invalidateQueries({ queryKey: keys.ticket(id) })
+            qc.invalidateQueries({ queryKey: ['board'] })
+            toast.success('IA atualizou o ticket ✨')
+          } else if (d?.event === 'ai_fill_failed') {
+            setFilling(false)
+            toast.error('A IA não conseguiu atualizar os campos. Tente novamente.')
+          }
+        },
+      },
+    )
+    return () => sub.unsubscribe()
+  }, [id, qc])
+  return [filling, setFilling]
 }
 
 // Per-session strategy-planning updates, pushed as the plan is built/revised off

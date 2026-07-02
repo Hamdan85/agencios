@@ -1,3 +1,4 @@
+import { Wand2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export function Spinner({ size = 22, className }) {
@@ -21,6 +22,33 @@ export function PageLoader() {
 
 export function Skeleton({ className }) {
   return <div className={cn('animate-pulse rounded-xl bg-surface-muted', className)} style={{ animationName: 'ag-pulse' }} />
+}
+
+// Overlay that shimmers a block of fields while the AI rewrites them off the
+// request. The children dim + pulse; a sweeping sheen and a "Reescrevendo…" chip
+// signal the work. Cleared when Action Cable broadcasts the fill is done.
+// `active=false` renders children untouched.
+export function AiRewritingOverlay({ active = false, label = 'Reescrevendo com IA…', color = '#7C3AED', children }) {
+  if (!active) return children
+  return (
+    <div className="relative">
+      <div className="pointer-events-none animate-pulse select-none opacity-40" style={{ animationName: 'ag-pulse' }} aria-hidden>
+        {children}
+      </div>
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="shimmer absolute inset-0" />
+        <div className="absolute inset-x-0 top-4 flex justify-center">
+          <span
+            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold shadow-sm"
+            style={{ background: `${color}16`, color }}
+          >
+            <Wand2 size={13} className="animate-pulse" strokeWidth={2.4} />
+            {label}
+          </span>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 // Big, friendly, iconographic empty state.

@@ -35,7 +35,10 @@ export function useTicketMutations(id) {
     advance: mk(({ toStatus, position }) => ticketsApi.advance(id, toStatus, position), 'Status atualizado!'),
     publish: mk((payload) => ticketsApi.publish(id, payload), undefined, () => analytics.track(EVENTS.POST_CREATED)),
     summarize: mk(() => ticketsApi.summarize(id)),
-    aiAction: mk((payload) => ticketsApi.aiAction(id, payload), 'IA atualizou o ticket ✨', () => analytics.track(EVENTS.AI_ACTION)),
+    // Fire-and-forget: this only ENQUEUES the rewrite. The success toast + field
+    // adoption happen when the ticket channel broadcasts ai_fill_done (see
+    // useAiFillStatus) — so no okMsg here, or it would fire before any work runs.
+    aiAction: mk((payload) => ticketsApi.aiAction(id, payload), undefined, () => analytics.track(EVENTS.AI_ACTION)),
     generateSubtasks: mk(() => ticketsApi.generateSubtasks(id), 'Checklist gerada com IA ✨', () => analytics.track(EVENTS.AI_ACTION)),
     addSubtask: mk((data) => ticketsApi.createSubtask(id, data)),
     addNote: mk((payload) => ticketsApi.createNote(id, payload)),

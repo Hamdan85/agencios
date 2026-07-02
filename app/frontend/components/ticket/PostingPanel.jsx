@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input, Textarea } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Spinner, EmptyState } from '@/components/ui/feedback'
+import { Spinner, EmptyState, AiRewritingOverlay } from '@/components/ui/feedback'
 import { DateTimePicker } from '@/components/ui/date-picker'
 import { ChannelIcons } from '@/components/ui/iconography'
 import { creativeMeta, channelMeta, creativeMediaKind, resolvePostRouting, isCoverType } from '@/lib/constants'
@@ -31,7 +31,7 @@ const POST_STATUS = {
 // The ticket only reaches "No ar" when a post actually succeeds.
 export default function PostingPanel({
   ticket, creatives = [], posts = [], onSave, onPublish, publishing = false,
-  onAiAction, acting = false, onUnpublish, unpublishingId, color = '#EC4899',
+  onAiAction, acting = false, filling = false, onUnpublish, unpublishingId, color = '#EC4899',
 }) {
   const fields = ticket?.fields?.scheduled || {}
   const channels = Array.isArray(ticket?.channels) ? ticket.channels : []
@@ -120,6 +120,7 @@ export default function PostingPanel({
         {onAiAction && <AiFillButton onClick={onAiAction} acting={acting} color={color} />}
       </div>
 
+      <AiRewritingOverlay active={filling} color={color}>
       <div className="space-y-5 p-5">
         {/* 1 — choose one creative per scoped type */}
         <div className="space-y-4">
@@ -337,6 +338,7 @@ export default function PostingPanel({
           </div>
         )}
       </div>
+      </AiRewritingOverlay>
     </Card>
   )
 }

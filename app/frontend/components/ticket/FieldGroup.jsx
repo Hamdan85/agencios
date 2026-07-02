@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
-import { Spinner } from '@/components/ui/feedback'
+import { Spinner, AiRewritingOverlay } from '@/components/ui/feedback'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ChipsInput } from '@/components/ui/chips-input'
 import { DatePicker, DateTimePicker } from '@/components/ui/date-picker'
@@ -20,30 +20,27 @@ import {
   Check, Link2, Target, Users, Layers, FlaskConical, Hash, ListChecks, Clock,
   MessageSquareText, ShieldCheck, FileText, ThumbsUp, AlertTriangle, Repeat,
   Eye, Heart, MessageCircle, Share2, Bookmark, BarChart3, ExternalLink,
-  Ban,
+  Ban, Cloud,
 } from 'lucide-react'
 
 // How long after the last change we wait before the autosave fires.
 const AUTOSAVE_MS = 800
 
-// The unobtrusive autosave status: a spinner while writing, then a brief "Salvo"
-// that fades on its own. No manual save button — edits persist on their own.
+// The unobtrusive autosave status — icon only, so it never reflows the header.
+// Resting: a still grey cloud. Saving: a blue spinner. Just-saved: a green check
+// that settles back to grey on its own. No manual save button — edits persist.
 function SaveIndicator({ saving, saved }) {
-  if (saving) {
-    return (
-      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-muted">
-        <Spinner size={13} /> Salvando…
-      </span>
-    )
-  }
-  if (saved) {
-    return (
-      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-success animate-rise">
-        <Check size={13} strokeWidth={2.8} /> Salvo
-      </span>
-    )
-  }
-  return null
+  return (
+    <span className="inline-flex size-[22px] items-center justify-center" aria-hidden="true">
+      {saving ? (
+        <Spinner size={15} className="border-sky/25 border-t-sky" />
+      ) : saved ? (
+        <Check size={15} strokeWidth={2.8} className="text-success animate-rise" />
+      ) : (
+        <Cloud size={15} strokeWidth={2.3} className="text-ink-muted/60" />
+      )}
+    </span>
+  )
 }
 
 // ── Per-status field schema ──────────────────────────────────────────────
@@ -134,6 +131,26 @@ const METRIC_TILES = [
 
 const linesToArray = (str) => String(str || '').split('\n').map((s) => s.trim()).filter(Boolean)
 const arrayToLines = (arr) => (Array.isArray(arr) ? arr.join('\n') : arr || '')
+
+// True when the draft diverges from the persisted server values for any field.
+// Pure so it can be bound to an outgoing ticket/status baseline (see the flush).
+const fieldsDirty = (fields, draft, server) =>
+  fields.some((f) => {
+    const a = draft[f.key]
+    const b = server[f.key]
+    if (f.kind === 'lines') return arrayToLines(a) !== arrayToLines(b)
+    if (f.kind === 'channels' || f.kind === 'chips' || f.kind === 'creativeTypes') return JSON.stringify(a || []) !== JSON.stringify(b || [])
+    return (a ?? '') !== (b ?? '')
+  })
+
+// Normalise line fields (one-per-line textarea ⇄ array) before persisting.
+const toPayload = (next, schema) => {
+  const payload = { ...next }
+  schema?.fields.forEach((f) => {
+    if (f.kind === 'lines') payload[f.key] = linesToArray(next[f.key])
+  })
+  return payload
+}
 
 // ── Read-only stat tiles for a post's metrics ────────────────────────────
 function MetricTiles({ metrics }) {
@@ -231,7 +248,7 @@ function PublishedView({ status, posts, color, onUnpublish, unpublishingId }) {
 }
 
 // ── The contextual editable field group ──────────────────────────────────
-export default function FieldGroup({ ticket, posts, subtasks = [], onSave, saving = false, onAiAction, acting = false }) {
+export default function FieldGroup({ ticket, posts, subtasks = [], onSave, saving = false, onAiAction, acting = false, filling = false }) {
   const status = ticket?.status
   const m = statusMeta(status)
   const schema = SCHEMAS[status]
@@ -245,34 +262,35 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
 
   // Whether the local draft diverges from the persisted server values.
   // (Computed before any early return so hook order stays stable.)
-  const dirty = useMemo(() => {
-    if (!schema) return false
-    return schema.fields.some((f) => {
-      const a = draft[f.key]
-      const b = serverValues[f.key]
-      if (f.kind === 'lines') return arrayToLines(a) !== arrayToLines(b)
-      if (f.kind === 'channels' || f.kind === 'chips' || f.kind === 'creativeTypes') return JSON.stringify(a || []) !== JSON.stringify(b || [])
-      return (a ?? '') !== (b ?? '')
-    })
-  }, [draft, serverValues, schema])
-
-  // Normalise line fields (one-per-line textarea ⇄ array) before persisting.
-  const toPayload = (next) => {
-    const payload = { ...next }
-    schema?.fields.forEach((f) => {
-      if (f.kind === 'lines') payload[f.key] = linesToArray(next[f.key])
-    })
-    return payload
-  }
+  const dirty = useMemo(
+    () => (schema ? fieldsDirty(schema.fields, draft, serverValues) : false),
+    [draft, serverValues, schema],
+  )
 
   // Latest-value refs so the debounced save reads fresh state inside its timer.
   const draftRef = useRef(draft); draftRef.current = draft
   const dirtyRef = useRef(dirty); dirtyRef.current = dirty
   const savingRef = useRef(saving); savingRef.current = saving
 
-  // Hard reset when navigating to a different ticket / status.
+  // Hard reset when navigating to a different ticket / status. The cleanup runs
+  // on a ticket/status switch AND on unmount (closing the drawer or leaving the
+  // page). We flush any pending draft on the way out — an edit made inside the
+  // debounce window must still persist. The baseline (schema, server values,
+  // onSave) is captured here at setup so the flush always saves the OUTGOING
+  // ticket/status to itself, never cross-contaminating the incoming one (the
+  // switch commits its new render before this cleanup runs).
   useEffect(() => {
-    setDraft(ticket?.fields?.[status] || {})
+    const outgoingSchema = SCHEMAS[status]
+    const outgoingServer = ticket?.fields?.[status] || {}
+    const outgoingSave = onSave
+    setDraft(outgoingServer)
+    return () => {
+      if (savingRef.current || !outgoingSchema) return
+      const d = draftRef.current
+      if (fieldsDirty(outgoingSchema.fields, d, outgoingServer)) {
+        outgoingSave?.(toPayload(d, outgoingSchema))
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ticket?.id, status])
 
@@ -288,7 +306,7 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
   useEffect(() => {
     if (!dirty) return undefined
     const t = setTimeout(() => {
-      if (dirtyRef.current && !savingRef.current) onSave?.(toPayload(draftRef.current))
+      if (dirtyRef.current && !savingRef.current) onSave?.(toPayload(draftRef.current, schema))
     }, AUTOSAVE_MS)
     return () => clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -598,9 +616,11 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
           {onAiAction && <AiFillButton onClick={onAiAction} acting={acting} color={m.color} />}
         </div>
       </div>
-      <div className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2">
-        {schema.fields.map(renderField)}
-      </div>
+      <AiRewritingOverlay active={filling} color={m.color}>
+        <div className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2">
+          {schema.fields.map(renderField)}
+        </div>
+      </AiRewritingOverlay>
     </Card>
   )
 }

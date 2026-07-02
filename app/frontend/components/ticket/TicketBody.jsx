@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Layers, MessageSquare } from 'lucide-react'
+import { useAiFillStatus } from '@/hooks/useRealtime'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import AiSummaryCard from './AiSummaryCard'
 import AiFillDialog from './AiFillDialog'
@@ -24,14 +25,23 @@ export default function TicketBody({
   const [drawerTab, setDrawerTab] = useState('details')
   // "Atualizar com IA" opens a dialog asking what to change before regenerating.
   const [aiOpen, setAiOpen] = useState(false)
+  // The rewrite runs off the request: the fields shimmer until the ticket channel
+  // broadcasts it's done (useAiFillStatus). Set optimistically on submit so the
+  // shimmer is instant, and rolled back if the enqueue itself fails.
+  const [aiFilling, setAiFilling] = useAiFillStatus(id)
 
   const showCreativesInMain = status === 'production'
   const saveFields = (fields) => mut.update.mutate({ status, fields })
   // "Atualizar com IA" fills the current stage's fields — only meaningful on the
   // editable funnel stages (the read-only monitoring/done stages have no fields).
   const editable = !['published', 'done'].includes(status)
-  const runAiFill = (instruction) =>
-    mut.aiAction.mutate({ instruction }, { onSuccess: () => setAiOpen(false) })
+  const runAiFill = (instruction) => {
+    setAiFilling(true)
+    mut.aiAction.mutate({ instruction }, {
+      onSuccess: () => setAiOpen(false),
+      onError: () => setAiFilling(false),
+    })
+  }
 
   const main = (
     <div className="space-y-5">
@@ -45,7 +55,8 @@ export default function TicketBody({
           onPublish={(payload) => mut.publish.mutate(payload)}
           publishing={mut.publish.isPending}
           onAiAction={() => setAiOpen(true)}
-          acting={mut.aiAction.isPending}
+          acting={aiFilling}
+          filling={aiFilling}
           onUnpublish={(postId) => mut.unpublishPost.mutate(postId)}
           unpublishingId={mut.unpublishPost.isPending ? mut.unpublishPost.variables : null}
         />
@@ -57,7 +68,8 @@ export default function TicketBody({
           onSave={saveFields}
           saving={mut.update.isPending}
           onAiAction={editable ? () => setAiOpen(true) : undefined}
-          acting={mut.aiAction.isPending}
+          acting={aiFilling}
+          filling={aiFilling}
           onUnpublish={(postId) => mut.unpublishPost.mutate(postId)}
           unpublishingId={mut.unpublishPost.isPending ? mut.unpublishPost.variables : null}
         />

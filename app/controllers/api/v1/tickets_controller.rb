@@ -31,8 +31,9 @@ module Api
       # POST /api/v1/tickets/:id/summarize — regenerate the status summary now.
       def summarize = render_ok(Controllers::Tickets::Summarize.call(params:))
 
-      # POST /api/v1/tickets/:id/ai_action — run the status's AI action.
-      def ai_action = render_ok(Controllers::Tickets::AiAction.call(params:))
+      # POST /api/v1/tickets/:id/ai_action — enqueue the status's AI action (async;
+      # the ticket channel broadcasts ai_fill_done/failed when it settles).
+      def ai_action = render_accepted(Controllers::Tickets::AiAction.call(params:))
 
       # POST /api/v1/tickets/:id/generate_subtasks — AI production checklist.
       def generate_subtasks = render_ok(Controllers::Tickets::GenerateSubtasks.call(params:))

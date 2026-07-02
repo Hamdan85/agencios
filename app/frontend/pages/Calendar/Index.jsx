@@ -280,7 +280,7 @@ function WeekStrip({ cursor, today, byDay, showWorkspace, onEventClick }) {
   const days = useMemo(() => weekDays(cursor), [cursor])
 
   return (
-    <div className="grid min-h-0 flex-1 grid-cols-2 gap-3 overflow-y-auto sm:grid-cols-4 lg:grid-cols-7 lg:overflow-hidden">
+    <div className="grid min-h-0 flex-1 grid-cols-2 gap-3 overflow-y-auto p-1.5 sm:grid-cols-4 lg:grid-cols-7 lg:overflow-hidden">
       {days.map((day) => {
         const events = byDay.get(dayKey(day)) || []
         const isToday = isSameDay(day, today)

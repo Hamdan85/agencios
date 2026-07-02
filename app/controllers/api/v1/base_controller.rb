@@ -46,6 +46,10 @@ module Api
         render json: data, status: :created
       end
 
+      def render_accepted(data = {})
+        render json: data, status: :accepted
+      end
+
       def render_error(msg, status: :unprocessable_entity)
         render json: { error: msg }, status: status
       end
