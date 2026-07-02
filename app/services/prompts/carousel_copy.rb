@@ -51,6 +51,7 @@ module Prompts
         reference_instruction,
         present_line('Tema', context[:topic]),
         present_line('Material de apoio', context[:copy_brief]),
+        present_line('Escopo de produção', context[:production_scope]),
         present_line('Roteiro', context[:script]),
         present_line('Canais', context[:channels])
       ].compact.join("\n\n").presence || 'Crie um carrossel sobre a marca e sua proposta de valor.'

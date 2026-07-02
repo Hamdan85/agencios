@@ -61,7 +61,7 @@ const SCHEMAS = {
       { key: 'caption', label: 'Legenda', kind: 'textarea', rows: 5, icon: MessageSquareText, placeholder: 'Escreva ou gere a legenda final…', full: true },
       { key: 'hashtags', label: 'Hashtags', kind: 'chips', icon: Hash, placeholder: 'Digite e tecle Enter…', full: true, hint: 'Enter ou vírgula adiciona; clique no × para remover' },
       { key: 'approval_status', label: 'Aprovação', kind: 'select', icon: ShieldCheck, options: 'approval' },
-      { key: 'internal_notes', label: 'Notas internas', kind: 'textarea', rich: true, rows: 3, icon: FileText, placeholder: 'Observações para a equipe…', full: true },
+      { key: 'production_scope', label: 'Escopo de Produção', kind: 'textarea', rich: true, rows: 3, icon: FileText, placeholder: 'Direções de produção — orientam a geração dos criativos (referências, o que mostrar/evitar, elementos obrigatórios)…', full: true },
     ],
   },
   scheduled: {

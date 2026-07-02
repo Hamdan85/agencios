@@ -63,6 +63,11 @@ module Tickets
     def script         = @overrides[:script].presence || scoping['script']
     def caption        = production['caption']
 
+    # Production-stage direction that guides the creative (references, what to
+    # show/avoid, mandatory elements). Rich text — strip HTML so the prompt gets
+    # clean prose. Fed into every generator (image/carousel/video copy).
+    def production_scope = strip_html(production['production_scope'])
+
     URL_RE = %r{https?://\S+}i
 
     # Reference material the team attached in ideation (+ any override). Free text
@@ -128,7 +133,8 @@ module Tickets
       {
         topic: topic, objective: objective, brief: brief, persona: persona,
         copy_brief: copy_brief, script: script, content_pillar: content_pillar,
-        channels: channels.join(', '), summary: summary, caption: caption,
+        production_scope: production_scope, channels: channels.join(', '),
+        summary: summary, caption: caption,
         creative_type: creative_type, aspect: aspect_ratio,
         references: references.presence&.join('; '),
         width: width, height: height
@@ -139,6 +145,7 @@ module Tickets
       [
         base.to_s.strip.presence || topic.presence,
         copy_brief.present? ? "Escopo: #{copy_brief}" : nil,
+        production_scope.present? ? "Direção de produção: #{production_scope}" : nil,
         content_pillar.present? ? "Pilar: #{content_pillar}" : nil,
         spec[:prompt_scaffold],
         brand_descriptor,
@@ -170,6 +177,13 @@ module Tickets
     end
 
     private
+
+    # Rich-text fields are stored as HTML; prompts want clean prose.
+    def strip_html(value)
+      return nil if value.blank?
+
+      ActionController::Base.helpers.strip_tags(value.to_s).squish.presence
+    end
 
     def attachment(name)
       [client, workspace].compact.each do |owner|

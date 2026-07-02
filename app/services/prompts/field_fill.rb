@@ -31,7 +31,9 @@ module Prompts
       'production' => {
         'caption' => 'Legenda final pronta para publicar: gancho na 1ª linha, corpo curto e CTA',
         'hashtags' => 'Hashtags relevantes SEM o # (5 a 12)',
-        'internal_notes' => 'Observações de produção para a equipe (HTML simples: <p>, <ul>, <li>, <strong>)'
+        'production_scope' => 'Escopo de produção: direções concretas que guiam a geração dos ' \
+                              'criativos (referências visuais, o que mostrar/evitar, tom, elementos ' \
+                              'obrigatórios). HTML simples: <p>, <ul>, <li>, <strong>.'
       },
       'scheduled' => {
         'captions' => 'Uma legenda final por canal conectado, cada uma otimizada para as ' \
