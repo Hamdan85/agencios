@@ -24,6 +24,13 @@ module Vendors
 
         SUPPORTED_ASPECT_RATIOS = %w[1:1 16:9 9:16 4:3 3:4].freeze
 
+        # Inline image MIME types the Gemini generateContent API accepts. Anything
+        # else (notably image/svg+xml brand logos) is rejected by the API with an
+        # "Unsupported MIME type" 400 — such references are dropped before sending.
+        SUPPORTED_IMAGE_MIME_TYPES = %w[
+          image/png image/jpeg image/webp image/heic image/heif
+        ].freeze
+
         def initialize(api_key: nil, model: nil)
           @api_key = api_key ||
                      credential(:google_banana, :api_key, env: 'GOOGLE_BANANA_API_KEY')
@@ -78,11 +85,19 @@ module Vendors
             bytes = ref && ref[:bytes]
             next [] if bytes.blank?
 
+            mime = ref[:content_type].presence || 'image/png'
+            unless SUPPORTED_IMAGE_MIME_TYPES.include?(mime.to_s.downcase)
+              Rails.logger.warn(
+                "[Google::Banana] skipping reference image with unsupported MIME type: #{mime}"
+              )
+              next []
+            end
+
             parts = []
             parts << { text: "Referência — #{ref[:label]}:" } if ref[:label].present?
             parts << {
               inlineData: {
-                mimeType: ref[:content_type].presence || 'image/png',
+                mimeType: mime,
                 data: Base64.strict_encode64(bytes)
               }
             }

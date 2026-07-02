@@ -222,9 +222,17 @@ module Tickets
       return nil if att.nil?
       return nil if att.respond_to?(:attached?) && !att.attached?
 
-      bytes = att.download
-      ct    = att.respond_to?(:content_type) ? att.content_type : att.blob&.content_type
-      { label: label, bytes: bytes, content_type: ct.presence || 'image/png' }
+      ct = att.respond_to?(:content_type) ? att.content_type : att.blob&.content_type
+      ct = ct.presence || 'image/png'
+
+      # Image models only accept a fixed set of raster MIME types. Brand logos are
+      # frequently SVGs, which the vendor rejects — skip them rather than 500.
+      unless Vendors::Google::Banana::Client::SUPPORTED_IMAGE_MIME_TYPES.include?(ct.to_s.downcase)
+        Rails.logger.info("[CreativeContext] skipping unsupported reference image (#{ct}) for #{label}")
+        return nil
+      end
+
+      { label: label, bytes: att.download, content_type: ct }
     rescue StandardError => e
       Rails.logger.warn("[CreativeContext] reference image read failed: #{e.message}")
       nil

@@ -10,6 +10,9 @@ module Operations
       end
 
       def call
+        channels = Array(@params[:channels]).compact_blank
+        types = Array(@params[:creative_types].presence || @params[:creative_type]).map(&:to_s).compact_blank
+
         ticket = Ticket.new(
           workspace: @workspace,
           created_by: @user,
@@ -19,8 +22,10 @@ module Operations
           priority: @params[:priority] || :medium,
           due_date: @params[:due_date],
           scheduled_at: @params[:scheduled_at],
-          channels: Array(@params[:channels]).compact_blank,
-          creative_type: @params[:creative_type],
+          channels: channels,
+          creative_type: types.first,
+          creative_types: types,
+          fields: scoping_seed(channels, types),
           strategy_session_id: @params[:strategy_session_id],
           status: :ideation,
           position: next_position
@@ -55,6 +60,18 @@ module Operations
       end
 
       private
+
+      # Seed the scoping field bag when the strategy is already known at creation
+      # (e.g. a ticket materialized from an AI content plan). The scoping panel
+      # reads channels/creative types from `fields['scoping']`, not the top-level
+      # columns, so without this seed a chatbot-created ticket shows them blank.
+      # Returns the full fields hash for Ticket.new (empty when nothing to seed).
+      def scoping_seed(channels, types)
+        seed = {}
+        seed['channels'] = channels if channels.present?
+        seed['creative_types'] = types if types.present?
+        seed.present? ? { 'scoping' => seed } : {}
+      end
 
       def ideation_fields
         raw = @params[:fields]
