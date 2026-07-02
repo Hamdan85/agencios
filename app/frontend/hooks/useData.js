@@ -183,7 +183,7 @@ export function useGenerate() {
       qc.invalidateQueries({ queryKey: ['generations'] })
       qc.invalidateQueries({ queryKey: ['creatives'] })
       qc.invalidateQueries({ queryKey: ['tickets'] })
-      // Activation + the usage-billing meter (carousel/video are metered).
+      // Activation + usage tracking (video/image consume credits; carousels are included).
       analytics.track(EVENTS.CREATIVE_GENERATED, { kind: variables?.kind, source: 'studio' })
       toast.success('Geração concluída ✨')
     },
@@ -477,6 +477,10 @@ export function useBillingMutations() {
 
 // ── Credits (prepaid wallet for video/image generation) ────────
 export const useCredits = () => useQuery({ queryKey: keys.credits(), queryFn: creditsApi.get })
+
+// Credit-usage breakdown for the "Uso" tab (spend by kind + trend + recent runs).
+export const useCreditUsage = (range = '30d') =>
+  useQuery({ queryKey: keys.creditUsage(range), queryFn: () => creditsApi.usage(range) })
 
 export function useCreditsMutations() {
   return {

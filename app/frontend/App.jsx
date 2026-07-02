@@ -83,6 +83,7 @@ const router = createBrowserRouter(
           <Route path="/configuracoes" element={<Settings />} />
           <Route path="/configuracoes/:tab" element={<Settings />} />
           <Route path="/assinatura" element={<Billing />} />
+          <Route path="/assinatura/:tab" element={<Billing />} />
         </Route>
       </Route>
 

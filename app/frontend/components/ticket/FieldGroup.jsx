@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { statusMeta, CREATIVE_TYPE_META, CHANNEL_META, creativeTypesForChannels } from '@/lib/constants'
 import { Card } from '@/components/ui/card'
 import { Input, Textarea } from '@/components/ui/input'
@@ -18,9 +18,32 @@ import {
   Lightbulb, Ruler, Wand2, CalendarClock, Radio, LineChart, CheckCircle2,
   Check, Link2, Target, Users, Layers, FlaskConical, Hash, ListChecks, Clock,
   MessageSquareText, ShieldCheck, FileText, ThumbsUp, AlertTriangle, Repeat,
-  Eye, Heart, MessageCircle, Share2, Bookmark, BarChart3, ExternalLink, Save,
+  Eye, Heart, MessageCircle, Share2, Bookmark, BarChart3, ExternalLink,
   Ban,
 } from 'lucide-react'
+
+// How long after the last change we wait before the autosave fires.
+const AUTOSAVE_MS = 800
+
+// The unobtrusive autosave status: a spinner while writing, then a brief "Salvo"
+// that fades on its own. No manual save button — edits persist on their own.
+function SaveIndicator({ saving, saved }) {
+  if (saving) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-muted">
+        <Spinner size={13} /> Salvando…
+      </span>
+    )
+  }
+  if (saved) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-success animate-rise">
+        <Check size={13} strokeWidth={2.8} /> Salvo
+      </span>
+    )
+  }
+  return null
+}
 
 // ── Per-status field schema ──────────────────────────────────────────────
 // Field kinds: text | textarea | lines (one-per-line ⇄ array) | date | datetime
@@ -214,12 +237,10 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
 
   const serverValues = ticket?.fields?.[status] || {}
 
-  // Local draft state — initialise from server, reset when ticket/status changes.
-  const [draft, setDraft] = useState({})
-  useEffect(() => {
-    setDraft(serverValues)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ticket?.id, status, JSON.stringify(serverValues)])
+  // Local draft state. Every edit just mutates the draft; a debounced effect
+  // persists it (see below). No control saves on its own anymore.
+  const [draft, setDraft] = useState(serverValues)
+  const setField = (key, value) => setDraft((d) => ({ ...d, [key]: value }))
 
   // Whether the local draft diverges from the persisted server values.
   // (Computed before any early return so hook order stays stable.)
@@ -234,6 +255,58 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
     })
   }, [draft, serverValues, schema])
 
+  // Normalise line fields (one-per-line textarea ⇄ array) before persisting.
+  const toPayload = (next) => {
+    const payload = { ...next }
+    schema?.fields.forEach((f) => {
+      if (f.kind === 'lines') payload[f.key] = linesToArray(next[f.key])
+    })
+    return payload
+  }
+
+  // Latest-value refs so the debounced save reads fresh state inside its timer.
+  const draftRef = useRef(draft); draftRef.current = draft
+  const dirtyRef = useRef(dirty); dirtyRef.current = dirty
+  const savingRef = useRef(saving); savingRef.current = saving
+
+  // Hard reset when navigating to a different ticket / status.
+  useEffect(() => {
+    setDraft(ticket?.fields?.[status] || {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ticket?.id, status])
+
+  // Adopt server values that land while we have no unsaved edits — e.g. an AI
+  // "Atualizar com IA" fill or a realtime update. Skipped mid-edit so in-flight
+  // keystrokes are never clobbered by a background refetch.
+  useEffect(() => {
+    if (!dirtyRef.current) setDraft(serverValues)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(serverValues)])
+
+  // Debounced autosave — persist the draft a beat after the last change.
+  useEffect(() => {
+    if (!dirty) return undefined
+    const t = setTimeout(() => {
+      if (dirtyRef.current && !savingRef.current) onSave?.(toPayload(draftRef.current))
+    }, AUTOSAVE_MS)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft, dirty])
+
+  // Transient "Salvo" flash once a save settles.
+  const [savedFlash, setSavedFlash] = useState(false)
+  const wasSaving = useRef(false)
+  useEffect(() => {
+    if (wasSaving.current && !saving) {
+      setSavedFlash(true)
+      const t = setTimeout(() => setSavedFlash(false), 2000)
+      wasSaving.current = saving
+      return () => clearTimeout(t)
+    }
+    wasSaving.current = saving
+    return undefined
+  }, [saving])
+
   // Read-only stages render a different surface entirely.
   if (status === 'published') {
     return <PublishedView status={status} posts={posts} color={m.color} />
@@ -244,43 +317,16 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
   }
   if (!schema) return null
 
-  const setField = (key, value) => setDraft((d) => ({ ...d, [key]: value }))
-
-  // Normalise line fields to arrays before persisting.
-  const toPayload = (next) => {
-    const payload = { ...next }
-    schema.fields.forEach((f) => {
-      if (f.kind === 'lines') payload[f.key] = linesToArray(next[f.key])
-    })
-    return payload
-  }
-
-  const handleSave = () => {
-    if (!dirty || saving) return
-    onSave?.(toPayload(draft))
-  }
-
-  // Set a field and persist immediately — used by selects, channels, switches
-  // and date pickers (these have no blur event to hang a save on).
-  const setAndPersist = (key, value) =>
-    setDraft((d) => {
-      const next = { ...d, [key]: value }
-      onSave?.(toPayload(next))
-      return next
-    })
-
   // Toggle a channel and prune any scoped creative type the new channel set no
   // longer supports (a creative type is only valid while a chosen channel fits
-  // it), persisting both in one write.
+  // it). The debounced autosave persists both together.
   const toggleChannel = (ch) =>
     setDraft((d) => {
       const list = Array.isArray(d.channels) ? d.channels : []
       const channels = list.includes(ch) ? list.filter((c) => c !== ch) : [...list, ch]
       const valid = creativeTypesForChannels(channels)
       const creative_types = (Array.isArray(d.creative_types) ? d.creative_types : []).filter((t) => valid.includes(t))
-      const next = { ...d, channels, creative_types }
-      onSave?.(toPayload(next))
-      return next
+      return { ...d, channels, creative_types }
     })
 
   const renderField = (f) => {
@@ -303,7 +349,6 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
             value={value || ''}
             placeholder={f.placeholder}
             onChange={(e) => setField(f.key, e.target.value)}
-            onBlur={handleSave}
           />
         )
         break
@@ -311,7 +356,7 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
         control = (
           <ChipsInput
             value={Array.isArray(value) ? value : []}
-            onChange={(v) => setAndPersist(f.key, v)}
+            onChange={(v) => setField(f.key, v)}
             placeholder={f.placeholder}
             prefix={f.key === 'hashtags' ? '#' : ''}
           />
@@ -329,7 +374,7 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
                 <button
                   key={o.value}
                   type="button"
-                  onClick={() => setAndPersist(f.key, o.value)}
+                  onClick={() => setField(f.key, o.value)}
                   aria-pressed={active}
                   className={cn(
                     'inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all',
@@ -358,7 +403,6 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
             placeholder={f.placeholder}
             className="font-mono text-[13px]"
             onChange={(e) => setField(f.key, e.target.value)}
-            onBlur={handleSave}
           />
         )
         break
@@ -366,7 +410,7 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
         control = (
           <DatePicker
             value={value ? String(value).slice(0, 10) : ''}
-            onChange={(v) => setAndPersist(f.key, v)}
+            onChange={(v) => setField(f.key, v)}
           />
         )
         break
@@ -374,14 +418,14 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
         control = (
           <DateTimePicker
             value={value ? String(value).slice(0, 16) : ''}
-            onChange={(v) => setAndPersist(f.key, v)}
+            onChange={(v) => setField(f.key, v)}
           />
         )
         break
       case 'select': {
         const opts = f.options === 'approval' ? APPROVAL_OPTIONS : REPEAT_OPTIONS
         control = (
-          <Select value={value || ''} onValueChange={(v) => setAndPersist(f.key, v)}>
+          <Select value={value || ''} onValueChange={(v) => setField(f.key, v)}>
             <SelectTrigger>
               <SelectValue placeholder="Selecione…" />
             </SelectTrigger>
@@ -488,7 +532,7 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
                 <button
                   key={key}
                   type="button"
-                  onClick={() => setAndPersist(f.key, active ? selected.filter((t) => t !== key) : [...selected, key])}
+                  onClick={() => setField(f.key, active ? selected.filter((t) => t !== key) : [...selected, key])}
                   aria-pressed={active}
                   className={cn(
                     'inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-semibold transition-all',
@@ -510,7 +554,7 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
           <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-muted/50 px-3.5 py-2.5">
             <Switch
               checked={!!value}
-              onCheckedChange={(checked) => setAndPersist(f.key, checked)}
+              onCheckedChange={(checked) => setField(f.key, checked)}
             />
             <span className="text-sm font-medium text-ink-secondary">{value ? 'Ativada' : 'Desativada'}</span>
           </div>
@@ -522,7 +566,6 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
             value={value || ''}
             placeholder={f.placeholder}
             onChange={(e) => setField(f.key, e.target.value)}
-            onBlur={handleSave}
           />
         )
     }
@@ -549,13 +592,7 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
             <p className="text-xs text-ink-muted">{schema.helper}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {dirty && <span className="text-[11px] font-semibold text-amber">Alterações não salvas</span>}
-          <Button size="sm" variant={dirty ? 'default' : 'outline'} onClick={handleSave} disabled={!dirty || saving}>
-            {saving ? <Spinner size={14} className="border-white/30 border-t-white" /> : dirty ? <Save size={14} /> : <Check size={14} />}
-            {dirty ? 'Salvar' : 'Salvo'}
-          </Button>
-        </div>
+        <SaveIndicator saving={saving} saved={savedFlash} />
       </div>
       <div className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2">
         {schema.fields.map(renderField)}

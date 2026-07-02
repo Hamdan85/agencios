@@ -12,6 +12,7 @@ import {
   useReport,
 } from '@/hooks/useData'
 import { useStrategySession, useStrategyPlan, useApplyStrategy, useDiscardStrategy } from '@/hooks/useStrategy'
+import { useUrlFilters, useUrlParam } from '@/hooks/useUrlState'
 import { useCurrentUser } from '@/hooks/useAuth'
 import { useSelection } from '@/hooks/useSelection'
 import { canManage } from '@/lib/roles'
@@ -47,17 +48,21 @@ const STATUS = {
   completed: { label: 'Finalizado', variant: 'soft' },
 }
 
+// Ticket filters live in the URL (?status=…&channel=…&q=…) so a project's
+// filtered view is shareable / reload-safe. Stable reference — see useUrlFilters.
+const FILTER_KEYS = ['q', 'status', 'assignee_id', 'channel', 'creative_type']
+
 export default function ProjectShow() {
   const { id } = useParams()
   const navigate = useNavigate()
   const qc = useQueryClient()
-  const [filters, setFilters] = useState({})
+  const [filters, setFilters] = useUrlFilters(FILTER_KEYS)
+  const [drawerId, setDrawerId] = useUrlParam('ticket')
   const [ticketOpen, setTicketOpen] = useState(false)
   const [strategyOpen, setStrategyOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [billingOpen, setBillingOpen] = useState(false)
   const [scopeOpen, setScopeOpen] = useState(false)
-  const [drawerId, setDrawerId] = useState(null)
   const { data, isLoading } = useProject(id, filters)
   const { data: latestReport } = useReport(data?.project?.latest_report_id)
   const { data: strategySession } = useStrategySession(id)
@@ -437,7 +442,7 @@ export default function ProjectShow() {
       <TicketDrawer
         ticketId={drawerId}
         open={!!drawerId}
-        onOpenChange={(o) => { if (!o) setDrawerId(null) }}
+        onOpenChange={(o) => { if (!o) setDrawerId(null, { replace: true }) }}
       />
 
       <NewTicketDialog

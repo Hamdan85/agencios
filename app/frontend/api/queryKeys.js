@@ -23,6 +23,7 @@ export const keys = {
   settings: () => ['settings'],
   billing: () => ['billing'],
   credits: () => ['credits'],
+  creditUsage: (range = '30d') => ['credits', 'usage', range],
   pricing: () => ['pricing'],
   workspaceMembers: () => ['workspace', 'memberships'],
   connections: () => ['connections'],

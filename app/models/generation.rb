@@ -1,7 +1,11 @@
 # frozen_string_literal: true
 
-# A creative-generation run. `carousel` and `video` kinds are the usage-based
-# billing meters (Stripe). Image is tracked but not metered.
+# A creative-generation run.
+#
+# Customer billing is prepaid credits: `video` and `image` kinds consume credits
+# (see Pricing#credits_for + Operations::Credits::Debit); `carousel` is included
+# in the plan (0 credits). `billable?` below is a SEPARATE, legacy concern — the
+# Stripe usage meter — and is unrelated to what the customer's wallet is charged.
 class Generation < ApplicationRecord
   belongs_to :workspace
   belongs_to :user, optional: true

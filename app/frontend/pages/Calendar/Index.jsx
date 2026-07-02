@@ -1,8 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   CalendarDays, CalendarRange, ChevronLeft, ChevronRight, Radio, Video,
 } from 'lucide-react'
 import { useCalendar, useOpenTicket } from '@/hooks/useData'
+import { useCurrentUser } from '@/hooks/useAuth'
 import { PageHeader } from '@/components/ui/page-header'
 import { PageLoader } from '@/components/ui/feedback'
 import { Button } from '@/components/ui/button'
@@ -15,9 +17,23 @@ import {
 } from '@/components/calendar/calendarUtils'
 import { EventChip } from '@/components/calendar/EventChip'
 import { MeetingDialog } from '@/components/calendar/MeetingDialog'
+import TicketDrawer from '@/components/ticket/TicketDrawer'
 
 const BRAND = '#0EA5E9'
 const MAX_CHIPS = 3
+
+// Local-time yyyy-mm-dd <-> Date, so the URL date param survives a reload
+// without a timezone shift.
+function toDateParam(d) {
+  const x = new Date(d)
+  return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`
+}
+function fromDateParam(s) {
+  if (!s) return null
+  const [y, m, d] = s.split('-').map(Number)
+  if (!y || !m || !d) return null
+  return new Date(y, m - 1, d)
+}
 
 // `scope="all_workspaces"` powers the personal "Meu calendário" view (/meu-calendario),
 // merging scheduled posts + meetings from every team. Without it, the calendar is
@@ -25,9 +41,42 @@ const MAX_CHIPS = 3
 export default function CalendarIndex({ scope } = {}) {
   const global = scope === 'all_workspaces'
   const openTicket = useOpenTicket()
-  const [view, setView] = useState('month') // 'month' | 'week'
-  const [cursor, setCursor] = useState(() => startOfDay(new Date()))
-  const [selected, setSelected] = useState(null) // event for dialog
+  const { data: me } = useCurrentUser()
+  const [selected, setSelected] = useState(null) // meeting event for dialog
+
+  // View (month/week), the navigated date, and the open ticket all live in the
+  // URL so the calendar is shareable / reload-safe (?view=week&date=2026-07-02&ticket=42).
+  const [searchParams, setSearchParams] = useSearchParams()
+  const view = searchParams.get('view') === 'week' ? 'week' : 'month'
+  const cursor = useMemo(
+    () => startOfDay(fromDateParam(searchParams.get('date')) || new Date()),
+    [searchParams],
+  )
+  const ticketId = searchParams.get('ticket')
+
+  const patchParams = useCallback(
+    (mut, { replace = true } = {}) => {
+      setSearchParams(
+        (prev) => {
+          const sp = new URLSearchParams(prev)
+          mut(sp)
+          return sp
+        },
+        { replace },
+      )
+    },
+    [setSearchParams],
+  )
+
+  const setView = useCallback((v) => patchParams((sp) => sp.set('view', v)), [patchParams])
+  const setCursor = useCallback(
+    (next) => patchParams((sp) => {
+      const base = startOfDay(fromDateParam(sp.get('date')) || new Date())
+      const value = typeof next === 'function' ? next(base) : next
+      sp.set('date', toDateParam(value))
+    }),
+    [patchParams],
+  )
 
   const range = useMemo(
     () => (view === 'month' ? monthRangeIso(cursor) : weekRangeIso(cursor)),
@@ -45,9 +94,14 @@ export default function CalendarIndex({ scope } = {}) {
 
   const handleEventClick = (ev) => {
     if (ev?.type === 'post' && ev?.ticket_id) {
-      // openTicket switches into the event's team first when it differs from the
-      // active one (global view); otherwise it's a plain in-app navigation.
-      openTicket(ev.ticket_id, ev.workspace_id)
+      // Another team's post (the cross-team "Meu calendário"): switch into that
+      // workspace and hand off to the full page — the drawer can't render a ticket
+      // from a different tenant. Same workspace → open it in the drawer.
+      if (ev.workspace_id && me?.workspace?.id && ev.workspace_id !== me.workspace.id) {
+        openTicket(ev.ticket_id, ev.workspace_id)
+        return
+      }
+      patchParams((sp) => sp.set('ticket', String(ev.ticket_id)), { replace: false })
       return
     }
     setSelected(ev)
@@ -121,6 +175,12 @@ export default function CalendarIndex({ scope } = {}) {
         event={selected}
         open={!!selected}
         onOpenChange={(o) => !o && setSelected(null)}
+      />
+
+      <TicketDrawer
+        ticketId={ticketId}
+        open={!!ticketId}
+        onOpenChange={(o) => { if (!o) patchParams((sp) => sp.delete('ticket')) }}
       />
     </Page>
   )

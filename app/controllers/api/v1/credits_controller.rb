@@ -8,6 +8,7 @@ module Api
       skip_billing_gate
 
       def show     = render_ok(Controllers::Credits::Show.call)
+      def usage    = render_ok(Controllers::Credits::Usage.call(params:))
       def checkout = render_ok(Controllers::Credits::Checkout.call(params:))
     end
   end

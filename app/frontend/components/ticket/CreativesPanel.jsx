@@ -341,6 +341,7 @@ export default function CreativesPanel({
   // types, fitting its channels) — a reel/TikTok ticket never offers a carousel.
   const uploadTypes = uploadableTypesForTicket(creativeTypes, channels)
   const [open, setOpen] = useState(false)
+  const [selectedKind, setSelectedKind] = useState(null)
   const [uploadOpen, setUploadOpen] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
   const [viewerOpen, setViewerOpen] = useState(false)
@@ -350,9 +351,18 @@ export default function CreativesPanel({
   const items = creatives || []
   const busy = generating || uploading || attaching
 
-  const fire = (item) => {
+  // Selecting a type is separate from firing — generation spends credits, so the
+  // user picks a type first and confirms with the "Gerar" button.
+  const openGenerate = (v) => {
+    setOpen(v)
+    if (!v) setSelectedKind(null)
+  }
+
+  const fire = () => {
+    const item = GENERATABLE.find((g) => g.kind === selectedKind)
+    if (!item) return
     onGenerate?.({ kind: item.kind, type: item.type, params: {} })
-    setOpen(false)
+    openGenerate(false)
   }
 
   const openViewer = (creative) => {
@@ -433,24 +443,31 @@ export default function CreativesPanel({
       </Suspense>
 
       {/* Generate dialog */}
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={openGenerate}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Sparkles size={18} className="text-brand" /> Gerar criativo
             </DialogTitle>
-            <DialogDescription>Escolha o tipo de peça para a IA produzir.</DialogDescription>
+            <DialogDescription>Escolha o tipo de peça e confirme — a geração consome créditos.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-2.5">
             {GENERATABLE.map((g) => {
               const Icon = g.icon
               const kindMeta = GENERATION_KIND_META[g.kind]
+              const active = selectedKind === g.kind
               return (
                 <button
                   key={g.kind}
                   type="button"
-                  onClick={() => fire(g)}
-                  className="flex items-center gap-3.5 rounded-2xl border border-border bg-surface p-4 text-left transition-all hover:border-brand/40 hover:bg-brand-soft/40 lift"
+                  aria-pressed={active}
+                  onClick={() => setSelectedKind(g.kind)}
+                  className={cn(
+                    'flex items-center gap-3.5 rounded-2xl border p-4 text-left transition-all lift',
+                    active
+                      ? 'border-brand bg-brand-soft/50 ring-2 ring-brand/30'
+                      : 'border-border bg-surface hover:border-brand/40 hover:bg-brand-soft/40',
+                  )}
                 >
                   <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl" style={{ background: `${g.color}16`, color: g.color }}>
                     <Icon size={24} strokeWidth={2.1} />
@@ -459,8 +476,12 @@ export default function CreativesPanel({
                     <p className="font-display text-sm font-bold text-ink">{g.label}</p>
                     <p className="text-xs text-ink-muted">{g.desc}</p>
                   </div>
-                  {kindMeta?.label && !['image'].includes(g.kind) && (
-                    <span className="rounded-full bg-amber/15 px-2 py-0.5 text-[10px] font-bold text-[#B45309]">Metrado</span>
+                  {active ? (
+                    <CheckCircle2 size={20} className="shrink-0 text-brand" />
+                  ) : (
+                    kindMeta?.label && !['image'].includes(g.kind) && (
+                      <span className="rounded-full bg-amber/15 px-2 py-0.5 text-[10px] font-bold text-[#B45309]">Metrado</span>
+                    )
                   )}
                 </button>
               )
@@ -470,6 +491,10 @@ export default function CreativesPanel({
             <DialogClose asChild>
               <Button variant="ghost" size="sm">Cancelar</Button>
             </DialogClose>
+            <Button size="sm" onClick={fire} disabled={!selectedKind || generating}>
+              {generating ? <Spinner size={14} className="border-white/30 border-t-white" /> : <Sparkles size={14} />}
+              Gerar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

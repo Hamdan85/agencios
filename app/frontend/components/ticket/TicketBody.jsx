@@ -24,15 +24,16 @@ export default function TicketBody({
 
   const showCreativesInMain = status === 'production'
   const saveFields = (fields) => mut.update.mutate({ status, fields })
+  // "Atualizar com IA" fills the current stage's fields — only meaningful on the
+  // editable funnel stages (the read-only monitoring/done stages have no fields).
+  const editable = !['published', 'done'].includes(status)
 
   const main = (
     <div className="space-y-5">
       <AiSummaryCard
         status={status}
         summary={ticket.ai_summaries?.[status]}
-        onSummarize={() => mut.summarize.mutate()}
-        onAiAction={() => mut.aiAction.mutate()}
-        summarizing={mut.summarize.isPending}
+        onAiAction={editable ? () => mut.aiAction.mutate() : undefined}
         acting={mut.aiAction.isPending}
       />
       {status === 'scheduled' ? (

@@ -235,6 +235,7 @@ export const billingApi = {
 // Prepaid credit wallet (video/image generation) + top-up checkout.
 export const creditsApi = {
   get: () => api.get('/credits'),
+  usage: (range = '30d') => api.get('/credits/usage', { params: { range } }),
   checkout: (pack) => api.post('/credits/checkout', { pack }),
 }
 

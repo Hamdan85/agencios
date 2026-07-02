@@ -8,6 +8,7 @@ import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import { KanbanSquare, Plus, LayoutGrid, Archive } from 'lucide-react'
 import { WORKFLOW, statusMeta } from '@/lib/constants'
 import { useBoard, useBoardMutations } from '@/hooks/useBoard'
+import { useUrlFilters, useUrlParam } from '@/hooks/useUrlState'
 import { useCurrentUser } from '@/hooks/useAuth'
 import { canManage } from '@/lib/roles'
 import { PageHeader } from '@/components/ui/page-header'
@@ -38,11 +39,15 @@ function toColumnMap(columns = []) {
 const findStatusOf = (map, id) =>
   WORKFLOW.find((s) => (map[s] || []).some((t) => String(t.id) === String(id)))
 
+// Filters live in the URL (?project_id=…&channel=…&q=…) so the board is
+// shareable / reload-safe. Stable reference — see useUrlFilters.
+const FILTER_KEYS = ['q', 'project_id', 'client_id', 'assignee_id', 'channel', 'creative_type']
+
 export default function Board() {
-  const [filters, setFilters] = useState({})
+  const [filters, setFilters] = useUrlFilters(FILTER_KEYS)
+  const [drawerTicketId, setDrawerTicketId] = useUrlParam('ticket')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [activeId, setActiveId] = useState(null)
-  const [drawerTicketId, setDrawerTicketId] = useState(null)
   const [clearStatus, setClearStatus] = useState(null)
 
   const { data, isLoading } = useBoard(filters)
@@ -247,7 +252,7 @@ export default function Board() {
         ticketId={drawerTicketId}
         open={!!drawerTicketId}
         showAutopilot
-        onOpenChange={(o) => { if (!o) setDrawerTicketId(null) }}
+        onOpenChange={(o) => { if (!o) setDrawerTicketId(null, { replace: true }) }}
       />
     </Page>
   )

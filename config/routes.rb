@@ -238,6 +238,7 @@ Rails.application.routes.draw do
 
       # Prepaid credit wallet (video/image generation) + top-up checkout.
       resource :credits, only: %i[show], controller: 'credits' do
+        get :usage
         post :checkout
       end
 
