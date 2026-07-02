@@ -101,10 +101,26 @@ Reuses `Converse` + `GeneratePlan` + `StrategyChannel`:
 
 ## Implementation slices (each deployable)
 
-1. **`key` + `state` on `proposed_plan` cards; table matches by key; visibility rule
-   (ghosts only when chat open + proposal).** No generation change yet. ← current
-2. `GeneratePlan` emits `plan_outline` + per-card `ticket_drafted`; table shows
-   empty → filling; page-level channel subscription.
-3. `revise_ticket` tool + `Operations::Strategy::ReviseTicket` + per-row shimmer.
-4. Drop the brief from the plan; `Apply` fires `FillBrief` per ticket at creation.
-5. (Optional) true streaming-parse in slice 2.
+1. ✅ `key` + `state` on `proposed_plan` cards; table matches by key; visibility
+   rule (ghosts only when chat open + proposal).
+2. ✅ `GeneratePlan` emits `plan_started`/`plan_outline`/`ticket_drafted`/
+   `plan_ready`; the page owns the live plan (`useStrategyPlan`); table shows empty
+   → filling; the ephemeral table loader stops at the first skeleton rows.
+3. ✅ Forced-tool router (`Operations::Strategy::ResolveTurn`, off the request via
+   `Strategy::PlanTurnJob`) → generate / revise / wait; `ReviseTicket` regenerates
+   one card in place (`ticket_revising` → `ticket_drafted`); per-row shimmer.
+4. ✅ Slim plan tool (approval-visible fields only); `Apply` materializes bare
+   ideation tickets and fires `Strategy::FillTicketJob` per ticket at creation
+   (`Ai::FillFields` + `BuildScope`) to fill the brief + checklist async.
+5. (Optional, not done) true streaming-parse in slice 2 — currently the batch is
+   built in one call and cascaded card-by-card with a small server-side stagger.
+
+## Follow-ups / known trade-offs
+
+- Subtask due dates are no longer back-scheduled from `lead_offset_days` (the plan
+  dropped subtasks); `BuildScope` creates the checklist without due dates. Revisit
+  if back-scheduled task deadlines are wanted.
+- The action router runs one (cheap, non-reasoning) AI call per turn; prompt-tune
+  if it ever re-generates a settled plan instead of waiting.
+- `GeneratePlan` sleeps ~0.35s between cards for the cascade — a background job, so
+  harmless, but it does hold a worker for a few seconds per batch.
