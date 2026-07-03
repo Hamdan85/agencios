@@ -16,17 +16,41 @@ module Operations
       def call
         return @ticket if @ticket.archived? == @archived
 
+        # Archiving shelves the ticket — nothing of it should still go live. The
+        # publish sweep reads Post#scheduled_at with no archived filter, so the
+        # pending schedules must be CANCELED here or the archived ticket would
+        # keep publishing on time. Restoring does not resurrect them; the user
+        # re-schedules from the posting step.
+        canceled = @archived ? cancel_pending_posts : 0
+
         @ticket.update!(archived_at: @archived ? Time.current : nil)
 
         Operations::Notes::Create.call(
           ticket: @ticket, user: nil, kind: :system,
-          body: @archived ? 'Ticket arquivado.' : 'Ticket restaurado.'
+          body: archive_note(canceled)
         )
 
         Broadcaster.ticket(@ticket, @archived ? 'archived' : 'unarchived')
         Broadcaster.board(@ticket.workspace_id, 'card_archived',
                           ticket_id: @ticket.id, archived: @archived)
         @ticket
+      end
+
+      private
+
+      # Cancel through the posts' own operation (the single cancel authority),
+      # never a bare destroy — same path the posting step's cancel action uses.
+      def cancel_pending_posts
+        @ticket.posts.status_scheduled.to_a.each do |post|
+          Operations::Posts::Cancel.call(post: post)
+        end.size
+      end
+
+      def archive_note(canceled)
+        return 'Ticket restaurado.' unless @archived
+        return 'Ticket arquivado.' if canceled.zero?
+
+        "Ticket arquivado. #{canceled} agendamento(s) de publicação cancelado(s)."
       end
     end
   end

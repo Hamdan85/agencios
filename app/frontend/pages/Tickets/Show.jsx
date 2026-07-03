@@ -186,7 +186,12 @@ export default function Show() {
             )}
 
             {/* Archive / delete */}
-            <TicketActionsMenu ticket={ticket} mut={mut} onDeleted={() => navigate(back.to)} />
+            <TicketActionsMenu
+              ticket={ticket}
+              mut={mut}
+              hasScheduledPosts={posts.some((p) => p.status === 'scheduled')}
+              onDeleted={() => navigate(back.to)}
+            />
           </div>
         </div>
       </div>

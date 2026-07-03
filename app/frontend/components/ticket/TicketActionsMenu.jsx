@@ -8,7 +8,11 @@ import { useConfirm } from '@/components/ui/confirm-dialog'
 // The "…" actions of the ticket detail surfaces (drawer + full page):
 // archive/restore plus a confirmed, final delete. `onDeleted` lets each surface
 // leave gracefully (close the drawer / navigate back to the origin).
-export default function TicketActionsMenu({ ticket, mut, onDeleted, size = 'icon', variant = 'outline' }) {
+// `hasScheduledPosts` makes archiving explicit about canceling pending schedules
+// (the backend cancels them — an archived ticket must never publish).
+export default function TicketActionsMenu({
+  ticket, mut, onDeleted, hasScheduledPosts = false, size = 'icon', variant = 'outline',
+}) {
   const confirm = useConfirm()
   const busy = mut.archive.isPending || mut.unarchive.isPending || mut.destroy.isPending
 
@@ -21,6 +25,19 @@ export default function TicketActionsMenu({ ticket, mut, onDeleted, size = 'icon
     })
     if (!ok) return
     mut.destroy.mutate(undefined, { onSuccess: () => onDeleted?.() })
+  }
+
+  const handleArchive = async () => {
+    if (hasScheduledPosts) {
+      const ok = await confirm({
+        title: 'Arquivar ticket?',
+        description: 'Este ticket tem publicações agendadas — arquivar cancela esses agendamentos. Você pode restaurar e reagendar depois.',
+        confirmLabel: 'Arquivar e cancelar',
+        destructive: true,
+      })
+      if (!ok) return
+    }
+    mut.archive.mutate()
   }
 
   return (
@@ -36,7 +53,7 @@ export default function TicketActionsMenu({ ticket, mut, onDeleted, size = 'icon
             <ArchiveRestore size={15} /> Restaurar
           </DropdownMenuItem>
         ) : (
-          <DropdownMenuItem onClick={() => mut.archive.mutate()}>
+          <DropdownMenuItem onClick={handleArchive}>
             <Archive size={15} /> Arquivar
           </DropdownMenuItem>
         )}

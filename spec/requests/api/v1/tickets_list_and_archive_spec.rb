@@ -88,6 +88,20 @@ RSpec.describe 'Tickets list, search & archive', type: :request do
       expect(@reel.reload.archived_at).to be_nil
     end
 
+    it 'archiving CANCELS still-scheduled posts (an archived ticket must never publish)' do
+      account = @client.social_accounts.create!(workspace: @workspace, provider: 'instagram')
+      scheduled = Post.create!(workspace: @workspace, ticket: @reel, social_account: account,
+                               status: :scheduled, scheduled_at: 1.day.from_now)
+      published = Post.create!(workspace: @workspace, ticket: @reel, social_account: account,
+                               status: :published, published_at: Time.current)
+
+      Operations::Tickets::Archive.call(@reel, user: @user, archived: true)
+
+      expect(Post.exists?(scheduled.id)).to be(false)   # canceled
+      expect(Post.exists?(published.id)).to be(true)    # history preserved
+      expect(@reel.notes.order(:created_at).last.body).to include('agendamento(s) de publicação cancelado(s)')
+    end
+
     it 'clears the done column (bulk archive) for a manager' do
       login
       Operations::Tickets::ChangeStatus.call(@reel, 'done', user: @user, force: true)

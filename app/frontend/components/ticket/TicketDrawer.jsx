@@ -78,6 +78,7 @@ function DrawerContent({ id, onOpenChange, showAutopilot }) {
                 mut={mut}
                 size="icon-sm"
                 variant="ghost"
+                hasScheduledPosts={(data?.posts || []).some((p) => p.status === 'scheduled')}
                 onDeleted={() => onOpenChange?.(false)}
               />
             )}
