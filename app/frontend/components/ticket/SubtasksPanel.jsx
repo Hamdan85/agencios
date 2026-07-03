@@ -236,8 +236,9 @@ export default function SubtasksPanel({ ticketId, subtasks = [], onAdd, adding =
   )
 }
 
-// Small assignee picker: shows the assignee's avatar (or an "add" affordance on
-// hover when unassigned), opening a member dropdown that patches assignee_id.
+// Small assignee picker: shows the assignee's avatar, or — when unassigned — a
+// permanently visible dashed-circle affordance (the row must read as
+// assignable at a glance). Opens a member dropdown that patches assignee_id.
 function AssigneeControl({ sub, people, onAssign }) {
   const currentId = sub.assignee_id
   return (
@@ -247,12 +248,14 @@ function AssigneeControl({ sub, people, onAssign }) {
           type="button"
           className={cn(
             'flex size-7 items-center justify-center rounded-full transition',
-            sub.assignee_name ? 'opacity-100' : 'text-ink-muted opacity-0 hover:bg-surface-muted group-hover:opacity-100',
+            sub.assignee_name
+              ? 'opacity-100'
+              : 'border border-dashed border-ink-faint/60 text-ink-faint hover:border-brand hover:bg-brand/5 hover:text-brand',
           )}
           aria-label={sub.assignee_name ? `Responsável: ${sub.assignee_name}` : 'Atribuir subtarefa'}
-          title={sub.assignee_name || 'Atribuir'}
+          title={sub.assignee_name || 'Atribuir responsável'}
         >
-          {sub.assignee_name ? <Avatar name={sub.assignee_name} size={22} /> : <UserPlus size={14} />}
+          {sub.assignee_name ? <Avatar name={sub.assignee_name} size={22} /> : <UserPlus size={13} />}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="max-h-72 overflow-y-auto">

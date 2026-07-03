@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
-  CalendarDays, CalendarRange, ChevronLeft, ChevronRight, Radio, Video,
+  CalendarDays, CalendarRange, ChevronLeft, ChevronRight, Radio, SquareCheck, Video,
 } from 'lucide-react'
 import { useCalendar, useOpenTicket } from '@/hooks/useData'
 import { useCurrentUser } from '@/hooks/useAuth'
@@ -16,6 +16,8 @@ import {
   monthLabel, weekLabel, dayLabel, addMonths, addDays, isSameDay, groupEventsByDay, dayKey, startOfDay,
 } from '@/components/calendar/calendarUtils'
 import { EventChip } from '@/components/calendar/EventChip'
+import { EventHoverCard } from '@/components/calendar/EventHoverCard'
+import { TimeGrid } from '@/components/calendar/TimeGrid'
 import { MeetingDialog } from '@/components/calendar/MeetingDialog'
 import TicketDrawer from '@/components/ticket/LazyTicketDrawer'
 
@@ -93,8 +95,9 @@ export default function CalendarIndex({ scope } = {}) {
     setCursor((c) => (view === 'month' ? addMonths(c, dir) : addDays(c, view === 'day' ? dir : dir * 7)))
 
   const handleEventClick = (ev) => {
-    if (ev?.type === 'post' && ev?.ticket_id) {
-      // Another team's post (the cross-team "Meu calendário"): switch into that
+    // Posts and tasks both live inside a ticket — open it.
+    if ((ev?.type === 'post' || ev?.type === 'task') && ev?.ticket_id) {
+      // Another team's event (the cross-team "Meu calendário"): switch into that
       // workspace and hand off to the full page — the drawer can't render a ticket
       // from a different tenant. Same workspace → open it in the drawer.
       if (ev.workspace_id && me?.workspace?.id && ev.workspace_id !== me.workspace.id) {
@@ -167,16 +170,9 @@ export default function CalendarIndex({ scope } = {}) {
             showWorkspace={global}
             onEventClick={handleEventClick}
           />
-        ) : view === 'day' ? (
-          <DayView
-            cursor={cursor}
-            today={today}
-            byDay={byDay}
-            showWorkspace={global}
-            onEventClick={handleEventClick}
-          />
         ) : (
-          <WeekStrip
+          <TimeGridView
+            view={view}
             cursor={cursor}
             today={today}
             byDay={byDay}
@@ -280,7 +276,9 @@ function DayCell({ day, inMonth, isToday, events, showWorkspace, onEventClick })
 
       <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
         {shown.map((ev) => (
-          <EventChip key={`${ev.type}-${ev.id}`} event={ev} onClick={onEventClick} showWorkspace={showWorkspace} compact />
+          <EventHoverCard key={`${ev.type}-${ev.id}`} event={ev} showWorkspace={showWorkspace}>
+            <EventChip event={ev} onClick={onEventClick} showWorkspace={showWorkspace} compact />
+          </EventHoverCard>
         ))}
         {overflow > 0 && (
           <span className="px-1.5 text-[10.5px] font-bold text-ink-muted">+{overflow} mais</span>
@@ -290,103 +288,22 @@ function DayCell({ day, inMonth, isToday, events, showWorkspace, onEventClick })
   )
 }
 
-// ── Week strip ─────────────────────────────────────────────────────
-// Days render as columns, exactly like the Kanban board: a single horizontal
-// row you scroll through (fixed-width, snapped columns on mobile; flexing to
-// share the width on desktop), never a wrapping grid.
-function WeekStrip({ cursor, today, byDay, showWorkspace, onEventClick }) {
-  const days = useMemo(() => weekDays(cursor), [cursor])
+// ── Day / week time grid ───────────────────────────────────────────
+// Both views share the Google Calendar-style TimeGrid: a 24h vertical axis
+// where each event sits at its time; the day view is the same grid with a
+// single, centered column.
+function TimeGridView({ view, cursor, today, byDay, showWorkspace, onEventClick }) {
+  const days = useMemo(() => (view === 'day' ? [cursor] : weekDays(cursor)), [view, cursor])
 
   return (
-    <div className="scrollbar-subtle flex min-h-0 flex-1 snap-x snap-mandatory items-stretch gap-3 overflow-x-auto overflow-y-hidden p-1.5 sm:snap-none">
-      {days.map((day) => {
-        const events = byDay.get(dayKey(day)) || []
-        const isToday = isSameDay(day, today)
-        const weekend = day.getDay() === 0 || day.getDay() === 6
-        const wd = day.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '')
-        return (
-          <div
-            key={dayKey(day)}
-            className={cn(
-              'flex w-[80vw] max-w-[22rem] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-border bg-surface lift sm:w-0 sm:min-w-[13rem] sm:max-w-none sm:flex-1 sm:snap-align-none',
-              isToday && 'ring-2 ring-sky/40',
-            )}
-          >
-            <div
-              className={cn(
-                'flex shrink-0 items-center justify-between rounded-t-2xl border-b border-border px-3 py-2.5',
-                isToday ? 'bg-sky/10' : weekend ? 'bg-surface-muted/40' : 'bg-surface-muted/20',
-              )}
-            >
-              <div>
-                <p className={cn('text-[10px] font-bold uppercase tracking-wider', isToday ? 'text-sky' : 'text-ink-muted')}>
-                  {wd}
-                </p>
-                <p className={cn('font-display text-xl font-extrabold tabular-nums', isToday ? 'text-sky' : 'text-ink')}>
-                  {day.getDate()}
-                </p>
-              </div>
-              {events.length > 0 && (
-                <span className="grid size-6 place-items-center rounded-full bg-surface text-[11px] font-bold text-ink-muted">
-                  {events.length}
-                </span>
-              )}
-            </div>
-            <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto p-2">
-              {events.length === 0 ? (
-                <p className="px-1 pt-2 text-[11px] font-medium text-ink-faint">Livre</p>
-              ) : (
-                events.map((ev) => (
-                  <EventChip key={`${ev.type}-${ev.id}`} event={ev} onClick={onEventClick} showWorkspace={showWorkspace} />
-                ))
-              )}
-            </div>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-// ── Day view ───────────────────────────────────────────────────────
-// A single day as one wide agenda column, centered like a focused list.
-function DayView({ cursor, today, byDay, showWorkspace, onEventClick }) {
-  const events = byDay.get(dayKey(cursor)) || []
-  const isToday = isSameDay(cursor, today)
-  const wd = cursor.toLocaleDateString('pt-BR', { weekday: 'long' })
-
-  return (
-    <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_1px_2px_rgba(24,18,43,0.04),0_8px_24px_-16px_rgba(24,18,43,0.12)]">
-      <div
-        className={cn(
-          'flex shrink-0 items-center justify-between border-b border-border px-4 py-3',
-          isToday ? 'bg-sky/10' : 'bg-surface-muted/30',
-        )}
-      >
-        <div className="flex items-center gap-3">
-          <span
-            className={cn(
-              'grid size-11 place-items-center rounded-2xl font-display text-lg font-extrabold tabular-nums',
-              isToday ? 'bg-sky text-white shadow-sm' : 'bg-surface text-ink',
-            )}
-          >
-            {cursor.getDate()}
-          </span>
-          <p className={cn('text-sm font-bold capitalize', isToday ? 'text-sky' : 'text-ink-secondary')}>{wd}</p>
-        </div>
-        <span className="text-xs font-semibold text-ink-muted">
-          {events.length > 0 ? `${events.length} ${events.length > 1 ? 'itens' : 'item'}` : 'Livre'}
-        </span>
-      </div>
-      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-3">
-        {events.length === 0 ? (
-          <p className="px-1 pt-4 text-center text-sm font-medium text-ink-faint">Nenhum post ou reunião neste dia.</p>
-        ) : (
-          events.map((ev) => (
-            <EventChip key={`${ev.type}-${ev.id}`} event={ev} onClick={onEventClick} showWorkspace={showWorkspace} />
-          ))
-        )}
-      </div>
+    <div className={cn('flex min-h-0 flex-1 flex-col p-1.5', view === 'day' && 'mx-auto w-full max-w-3xl')}>
+      <TimeGrid
+        days={days}
+        today={today}
+        byDay={byDay}
+        showWorkspace={showWorkspace}
+        onEventClick={onEventClick}
+      />
     </div>
   )
 }
@@ -398,6 +315,7 @@ function Legend() {
       <span className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">Legenda</span>
       <LegendItem icon={Radio} color="#7C3AED" label="Posts agendados" />
       <LegendItem icon={Video} color="#14B8A6" label="Reuniões" />
+      <LegendItem icon={SquareCheck} color="#F59E0B" label="Tarefas" />
     </div>
   )
 }

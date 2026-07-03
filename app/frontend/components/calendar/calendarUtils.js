@@ -107,17 +107,89 @@ export function dayKey(d) {
   return `${x.getFullYear()}-${x.getMonth()}-${x.getDate()}`
 }
 
+export const MINUTES_IN_DAY = 24 * 60
+
+// All-day events (tasks) carry a date-only `start` ("2026-07-03"); parsing that
+// with `new Date` lands on UTC midnight and shifts a day in Brazil. Parse the
+// parts locally instead.
+export function parseEventStart(ev) {
+  if (ev?.all_day && typeof ev.start === 'string') {
+    const [y, m, d] = ev.start.slice(0, 10).split('-').map(Number)
+    if (y && m && d) return new Date(y, m - 1, d)
+  }
+  return new Date(ev.start)
+}
+
+// Minutes elapsed since local midnight for an ISO timestamp / Date.
+export function minutesOfDay(d) {
+  const x = new Date(d)
+  return x.getHours() * 60 + x.getMinutes()
+}
+
+// Position a day's events on a vertical time axis (Google Calendar style).
+// Overlapping events form a cluster; each cluster splits its width into
+// side-by-side columns. Returns [{ event, startMin, endMin, col, cols }].
+// Posts have no end time, so they occupy `defaultDurationMin`; every event
+// reserves at least `minSlotMin` so tiny blocks stay clickable and stack
+// side by side instead of piling up.
+export function layoutDayEvents(events = [], { defaultDurationMin = 24, minSlotMin = 24 } = {}) {
+  const items = events
+    .filter((ev) => ev?.start && !ev.all_day)
+    .map((ev) => {
+      const startMin = Math.min(minutesOfDay(ev.start), MINUTES_IN_DAY - minSlotMin)
+      // An end on a later day (or missing/inverted) falls back to the default block.
+      let endMin = ev.end && isSameDay(ev.start, ev.end) ? minutesOfDay(ev.end) : startMin + defaultDurationMin
+      if (ev.end && !isSameDay(ev.start, ev.end)) endMin = MINUTES_IN_DAY
+      endMin = Math.min(Math.max(endMin, startMin + minSlotMin), MINUTES_IN_DAY)
+      return { event: ev, startMin, endMin, col: 0, cols: 1 }
+    })
+    .sort((a, b) => a.startMin - b.startMin || b.endMin - a.endMin)
+
+  const laid = []
+  let cluster = []
+  let clusterEnd = -1
+
+  const flush = () => {
+    if (!cluster.length) return
+    const colEnds = [] // last occupied minute per column
+    for (const it of cluster) {
+      let col = colEnds.findIndex((end) => end <= it.startMin)
+      if (col === -1) {
+        col = colEnds.length
+        colEnds.push(0)
+      }
+      colEnds[col] = it.endMin
+      it.col = col
+    }
+    for (const it of cluster) {
+      it.cols = colEnds.length
+      laid.push(it)
+    }
+    cluster = []
+    clusterEnd = -1
+  }
+
+  for (const it of items) {
+    if (cluster.length && it.startMin >= clusterEnd) flush()
+    cluster.push(it)
+    clusterEnd = Math.max(clusterEnd, it.endMin)
+  }
+  flush()
+
+  return laid
+}
+
 export function groupEventsByDay(events = []) {
   const map = new Map()
   for (const ev of events) {
     if (!ev?.start) continue
-    const key = dayKey(ev.start)
+    const key = dayKey(parseEventStart(ev))
     if (!map.has(key)) map.set(key, [])
     map.get(key).push(ev)
   }
-  // Sort each day's events chronologically.
+  // All-day events (tasks) lead each day, then the rest chronologically.
   for (const list of map.values()) {
-    list.sort((a, b) => new Date(a.start) - new Date(b.start))
+    list.sort((a, b) => (!!b.all_day - !!a.all_day) || (parseEventStart(a) - parseEventStart(b)))
   }
   return map
 }

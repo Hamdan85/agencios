@@ -572,11 +572,17 @@ export default function BillingIndex() {
       {/* Trial banner */}
       {sub.trialing && (
         <div className="mb-5 flex flex-wrap items-center gap-3 rounded-2xl border border-sky/30 bg-sky/8 px-5 py-3.5">
-          <span className="flex size-9 items-center justify-center rounded-xl bg-sky/15 text-sky"><Sparkles size={18} /></span>
-          <p className="text-sm font-semibold text-ink">
-            Período de teste ativo
-            {sub.trial_ends_at && <span className="font-normal text-ink-muted"> — termina em {date(sub.trial_ends_at)}</span>}
-          </p>
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-sky/15 text-sky"><Sparkles size={18} /></span>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-ink">
+              Período de teste ativo
+              {sub.trial_ends_at && <span className="font-normal text-ink-muted"> — termina em {date(sub.trial_ends_at)}</span>}
+            </p>
+            <p className="mt-0.5 text-[13px] leading-snug text-ink-muted">
+              Os créditos mensais do plano serão liberados quando o período de teste terminar.
+              Precisa gerar antes? Você já pode comprar packs de créditos avulsos abaixo.
+            </p>
+          </div>
         </div>
       )}
 

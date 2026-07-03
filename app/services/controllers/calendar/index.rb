@@ -10,7 +10,9 @@ module Controllers
       end
 
       def call
-        events = posts.map { |p| post_event(p) } + meetings.map { |m| meeting_event(m) }
+        events = posts.map { |p| post_event(p) } +
+                 meetings.map { |m| meeting_event(m) } +
+                 subtasks.map { |s| task_event(s) }
         { events: events.sort_by { |e| e[:start] } }
       end
 
@@ -44,6 +46,34 @@ module Controllers
         scope = Meeting.where(workspace_id: workspace_ids, starts_at: from..to)
         scope = scope.involving(user) if all_workspaces?
         scope.includes(:workspace, :client, :project)
+      end
+
+      # Subtasks are date-only (no time), so they surface as all-day events —
+      # the calendar pins them to the top band of the day, Google Calendar-style.
+      # The workspace calendar shows the whole team's tasks; the personal
+      # "Meu calendário" shows only the ones assigned to the user.
+      def subtasks
+        scope = Subtask.where(workspace_id: workspace_ids, due_date: from.to_date..to.to_date)
+        scope = scope.where(assignee_id: user.id) if all_workspaces?
+        scope.includes(:workspace, :assignee, ticket: :project)
+      end
+
+      def task_event(subtask)
+        {
+          id: "task-#{subtask.id}",
+          type: 'task',
+          title: subtask.title,
+          start: subtask.due_date.iso8601,
+          all_day: true,
+          done: subtask.done,
+          overdue: subtask.overdue?,
+          ticket_id: subtask.ticket_id,
+          ticket_title: subtask.ticket&.display_title,
+          assignee_name: subtask.assignee&.name,
+          color: subtask.ticket&.project&.color,
+          workspace_id: subtask.workspace_id,
+          workspace_name: subtask.workspace&.name
+        }
       end
 
       def post_event(post)
