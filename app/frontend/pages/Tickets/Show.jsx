@@ -190,6 +190,7 @@ export default function Show() {
               ticket={ticket}
               mut={mut}
               hasScheduledPosts={posts.some((p) => p.status === 'scheduled')}
+              hasPublishedPosts={posts.some((p) => p.status === 'published')}
               onDeleted={() => navigate(back.to)}
             />
           </div>

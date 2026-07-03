@@ -79,6 +79,7 @@ function DrawerContent({ id, onOpenChange, showAutopilot }) {
                 size="icon-sm"
                 variant="ghost"
                 hasScheduledPosts={(data?.posts || []).some((p) => p.status === 'scheduled')}
+                hasPublishedPosts={(data?.posts || []).some((p) => p.status === 'published')}
                 onDeleted={() => onOpenChange?.(false)}
               />
             )}

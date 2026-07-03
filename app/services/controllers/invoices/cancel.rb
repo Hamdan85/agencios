@@ -2,7 +2,8 @@
 
 module Controllers
   module Invoices
-    # POST /api/v1/invoices/:id/cancel
+    # POST /api/v1/invoices/:id/cancel — the cancel rules (no paid invoices;
+    # pending charges voided) live in Operations::Invoices::Cancel.
     class Cancel < Base
       def initialize(params:)
         @params = params
@@ -11,8 +12,8 @@ module Controllers
       def call
         require_manager!
         invoice = workspace.invoices.find(@params[:id])
-        invoice.update!(status: :canceled)
-        { invoice: serialize(invoice, InvoiceSerializer) }
+        Operations::Invoices::Cancel.call(invoice: invoice)
+        { invoice: serialize(invoice.reload, InvoiceSerializer) }
       end
     end
   end

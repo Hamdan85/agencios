@@ -47,6 +47,13 @@ module Operations
           raise Operations::Errors::Invalid, 'Há um criativo selecionado que ainda não está pronto.'
         end
         raise Operations::Errors::Invalid, 'Defina ao menos um canal.' if @ticket.channels.blank?
+        # An in-flight post must never be dropped mid-publish (the vendor call may
+        # already be out — destroying its record would orphan the content on the
+        # network, with no unpublish handle and no metrics).
+        if @ticket.posts.status_publishing.exists?
+          raise Operations::Errors::Invalid,
+                'Há uma publicação em andamento — aguarde ela concluir antes de publicar novamente.'
+        end
         return unless @mode == 'scheduled' && publish_at.nil?
 
         raise Operations::Errors::Invalid,
@@ -85,10 +92,14 @@ module Operations
         Operations::Tickets::UpdateFields.call(ticket: @ticket, status: 'scheduled', values: values)
       end
 
-      # Fresh start: drop prior unpublished posts, then build one bound Post per
-      # posted creative per connected channel (see #plan_channel for the routing).
+      # Fresh start for the PENDING attempts only: scheduled/failed posts are
+      # canceled through the posts' own cancel authority; `published` and
+      # `unpublished` records are history (metrics, failure trail) and stay;
+      # `publishing` (in-flight) is guarded in #validate!. Then build one bound
+      # Post per posted creative per connected channel (see #plan_channel).
       def build_posts
-        @ticket.posts.where.not(status: Post.statuses[:published]).destroy_all
+        @ticket.posts.where(status: Post.statuses.values_at('scheduled', 'failed')).to_a
+               .each { |post| Operations::Posts::Cancel.call(post: post) }
         @skipped = []
         base_caption = @ticket.fields_for('production')['caption']
         captions = @ticket.fields_for('scheduled')['captions']

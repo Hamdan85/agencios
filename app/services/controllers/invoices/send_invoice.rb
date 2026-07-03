@@ -2,7 +2,8 @@
 
 module Controllers
   module Invoices
-    # POST /api/v1/invoices/:id/send_invoice — move a draft to `open`.
+    # POST /api/v1/invoices/:id/send_invoice — the draft-only rule lives in
+    # Operations::Invoices::Send.
     class SendInvoice < Base
       def initialize(params:)
         @params = params
@@ -10,8 +11,8 @@ module Controllers
 
       def call
         invoice = workspace.invoices.find(@params[:id])
-        invoice.update!(status: :open)
-        { invoice: serialize(invoice, InvoiceSerializer) }
+        Operations::Invoices::Send.call(invoice: invoice)
+        { invoice: serialize(invoice.reload, InvoiceSerializer) }
       end
     end
   end

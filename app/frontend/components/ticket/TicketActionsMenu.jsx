@@ -9,9 +9,11 @@ import { useConfirm } from '@/components/ui/confirm-dialog'
 // archive/restore plus a confirmed, final delete. `onDeleted` lets each surface
 // leave gracefully (close the drawer / navigate back to the origin).
 // `hasScheduledPosts` makes archiving explicit about canceling pending schedules
-// (the backend cancels them — an archived ticket must never publish).
+// (the backend cancels them — an archived ticket must never publish);
+// `hasPublishedPosts` makes deleting explicit about losing live-post history.
 export default function TicketActionsMenu({
-  ticket, mut, onDeleted, hasScheduledPosts = false, size = 'icon', variant = 'outline',
+  ticket, mut, onDeleted, hasScheduledPosts = false, hasPublishedPosts = false,
+  size = 'icon', variant = 'outline',
 }) {
   const confirm = useConfirm()
   const busy = mut.archive.isPending || mut.unarchive.isPending || mut.destroy.isPending
@@ -19,7 +21,9 @@ export default function TicketActionsMenu({
   const handleDelete = async () => {
     const ok = await confirm({
       title: 'Excluir ticket?',
-      description: 'Isso remove o ticket com suas tarefas, criativos e publicações agendadas. Esta ação não pode ser desfeita.',
+      description: hasPublishedPosts
+        ? 'Este ticket tem posts NO AR — excluir apaga o histórico e as métricas dessas publicações (o conteúdo continua na rede; para tirá-lo do ar, despublique antes). Também remove tarefas, criativos e agendamentos. Esta ação não pode ser desfeita.'
+        : 'Isso remove o ticket com suas tarefas, criativos e publicações agendadas. Esta ação não pode ser desfeita.',
       confirmLabel: 'Excluir ticket',
       destructive: true,
     })

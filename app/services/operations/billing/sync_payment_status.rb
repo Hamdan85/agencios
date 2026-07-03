@@ -74,10 +74,24 @@ module Operations
       # Move the invoice forward only. approved => paid; rejected/cancelled =>
       # overdue/canceled are NOT auto-applied here (a failed attempt doesn't void
       # an invoice — the client can retry), so we only ever advance to :paid.
+      #
+      # A CANCELED invoice never resurrects: MP has no remote void for a Pix QR,
+      # so a client can still pay one that's already canceled — the money event
+      # is logged loudly for manual refund handling, but the invoice stays
+      # canceled (the charge itself was updated above, so the payment is on
+      # record).
       def advance_invoice(invoice, new_status)
         return unless invoice
         return unless APPROVED_STATUSES.include?(new_status)
         return if invoice.status_paid?
+
+        if invoice.status_canceled?
+          Rails.logger.error(
+            "[Billing::SyncPaymentStatus] payment #{@payment_id} APPROVED for CANCELED " \
+            "invoice ##{invoice.id} (workspace #{invoice.workspace_id}) — needs manual refund"
+          )
+          return
+        end
 
         invoice.update!(status: :paid)
         Operations::Invoices::NotifyPaid.call(invoice: invoice)
