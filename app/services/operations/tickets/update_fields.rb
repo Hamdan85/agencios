@@ -19,6 +19,10 @@ module Operations
         attrs.merge!(mirrored_columns(clean))
 
         @ticket.update!(attrs)
+        # A new posting time must reach the still-scheduled posts — the publish
+        # sweep reads Post#scheduled_at, so without this the edit never changes
+        # when the content actually goes live.
+        Operations::Posts::Reschedule.call(ticket: @ticket, scheduled_at: clean['scheduled_at']) if clean.key?('scheduled_at')
         Broadcaster.ticket(@ticket, 'ticket_updated', status: @ticket.status)
         refresh_summary
         @ticket

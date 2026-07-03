@@ -65,6 +65,15 @@ export function useTicketMutations(id) {
     autopilot: mk((payload) => ticketsApi.autopilotStart(id, payload), 'Piloto automático iniciado 🚀'),
     addPost: mk((data) => ticketsApi.createPost(id, data), undefined, () => analytics.track(EVENTS.POST_CREATED)),
     unpublishPost: mk((postId) => ticketsApi.unpublishPost(id, postId), 'Post despublicado.'),
+    // Cancel a scheduled/failed publication (deletes the post before it goes live).
+    removePost: mk((postId) => ticketsApi.destroyPost(id, postId), 'Agendamento cancelado.'),
+    // Ticket lifecycle: archive hides it from the active views; destroy is final.
+    archive: mk(() => ticketsApi.archive(id), 'Ticket arquivado.', () => qc.invalidateQueries({ queryKey: ['tickets'] })),
+    unarchive: mk(() => ticketsApi.unarchive(id), 'Ticket restaurado.', () => qc.invalidateQueries({ queryKey: ['tickets'] })),
+    destroy: mk(() => ticketsApi.destroy(id), 'Ticket excluído.', () => {
+      qc.invalidateQueries({ queryKey: ['tickets'] })
+      qc.invalidateQueries({ queryKey: ['projects'] })
+    }),
     uploadAttachments: mk(({ files, meta }) => attachmentsApi.create(id, files, meta), 'Arquivo(s) enviado(s)!'),
     updateAttachment: mk(({ attachmentId, data }) => attachmentsApi.update(id, attachmentId, data), 'Arquivo atualizado!'),
     removeAttachment: mk((attachmentId) => attachmentsApi.destroy(id, attachmentId), 'Arquivo removido.'),

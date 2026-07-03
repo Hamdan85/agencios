@@ -16,6 +16,9 @@ module Operations
 
         previous_assignee_id = @ticket.assignee_id
         @ticket.update!(attrs)
+        # Posting-time edits (drawer meta, calendar drag) must reach the
+        # still-scheduled posts — the publish sweep reads Post#scheduled_at.
+        Operations::Posts::Reschedule.call(ticket: @ticket, scheduled_at: attrs[:scheduled_at]) if attrs[:scheduled_at].present?
         Broadcaster.board(@ticket.workspace_id, 'ticket_updated', ticket_id: @ticket.id)
         notify_reassignment(previous_assignee_id)
         @ticket

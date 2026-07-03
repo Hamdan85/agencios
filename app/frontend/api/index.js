@@ -103,6 +103,8 @@ export const ticketsApi = {
   attachCreative: (id, creativeId) => api.post(`/tickets/${id}/creatives/attach`, { creative_id: creativeId }),
   createPost: (id, data) => api.post(`/tickets/${id}/posts`, { post: data }),
   unpublishPost: (id, postId) => api.post(`/tickets/${id}/posts/${postId}/unpublish`),
+  // Cancel a scheduled (or failed) publication — removed before going live.
+  destroyPost: (id, postId) => api.delete(`/tickets/${id}/posts/${postId}`),
   // Autopilot ("GO mode"): estimate the credit cost, then launch the run.
   autopilotEstimate: (id) => api.post(`/tickets/${id}/autopilot_estimate`),
   autopilotStart: (id, payload = {}) => api.post(`/tickets/${id}/autopilot_start`, payload),

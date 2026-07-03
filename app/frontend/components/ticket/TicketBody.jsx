@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Layers, MessageSquare } from 'lucide-react'
 import { useAiFillStatus } from '@/hooks/useRealtime'
+import { useConfirm } from '@/components/ui/confirm-dialog'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import AiSummaryCard from './AiSummaryCard'
 import AiFillDialog from './AiFillDialog'
@@ -43,6 +44,19 @@ export default function TicketBody({
     })
   }
 
+  // Cancel a scheduled publication: confirmed, then the post is deleted before
+  // it goes live (it can be scheduled again from this same step).
+  const confirm = useConfirm()
+  const cancelPost = async (postId) => {
+    const ok = await confirm({
+      title: 'Cancelar agendamento?',
+      description: 'O post não será publicado nesta rede. Você pode agendar de novo quando quiser.',
+      confirmLabel: 'Cancelar agendamento',
+      destructive: true,
+    })
+    if (ok) mut.removePost.mutate(postId)
+  }
+
   const main = (
     <div className="space-y-5">
       <AiSummaryCard status={status} summary={ticket.ai_summaries?.[status]} />
@@ -59,6 +73,8 @@ export default function TicketBody({
           filling={aiFilling}
           onUnpublish={(postId) => mut.unpublishPost.mutate(postId)}
           unpublishingId={mut.unpublishPost.isPending ? mut.unpublishPost.variables : null}
+          onCancelPost={cancelPost}
+          cancelingId={mut.removePost.isPending ? mut.removePost.variables : null}
         />
       ) : (
         <FieldGroup

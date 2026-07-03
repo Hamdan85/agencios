@@ -12,7 +12,7 @@ import AiFillButton from './AiFillButton'
 import { dt } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 import {
-  Send, Clock, Zap, MessageCircle, MessageSquareText, Link2, CheckCircle2, AlertCircle, Loader2, ImagePlus, Radio, Ban, Eye, ChevronDown, ChevronUp,
+  Send, Clock, Zap, MessageCircle, MessageSquareText, Link2, CheckCircle2, AlertCircle, Loader2, ImagePlus, Radio, Ban, Eye, ChevronDown, ChevronUp, CalendarX2,
 } from 'lucide-react'
 
 const MediaViewer = lazy(() => import('./MediaViewer'))
@@ -51,7 +51,8 @@ const POST_STATUS = {
 // The ticket only reaches "No ar" when a post actually succeeds.
 export default function PostingPanel({
   ticket, creatives = [], posts = [], onSave, onPublish, publishing = false,
-  onAiAction, acting = false, filling = false, onUnpublish, unpublishingId, color = '#EC4899',
+  onAiAction, acting = false, filling = false, onUnpublish, unpublishingId,
+  onCancelPost, cancelingId, color = '#EC4899',
 }) {
   const fields = ticket?.fields?.scheduled || {}
   const channels = Array.isArray(ticket?.channels) ? ticket.channels : []
@@ -394,6 +395,20 @@ export default function PostingPanel({
                       <StIcon size={11} className={cn('mr-0.5', post.status === 'publishing' && 'animate-spin')} />
                       {st.label}
                     </Badge>
+                    {/* A not-yet-live publication can be CANCELED (the post is
+                        removed before going live; schedule again anytime). */}
+                    {['scheduled', 'failed'].includes(post.status) && onCancelPost && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2 text-xs text-danger hover:border-danger/40 hover:bg-danger/5"
+                        onClick={() => onCancelPost(post.id)}
+                        disabled={cancelingId === post.id}
+                      >
+                        {cancelingId === post.id ? <Spinner size={11} /> : <CalendarX2 size={11} />}
+                        Cancelar
+                      </Button>
+                    )}
                     {post.status === 'published' && onUnpublish && (
                       <Button
                         variant="outline"

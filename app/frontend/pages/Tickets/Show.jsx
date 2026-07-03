@@ -14,8 +14,9 @@ import {
 import StatusStepper from '@/components/ticket/StatusStepper'
 import TicketBody from '@/components/ticket/TicketBody'
 import AutopilotButton from '@/components/ticket/AutopilotButton'
+import TicketActionsMenu from '@/components/ticket/TicketActionsMenu'
 import {
-  ArrowLeft, ArrowRight, ChevronDown, Building2, Ghost, Folder, Layers, AlertTriangle,
+  ArrowLeft, ArrowRight, ChevronDown, Building2, Ghost, Folder, Layers, AlertTriangle, Archive,
 } from 'lucide-react'
 
 export default function Show() {
@@ -86,7 +87,7 @@ export default function Show() {
           <div className="min-w-0">
             <div className="mb-2 flex flex-wrap items-center gap-2">
               {ticket.project && (
-                <Link to={`/campanhas/${ticket.project.id}`} className="min-w-0 max-w-[60vw] sm:max-w-[240px]">
+                <Link to={`/campanhas/${ticket.project.id}`} className="min-w-0 max-w-[60vw] sm:max-w-60">
                   <ColorBadge color={ticket.project.color || m.color} solid className="max-w-full gap-1.5 lift">
                     <Folder size={11} className="shrink-0" /> <span className="truncate">{ticket.project.name}</span>
                   </ColorBadge>
@@ -107,6 +108,11 @@ export default function Show() {
                 )
               )}
               <StatusPill status={status} size="sm" />
+              {ticket.archived && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-ink-muted">
+                  <Archive size={11} strokeWidth={2.4} /> Arquivado
+                </span>
+              )}
               {ticket.overdue && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-danger/12 px-2 py-0.5 text-[11px] font-bold text-danger">
                   <AlertTriangle size={12} strokeWidth={2.4} /> Atrasado
@@ -178,6 +184,9 @@ export default function Show() {
                 <ArrowRight size={15} className="shrink-0" />
               </Button>
             )}
+
+            {/* Archive / delete */}
+            <TicketActionsMenu ticket={ticket} mut={mut} onDeleted={() => navigate(back.to)} />
           </div>
         </div>
       </div>

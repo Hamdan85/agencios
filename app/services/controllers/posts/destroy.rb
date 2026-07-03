@@ -9,8 +9,18 @@ module Controllers
 
       def call
         ticket = workspace.tickets.find(@params[:ticket_id])
-        ticket.posts.find(@params[:id]).destroy!
-        { message: 'Publicação removida.' }
+        post = ticket.posts.find(@params[:id])
+
+        # Destroying is CANCELING a not-yet-live publication. A post already on
+        # the network keeps its history — unpublish it instead (which preserves
+        # the record and its metrics).
+        unless post.status_scheduled? || post.status_failed?
+          raise Operations::Errors::Invalid,
+                'Só é possível cancelar publicações agendadas ou com falha. Para tirar um post do ar, despublique-o.'
+        end
+
+        post.destroy!
+        { message: 'Agendamento cancelado.' }
       end
     end
   end

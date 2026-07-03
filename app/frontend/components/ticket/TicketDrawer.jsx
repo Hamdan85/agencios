@@ -16,6 +16,7 @@ import {
 import StatusStepper from './StatusStepper'
 import TicketBody from './TicketBody'
 import AutopilotButton from './AutopilotButton'
+import TicketActionsMenu from './TicketActionsMenu'
 
 // The board side drawer: a near-complete, mobile-friendly mirror of the ticket
 // detail screen. The header carries an "Abrir tela cheia" action that hands off
@@ -70,11 +71,22 @@ function DrawerContent({ id, onOpenChange, showAutopilot }) {
           <Button variant="ghost" size="sm" onClick={expand} className="-ml-2 hidden text-ink-secondary md:inline-flex">
             <Maximize2 size={15} /> Abrir tela cheia
           </Button>
-          <SheetClose asChild>
-            <Button variant="ghost" size="icon-sm" aria-label="Fechar" className="ml-auto">
-              <X size={18} />
-            </Button>
-          </SheetClose>
+          <div className="ml-auto flex items-center gap-1">
+            {ticket && (
+              <TicketActionsMenu
+                ticket={ticket}
+                mut={mut}
+                size="icon-sm"
+                variant="ghost"
+                onDeleted={() => onOpenChange?.(false)}
+              />
+            )}
+            <SheetClose asChild>
+              <Button variant="ghost" size="icon-sm" aria-label="Fechar">
+                <X size={18} />
+              </Button>
+            </SheetClose>
+          </div>
         </div>
 
         {isLoading || !ticket ? (
@@ -84,9 +96,11 @@ function DrawerContent({ id, onOpenChange, showAutopilot }) {
         ) : (
           <>
             <div className="mb-2 flex flex-wrap items-center gap-2">
+              {/* The campaign chip stays a single line — long names truncate with
+                  an ellipsis instead of wrapping the badge across lines. */}
               {ticket.project && (
-                <ColorBadge color={ticket.project.color || m.color} solid className="gap-1.5">
-                  <Folder size={11} /> {ticket.project.name}
+                <ColorBadge color={ticket.project.color || m.color} solid className="max-w-[60vw] gap-1.5 sm:max-w-60">
+                  <Folder size={11} className="shrink-0" /> <span className="min-w-0 truncate">{ticket.project.name}</span>
                 </ColorBadge>
               )}
               {ticket.project?.client_name && (
