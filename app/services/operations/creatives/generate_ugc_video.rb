@@ -23,6 +23,7 @@ module Operations
 
       def call
         ctx    = ::Tickets::CreativeContext.for(@ticket, creative_type: type, client: resolve_client)
+        ensure_client_active!(ctx.client)
         script = @script.presence || ctx.script
         aspect = ctx.aspect_ratio.presence || '9:16'
 

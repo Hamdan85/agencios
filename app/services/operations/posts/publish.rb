@@ -18,6 +18,7 @@ module Operations
       end
 
       def call
+        guard_client_active!
         guard_media_support!
         @post.update!(status: :publishing)
         Broadcaster.ticket(@post.ticket, 'post_publishing', post_id: @post.id)
@@ -40,6 +41,17 @@ module Operations
       end
 
       private
+
+      # An archived client is frozen — nothing new goes live under its name. The
+      # cron sweep already skips these, so this only bites a manual/MCP publish of
+      # a post whose campaign/client was archived after scheduling; it gets a clear
+      # 422 instead of quietly going out.
+      def guard_client_active!
+        return unless @post.ticket&.project&.status_archived?
+
+        raise Operations::Errors::Invalid,
+              'A campanha/cliente deste post está arquivada. Reative para publicar.'
+      end
 
       # A network only posts media it supports (e.g. TikTok/YouTube are video-only).
       # Guard here too so a scheduled/cron-published post can never send an

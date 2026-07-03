@@ -134,6 +134,7 @@ Rails.application.routes.draw do
       resources :clients do
         member do
           post  :archive
+          post  :unarchive
           patch :positioning, action: :update_positioning
           patch :brand_assets
         end

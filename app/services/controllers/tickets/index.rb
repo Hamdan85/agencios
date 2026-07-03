@@ -28,7 +28,10 @@ module Controllers
         case @params[:view].to_s
         when 'archived' then scope.archived
         when 'all'      then scope
-        else                 scope.active
+        # Default view is active work only — like the board, it hides tickets of
+        # archived campaigns/clients. Use `view=all` (or the client/project page)
+        # to reach an archived client's history.
+        else                 scope.active.in_live_project
         end
       end
     end

@@ -31,6 +31,7 @@ module Api
       rescue_from Pundit::NotAuthorizedError,              with: :forbidden
       rescue_from Operations::Errors::Forbidden,           with: :forbidden
       rescue_from Operations::Errors::SeatLimitReached,    with: :payment_required
+      rescue_from Operations::Errors::ClientLimitReached,  with: :payment_required
       rescue_from Operations::Errors::BillingRequired,     with: :payment_required
       rescue_from Operations::Errors::InsufficientCredits, with: :insufficient_credits
       rescue_from Operations::Errors::InvalidTransition,   with: :unprocessable

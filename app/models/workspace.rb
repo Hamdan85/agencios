@@ -61,7 +61,10 @@ class Workspace < ApplicationRecord
     Pricing.client_limit_for(plan)
   end
 
-  def within_client_limit? = clients.count < client_limit
+  # Only ACTIVE clients occupy plan slots. Archiving a client frees its slot by
+  # design — the client becomes read-only (no new campaigns/creatives/meetings),
+  # so the slot genuinely stops being used. Reactivation re-checks this limit.
+  def within_client_limit? = clients.status_active.count < client_limit
 
   # A godfathered workspace whose monthly generation credits are capped by staff.
   # (Godfathered without a cap = truly unlimited; non-godfathered ignore the cap.)

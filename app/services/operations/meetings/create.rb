@@ -15,6 +15,7 @@ module Operations
       end
 
       def call
+        find_active_client!(@params[:client_id])
         meeting = workspace.meetings.new(@params)
         meeting.user = @user
         meeting.attendees = Operations::Meetings::ResolveAttendees.call(meeting.attendees, workspace: workspace)

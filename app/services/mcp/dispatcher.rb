@@ -140,6 +140,7 @@ module Mcp
            Operations::Errors::Invalid,
            Operations::Errors::InvalidTransition,
            Operations::Errors::SeatLimitReached,
+           Operations::Errors::ClientLimitReached,
            Operations::Errors::BillingRequired
         err.message
       when Pundit::NotAuthorizedError

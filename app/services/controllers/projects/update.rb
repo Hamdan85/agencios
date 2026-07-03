@@ -10,7 +10,10 @@ module Controllers
       def call
         require_manager!
         project = workspace.projects.find(@params[:id])
-        project.update!(project_params)
+        attrs = project_params
+        # Moving a project to another client only lands on an active one.
+        find_active_client!(attrs[:client_id]) if attrs[:client_id].present? && attrs[:client_id].to_s != project.client_id.to_s
+        project.update!(attrs)
         { project: serialize(project, ProjectSerializer) }
       end
 

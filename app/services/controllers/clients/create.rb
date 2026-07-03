@@ -9,6 +9,8 @@ module Controllers
 
       def call
         authorize!(Client, :create?)
+        raise Operations::Errors::ClientLimitReached unless workspace.within_client_limit?
+
         client = Operations::Clients::Create.call(client_params)
         { client: serialize(client, ClientSerializer) }
       end

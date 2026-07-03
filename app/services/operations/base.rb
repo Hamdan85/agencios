@@ -5,6 +5,8 @@ module Operations
   # external API calls, broadcasts). Called by jobs, webhooks, controllers, or
   # other operations. No HTTP concerns.
   class Base
+    include ClientGuards
+
     def self.call(...)
       new(...).call
     end

@@ -12,6 +12,10 @@ module Controllers
         authorize!(meeting, :update?)
 
         attrs = meeting_params.to_h
+        # Re-linking the meeting to a client only lands on an active one.
+        if attrs['client_id'].present? && attrs['client_id'].to_s != meeting.client_id.to_s
+          find_active_client!(attrs['client_id'])
+        end
         if attrs.key?('attendees')
           attrs['attendees'] = Operations::Meetings::ResolveAttendees.call(attrs['attendees'], workspace: workspace)
         end

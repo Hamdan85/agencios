@@ -12,6 +12,9 @@ module Api
       # POST /api/v1/clients/:id/archive
       def archive = render_ok(Controllers::Clients::Archive.call(params:))
 
+      # POST /api/v1/clients/:id/unarchive — re-checks the plan's client limit.
+      def unarchive = render_ok(Controllers::Clients::Unarchive.call(params:))
+
       # POST /api/v1/clients/positioning_preview — AI-synthesized positioning
       # (stateless; used by the creation wizard before the client exists).
       def positioning_preview = render_ok(Controllers::Clients::PositioningPreview.call(params:))

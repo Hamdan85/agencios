@@ -10,6 +10,13 @@ module Operations
       end
 
       def call
+        # New work only lands on live campaigns of live clients — an archived
+        # client is read-only (this is what makes the plan's client limit real).
+        project = @workspace.projects.find(@params[:project_id])
+        raise Errors::Invalid, "A campanha \"#{project.name}\" está arquivada — reative-a para criar tickets." if project.status_archived?
+
+        ensure_client_active!(project.client)
+
         channels = Array(@params[:channels]).compact_blank
         types = Array(@params[:creative_types].presence || @params[:creative_type]).map(&:to_s).compact_blank
 

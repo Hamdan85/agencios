@@ -147,6 +147,7 @@ export const clientsApi = {
   create: (data) => api.post('/clients', { client: data }),
   update: (id, data) => api.patch(`/clients/${id}`, { client: data }),
   archive: (id) => api.post(`/clients/${id}/archive`),
+  unarchive: (id) => api.post(`/clients/${id}/unarchive`),
   destroy: (id) => api.delete(`/clients/${id}`),
   synthesizePositioning: (data) => api.post('/clients/positioning_preview', data),
   extractFromUrl: (data) => api.post('/clients/extract_from_url', data),

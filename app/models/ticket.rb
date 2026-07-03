@@ -63,6 +63,14 @@ class Ticket < ApplicationRecord
   scope :active, -> { where(archived_at: nil) }
   scope :archived, -> { where.not(archived_at: nil) }
 
+  # Tickets under a still-live campaign. Operational surfaces (board, ticket
+  # list, calendar, My Tasks, dashboard counts) use this to drop work belonging
+  # to an archived project — which is how an archived CLIENT's tickets fall out,
+  # since archiving a client cascade-archives its projects. History stays
+  # reachable through the client/project pages. Subquery (not a join) so it
+  # composes with any existing scope/includes without double-joining.
+  scope :in_live_project, -> { where(project_id: Project.where.not(status: :archived)) }
+
   # Due today or earlier — falls back to `scheduled_at`'s date when no
   # `due_date` is set. Feeds the daily ticket digest (Operations::Digests).
   scope :due_or_overdue, lambda {

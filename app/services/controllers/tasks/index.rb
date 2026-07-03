@@ -31,7 +31,9 @@ module Controllers
           else
             Subtask.where(workspace_id: workspace.id, assignee_id: user.id)
           end
-        base.includes(:workspace, ticket: :project)
+        # Subtasks of archived campaigns/clients drop off My Tasks — the client's
+        # work is frozen; its checklist history stays on the ticket itself.
+        base.where(ticket_id: Ticket.in_live_project).includes(:workspace, ticket: :project)
       end
 
       def apply_search(rel)

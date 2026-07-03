@@ -17,21 +17,25 @@ module Controllers
 
       private
 
+      # All operational counts exclude archived clients/campaigns — the dashboard
+      # reflects live work only. Financials (invoices) still count every client.
       def stats
         {
-          active_tickets: workspace.tickets.where.not(status: :done).count,
-          clients: workspace.clients.count,
+          active_tickets: live_tickets.where.not(status: :done).count,
+          clients: workspace.clients.status_active.count,
           projects: workspace.projects.where(status: :active).count,
-          scheduled_posts: workspace.posts.where(status: :scheduled).count,
+          scheduled_posts: workspace.posts.where(status: :scheduled).where(ticket_id: Ticket.in_live_project).count,
           open_invoices: workspace.invoices.where(status: :open).count,
           revenue_cents: workspace.invoices.where(status: :paid).sum(:amount_cents)
         }
       end
 
       def tickets_by_status
-        counts = workspace.tickets.group(:status).count
+        counts = live_tickets.group(:status).count
         STATUS_KEYS.index_with { |key| counts[key].to_i }
       end
+
+      def live_tickets = workspace.tickets.in_live_project
 
       def recent_generations
         workspace.generations

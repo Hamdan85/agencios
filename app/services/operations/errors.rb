@@ -14,6 +14,13 @@ module Operations
       end
     end
 
+    # Creating/reactivating a client past the plan's active-client limit.
+    class ClientLimitReached < Error
+      def initialize(msg = 'Limite de clientes ativos do plano atingido. Arquive um cliente ou faça upgrade.')
+        super
+      end
+    end
+
     # Workspace billing is not active and the action requires it.
     class BillingRequired < Error
       def initialize(msg = 'Assinatura necessária para esta ação.')

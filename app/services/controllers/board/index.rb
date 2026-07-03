@@ -28,7 +28,10 @@ module Controllers
       end
 
       def filtered_scope
-        scope = workspace.tickets.active.includes(:project, :assignee, :subtasks, :creatives, :autopilot_runs)
+        # `in_live_project` drops tickets of archived campaigns/clients — the
+        # board is active work only; their history stays on the client/project pages.
+        scope = workspace.tickets.active.in_live_project
+                         .includes(:project, :assignee, :subtasks, :creatives, :autopilot_runs)
         ::Tickets::Filters.apply(scope, @params)
       end
     end

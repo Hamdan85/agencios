@@ -34,8 +34,11 @@ module Controllers
         @to ||= parse_time(@params[:to]) || Time.current.end_of_month.end_of_day
       end
 
+      # Scheduled posts of archived campaigns/clients drop off the calendar — the
+      # calendar is live planning; the archived work no longer publishes.
       def posts
         Post.where(workspace_id: workspace_ids, scheduled_at: from..to)
+            .where(ticket_id: Ticket.in_live_project)
             .includes(:workspace, :social_account, ticket: :project)
       end
 
@@ -54,6 +57,7 @@ module Controllers
       # "Meu calendário" shows only the ones assigned to the user.
       def subtasks
         scope = Subtask.where(workspace_id: workspace_ids, due_date: from.to_date..to.to_date)
+                       .where(ticket_id: Ticket.in_live_project)
         scope = scope.where(assignee_id: user.id) if all_workspaces?
         scope.includes(:workspace, :assignee, ticket: :project)
       end

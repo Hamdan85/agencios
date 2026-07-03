@@ -22,13 +22,16 @@ export function ProjectSelect({ placeholder = 'Campanha', listParams, ...props }
   )
 }
 
+// Only ACTIVE clients are selectable — archived clients are read-only and
+// can't receive new work (campaigns, reuniões, criativos). Pass
+// `listParams={{ status: undefined }}` if a caller ever needs everything.
 export function ClientSelect({ placeholder = 'Cliente', listParams, ...props }) {
   return (
     <AsyncCombobox
       placeholder={placeholder}
       icon={Building2}
       queryKey={['clients', 'select']}
-      fetchPage={({ q, page }) => clientsApi.list({ q, page, per: 20, ...listParams })}
+      fetchPage={({ q, page }) => clientsApi.list({ q, page, per: 20, status: 'active', ...listParams })}
       mapResponse={(d) => ({ items: d.clients || [], hasMore: d.meta?.has_more })}
       getOption={(c) => ({ value: c.id, label: c.name, description: c.company, avatar: c.logo_url, avatarName: c.name })}
       {...props}

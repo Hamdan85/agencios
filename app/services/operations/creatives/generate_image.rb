@@ -21,6 +21,7 @@ module Operations
 
       def call
         ctx    = ::Tickets::CreativeContext.for(@ticket, creative_type: type, client: resolve_client)
+        ensure_client_active!(ctx.client)
         aspect = @aspect_ratio.presence || ctx.banana_aspect_ratio
         refs   = ctx.reference_images
         prompt = ctx.image_prompt(@prompt)

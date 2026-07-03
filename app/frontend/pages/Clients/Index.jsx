@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Users, Plus, Mail, Phone, FileText, MoreHorizontal,
-  Pencil, Archive, FolderKanban, Building2, Sparkles,
+  Pencil, Archive, ArchiveRestore, FolderKanban, Building2, Sparkles,
 } from 'lucide-react'
 import { useClients, useClientMutations } from '@/hooks/useData'
 import { PageHeader } from '@/components/ui/page-header'
@@ -19,7 +19,7 @@ import { Page } from '@/components/ui/page'
 import { cn } from '@/lib/utils'
 import ClientWizard from '@/components/client/ClientWizard'
 
-function ClientCard({ client, onEdit, onArchive }) {
+function ClientCard({ client, onEdit, onArchive, onUnarchive }) {
   const navigate = useNavigate()
   const archived = client.status === 'archived'
 
@@ -55,7 +55,11 @@ function ClientCard({ client, onEdit, onArchive }) {
               <DropdownMenuItem onSelect={() => onEdit(client)}>
                 <Pencil /> Editar
               </DropdownMenuItem>
-              {!archived && (
+              {archived ? (
+                <DropdownMenuItem onSelect={() => onUnarchive(client)}>
+                  <ArchiveRestore /> Reativar
+                </DropdownMenuItem>
+              ) : (
                 <DropdownMenuItem onSelect={() => onArchive(client)} className="text-danger data-[highlighted]:text-danger">
                   <Archive /> Arquivar
                 </DropdownMenuItem>
@@ -102,7 +106,7 @@ function ClientCard({ client, onEdit, onArchive }) {
 
 export default function ClientsIndex() {
   const { data: clients, isLoading } = useClients()
-  const { create, update, archive, synthesize, importFromUrl, uploadBrandAssets } = useClientMutations()
+  const { create, update, archive, unarchive, synthesize, importFromUrl, uploadBrandAssets } = useClientMutations()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [search, setSearch] = useState('')
@@ -133,6 +137,9 @@ export default function ClientsIndex() {
     })
     if (ok) archive.mutate(client.id)
   }
+  // Reactivation is reversible — no confirm. The backend re-checks the plan's
+  // active-client limit and answers 402 when the workspace is already full.
+  const onUnarchive = (client) => unarchive.mutate(client.id)
 
   if (isLoading) return <PageLoader />
 
@@ -187,7 +194,7 @@ export default function ClientsIndex() {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((c) => (
-            <ClientCard key={c.id} client={c} onEdit={onEdit} onArchive={onArchive} />
+            <ClientCard key={c.id} client={c} onEdit={onEdit} onArchive={onArchive} onUnarchive={onUnarchive} />
           ))}
         </div>
       )}

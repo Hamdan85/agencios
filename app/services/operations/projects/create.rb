@@ -11,6 +11,7 @@ module Operations
       end
 
       def call
+        find_active_client!(@params[:client_id])
         project = workspace.projects.new(@params)
         project.save!
         project

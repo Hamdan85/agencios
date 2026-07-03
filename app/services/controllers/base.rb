@@ -10,6 +10,8 @@ module Controllers
   # Controllers must only call these (`render_ok`/`render_created` with the result)
   # — no querying, authorization, or business logic in the controller.
   class Base
+    include ClientGuards
+
     def self.call(...)
       new(...).call
     end

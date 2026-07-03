@@ -34,6 +34,7 @@ module Operations
         @ctx        = ::Tickets::CreativeContext.for(
           @ticket, creative_type: 'carousel', client: resolve_client, overrides: source_overrides
         )
+        ensure_client_active!(@ctx.client)
         @uploads = user_image_queue
         slides   = choose_slides(copy_slides)
 
