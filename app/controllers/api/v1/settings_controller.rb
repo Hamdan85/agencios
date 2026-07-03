@@ -7,9 +7,6 @@ module Api
       def update = render_ok(Controllers::Settings::Update.call(params:))
 
       def brand_assets = render_ok(Controllers::Settings::UpdateBrandAssets.call(params:))
-
-      def google_calendar_authorize_url = render_ok(Controllers::Settings::GoogleCalendar::AuthorizeUrl.call)
-      def google_calendar               = render_ok(Controllers::Settings::GoogleCalendar::Disconnect.call)
     end
   end
 end

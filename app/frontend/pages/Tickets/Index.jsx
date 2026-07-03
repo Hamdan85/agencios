@@ -1,209 +1,139 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Rows3, Archive, Ghost, Trash2 } from 'lucide-react'
-import {
-  WORKFLOW, STATUS_META, CHANNEL_META, CREATIVE_TYPE_META, PRIORITY_META,
-} from '@/lib/constants'
-import { toast } from 'sonner'
-import { ticketsApi } from '@/api'
-import { useTicketsList, useTicketArchiveMutations, useTicketBulkDelete } from '@/hooks/useData'
-import { useCurrentUser } from '@/hooks/useAuth'
-import { useSelection } from '@/hooks/useSelection'
-import { canManage } from '@/lib/roles'
+import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { KanbanSquare, Plus } from 'lucide-react'
+import { useUrlFilters, useUrlParam } from '@/hooks/useUrlState'
+import { useBoardMutations } from '@/hooks/useBoard'
 import { PageHeader } from '@/components/ui/page-header'
-import { Spinner, EmptyState } from '@/components/ui/feedback'
-import { FilterBar } from '@/components/ui/filter-bar'
-import { SelectionBar } from '@/components/ui/selection-bar'
-import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Button } from '@/components/ui/button'
-import { Page } from '@/components/ui/page'
+import { PageShell, PageTitle, PageContent } from '@/components/ui/page'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import TicketRow from '@/components/ticket/TicketRow'
-import TicketDrawer from '@/components/ticket/TicketDrawer'
+import { BoardFilters } from '@/components/board/BoardFilters'
+import { NewTicketDialog } from '@/components/board/NewTicketDialog'
+import TicketDrawer from '@/components/ticket/LazyTicketDrawer'
+import BoardView from './views/BoardView'
+import ListView from './views/ListView'
 
-const BRAND = '#06B6D4'
+const BRAND = '#EC4899'
 
-export default function TicketsList() {
-  const [filters, setFilters] = useState({ view: 'active' })
-  const [drawerId, setDrawerId] = useState(null)
+// Every filter both views understand, shared through the URL so switching
+// between Quadro and Lista keeps the selection (?visao=lista&project_id=…).
+// status / priority / view are list-only; the board ignores them.
+const FILTER_KEYS = ['q', 'project_id', 'client_id', 'assignee_id', 'status', 'channel', 'creative_type', 'priority', 'view']
 
-  const { data: me } = useCurrentUser()
-  const manager = canManage(me?.membership?.role)
-  const { archive, unarchive } = useTicketArchiveMutations()
-  const bulkDelete = useTicketBulkDelete()
-  const selection = useSelection()
-  const [confirmOpen, setConfirmOpen] = useState(false)
+// The single tickets page: one fixed title band (header + view tabs + new-ticket
+// action) over one content band that renders as a Kanban board (?visao=quadro,
+// the default) or a flat list (?visao=lista). Only the content band changes
+// shape between views — the title stays put, and the swap cross-fades — so the
+// tabs never move under the cursor and the filters don't appear to jump.
+export default function TicketsHub() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const visao = searchParams.get('visao') === 'lista' ? 'lista' : 'quadro'
+  const isQuadro = visao === 'quadro'
 
-  const query = useTicketsList(filters)
-  const { data, isLoading, isError, hasNextPage, isFetchingNextPage, fetchNextPage, isFetching } = query
+  const [filters, setFilters] = useUrlFilters(FILTER_KEYS)
+  const [drawerTicketId, setDrawerTicketId] = useUrlParam('ticket')
+  const [dialogOpen, setDialogOpen] = useState(false)
+  // The filters live in the fixed title band. The board's filter bar is driven
+  // straight from hub state, so it renders here directly; the list's toolbar is
+  // coupled to the list's own selection/total, so ListView portals it into this
+  // slot instead of lifting all that state up.
+  const [filtersSlot, setFiltersSlot] = useState(null)
+  const { create } = useBoardMutations()
 
-  const rows = useMemo(() => (data?.pages || []).flatMap((p) => p.tickets || []), [data])
-  const total = data?.pages?.[0]?.meta?.total ?? 0
-
-  const set = (key) => (value) => setFilters((f) => ({ ...f, [key]: value }))
-
-  // Reset the selection whenever the visible set changes (filters / tab / search)
-  // so a bulk delete never hits tickets scrolled out of view.
-  const { clear: clearSelection } = selection
-  useEffect(() => { clearSelection() }, [JSON.stringify(filters), clearSelection])
-
-  const confirmDelete = () => {
-    bulkDelete.mutate(selection.list, {
-      onSuccess: () => { selection.clear(); setConfirmOpen(false) },
-    })
-  }
-
-  // Select-all spans the WHOLE filtered result set (not just loaded pages): fetch
-  // every matching id from the server for the current filters.
-  const selectAll = async () => {
-    try {
-      const { ids } = await ticketsApi.ids(filters)
-      selection.set(ids)
-    } catch {
-      toast.error('Não foi possível selecionar todos os tickets.')
-    }
-  }
-
-  // Infinite scroll.
-  const sentinelRef = useRef(null)
-  useEffect(() => {
-    const el = sentinelRef.current
-    if (!el) return
-    const io = new IntersectionObserver(
-      (entries) => { if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) fetchNextPage() },
-      { rootMargin: '300px' },
+  const setVisao = (v) => {
+    setSearchParams(
+      (prev) => {
+        const sp = new URLSearchParams(prev)
+        if (v === 'lista') {
+          sp.set('visao', v)
+        } else {
+          sp.delete('visao')
+          // status / priority / view are list-only — the board expresses the
+          // status through its columns and has no archived/priority filters.
+          // Drop them so the URL reflects the filters actually in effect.
+          sp.delete('status')
+          sp.delete('priority')
+          sp.delete('view')
+        }
+        return sp
+      },
+      { replace: true },
     )
-    io.observe(el)
-    return () => io.disconnect()
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage, rows.length])
-
-  const statusOptions = WORKFLOW.map((k) => ({ value: k, label: STATUS_META[k].label, color: STATUS_META[k].color, icon: STATUS_META[k].icon }))
-  const channelOptions = Object.entries(CHANNEL_META).map(([k, m]) => ({ value: k, label: m.label, icon: m.icon, color: m.color }))
-  const creativeOptions = Object.entries(CREATIVE_TYPE_META).map(([k, m]) => ({ value: k, label: m.label, icon: m.icon, color: m.color }))
-  const priorityOptions = Object.entries(PRIORITY_META).map(([k, m]) => ({ value: k, label: m.label, color: m.dot }))
-
-  const filterKeys = ['project_id', 'client_id', 'assignee_id', 'status', 'channel', 'creative_type', 'priority']
-  const activeCount = filterKeys.filter((k) => filters[k]).length + (filters.q ? 1 : 0)
-  // Clear filters but keep the current tab (view) and the text search.
-  const clearFilters = () => setFilters((f) => {
-    const next = { ...f }
-    filterKeys.forEach((k) => delete next[k])
-    return next
-  })
-
-  const filterSpec = [
-    { key: 'project_id', type: 'project', label: 'Campanha' },
-    { key: 'client_id', type: 'client', label: 'Cliente' },
-    { key: 'assignee_id', type: 'assignee', label: 'Responsável' },
-    { key: 'status', type: 'options', label: 'Etapa', options: statusOptions },
-    { key: 'channel', type: 'options', label: 'Canal', options: channelOptions },
-    { key: 'creative_type', type: 'options', label: 'Tipo', options: creativeOptions },
-    { key: 'priority', type: 'options', label: 'Prioridade', options: priorityOptions },
-  ]
+  }
 
   return (
-    <Page className="animate-rise">
-      <PageHeader
-        eyebrow="Operação"
-        title="Tickets"
-        icon={Rows3}
-        color={BRAND}
-        description="Todos os tickets do workspace em lista — busque, filtre e arquive."
-      />
+    <PageShell className="animate-rise">
+      {/* ── Fixed title band — header + view tabs + new-ticket, then the filters.
+          Constant respiro gutter (like every page's title); the whole band stays
+          put and always visible while the content varies/scrolls beneath. ── */}
+      <PageTitle className="pb-4">
+        <PageHeader
+          className="mb-0"
+          actionsClassName="max-sm:w-full"
+          eyebrow="Operação"
+          title="Tickets"
+          icon={KanbanSquare}
+          color={BRAND}
+          description="O funil de produção da agência, da ideia ao arquivo."
+          actions={
+            // Mobile: one continuous control row — the view tabs stretch to meet
+            // the button instead of the two sitting at opposite screen edges.
+            <div className="flex w-full items-center gap-2 sm:w-auto">
+              <Tabs value={visao} onValueChange={setVisao} className="min-w-0 flex-1 sm:flex-none">
+                <TabsList className="w-full sm:w-auto">
+                  <TabsTrigger value="quadro" className="flex-1 sm:flex-none">Quadro</TabsTrigger>
+                  <TabsTrigger value="lista" className="flex-1 sm:flex-none">Lista</TabsTrigger>
+                </TabsList>
+              </Tabs>
+              <Button onClick={() => setDialogOpen(true)} className="shrink-0">
+                <Plus size={18} /> Novo ticket
+              </Button>
+            </div>
+          }
+        />
+        {/* Filters slot: board filters render straight in; the list portals its
+            toolbar here (see ListView). */}
+        <div ref={setFiltersSlot} className="mt-5">
+          {isQuadro && <BoardFilters filters={filters} onChange={setFilters} />}
+        </div>
+      </PageTitle>
 
-      {/* ── Toolbar: view tabs, then search + filters on one line ── */}
-      <div className="mb-5 space-y-3">
-        <Tabs value={filters.view} onValueChange={(v) => set('view')(v)}>
-          <TabsList>
-            <TabsTrigger value="active">Ativos</TabsTrigger>
-            <TabsTrigger value="archived">Arquivados</TabsTrigger>
-            <TabsTrigger value="all">Todos</TabsTrigger>
-          </TabsList>
-        </Tabs>
-        {selection.count > 0 ? (
-          <SelectionBar
-            className="mb-0"
-            count={selection.count}
-            total={total}
-            onSelectAll={selectAll}
-            onClear={selection.clear}
-          >
-            <Button variant="destructive" size="sm" className="gap-1.5" onClick={() => setConfirmOpen(true)}>
-              <Trash2 size={15} /> Excluir
-            </Button>
-          </SelectionBar>
+      {/* ── Content band — just the board/list. Owns the per-view width/padding;
+          when it scrolls (list), the scrollbar sits at the screen edge and the
+          content is an inner container that expands to fill it. `key={visao}`
+          remounts it on a view switch so it cross-fades in at its new shape. ── */}
+      <PageContent
+        key={visao}
+        wide={isQuadro}
+        flush={isQuadro}
+        scroll={!isQuadro}
+        className="animate-rise pt-1"
+      >
+        {isQuadro ? (
+          <BoardView
+            filters={filters}
+            onOpenTicket={setDrawerTicketId}
+            onNewTicket={() => setDialogOpen(true)}
+          />
         ) : (
-          <FilterBar
-            search
-            searchValue={filters.q || ''}
-            onSearch={(v) => setFilters((f) => ({ ...f, q: v }))}
-            searchPlaceholder="Buscar por título…"
-            filters={filterSpec}
-            values={filters}
-            onChange={(key, value) => set(key)(value)}
-            onClear={clearFilters}
-            className="mb-0"
+          <ListView
+            filters={filters}
+            setFilters={setFilters}
+            filtersSlot={filtersSlot}
+            onOpenTicket={setDrawerTicketId}
+            onNewTicket={() => setDialogOpen(true)}
           />
         )}
-      </div>
+      </PageContent>
 
-      {/* ── List ── */}
-      {isLoading ? (
-        <div className="flex justify-center py-24"><Spinner size={30} /></div>
-      ) : isError ? (
-        <EmptyState icon={Ghost} title="Erro ao carregar" description="Não foi possível carregar os tickets. Tente novamente." />
-      ) : rows.length === 0 ? (
-        <EmptyState
-          icon={filters.view === 'archived' ? Archive : Rows3}
-          color={BRAND}
-          title={filters.view === 'archived' ? 'Nenhum ticket arquivado' : 'Nenhum ticket encontrado'}
-          description={activeCount > 0 ? 'Ajuste os filtros para ver mais resultados.' : 'Os tickets criados no quadro aparecem aqui.'}
-        />
-      ) : (
-        <>
-          <p className="mb-2 px-1 text-[12px] font-semibold text-ink-muted">
-            {total} ticket{total === 1 ? '' : 's'}
-          </p>
-          <div className="space-y-2">
-            {rows.map((t) => (
-              <TicketRow
-                key={t.id}
-                ticket={t}
-                manager={manager}
-                busy={archive.isPending || unarchive.isPending}
-                selected={selection.has(t.id)}
-                onToggleSelect={selection.toggle}
-                onOpen={setDrawerId}
-                onArchive={(id) => archive.mutate(id)}
-                onUnarchive={(id) => unarchive.mutate(id)}
-              />
-            ))}
-          </div>
-
-          <div ref={sentinelRef} aria-hidden className="h-1" />
-          {isFetchingNextPage && <div className="flex justify-center py-5"><Spinner size={20} /></div>}
-          {!hasNextPage && rows.length > 8 && (
-            <p className="py-5 text-center text-[12px] text-ink-faint">Fim da lista</p>
-          )}
-        </>
-      )}
+      <NewTicketDialog open={dialogOpen} onOpenChange={setDialogOpen} create={create} />
 
       <TicketDrawer
-        ticketId={drawerId}
-        open={!!drawerId}
-        onOpenChange={(o) => { if (!o) setDrawerId(null) }}
+        ticketId={drawerTicketId}
+        open={!!drawerTicketId}
+        showAutopilot
+        onOpenChange={(o) => { if (!o) setDrawerTicketId(null, { replace: true }) }}
       />
-
-      <ConfirmDialog
-        open={confirmOpen}
-        onOpenChange={setConfirmOpen}
-        icon={Trash2}
-        destructive
-        title={selection.count === 1 ? 'Excluir ticket?' : `Excluir ${selection.count} tickets?`}
-        description="Esta ação é permanente e não pode ser desfeita. Os tickets e todo o seu conteúdo (subtarefas, criativos, posts) serão removidos."
-        confirmLabel="Excluir"
-        loading={bulkDelete.isPending}
-        onConfirm={confirmDelete}
-      />
-    </Page>
+    </PageShell>
   )
 }

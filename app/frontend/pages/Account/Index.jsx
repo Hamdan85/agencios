@@ -2,13 +2,14 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   UserRound, Shield, Bot, Save, Camera, Mail, Check, Copy, RefreshCw,
-  ShieldCheck, Sparkles, Trash2, KeyRound, AlertCircle,
+  ShieldCheck, Sparkles, Trash2, KeyRound, AlertCircle, Calendar,
 } from 'lucide-react'
 import {
   useCurrentUser, useUpdateAccount, useUpdateAvatar, useUpdatePassword, useRequestEmailChange,
 } from '@/hooks/useAuth'
 import {
   useConnections, useRevokeConnection, useMcpConnector, useRotateMcpConnector,
+  useGoogleCalendarMutations,
 } from '@/hooks/useData'
 import { PageHeader } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
@@ -202,6 +203,52 @@ function SecurityTab() {
 }
 
 // ── Connections tab (Claude connector + OAuth apps) — personal ──
+// Google Calendar is personal: meetings you schedule live on YOUR calendar
+// (with the Meet link), so each member connects their own account here.
+function GoogleCalendarCard() {
+  const { data: me } = useCurrentUser()
+  const calendar = useGoogleCalendarMutations()
+  const connected = !!me?.user?.google_calendar_connected
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2"><Calendar size={18} /> Google Calendar</CardTitle>
+        <CardDescription>
+          Suas reuniões são criadas no <strong>seu</strong> Google Calendar, com link do Meet e convite
+          para todos os participantes.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-wrap items-center justify-between gap-3">
+        {connected ? (
+          <>
+            <Badge variant="success" className="gap-1.5"><Check size={13} /> Conectado</Badge>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => calendar.disconnect.mutate()}
+              disabled={calendar.disconnect.isPending}
+            >
+              {calendar.disconnect.isPending ? 'Desconectando…' : 'Desconectar'}
+            </Button>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-ink-muted">Nenhuma conta conectada.</p>
+            <Button
+              type="button"
+              onClick={() => calendar.connect.mutate()}
+              disabled={calendar.connect.isPending}
+            >
+              <Calendar size={16} /> {calendar.connect.isPending ? 'Abrindo…' : 'Conectar Google Calendar'}
+            </Button>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
 function ConnectionsTab() {
   const { data: connections, isLoading } = useConnections()
   const revoke = useRevokeConnection()
@@ -237,6 +284,8 @@ function ConnectionsTab() {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       <div className="space-y-6 lg:col-span-2">
+        <GoogleCalendarCard />
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Bot size={18} /> Conector do Claude</CardTitle>

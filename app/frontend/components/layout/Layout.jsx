@@ -27,11 +27,13 @@ export default function Layout() {
   const blocked = me?.workspace && me.workspace.billing_active === false
     && !PAYWALL_ALLOWED.some((p) => location.pathname.startsWith(p))
 
-  // The board manages its own scrolling internally (each column scrolls itself),
-  // so it never needs <main>'s scrollbar — reserving a gutter for one anyway
-  // (via `scrollbarGutter: stable`) leaves a permanent unused strip on the right,
-  // which is only visible now that Board renders with a flush (zero-gutter) Page.
-  const isBoard = location.pathname.startsWith('/quadro')
+  // Split-shell screens (fixed title band + a content band that fills the height
+  // and scrolls itself) manage their own scrolling, so <main> must NOT scroll or
+  // reserve a scrollbar gutter for them: the gutter would leave an unused strip
+  // and, on the tickets hub, toggle on only for the list view — shifting the
+  // header's controls when switching views. Keeping main gutter-less pins the
+  // title band. The tickets hub and the calendar both use this shell.
+  const selfScroll = ['/tickets', '/calendario', '/meu-calendario'].includes(location.pathname)
 
   // Close the drawer whenever we cross into desktop so it can't get stuck open.
   useEffect(() => {
@@ -145,9 +147,9 @@ export default function Layout() {
         <main
           className={cn(
             'flex min-h-0 flex-1 flex-col overscroll-contain',
-            isBoard ? 'overflow-hidden' : 'overflow-y-auto',
+            selfScroll ? 'overflow-hidden' : 'overflow-y-auto',
           )}
-          style={isBoard ? undefined : { scrollbarGutter: 'stable' }}
+          style={selfScroll ? undefined : { scrollbarGutter: 'stable' }}
         >
           <Outlet />
         </main>

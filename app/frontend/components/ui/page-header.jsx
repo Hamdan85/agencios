@@ -1,7 +1,9 @@
 import { cn } from '@/lib/utils'
 
-// The bold page header used across every screen.
-export function PageHeader({ eyebrow, title, icon: Icon, color = '#7C3AED', description, actions, className }) {
+// The bold page header used across every screen. `actionsClassName` lets a
+// screen reshape the actions container (e.g. stretch it full-width on mobile
+// for a continuous control row) without affecting other pages.
+export function PageHeader({ eyebrow, title, icon: Icon, color = '#7C3AED', description, actions, actionsClassName, className }) {
   return (
     <div className={cn('mb-7 flex flex-wrap items-start justify-between gap-4', className)}>
       <div className="flex items-start gap-3.5">
@@ -16,7 +18,7 @@ export function PageHeader({ eyebrow, title, icon: Icon, color = '#7C3AED', desc
           {description && <p className="mt-0.5 max-w-xl text-sm text-ink-muted">{description}</p>}
         </div>
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      {actions && <div className={cn('flex items-center gap-2', actionsClassName)}>{actions}</div>}
     </div>
   )
 }

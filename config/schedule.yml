@@ -45,3 +45,8 @@ send_daily_ticket_digest:
   cron: "0 7 * * *"            # daily at 07:00 — start of day
   class: "SendDailyTicketDigestJob"
   queue: low
+
+pull_meetings_from_calendar:
+  cron: "*/15 * * * *"         # every 15 minutes — reflect Google Calendar edits
+  class: "Meetings::PullFromCalendarJob"
+  queue: low

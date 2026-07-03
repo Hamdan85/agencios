@@ -109,6 +109,9 @@ Rails.application.routes.draw do
         patch :avatar
         post  :email                                  # request an e-mail change
         post  'email/confirm/:token', action: :confirm_email # public confirm link
+        # Google Calendar is a personal integration (meetings are user-level).
+        get    :google_calendar_authorize_url
+        delete :google_calendar
       end
 
       # Web Push subscriptions (id is the URL-encoded endpoint)
@@ -231,9 +234,7 @@ Rails.application.routes.draw do
       end
 
       resource :settings, only: %i[show update], controller: 'settings' do
-        patch  :brand_assets
-        get    :google_calendar_authorize_url
-        delete :google_calendar
+        patch :brand_assets
       end
 
       resource :billing, only: %i[show], controller: 'billing' do

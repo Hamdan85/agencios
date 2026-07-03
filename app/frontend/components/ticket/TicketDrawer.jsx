@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Maximize2, X, ArrowRight, ChevronDown, Layers, Folder, Building2, Ghost,
 } from 'lucide-react'
@@ -36,6 +36,7 @@ export default function TicketDrawer({ ticketId, open, onOpenChange, showAutopil
 
 function DrawerContent({ id, onOpenChange, showAutopilot }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const { data, isLoading } = useTicket(id)
   const mut = useTicketMutations(id)
   useTicketChannel(id)
@@ -48,7 +49,12 @@ function DrawerContent({ id, onOpenChange, showAutopilot }) {
 
   const expand = () => {
     onOpenChange?.(false)
-    navigate(`/tickets/${id}`, { state: { from: '/quadro' } })
+    // Hand the full page the real origin (board / list / calendar / campaign),
+    // minus the ?ticket= param so "back" doesn't re-open the drawer.
+    const sp = new URLSearchParams(location.search)
+    sp.delete('ticket')
+    const qs = sp.toString()
+    navigate(`/tickets/${id}`, { state: { from: `${location.pathname}${qs ? `?${qs}` : ''}` } })
   }
 
   const jumpTo = (toStatus) => {

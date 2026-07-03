@@ -34,14 +34,32 @@ module Controllers
       end
 
       def recent_generations
-        workspace.generations.order(created_at: :desc).limit(6).map do |generation|
+        workspace.generations
+                 .includes(creative: [:ticket, { assets_attachments: :blob }])
+                 .order(created_at: :desc).limit(6).map do |generation|
+          creative = generation.creative
           {
             id: generation.id,
             kind: generation.kind,
             status: generation.status,
-            created_at: generation.created_at&.iso8601
+            created_at: generation.created_at&.iso8601,
+            creative_name: creative&.name,
+            ticket_id: creative&.ticket_id,
+            preview_url: generation_preview_url(creative)
           }
         end
+      end
+
+      # First image asset of the generated creative — the row's thumbnail.
+      def generation_preview_url(creative)
+        return unless creative&.assets&.attached?
+
+        asset = creative.assets.find { |a| a.blob&.image? }
+        return unless asset
+
+        Rails.application.routes.url_helpers.rails_blob_url(asset, host: SystemConfig.app_host)
+      rescue StandardError
+        nil
       end
     end
   end

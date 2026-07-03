@@ -36,6 +36,8 @@ export function useBoardMutations(filters = {}) {
     mutationFn: (data) => ticketsApi.create(data),
     onSuccess: () => {
       invalidate()
+      // The hub's list view reads the global tickets list, not the board.
+      qc.invalidateQueries({ queryKey: ['tickets'] })
       analytics.track(EVENTS.TICKET_CREATED)
       toast.success('Ticket criado!')
     },

@@ -3,10 +3,11 @@
 module Controllers
   module Auth
     module Calendar
-      # Verifies the signed state (carrying workspace_id), exchanges the
-      # authorization code for tokens, and persists them on the workspace Setting.
-      # Called by Auth::CalendarController#callback — this is a browser-facing
-      # request, so Current.workspace is not set; workspace is resolved from state.
+      # Verifies the signed state (carrying user_id), exchanges the authorization
+      # code for tokens, and persists them on the USER — calendars are personal,
+      # each member connects their own from the account page. Called by
+      # Auth::CalendarController#callback — a browser-facing request, so Current
+      # is not set; the user is resolved from state.
       class Callback
         def self.call(...) = new(...).call
 
@@ -19,15 +20,14 @@ module Controllers
           data = verify_state!
           raise Operations::Errors::Invalid, 'code missing' if @code.blank?
 
-          workspace = Workspace.find(data['workspace_id'])
-          token     = Vendors::Google::Actions::ExchangeCode.call(
+          user  = User.find(data['user_id'])
+          token = Vendors::Google::Actions::ExchangeCode.call(
             code: @code, redirect_uri: Calendar.redirect_uri
           )
 
-          setting = workspace.setting || Setting.create!(workspace: workspace)
-          setting.update!(
+          user.update!(
             google_access_token: token['access_token'],
-            google_refresh_token: token['refresh_token'].presence || setting.google_refresh_token,
+            google_refresh_token: token['refresh_token'].presence || user.google_refresh_token,
             google_calendar_connected_at: Time.current
           )
         end

@@ -9,14 +9,18 @@ import { cn } from '@/lib/utils'
 
 // Renders one filter control from its descriptor, in the right variant for the
 // surface (a compact `pill` on desktop, a full-width `field` in the mobile sheet).
+// `placeholder` defaults to `label`, but a filter with a meaningful default value
+// (e.g. "situação": Ativos) sets its own so the pill reads the current value while
+// the sheet field is still titled by `label`.
 function Control({ ctrl, value, onChange, variant }) {
   const isField = variant === 'field'
-  const common = { value, onChange, variant, placeholder: ctrl.label }
+  const placeholder = ctrl.placeholder ?? ctrl.label
+  const common = { value, onChange, variant, placeholder }
   switch (ctrl.type) {
     case 'project':  return <ProjectSelect {...common} listParams={ctrl.listParams} />
     case 'client':   return <ClientSelect {...common} />
     case 'assignee': return <AssigneeSelect {...common} />
-    default:         return <OptionSelect value={value} onChange={onChange} placeholder={ctrl.label} options={ctrl.options} fullWidth={isField} />
+    default:         return <OptionSelect value={value} onChange={onChange} placeholder={placeholder} options={ctrl.options} fullWidth={isField} />
   }
 }
 

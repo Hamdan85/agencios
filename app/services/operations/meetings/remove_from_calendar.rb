@@ -13,7 +13,7 @@ module Operations
       def call
         return @meeting if @meeting.google_event_id.blank?
 
-        Vendors::Google::Calendar.new(setting: @meeting.workspace.setting).delete_event(@meeting)
+        Vendors::Google::Calendar.new(user: @meeting.user).delete_event(@meeting)
         @meeting
       rescue StandardError => e
         Rails.logger.warn("[Meetings::RemoveFromCalendar] meeting ##{@meeting.id}: #{e.message}")

@@ -2,14 +2,13 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Settings, Palette, Users2, Plug, Save, AtSign, Sparkles, UserPlus,
-  Link2, Check, Calendar, Wallet, Copy, ShieldCheck,
+  Link2, Check, Wallet, Copy, ShieldCheck,
   Image as ImageIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   useSettings, useSettingsMutation, useSettingsBrandAssetsMutation,
   useWorkspaceMembers, useWorkspaceMutations,
-  useGoogleCalendarMutations,
 } from '@/hooks/useData'
 import { PageHeader } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
@@ -335,7 +334,6 @@ function IntegrationCard({ icon: Icon, color, name, connected, sub, onConnect, o
 
 function IntegrationsTab() {
   const { data: setting } = useSettings()
-  const calendar = useGoogleCalendarMutations()
 
   const s = setting?.setting || setting || {}
 
@@ -346,18 +344,8 @@ function IntegrationsTab() {
           <Plug size={18} className="text-emerald" />
           <h2 className="font-display text-lg font-bold text-ink">Serviços</h2>
         </div>
+        {/* Google Calendar é pessoal (reuniões são do usuário) — conecta em /conta. */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <IntegrationCard
-            icon={Calendar}
-            color="#0EA5E9"
-            name="Google Calendar"
-            connected={!!s.google_connected}
-            sub="Sincronize reuniões e crie links do Meet."
-            onConnect={() => calendar.connect.mutate()}
-            onDisconnect={() => calendar.disconnect.mutate()}
-            connectPending={calendar.connect.isPending}
-            disconnectPending={calendar.disconnect.isPending}
-          />
           <IntegrationCard
             icon={Wallet}
             color="#10B981"

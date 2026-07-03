@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_02_193100) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_03_031909) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -342,9 +342,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_02_193100) do
     t.datetime "starts_at", null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
+    t.bigint "user_id"
     t.bigint "workspace_id", null: false
     t.index ["client_id"], name: "index_meetings_on_client_id"
     t.index ["project_id"], name: "index_meetings_on_project_id"
+    t.index ["user_id"], name: "index_meetings_on_user_id"
     t.index ["workspace_id", "starts_at"], name: "index_meetings_on_workspace_id_and_starts_at"
     t.index ["workspace_id"], name: "index_meetings_on_workspace_id"
   end
@@ -796,6 +798,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_02_193100) do
   add_foreign_key "mcp_call_logs", "workspaces"
   add_foreign_key "meetings", "clients"
   add_foreign_key "meetings", "projects"
+  add_foreign_key "meetings", "users"
   add_foreign_key "meetings", "workspaces"
   add_foreign_key "memberships", "users"
   add_foreign_key "memberships", "workspaces"

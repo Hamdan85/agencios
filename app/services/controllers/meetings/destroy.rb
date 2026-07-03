@@ -8,8 +8,8 @@ module Controllers
       end
 
       def call
-        require_manager!
         meeting = workspace.meetings.find(@params[:id])
+        authorize!(meeting, :destroy?)
         Operations::Meetings::RemoveFromCalendar.call(meeting)
         meeting.destroy!
         { message: 'Reunião removida.' }

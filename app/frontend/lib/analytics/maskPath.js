@@ -8,7 +8,7 @@ export const ROUTE_PATTERNS = [
   '/login',
   '/cadastro',
   '/painel',
-  '/quadro',
+  '/quadro', // legacy — redirects to /tickets, kept so pre-redirect hits stay masked
   '/calendario',
   '/meu-calendario',
   '/tarefas',
@@ -19,6 +19,7 @@ export const ROUTE_PATTERNS = [
   '/clientes',
   '/tickets/:id/:tab',
   '/tickets/:id',
+  '/tickets',
   '/estudio',
   '/reunioes',
   '/cobrancas',

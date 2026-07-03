@@ -5,7 +5,7 @@ import {
   KanbanSquare, Wand2, CalendarDays, ChevronRight, Clock,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { dt, brl, relativeDay } from '@/lib/formatters'
+import { dt, brl, timeAgo } from '@/lib/formatters'
 import { WORKFLOW, statusMeta, GENERATION_KIND_META } from '@/lib/constants'
 import { useDashboard } from '@/hooks/useData'
 import { useCurrentUser } from '@/hooks/useAuth'
@@ -37,7 +37,7 @@ const GEN_STATUS = {
 }
 
 const SHORTCUTS = [
-  { to: '/quadro', label: 'Quadro', hint: 'Funil de produção', icon: KanbanSquare, color: '#EC4899' },
+  { to: '/tickets', label: 'Tickets', hint: 'Funil de produção', icon: KanbanSquare, color: '#EC4899' },
   { to: '/estudio', label: 'Estúdio', hint: 'Gerar criativos', icon: Wand2, color: '#7C3AED' },
   { to: '/calendario', label: 'Calendário', hint: 'Posts e reuniões', icon: CalendarDays, color: '#0EA5E9' },
   { to: '/clientes', label: 'Clientes', hint: 'Sua carteira', icon: Users, color: '#10B981' },
@@ -61,7 +61,7 @@ export default function Dashboard() {
   const totalFunnel = WORKFLOW.reduce((sum, s) => sum + (Number(byStatus[s]) || 0), 0)
 
   const statCards = [
-    { label: 'Tickets ativos', value: stats.active_tickets ?? 0, icon: Ticket, color: '#EC4899', sub: 'em produção agora', to: '/quadro' },
+    { label: 'Tickets ativos', value: stats.active_tickets ?? 0, icon: Ticket, color: '#EC4899', sub: 'em produção agora', to: '/tickets' },
     { label: 'Clientes', value: stats.clients ?? 0, icon: Users, color: '#10B981', sub: 'na carteira', to: '/clientes' },
     { label: 'Campanhas', value: stats.projects ?? 0, icon: FolderKanban, color: '#7C3AED', sub: 'em andamento', to: '/campanhas' },
     { label: 'Posts agendados', value: stats.scheduled_posts ?? 0, icon: CalendarClock, color: '#0EA5E9', sub: 'na fila', to: '/calendario' },
@@ -86,7 +86,7 @@ export default function Dashboard() {
           </div>
           <div className="flex w-full gap-2.5 sm:w-auto sm:flex-wrap sm:items-center">
             <Button asChild size="lg" variant="glow" className="flex-1 justify-center bg-white text-brand-ink hover:bg-white/90 sm:flex-none">
-              <Link to="/quadro"><Plus size={18} /> Novo ticket</Link>
+              <Link to="/tickets"><Plus size={18} /> Novo ticket</Link>
             </Button>
             <Button asChild size="lg" variant="ghost" className="flex-1 justify-center text-white hover:bg-white/10 sm:flex-none">
               <Link to="/estudio"><Sparkles size={18} /> Estúdio</Link>
@@ -113,7 +113,7 @@ export default function Dashboard() {
               <p className="text-sm text-ink-muted">{totalFunnel} tickets distribuídos pelas 7 etapas</p>
             </div>
             <Button asChild variant="outline" size="sm">
-              <Link to="/quadro">Abrir quadro <ArrowUpRight size={15} /></Link>
+              <Link to="/tickets">Abrir quadro <ArrowUpRight size={15} /></Link>
             </Button>
           </CardHeader>
           <CardContent>
@@ -125,9 +125,12 @@ export default function Dashboard() {
                 return (
                   <Link
                     key={status}
-                    to="/quadro"
-                    className="group relative flex min-w-[120px] flex-1 flex-col justify-between gap-3 overflow-hidden rounded-2xl border border-border p-3.5 transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_30px_-16px_rgba(24,18,43,0.3)] sm:min-w-0"
-                    style={{ flexBasis: 0, background: `${m.color}0D`, borderColor: `${m.color}33` }}
+                    to="/tickets"
+                    // flex-1/basis-0 only on the sm+ row layout (equal-width
+                    // columns). In the stacked mobile column they'd zero the
+                    // cards' heights and collapse the whole funnel.
+                    className="group relative flex flex-col justify-between gap-3 overflow-hidden rounded-2xl border border-border p-3.5 transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_30px_-16px_rgba(24,18,43,0.3)] sm:min-w-0 sm:flex-1 sm:basis-0"
+                    style={{ background: `${m.color}0D`, borderColor: `${m.color}33` }}
                   >
                     <div className="flex items-center justify-between">
                       <span className="flex size-8 items-center justify-center rounded-xl" style={{ background: `${m.color}1F`, color: m.color }}>
@@ -216,21 +219,31 @@ export default function Dashboard() {
               generations.map((gen) => {
                 const m = GENERATION_KIND_META[gen.kind] || GENERATION_KIND_META.image
                 const Icon = m.icon
-                const rel = relativeDay(gen.created_at)
+                const ago = timeAgo(gen.created_at)
                 const st = GEN_STATUS[gen.status] || { label: gen.status || '—', variant: 'muted' }
                 return (
-                  <div key={gen.id} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface p-3 transition-colors hover:bg-surface-muted">
+                  <Link
+                    key={gen.id}
+                    to={gen.ticket_id ? `/tickets/${gen.ticket_id}` : '/estudio'}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface p-3 transition-colors hover:bg-surface-muted"
+                  >
                     <div className="flex min-w-0 items-center gap-3">
-                      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl" style={{ background: `${m.color}16`, color: m.color }}>
-                        <Icon size={17} strokeWidth={2.3} />
-                      </span>
+                      {gen.preview_url ? (
+                        <img src={gen.preview_url} alt="" className="size-10 shrink-0 rounded-xl object-cover" />
+                      ) : (
+                        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl" style={{ background: `${m.color}16`, color: m.color }}>
+                          <Icon size={17} strokeWidth={2.3} />
+                        </span>
+                      )}
                       <div className="min-w-0">
-                        <p className="truncate font-semibold text-ink">{m.label}</p>
-                        <p className="truncate text-[12.5px] text-ink-muted">{rel?.text || dt(gen.created_at)}</p>
+                        <p className="truncate font-semibold text-ink">{gen.creative_name || m.label}</p>
+                        <p className="truncate text-[12.5px] text-ink-muted">
+                          {gen.creative_name ? `${m.label} · ` : ''}{ago || dt(gen.created_at)}
+                        </p>
                       </div>
                     </div>
                     <Badge variant={st.variant} className="shrink-0">{st.label}</Badge>
-                  </div>
+                  </Link>
                 )
               })
             )}

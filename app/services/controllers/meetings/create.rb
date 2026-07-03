@@ -9,16 +9,18 @@ module Controllers
 
       def call
         authorize!(Meeting, :create?)
-        meeting = Operations::Meetings::Create.call(meeting_params)
+        meeting = Operations::Meetings::Create.call(meeting_params, user: user)
         { meeting: serialize(meeting, MeetingSerializer) }
       end
 
       private
 
       def meeting_params
+        # Attendees mix workspace members ({ user_id }) and external guests
+        # ({ email, name }).
         @params.require(:meeting).permit(
           :title, :starts_at, :ends_at, :notes, :client_id, :project_id,
-          attendees: []
+          attendees: %i[email name user_id]
         )
       end
     end

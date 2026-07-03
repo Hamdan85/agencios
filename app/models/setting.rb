@@ -5,9 +5,10 @@
 class Setting < ApplicationRecord
   belongs_to :workspace
 
+  # google_* columns are retired: Google Calendar became a per-user integration
+  # (tokens on User; meetings are user-level). Columns stay encrypted for old rows.
   encrypts :google_access_token, :google_refresh_token, :mercadopago_access_token
 
-  def google_connected? = google_access_token.present?
   def mercadopago_connected? = mercadopago_access_token.present?
 
   # Whether a real payment link can actually be generated: either this

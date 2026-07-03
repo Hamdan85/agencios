@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import {
   dashboardApi, calendarApi, tasksApi, ticketsApi, clientsApi, projectsApi, reportsApi, studioApi,
   generationsApi, creativesApi, socialApi, meetingsApi, invoicesApi, settingsApi, billingApi,
-  creditsApi, pricingApi, workspaceApi, subtasksApi, connectionsApi, connectorApi,
+  creditsApi, pricingApi, workspaceApi, subtasksApi, connectionsApi, connectorApi, accountApi,
 } from '@/api'
 import { keys } from '@/api/queryKeys'
 import { useCurrentUser } from '@/hooks/useAuth'
@@ -364,9 +364,11 @@ export function useInvoiceMutations() {
 // ── Settings ───────────────────────────────────────────────────
 export const useSettings = () => useQuery({ queryKey: keys.settings(), queryFn: settingsApi.get })
 
+// Google Calendar is a personal integration (meetings are user-level): the
+// connection lives on the user, surfaced on /conta and read from /me.
 export function useGoogleCalendarMutations() {
   const qc = useQueryClient()
-  const inv = () => qc.invalidateQueries({ queryKey: keys.settings() })
+  const inv = () => qc.invalidateQueries({ queryKey: keys.me() })
 
   function openCalendarPopup(url) {
     const w = 600, h = 700
@@ -391,12 +393,12 @@ export function useGoogleCalendarMutations() {
 
   return {
     connect: useMutation({
-      mutationFn: settingsApi.calendarAuthorizeUrl,
+      mutationFn: accountApi.calendarAuthorizeUrl,
       onSuccess: (d) => { if (d?.url) openCalendarPopup(d.url) },
       onError: onErr('Não foi possível iniciar a conexão.'),
     }),
     disconnect: useMutation({
-      mutationFn: settingsApi.calendarDisconnect,
+      mutationFn: accountApi.calendarDisconnect,
       onSuccess: () => { inv(); toast.success('Google Calendar desconectado.') },
       onError: onErr('Erro ao desconectar.'),
     }),

@@ -8,7 +8,7 @@ import { useCurrentUser } from '@/hooks/useAuth'
 import { PageHeader } from '@/components/ui/page-header'
 import { PageLoader } from '@/components/ui/feedback'
 import { Button } from '@/components/ui/button'
-import { Page } from '@/components/ui/page'
+import { PageShell, PageTitle, PageContent } from '@/components/ui/page'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 import {
@@ -17,7 +17,7 @@ import {
 } from '@/components/calendar/calendarUtils'
 import { EventChip } from '@/components/calendar/EventChip'
 import { MeetingDialog } from '@/components/calendar/MeetingDialog'
-import TicketDrawer from '@/components/ticket/TicketDrawer'
+import TicketDrawer from '@/components/ticket/LazyTicketDrawer'
 
 const BRAND = '#0EA5E9'
 const MAX_CHIPS = 3
@@ -110,47 +110,53 @@ export default function CalendarIndex({ scope } = {}) {
   const label = view === 'month' ? monthLabel(cursor) : view === 'day' ? dayLabel(cursor) : weekLabel(cursor)
 
   return (
-    <Page wide className="flex min-h-0 flex-1 flex-col animate-rise">
-      <PageHeader
-        className="shrink-0"
-        eyebrow={global ? 'Você' : 'Planejamento'}
-        title={global ? 'Meu calendário' : 'Calendário'}
-        icon={global ? CalendarRange : CalendarDays}
-        color={BRAND}
-        description={global
-          ? 'Posts agendados e reuniões de todos os seus times, num só lugar.'
-          : 'Posts agendados e reuniões, num só lugar.'}
-        actions={
-          <Tabs value={view} onValueChange={setView}>
-            <TabsList>
-              <TabsTrigger value="day">Dia</TabsTrigger>
-              <TabsTrigger value="week">Semana</TabsTrigger>
-              <TabsTrigger value="month">Mês</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        }
-      />
+    <PageShell className="animate-rise">
+      {/* Fixed title band — respiro gutter, like every page's title. Holds the
+          header, the view tabs, and the navigation + legend toolbar. */}
+      <PageTitle className="pb-4">
+        <PageHeader
+          className="mb-0"
+          eyebrow={global ? 'Você' : 'Planejamento'}
+          title={global ? 'Meu calendário' : 'Calendário'}
+          icon={global ? CalendarRange : CalendarDays}
+          color={BRAND}
+          description={global
+            ? 'Posts agendados e reuniões de todos os seus times, num só lugar.'
+            : 'Posts agendados e reuniões, num só lugar.'}
+          actions={
+            <Tabs value={view} onValueChange={setView}>
+              <TabsList>
+                <TabsTrigger value="day">Dia</TabsTrigger>
+                <TabsTrigger value="week">Semana</TabsTrigger>
+                <TabsTrigger value="month">Mês</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          }
+        />
 
-      {/* Toolbar: navigation + legend */}
-      <div className="mb-5 flex shrink-0 flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center rounded-xl border border-border bg-surface p-1">
-            <Button variant="ghost" size="icon-sm" onClick={() => step(-1)} aria-label="Anterior">
-              <ChevronLeft size={18} />
-            </Button>
-            <Button variant="ghost" size="icon-sm" onClick={() => step(1)} aria-label="Próximo">
-              <ChevronRight size={18} />
-            </Button>
+        {/* Navigation + legend */}
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center rounded-xl border border-border bg-surface p-1">
+              <Button variant="ghost" size="icon-sm" onClick={() => step(-1)} aria-label="Anterior">
+                <ChevronLeft size={18} />
+              </Button>
+              <Button variant="ghost" size="icon-sm" onClick={() => step(1)} aria-label="Próximo">
+                <ChevronRight size={18} />
+              </Button>
+            </div>
+            <Button variant="outline" size="sm" onClick={goToday}>Hoje</Button>
+            <h2 className="ml-1 font-display text-lg font-extrabold capitalize tracking-tight text-ink">
+              {label}
+            </h2>
           </div>
-          <Button variant="outline" size="sm" onClick={goToday}>Hoje</Button>
-          <h2 className="ml-1 font-display text-lg font-extrabold capitalize tracking-tight text-ink">
-            {label}
-          </h2>
+          <Legend />
         </div>
-        <Legend />
-      </div>
+      </PageTitle>
 
-      <div className="flex min-h-0 flex-1 flex-col">
+      {/* Content band — the grid runs full-width (wide); day/week views scroll
+          inside themselves. */}
+      <PageContent wide flush className="pt-1">
         {isLoading ? (
           <PageLoader />
         ) : view === 'month' ? (
@@ -178,7 +184,7 @@ export default function CalendarIndex({ scope } = {}) {
             onEventClick={handleEventClick}
           />
         )}
-      </div>
+      </PageContent>
 
       <MeetingDialog
         event={selected}
@@ -191,7 +197,7 @@ export default function CalendarIndex({ scope } = {}) {
         open={!!ticketId}
         onOpenChange={(o) => { if (!o) patchParams((sp) => sp.delete('ticket')) }}
       />
-    </Page>
+    </PageShell>
   )
 }
 

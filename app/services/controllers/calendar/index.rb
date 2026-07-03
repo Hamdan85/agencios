@@ -37,9 +37,13 @@ module Controllers
             .includes(:workspace, :social_account, ticket: :project)
       end
 
+      # The workspace calendar shows the whole team's meetings; the personal
+      # "Meu calendário" (all_workspaces) shows only the ones the user owns or
+      # is included in — meetings are user-level.
       def meetings
-        Meeting.where(workspace_id: workspace_ids, starts_at: from..to)
-               .includes(:workspace, :client, :project)
+        scope = Meeting.where(workspace_id: workspace_ids, starts_at: from..to)
+        scope = scope.involving(user) if all_workspaces?
+        scope.includes(:workspace, :client, :project)
       end
 
       def post_event(post)

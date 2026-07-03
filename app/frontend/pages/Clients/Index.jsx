@@ -1,20 +1,17 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Users, Plus, Search, Mail, Phone, FileText, MoreHorizontal,
+  Users, Plus, Mail, Phone, FileText, MoreHorizontal,
   Pencil, Archive, FolderKanban, Building2, Sparkles,
 } from 'lucide-react'
 import { useClients, useClientMutations } from '@/hooks/useData'
 import { PageHeader } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
 import { useConfirm } from '@/components/ui/confirm-dialog'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Avatar } from '@/components/ui/avatar'
 import { PageLoader, EmptyState } from '@/components/ui/feedback'
-import {
-  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
-} from '@/components/ui/select'
+import { FilterBar } from '@/components/ui/filter-bar'
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
 } from '@/components/ui/dropdown-menu'
@@ -154,27 +151,28 @@ export default function ClientsIndex() {
         )}
       />
 
-      <div className="mb-6 flex flex-wrap items-center gap-3">
-        <div className="relative min-w-0 flex-1 sm:min-w-[240px]">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por nome, empresa ou e-mail…"
-            className="pl-9"
-          />
-        </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-44">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="active">Ativos</SelectItem>
-            <SelectItem value="archived">Arquivados</SelectItem>
-            <SelectItem value="all">Todos</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <FilterBar
+        search
+        searchValue={search}
+        onSearch={(v) => setSearch(v || '')}
+        searchPlaceholder="Buscar por nome, empresa ou e-mail…"
+        filters={[
+          {
+            key: 'status',
+            type: 'options',
+            label: 'Situação',
+            placeholder: 'Ativos',
+            options: [
+              { value: 'archived', label: 'Arquivados' },
+              { value: 'all', label: 'Todos' },
+            ],
+          },
+        ]}
+        values={{ status: statusFilter === 'active' ? undefined : statusFilter }}
+        onChange={(_key, value) => setStatusFilter(value || 'active')}
+        onClear={() => setStatusFilter('active')}
+        className="mb-6"
+      />
 
       {filtered.length === 0 ? (
         <EmptyState

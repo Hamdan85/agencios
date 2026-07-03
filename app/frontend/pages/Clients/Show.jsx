@@ -3,19 +3,25 @@ import { Link, useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, Mail, Phone, FileText, FolderKanban, Receipt, Wallet,
   Building2, StickyNote, Pencil, Plus, ListChecks, Sparkles, Palette, AtSign,
-  Plug, Link2, Check, RefreshCw, Unplug, Copy, Share2,
+  Plug, Link2, Check, RefreshCw, Unplug, Copy, Share2, Video,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { socialApi } from '@/api'
-import { useClient, useClientMutations, useSocialAccountMutations } from '@/hooks/useData'
+import {
+  useClient, useClientMutations, useSocialAccountMutations, useMeetings, useMeetingMutations,
+} from '@/hooks/useData'
+import { useCurrentUser } from '@/hooks/useAuth'
 import { PageLoader, EmptyState } from '@/components/ui/feedback'
 import { Button } from '@/components/ui/button'
+import { useConfirm } from '@/components/ui/confirm-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Avatar } from '@/components/ui/avatar'
 import { Card } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Page } from '@/components/ui/page'
 import ClientWizard from '@/components/client/ClientWizard'
+import { MeetingCard } from '@/components/meeting/MeetingCard'
+import { MeetingFormDialog } from '@/components/meeting/MeetingFormDialog'
 import { POSITIONING_FIELDS, CHANNEL_META } from '@/lib/constants'
 import { brl, date } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
@@ -413,10 +419,86 @@ function Stat({ icon: Icon, color, label, value }) {
   )
 }
 
+// Every meeting anyone on the team scheduled with this client — meetings are
+// personal, so only the owner of each one can edit/cancel it; the owner chip
+// shows who scheduled it.
+function MeetingsSection({ client }) {
+  const { data: meetings, isLoading } = useMeetings({ client_id: client.id })
+  const { create, update, destroy } = useMeetingMutations()
+  const { data: me } = useCurrentUser()
+  const confirm = useConfirm()
+  const [open, setOpen] = useState(false)
+  const [editing, setEditing] = useState(null)
+
+  const myId = me?.user?.id
+  const list = meetings || []
+  const now = Date.now()
+  const upcoming = list.filter((m) => new Date(m.starts_at).getTime() >= now)
+  const past = list.filter((m) => new Date(m.starts_at).getTime() < now).reverse()
+
+  const onEdit = (m) => { setEditing(m); setOpen(true) }
+  const onCancel = async (m) => {
+    const ok = await confirm({
+      title: `Cancelar "${m.title}"?`,
+      description: 'A reunião será removida da agenda e do Google Calendar.',
+      confirmLabel: 'Cancelar reunião',
+      cancelLabel: 'Voltar',
+      destructive: true,
+    })
+    if (ok) destroy.mutate(m.id)
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-ink-muted">Todas as reuniões do time com este cliente.</p>
+        <Button size="sm" onClick={() => { setEditing(null); setOpen(true) }}>
+          <Plus size={16} /> Agendar reunião
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <p className="py-8 text-center text-sm text-ink-faint">Carregando…</p>
+      ) : list.length === 0 ? (
+        <EmptyState
+          icon={Video}
+          color="#14B8A6"
+          title="Nenhuma reunião com este cliente"
+          description="Agende a primeira — ela entra no seu Google Calendar com link do Meet."
+          action={<Button size="sm" onClick={() => { setEditing(null); setOpen(true) }}><Plus size={16} /> Agendar reunião</Button>}
+        />
+      ) : (
+        <div className="space-y-4">
+          {[...upcoming, ...past].map((m) => (
+            <MeetingCard
+              key={m.id}
+              meeting={m}
+              past={new Date(m.starts_at).getTime() < now}
+              canEdit={m.user_id === myId}
+              showOwner
+              onEdit={onEdit}
+              onCancel={onCancel}
+            />
+          ))}
+        </div>
+      )}
+
+      <MeetingFormDialog
+        open={open}
+        onOpenChange={setOpen}
+        editing={editing}
+        createMutation={create}
+        updateMutation={update}
+        defaultClient={{ id: client.id, name: client.name }}
+      />
+    </div>
+  )
+}
+
 // Each tab is its own URL (Portuguese segment); "branding" is the base path.
-const TAB_TO_SEG = { branding: '', config: 'configuracoes', projects: 'campanhas', invoices: 'faturas' }
+const TAB_TO_SEG = { branding: '', config: 'configuracoes', projects: 'campanhas', invoices: 'faturas', meetings: 'reunioes' }
 // `projetos` kept as a legacy alias — the entity was renamed to Campanha.
-const SEG_TO_TAB = { configuracoes: 'config', campanhas: 'projects', projetos: 'projects', faturas: 'invoices' }
+const SEG_TO_TAB = { configuracoes: 'config', campanhas: 'projects', projetos: 'projects', faturas: 'invoices', reunioes: 'meetings' }
 
 export default function ClientShow() {
   const { id, tab: seg } = useParams()
@@ -466,6 +548,7 @@ export default function ClientShow() {
             <TabsTrigger value="branding"><Palette size={15} /> Posicionamento & Marca</TabsTrigger>
             <TabsTrigger value="config"><Plug size={15} /> Configurações</TabsTrigger>
             <TabsTrigger value="projects"><FolderKanban size={15} /> Campanhas</TabsTrigger>
+            <TabsTrigger value="meetings"><Video size={15} /> Reuniões</TabsTrigger>
             <TabsTrigger value="invoices"><Receipt size={15} /> Faturas</TabsTrigger>
           </TabsList>
 
@@ -480,6 +563,10 @@ export default function ClientShow() {
 
           <TabsContent value="projects" className="animate-rise">
             <ProjectsSection projects={projects} />
+          </TabsContent>
+
+          <TabsContent value="meetings" className="animate-rise">
+            <MeetingsSection client={client} />
           </TabsContent>
 
           <TabsContent value="invoices" className="animate-rise">

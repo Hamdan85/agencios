@@ -1,6 +1,6 @@
 import { Suspense, lazy } from 'react'
 import {
-  createBrowserRouter, createRoutesFromElements, RouterProvider, Route, Outlet, Navigate, useParams,
+  createBrowserRouter, createRoutesFromElements, RouterProvider, Route, Outlet, Navigate, useParams, useLocation,
 } from 'react-router-dom'
 import ProtectedRoute, { GuestRoute } from '@/components/shared/ProtectedRoute'
 import Layout from '@/components/layout/Layout'
@@ -18,12 +18,18 @@ function LegacyProjectRedirect() {
   return <Navigate to={`/campanhas/${id}`} replace />
 }
 
+// The board merged into the tickets hub (/tickets, quadro view by default).
+// Old /quadro bookmarks keep working — including ?ticket=… drawer links.
+function LegacyBoardRedirect() {
+  const location = useLocation()
+  return <Navigate to={{ pathname: '/tickets', search: location.search }} replace />
+}
+
 const Login = lazy(() => import('@/pages/Auth/Login'))
 const Register = lazy(() => import('@/pages/Auth/Register'))
 const ConfirmEmailChange = lazy(() => import('@/pages/Auth/ConfirmEmailChange'))
 const Account = lazy(() => import('@/pages/Account/Index'))
 const Dashboard = lazy(() => import('@/pages/Dashboard/Index'))
-const Board = lazy(() => import('@/pages/Board/Index'))
 const Calendar = lazy(() => import('@/pages/Calendar/Index'))
 const Tasks = lazy(() => import('@/pages/Tasks/Index'))
 const MyTasks = lazy(() => import('@/pages/Tasks/Global'))
@@ -75,8 +81,8 @@ const router = createBrowserRouter(
           {/* Você — personal, cross-team views (outside any single workspace) */}
           <Route path="/minhas-tarefas" element={<MyTasks />} />
           <Route path="/meu-calendario" element={<MyCalendar />} />
+          <Route path="/reunioes" element={<Meetings />} />
           <Route path="/painel" element={<Dashboard />} />
-          <Route path="/quadro" element={<Board />} />
           <Route path="/calendario" element={<Calendar />} />
           <Route path="/tarefas" element={<Tasks />} />
           <Route path="/campanhas" element={<Projects />} />
@@ -85,6 +91,7 @@ const router = createBrowserRouter(
               bookmarks/links keep working. */}
           <Route path="/projetos" element={<Navigate to="/campanhas" replace />} />
           <Route path="/projetos/:id" element={<LegacyProjectRedirect />} />
+          <Route path="/quadro" element={<LegacyBoardRedirect />} />
           <Route path="/relatorios/:id" element={<ReportShow />} />
           <Route path="/clientes" element={<Clients />} />
           <Route path="/clientes/:id" element={<ClientShow />} />
@@ -93,7 +100,6 @@ const router = createBrowserRouter(
           <Route path="/tickets/:id" element={<TicketShow />} />
           <Route path="/tickets/:id/:tab" element={<TicketShow />} />
           <Route path="/estudio" element={<Studio />} />
-          <Route path="/reunioes" element={<Meetings />} />
           <Route path="/cobrancas" element={<Invoices />} />
           <Route path="/conta" element={<Account />} />
           <Route path="/conta/:tab" element={<Account />} />

@@ -2,16 +2,22 @@
 
 module Operations
   module Meetings
-    # Creates a Meeting on the active workspace, then syncs it to Google Calendar.
+    # Creates a Meeting owned by the scheduling user, then syncs it to THEIR
+    # Google Calendar. Attendees mix workspace members ({ user_id: }) and
+    # external guests ({ email:, name: }) — member entries are resolved to
+    # their user's email/name so the Calendar invite reaches everyone.
     class Create < Operations::Base
       PERMITTED = %i[client_id project_id title starts_at ends_at notes attendees].freeze
 
-      def initialize(params)
+      def initialize(params, user: Current.user)
         @params = params.to_h.symbolize_keys.slice(*PERMITTED)
+        @user = user
       end
 
       def call
         meeting = workspace.meetings.new(@params)
+        meeting.user = @user
+        meeting.attendees = Operations::Meetings::ResolveAttendees.call(meeting.attendees, workspace: workspace)
         meeting.save!
 
         Operations::Meetings::SyncToCalendar.call(meeting)

@@ -5,25 +5,24 @@ import {
   useSensor, useSensors, pointerWithin,
 } from '@dnd-kit/core'
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
-import { KanbanSquare, Plus, LayoutGrid, Archive } from 'lucide-react'
+import { Plus, LayoutGrid, Archive } from 'lucide-react'
 import { WORKFLOW, statusMeta } from '@/lib/constants'
 import { useBoard, useBoardMutations } from '@/hooks/useBoard'
-import { useUrlFilters, useUrlParam } from '@/hooks/useUrlState'
 import { useCurrentUser } from '@/hooks/useAuth'
 import { canManage } from '@/lib/roles'
-import { PageHeader } from '@/components/ui/page-header'
 import { PageLoader, EmptyState } from '@/components/ui/feedback'
 import { Button } from '@/components/ui/button'
-import { Page } from '@/components/ui/page'
 import { ScrollShadow } from '@/components/ui/scroll-shadow'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { BoardColumn } from '@/components/board/BoardColumn'
-import { BoardFilters } from '@/components/board/BoardFilters'
-import { NewTicketDialog } from '@/components/board/NewTicketDialog'
 import { TicketCard } from '@/components/board/TicketCard'
-import TicketDrawer from '@/components/ticket/TicketDrawer'
 
 const BRAND = '#EC4899'
+
+// Only the params the board endpoint understands. The shared URL may also carry
+// list-only filters (status, priority, view) — the columns already express the
+// status, so the board simply ignores them.
+const BOARD_FILTER_KEYS = ['q', 'project_id', 'client_id', 'assignee_id', 'channel', 'creative_type']
 
 // Build a {status: [tickets]} map from the API columns, in WORKFLOW order.
 function toColumnMap(columns = []) {
@@ -39,19 +38,21 @@ function toColumnMap(columns = []) {
 const findStatusOf = (map, id) =>
   WORKFLOW.find((s) => (map[s] || []).some((t) => String(t.id) === String(id)))
 
-// Filters live in the URL (?project_id=…&channel=…&q=…) so the board is
-// shareable / reload-safe. Stable reference — see useUrlFilters.
-const FILTER_KEYS = ['q', 'project_id', 'client_id', 'assignee_id', 'channel', 'creative_type']
+// The Kanban view of the tickets hub: columns are the 7 workflow statuses,
+// cards drag between them. Filters, the drawer and the new-ticket dialog live
+// in the hub (pages/Tickets/Index) — this view only renders the board itself.
+export default function BoardView({ filters, onOpenTicket, onNewTicket }) {
+  const boardFilters = useMemo(() => {
+    const f = {}
+    BOARD_FILTER_KEYS.forEach((k) => { if (filters?.[k]) f[k] = filters[k] })
+    return f
+  }, [filters])
 
-export default function Board() {
-  const [filters, setFilters] = useUrlFilters(FILTER_KEYS)
-  const [drawerTicketId, setDrawerTicketId] = useUrlParam('ticket')
-  const [dialogOpen, setDialogOpen] = useState(false)
   const [activeId, setActiveId] = useState(null)
   const [clearStatus, setClearStatus] = useState(null)
 
-  const { data, isLoading } = useBoard(filters)
-  const { advance, reorder, create, clearColumn } = useBoardMutations(filters)
+  const { data, isLoading } = useBoard(boardFilters)
+  const { advance, reorder, clearColumn } = useBoardMutations(boardFilters)
   const { data: me } = useCurrentUser()
   const isManager = canManage(me?.membership?.role)
 
@@ -166,75 +167,57 @@ export default function Board() {
 
   if (isLoading) return <PageLoader />
 
-  return (
-    <Page wide flush className="flex min-h-0 flex-1 flex-col animate-rise">
-      <PageHeader
-        className="shrink-0"
-        eyebrow="Produção"
-        title="Quadro"
-        icon={KanbanSquare}
-        color={BRAND}
-        description="O funil de produção da agência, da ideia ao arquivo."
-        actions={
-          <Button onClick={() => setDialogOpen(true)}>
-            <Plus size={18} /> Novo ticket
-          </Button>
-        }
-      />
-
-      <div className="shrink-0">
-        <BoardFilters filters={filters} onChange={setFilters} />
+  if (totalTickets === 0) {
+    return (
+      <div className="flex min-h-0 flex-1 items-center justify-center">
+        <EmptyState
+          icon={LayoutGrid}
+          color={BRAND}
+          title="Nenhum ticket por aqui"
+          description="Crie o primeiro card e comece a mover o trabalho pelo funil de produção."
+          action={<Button onClick={onNewTicket}><Plus size={18} /> Novo ticket</Button>}
+        />
       </div>
+    )
+  }
 
-      {totalTickets === 0 ? (
-        <div className="flex min-h-0 flex-1 items-center justify-center">
-          <EmptyState
-            icon={LayoutGrid}
-            color={BRAND}
-            title="Nenhum ticket por aqui"
-            description="Crie o primeiro card e comece a mover o trabalho pelo funil de produção."
-            action={<Button onClick={() => setDialogOpen(true)}><Plus size={18} /> Novo ticket</Button>}
-          />
-        </div>
-      ) : (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={pointerWithin}
-          onDragStart={onDragStart}
-          onDragOver={onDragOver}
-          onDragEnd={onDragEnd}
-          onDragCancel={onDragCancel}
+  return (
+    <>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={pointerWithin}
+        onDragStart={onDragStart}
+        onDragOver={onDragOver}
+        onDragEnd={onDragEnd}
+        onDragCancel={onDragCancel}
+      >
+        <ScrollShadow
+          className="-mx-4 min-h-0 flex-1 sm:-mx-6"
+          viewportClassName="scrollbar-subtle flex items-stretch gap-3.5 overflow-x-auto overflow-y-hidden px-2 pb-2 pt-0.5 scroll-px-2 snap-x snap-mandatory sm:snap-none"
         >
-          <ScrollShadow
-            className="-mx-4 min-h-0 flex-1 sm:-mx-6"
-            viewportClassName="scrollbar-subtle flex items-stretch gap-3.5 overflow-x-auto overflow-y-hidden px-2 pb-2 pt-0.5 scroll-px-2 snap-x snap-mandatory sm:snap-none"
-          >
-            {WORKFLOW.map((status) => (
-              <BoardColumn
-                key={status}
-                status={status}
-                label={labels[status] || statusMeta(status).label}
-                tickets={board[status] || []}
-                onOpenTicket={(ticket) => setDrawerTicketId(ticket.id)}
-                onClear={status === 'done' && isManager ? () => setClearStatus('done') : undefined}
-              />
-            ))}
-          </ScrollShadow>
+          {WORKFLOW.map((status) => (
+            <BoardColumn
+              key={status}
+              status={status}
+              label={labels[status] || statusMeta(status).label}
+              tickets={board[status] || []}
+              onOpenTicket={(ticket) => onOpenTicket(ticket.id)}
+              onClear={status === 'done' && isManager ? () => setClearStatus('done') : undefined}
+            />
+          ))}
+        </ScrollShadow>
 
-          {createPortal(
-            <DragOverlay dropAnimation={{ duration: 180 }}>
-              {activeTicket ? (
-                <div className="w-[270px]">
-                  <TicketCard ticket={activeTicket} overlay />
-                </div>
-              ) : null}
-            </DragOverlay>,
-            document.body,
-          )}
-        </DndContext>
-      )}
-
-      <NewTicketDialog open={dialogOpen} onOpenChange={setDialogOpen} create={create} />
+        {createPortal(
+          <DragOverlay dropAnimation={{ duration: 180 }}>
+            {activeTicket ? (
+              <div className="w-[270px]">
+                <TicketCard ticket={activeTicket} overlay />
+              </div>
+            ) : null}
+          </DragOverlay>,
+          document.body,
+        )}
+      </DndContext>
 
       <ConfirmDialog
         open={!!clearStatus}
@@ -242,18 +225,11 @@ export default function Board() {
         icon={Archive}
         tone={statusMeta('done').color}
         title="Arquivar concluídos?"
-        description={`Todos os ${board.done?.length || 0} ticket(s) da coluna "Concluído" serão arquivados e sairão do quadro. Você ainda poderá vê-los na lista de tickets, filtrando por arquivados.`}
+        description={`Todos os ${board.done?.length || 0} ticket(s) da coluna "Concluído" serão arquivados e sairão do quadro. Você ainda poderá vê-los na visão de lista, filtrando por arquivados.`}
         confirmLabel="Arquivar todos"
         loading={clearColumn.isPending}
         onConfirm={() => clearColumn.mutate(clearStatus, { onSuccess: () => setClearStatus(null) })}
       />
-
-      <TicketDrawer
-        ticketId={drawerTicketId}
-        open={!!drawerTicketId}
-        showAutopilot
-        onOpenChange={(o) => { if (!o) setDrawerTicketId(null, { replace: true }) }}
-      />
-    </Page>
+    </>
   )
 }

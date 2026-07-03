@@ -20,6 +20,9 @@ export const accountApi = {
   },
   changeEmail: (data) => api.post('/account/email', data),
   confirmEmailChange: (token) => api.post(`/account/email/confirm/${token}`),
+  // Google Calendar is a personal integration — meetings are user-level.
+  calendarAuthorizeUrl: () => api.get('/account/google_calendar_authorize_url'),
+  calendarDisconnect: () => api.delete('/account/google_calendar'),
 }
 
 export const pushApi = {
@@ -232,8 +235,6 @@ export const settingsApi = {
     if (defaultCreatorAvatar) form.append('default_creator_avatar', defaultCreatorAvatar)
     return api.patch('/settings/brand_assets', form)
   },
-  calendarAuthorizeUrl: () => api.get('/settings/google_calendar_authorize_url'),
-  calendarDisconnect: () => api.delete('/settings/google_calendar'),
 }
 
 export const billingApi = {

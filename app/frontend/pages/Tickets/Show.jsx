@@ -39,11 +39,15 @@ export default function Show() {
   const nextStatus = ticket?.next_status
   const nextMeta = nextStatus ? STATUS_META[nextStatus] : null
 
-  // Return to wherever the ticket was opened from (board or project); fall back to the board.
+  // Return to wherever the ticket was opened from (tickets hub, calendar or
+  // campaign); fall back to the tickets hub.
   const back = useMemo(() => {
     const from = location.state?.from
     if (from?.startsWith('/campanhas/')) return { to: from, label: 'Voltar à campanha' }
-    return { to: '/quadro', label: 'Voltar ao quadro' }
+    if (from?.startsWith('/calendario') || from?.startsWith('/meu-calendario')) return { to: from, label: 'Voltar ao calendário' }
+    if (from?.startsWith('/tickets')) return { to: from, label: 'Voltar aos tickets' }
+    if (from) return { to: from, label: 'Voltar' }
+    return { to: '/tickets', label: 'Voltar aos tickets' }
   }, [location.state])
 
   if (isLoading) return <PageLoader />

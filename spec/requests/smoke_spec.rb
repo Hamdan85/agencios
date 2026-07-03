@@ -29,7 +29,7 @@ RSpec.describe 'End-to-end smoke', type: :request do
     # Root is the SSR marketing landing page; the catch-all serves the React
     # shell for the in-app Portuguese frontend routes.
     expect(Rails.application.routes.recognize_path('/')).to include(controller: 'pages', action: 'home')
-    %w[/painel /quadro /tickets/1 /clientes].each do |path|
+    %w[/painel /tickets /tickets/1 /clientes].each do |path|
       expect(Rails.application.routes.recognize_path(path)).to include(controller: 'spa', action: 'index')
     end
     shell = Rails.root.join('app/views/spa/index.html.erb').read

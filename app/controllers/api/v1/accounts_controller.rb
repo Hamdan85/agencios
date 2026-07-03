@@ -17,6 +17,10 @@ module Api
       def email    = render_ok(Controllers::Account::RequestEmailChange.call(params:))
 
       def confirm_email = render_ok(Controllers::Account::ConfirmEmailChange.call(params:))
+
+      # Google Calendar is personal — meetings live on the user's own calendar.
+      def google_calendar_authorize_url = render_ok(Controllers::Account::GoogleCalendar::AuthorizeUrl.call)
+      def google_calendar               = render_ok(Controllers::Account::GoogleCalendar::Disconnect.call)
     end
   end
 end

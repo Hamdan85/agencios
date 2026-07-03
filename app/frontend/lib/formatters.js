@@ -107,6 +107,22 @@ export function fileSize(bytes) {
   return `${value.toLocaleString(LOCALE, { maximumFractionDigits: value < 10 ? 1 : 0 })} ${units[i]}`
 }
 
+// "agora", "há 5 min", "há 3 h", "ontem", "há 3 dias" — for PAST timestamps
+// (created_at). Deadlines use relativeDay below, which speaks in "atraso".
+export function timeAgo(iso) {
+  if (!iso) return null
+  const secs = Math.round((Date.now() - new Date(iso)) / 1000)
+  if (secs < 60) return 'agora'
+  const mins = Math.round(secs / 60)
+  if (mins < 60) return `há ${mins} min`
+  const hours = Math.round(mins / 60)
+  if (hours < 24) return `há ${hours} h`
+  const days = Math.round(hours / 24)
+  if (days === 1) return 'ontem'
+  if (days < 30) return `há ${days} dias`
+  return date(iso)
+}
+
 // "há 3 dias", "em 2 dias", "hoje"
 export function relativeDay(iso) {
   if (!iso) return null

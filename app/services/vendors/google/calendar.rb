@@ -5,17 +5,18 @@ require 'googleauth'
 
 module Vendors
   module Google
-    # Google Calendar + Meet for meetings. Uses the connecting workspace's
-    # encrypted Google tokens (on Setting). App OAuth client from credentials.
+    # Google Calendar + Meet for meetings. Uses the meeting OWNER's encrypted
+    # Google tokens (on User — each person connects their own calendar from the
+    # account page). App OAuth client from credentials.
     class Calendar < Vendors::Base
       CalendarV3 = ::Google::Apis::CalendarV3
 
-      def initialize(setting:)
-        @setting = setting
+      def initialize(user:)
+        @user = user
       end
 
       def configured?
-        @setting&.google_access_token.present?
+        @user&.google_access_token.present? && @user&.google_calendar_connected?
       end
 
       # Creates/updates the event (with a Meet link) and returns
@@ -38,6 +39,17 @@ module Vendors
         return if meeting.google_event_id.blank? || !configured?
 
         service.delete_event('primary', meeting.google_event_id)
+      rescue ::Google::Apis::ClientError
+        nil
+      end
+
+      # Current state of a meeting's event on Google — used by the pull-sync to
+      # reflect edits made directly on Google Calendar back into agencios.
+      # Returns nil when the event is gone or Google is unreachable.
+      def fetch_event(meeting)
+        return if meeting.google_event_id.blank? || !configured?
+
+        service.get_event('primary', meeting.google_event_id)
       rescue ::Google::Apis::ClientError
         nil
       end
@@ -73,8 +85,8 @@ module Vendors
           svc.authorization = ::Google::Auth::UserRefreshCredentials.new(
             client_id: credential(:google, :client_id, env: 'GOOGLE_CLIENT_ID'),
             client_secret: credential(:google, :client_secret, env: 'GOOGLE_CLIENT_SECRET'),
-            access_token: @setting.google_access_token,
-            refresh_token: @setting.google_refresh_token,
+            access_token: @user.google_access_token,
+            refresh_token: @user.google_refresh_token,
             scope: 'https://www.googleapis.com/auth/calendar.events'
           )
         end
