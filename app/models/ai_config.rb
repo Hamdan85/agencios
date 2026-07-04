@@ -6,12 +6,14 @@
 # or an unsaved defaults-populated record when the table is empty so reads never
 # write.
 class AiConfig < ApplicationRecord
-  # Text-AI operations that route through Vendors::Ai (image/video vendors are
-  # billed separately and are NOT listed here).
+  # Text-AI operations that route through Vendors::Ai. The video RENDER engines
+  # live in VideoConfig — these are the video pipeline's TEXT agents (storyboard
+  # planning, the conversational editor, the prompt-improver wand).
   OPERATIONS = %w[
     summarize_ticket fill_fields build_scope synthesize_idea synthesize_positioning
     extract_client_from_url carousel_copy project_audit draft_retrospective
     strategy_planner strategy_plan
+    video_storyboard video_editor improve_video_prompt
   ].freeze
 
   PROVIDERS = ['', AiUsageLog::PROVIDER_OPENROUTER, AiUsageLog::PROVIDER_ANTHROPIC].freeze
@@ -28,7 +30,10 @@ class AiConfig < ApplicationRecord
     'project_audit' => 'Auditoria de campanha',
     'draft_retrospective' => 'Rascunho de retrospectiva',
     'strategy_planner' => 'Planejador de estratégia (chat)',
-    'strategy_plan' => 'Planejador de estratégia (gerar plano)'
+    'strategy_plan' => 'Planejador de estratégia (gerar plano)',
+    'video_storyboard' => 'Storyboard de vídeo',
+    'video_editor' => 'Editor de vídeo (chat)',
+    'improve_video_prompt' => 'Melhorar prompt de vídeo'
   }.freeze
 
   # nil and '' both mean "auto-detect" — allow nil so a fresh first_or_create!

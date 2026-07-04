@@ -86,6 +86,39 @@ module Tickets
       @overrides[:objective].presence || ideation['objective']
     end
 
+    # --- client positioning (for planning direction) --------------------------
+
+    def positioning = client&.positioning? ? client.positioning : {}
+
+    # Hard "avoid" constraints ("Restrições / o que evitar"). These are the one
+    # positioning field that is constraint-shaped and safe to hand the RENDER
+    # model as a do-not list (props/wardrobe/set the model invents beyond the
+    # scene prompt could otherwise violate them). Array or string.
+    def guardrails
+      val = positioning['guardrails']
+      Array(val).map { |v| v.to_s.strip }.reject(&:blank?).join('; ').presence
+    end
+
+    # Compact PT-BR positioning briefing for the video PLANNER (storyboard/editor)
+    # — the fields that shape what the video says and shows. Kept short so it
+    # frames the plan without bloating the system prompt.
+    POSITIONING_BRIEF_KEYS = {
+      'statement' => 'Posicionamento', 'one_liner' => 'O que faz',
+      'value_proposition' => 'Proposta de valor', 'target_audience' => 'Público',
+      'audience_pain' => 'Dor da audiência', 'differentiators' => 'Diferenciais',
+      'guardrails' => 'Evitar'
+    }.freeze
+
+    def positioning_brief
+      POSITIONING_BRIEF_KEYS.filter_map do |key, label|
+        value = positioning[key]
+        value = value.join('; ') if value.is_a?(Array)
+        next if value.blank?
+
+        "#{label}: #{value.to_s.strip}"
+      end.join("\n").presence
+    end
+
     # The message/source material: an explicit text/url-extracted source wins,
     # then the scoping copy brief.
     def copy_brief
@@ -140,6 +173,12 @@ module Tickets
         reference_image(avatar, 'CRIADOR (avatar/rosto do porta-voz)')
       ].compact
     end
+
+    # Public URLs of the brand's visual-identity assets, for URL-based vendors
+    # (the video API takes reference URLs, not bytes). SVGs and other non-raster
+    # types are skipped — the same guard as reference_image.
+    def brand_logo_url   = raster_url(logo)
+    def brand_avatar_url = raster_url(avatar)
 
     # Tells the model the attached references are OPTIONAL — use them only when
     # the requested content calls for them, never force them in.
@@ -213,6 +252,18 @@ module Tickets
         att = owner.public_send(name) if owner.respond_to?(name)
         return att if att&.attached?
       end
+      nil
+    end
+
+    # Public blob URL of a raster brand asset (nil for SVG/missing/unreadable).
+    def raster_url(att)
+      return nil unless att.respond_to?(:attached?) && att.attached?
+
+      ct = att.blob&.content_type.to_s.downcase
+      return nil unless Vendors::Google::Banana::Client::SUPPORTED_IMAGE_MIME_TYPES.include?(ct)
+
+      Rails.application.routes.url_helpers.rails_blob_url(att, host: SystemConfig.app_host)
+    rescue StandardError
       nil
     end
 

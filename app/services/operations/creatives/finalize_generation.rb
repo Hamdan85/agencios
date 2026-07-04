@@ -96,6 +96,8 @@ module Operations
 
       def compute_cost_cents
         return @generation.cost_cents if @generation.cost_cents.present?
+        # OpenRouter reports the REAL per-generation cost (USD) — use it verbatim.
+        return @metadata[:cost_cents].round if @metadata[:cost_cents].present?
 
         case @generation.kind
         when 'video'
@@ -106,6 +108,8 @@ module Operations
           @generation.cost_cents
         end
       end
+
+      def openrouter? = @generation.provider.to_s == AiUsageLog::PROVIDER_OPENROUTER
 
       def engine
         (@metadata[:engine] || @generation.params['engine'] || 'avatar').to_s
@@ -151,10 +155,12 @@ module Operations
         return unless @generation.kind == 'video'
 
         duration = (@duration || @generation.result['duration'] || @generation.params['duration']).to_f
+        provider = openrouter? ? AiUsageLog::PROVIDER_OPENROUTER : AiUsageLog::PROVIDER_HEYGEN
+        model    = openrouter? ? VideoConfig.instance.model_for(@generation.params['mode']) : engine
         Operations::Ai::LogUsage.call(
-          provider: AiUsageLog::PROVIDER_HEYGEN,
-          operation: 'generate_ugc_video',
-          model: engine,
+          provider: provider,
+          operation: 'generate_video',
+          model: model,
           units: duration,
           unit_kind: AiUsageLog::UNIT_SECOND,
           cost_cents: cost_cents,

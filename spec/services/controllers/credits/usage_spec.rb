@@ -38,8 +38,44 @@ RSpec.describe Controllers::Credits::Usage, type: :model do
     expect(by_kind['image']).to include(count: 2, credits: 2)
     expect(by_kind['carousel']).to include(count: 1, credits: 0)
 
-    expect(result[:recent].size).to eq(4)
-    expect(result[:recent].sum { |g| g[:credits] }).to eq(18)
+    expect(result[:recent][:items].size).to eq(4)
+    expect(result[:recent][:items].sum { |g| g[:credits] }).to eq(18)
+    expect(result[:recent][:meta]).to include(total: 4)
+
+    # The trend is zero-filled across the whole range (a continuous axis, never a
+    # blank card) and carries both real spend and generation activity per bucket.
+    expect(result[:series].size).to eq(31) # 30 days ago through today, inclusive
+    expect(result[:series].sum { |p| p[:credits] }).to eq(18)
+    expect(result[:series].sum { |p| p[:generations] }).to eq(4)
+    today = result[:series].last
+    expect(today[:credits]).to eq(18)
+    expect(today[:generations]).to eq(4)
+  end
+
+  it 'filters and paginates the recent generations log' do
+    Operations::Credits::Grant.call(workspace: workspace, amount: 100, expires_at: 1.month.from_now)
+    images = Array.new(3) do
+      img = gen(:image, 'google_banana')
+      Operations::Credits::Debit.call(workspace: workspace, amount: 1, generation: img)
+      img
+    end
+    2.times { gen(:carousel, 'internal') }
+    images.first.update!(status: :failed)
+
+    kind = described_class.call(params: { range: '30d', kind: 'image' })
+    expect(kind[:recent][:items].map { |g| g[:kind] }.uniq).to eq(['image'])
+    expect(kind[:recent][:meta][:total]).to eq(3)
+
+    failed = described_class.call(params: { range: '30d', status: 'failed' })
+    expect(failed[:recent][:items].map { |g| g[:status] }.uniq).to eq(['failed'])
+    expect(failed[:recent][:meta][:total]).to eq(1)
+
+    page1 = described_class.call(params: { range: '30d', per: 2, page: 1 })
+    expect(page1[:recent][:items].size).to eq(2)
+    expect(page1[:recent][:meta]).to include(total: 5, has_more: true)
+    page3 = described_class.call(params: { range: '30d', per: 2, page: 3 })
+    expect(page3[:recent][:items].size).to eq(1)
+    expect(page3[:recent][:meta]).to include(has_more: false)
   end
 
   it 'excludes activity outside the selected range' do

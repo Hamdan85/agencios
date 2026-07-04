@@ -4,8 +4,10 @@ module Operations
   module Credits
     # Return the credits spent on a generation (e.g. the async render failed).
     # Refunds to the exact buckets the debit came from, using the split recorded
-    # on the original debit transaction. Idempotent: a generation already
-    # refunded is a no-op.
+    # on the original debit transaction. Idempotent per ATTEMPT: the newest
+    # debit is refunded once — but a NEW debit after a refund (a charged retry
+    # that failed again) refunds again, so a fail→retry→fail loop never eats
+    # credits for renders that were never delivered.
     class Refund < Operations::Base
       def initialize(generation:, description: nil)
         @generation  = generation
@@ -23,7 +25,7 @@ module Operations
                            .where(generation_id: @generation.id, kind: 'debit')
                            .order(:created_at).last
           return :none unless debit
-          return :already if refunded?(workspace)
+          return :already if refunded?(workspace, debit)
 
           wallet = Operations::Credits::EnsureWallet.call(workspace: workspace)
           wallet.lock!
@@ -49,8 +51,13 @@ module Operations
 
       private
 
-      def refunded?(workspace)
-        workspace.credit_transactions.exists?(generation_id: @generation.id, kind: 'refund')
+      # This debit is settled only if a refund NEWER than it exists — an older
+      # refund belongs to a previous failed attempt, not to this charge.
+      def refunded?(workspace, debit)
+        workspace.credit_transactions
+                 .where(generation_id: @generation.id, kind: 'refund')
+                 .where(created_at: debit.created_at..)
+                 .exists?
       end
     end
   end

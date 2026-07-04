@@ -79,6 +79,19 @@ RSpec.describe 'Operations::Credits', type: :model do
       2.times { Operations::Credits::Refund.call(generation: gen) }
       expect(balance).to eq(10)
     end
+
+    it 'refunds again when a NEW debit followed a previous refund (fail → charged retry → fail)' do
+      Operations::Credits::Purchase.call(workspace: workspace, amount: 20, reference: 'r3')
+      gen = workspace.generations.create!(kind: :video, status: :processing, provider: 'openrouter')
+
+      Operations::Credits::Debit.call(workspace: workspace, amount: 6, generation: gen)
+      Operations::Credits::Refund.call(generation: gen)                                  # 1st failure settles
+      Operations::Credits::Debit.call(workspace: workspace, amount: 4, generation: gen)  # retry charge
+      Operations::Credits::Refund.call(generation: gen)                                  # retry failed too
+
+      expect(balance).to eq(20) # nothing was delivered — nothing stays charged
+      expect(workspace.credit_transactions.where(generation_id: gen.id, kind: 'refund').count).to eq(2)
+    end
   end
 
   describe 'Godfathered workspaces never draw down a balance' do

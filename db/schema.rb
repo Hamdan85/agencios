@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_03_031909) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_05_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -163,7 +163,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_031909) do
     t.index ["batch_id"], name: "index_autopilot_runs_on_batch_id"
     t.index ["ticket_id", "state"], name: "index_autopilot_runs_on_ticket_id_and_state"
     t.index ["ticket_id"], name: "index_autopilot_runs_on_ticket_id"
-    t.index ["ticket_id"], name: "index_autopilot_runs_one_active_per_ticket", unique: true, where: "(((scope)::text = 'ticket'::text) AND ((state)::text = ANY (ARRAY[('pending'::character varying)::text, ('scoping'::character varying)::text, ('generating'::character varying)::text, ('awaiting_generation'::character varying)::text, ('publishing'::character varying)::text])))"
+    t.index ["ticket_id"], name: "index_autopilot_runs_one_active_per_ticket", unique: true, where: "(((scope)::text = 'ticket'::text) AND ((state)::text = ANY ((ARRAY['pending'::character varying, 'scoping'::character varying, 'generating'::character varying, 'awaiting_generation'::character varying, 'publishing'::character varying])::text[])))"
     t.index ["user_id"], name: "index_autopilot_runs_on_user_id"
     t.index ["workspace_id", "state"], name: "index_autopilot_runs_on_workspace_id_and_state"
     t.index ["workspace_id"], name: "index_autopilot_runs_on_workspace_id"
@@ -745,6 +745,39 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_031909) do
     t.index ["mcp_connector_token"], name: "index_users_on_mcp_connector_token", unique: true
   end
 
+  create_table "video_configs", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "default_model"
+    t.jsonb "draft_models", default: {}, null: false
+    t.integer "max_duration_seconds", default: 30, null: false
+    t.jsonb "mode_models", default: {}, null: false
+    t.jsonb "music_tracks", default: {}, null: false
+    t.string "provider"
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "video_scenes", force: :cascade do |t|
+    t.string "aspect_ratio"
+    t.text "caption"
+    t.integer "cost_cents"
+    t.datetime "created_at", null: false
+    t.bigint "creative_id", null: false
+    t.integer "duration_seconds"
+    t.string "external_id"
+    t.jsonb "metadata", default: {}, null: false
+    t.string "mode"
+    t.integer "position", default: 0, null: false
+    t.text "prompt"
+    t.jsonb "reference_image_urls", default: [], null: false
+    t.integer "render_state", default: 0, null: false
+    t.string "seed"
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["creative_id", "position"], name: "index_video_scenes_on_creative_id_and_position"
+    t.index ["creative_id"], name: "index_video_scenes_on_creative_id"
+    t.index ["workspace_id"], name: "index_video_scenes_on_workspace_id"
+  end
+
   create_table "workspaces", force: :cascade do |t|
     t.string "brand_primary_color", default: "#7C3AED"
     t.string "brand_secondary_color", default: "#F59E0B"
@@ -839,4 +872,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_031909) do
   add_foreign_key "tickets", "users", column: "assignee_id"
   add_foreign_key "tickets", "users", column: "created_by_id"
   add_foreign_key "tickets", "workspaces"
+  add_foreign_key "video_scenes", "creatives"
+  add_foreign_key "video_scenes", "workspaces"
 end

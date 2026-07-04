@@ -1,8 +1,8 @@
 import {
   CreditCard, Check, Crown, Users2, CalendarClock, Sparkles, Rocket,
   ExternalLink, AlertTriangle, RefreshCw, Zap, Coins, Wallet, Image as ImageIcon,
-  Video, GalleryHorizontalEnd, Infinity as InfinityIcon, ArrowUpRight, ArrowDownRight,
-  BarChart3, TrendingUp, Activity, Clock, Info,
+  Video, GalleryHorizontalEnd, Infinity as InfinityIcon,
+  BarChart3, TrendingUp, Activity, Clock, Info, ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import { useState } from 'react'
 import {
@@ -17,6 +17,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { PageLoader } from '@/components/ui/feedback'
 import { Page } from '@/components/ui/page'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select'
 import { IntervalToggle } from '@/components/billing/IntervalToggle'
 import { ConfirmDialog, useConfirm } from '@/components/ui/confirm-dialog'
 import { PLAN_META } from '@/lib/constants'
@@ -150,7 +151,6 @@ function CreditsSection() {
   const wallet = data?.wallet || {}
   const packs = data?.packs || []
   const costs = data?.costs || {}
-  const transactions = data?.transactions || []
   const unlimited = wallet.unlimited || wallet.available == null
   const balance = Number(wallet.available ?? 0)
 
@@ -227,36 +227,6 @@ function CreditsSection() {
           ))}
         </div>
       )}
-
-      {/* Recent ledger */}
-      {transactions.length > 0 && (
-        <Card>
-          <CardContent className="p-0">
-            <p className="border-b border-border px-5 py-3 font-display text-sm font-bold text-ink">Movimentações recentes</p>
-            <ul className="divide-y divide-border">
-              {transactions.slice(0, 8).map((tx) => {
-                const positive = Number(tx.amount) >= 0
-                return (
-                  <li key={tx.id} className="flex items-center justify-between gap-3 px-5 py-2.5">
-                    <div className="flex min-w-0 items-center gap-2.5">
-                      <span className={cn('flex size-7 shrink-0 items-center justify-center rounded-lg', positive ? 'bg-emerald/12 text-emerald' : 'bg-danger/12 text-danger')}>
-                        {positive ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-                      </span>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-ink">{tx.description || (positive ? 'Crédito' : 'Débito')}</p>
-                        <p className="text-xs text-ink-muted">{dt(tx.created_at)}</p>
-                      </div>
-                    </div>
-                    <span className={cn('shrink-0 font-display text-sm font-extrabold', positive ? 'text-emerald' : 'text-danger')}>
-                      {positive ? '+' : ''}{Number(tx.amount).toLocaleString('pt-BR')}
-                    </span>
-                  </li>
-                )
-              })}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
     </div>
   )
 }
@@ -303,24 +273,73 @@ function UsageStat({ icon: Icon, label, value, sub, color }) {
   )
 }
 
+const KIND_FILTERS = [
+  { key: 'all', label: 'Todos os tipos' },
+  { key: 'video', label: 'Vídeo' },
+  { key: 'image', label: 'Imagem' },
+  { key: 'carousel', label: 'Carrossel' },
+]
+const STATUS_FILTERS = [
+  { key: 'all', label: 'Todos os status' },
+  { key: 'completed', label: 'Concluído' },
+  { key: 'processing', label: 'Processando' },
+  { key: 'queued', label: 'Na fila' },
+  { key: 'failed', label: 'Falhou' },
+]
+
 function UsageSection() {
   const [range, setRange] = useState('30d')
-  const { data, isLoading } = useCreditUsage(range)
+  const [kind, setKind] = useState('all')
+  const [status, setStatus] = useState('all')
+  const [page, setPage] = useState(1)
+  // null = auto (credits when the period spent any, else generation activity).
+  const [metricOverride, setMetricOverride] = useState(null)
+
+  // The time range drives the whole tab; kind/status/page scope the log below.
+  const params = {
+    range,
+    page,
+    ...(kind !== 'all' && { kind }),
+    ...(status !== 'all' && { status }),
+  }
+  const { data, isLoading, isFetching } = useCreditUsage(params)
 
   const totals = data?.totals || {}
   const byKind = data?.by_kind || []
   const series = data?.series || []
-  const recent = data?.recent || []
+  const recent = data?.recent?.items || []
+  const meta = data?.recent?.meta || {}
   const granularity = data?.granularity || 'day'
 
   const spent = Number(totals.spent ?? 0)
   const totalKindCredits = byKind.reduce((s, k) => s + Number(k.credits || 0), 0)
-  const maxSeries = Math.max(1, ...series.map((s) => Number(s.credits || 0)))
   const hasActivity = Number(totals.generations ?? 0) > 0
+
+  // The trend plots real credit spend, but auto-falls back to generation
+  // activity when the period spent 0 credits (only free carousels, or a
+  // godfathered workspace) — so the card is never blank. The user can switch.
+  const seriesCredits = series.reduce((s, p) => s + Number(p.credits || 0), 0)
+  const metric = metricOverride ?? (seriesCredits > 0 ? 'credits' : 'generations')
+  const maxSeries = Math.max(1, ...series.map((s) => Number(s[metric] || 0)))
+  // The selected metric can be all-zero (e.g. "Créditos" on a period that only
+  // ran free carousels) — bars would render at 1px and read as a blank card, so
+  // show an explicit empty state for that metric instead.
+  const metricTotal = series.reduce((s, p) => s + Number(p[metric] || 0), 0)
+
+  // Range / filter changes reset paging.
+  const changeRange = (r) => { setRange(r); setPage(1) }
+  const changeKind = (k) => { setKind(k); setPage(1) }
+  const changeStatus = (s) => { setStatus(s); setPage(1) }
+
+  const total = Number(meta.total ?? recent.length)
+  const per = Number(meta.per ?? 20)
+  const from = total === 0 ? 0 : (page - 1) * per + 1
+  const to = Math.min(page * per, total)
+  const filtered = kind !== 'all' || status !== 'all'
 
   return (
     <div>
-      {/* Range selector */}
+      {/* Time range — the page-wide filter for every card below. */}
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <BarChart3 size={18} className="text-brand" />
@@ -331,7 +350,7 @@ function UsageSection() {
             <button
               key={r.key}
               type="button"
-              onClick={() => setRange(r.key)}
+              onClick={() => changeRange(r.key)}
               className={cn(
                 'rounded-lg px-3 py-1.5 text-sm font-semibold transition-all',
                 range === r.key ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink',
@@ -433,30 +452,55 @@ function UsageSection() {
                 </CardContent>
               </Card>
 
-              {/* Spend trend */}
+              {/* Spend / activity trend */}
               <Card className="lg:col-span-3">
                 <CardContent className="p-5">
-                  <p className="mb-4 font-display text-sm font-bold text-ink">Créditos gastos ao longo do tempo</p>
-                  {series.length === 0 ? (
-                    <p className="py-10 text-center text-sm text-ink-muted">Sem gastos no período.</p>
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                    <p className="font-display text-sm font-bold text-ink">
+                      {metric === 'credits' ? 'Créditos gastos ao longo do tempo' : 'Gerações ao longo do tempo'}
+                    </p>
+                    <div className="inline-flex items-center gap-0.5 rounded-lg bg-surface-muted p-0.5">
+                      {[['credits', 'Créditos'], ['generations', 'Gerações']].map(([k, l]) => (
+                        <button
+                          key={k}
+                          type="button"
+                          onClick={() => setMetricOverride(k)}
+                          className={cn(
+                            'rounded-md px-2.5 py-1 text-xs font-semibold transition-all',
+                            metric === k ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink',
+                          )}
+                        >
+                          {l}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {series.length === 0 || metricTotal === 0 ? (
+                    <p className="py-16 text-center text-sm text-ink-muted">
+                      {metric === 'credits' ? 'Nenhum crédito gasto no período.' : 'Nenhuma geração no período.'}
+                    </p>
                   ) : (
-                    <div className="flex h-44 items-end gap-1.5">
+                    <div className="flex h-44 items-end gap-1">
                       {series.map((s) => {
-                        const c = Number(s.credits || 0)
-                        const h = Math.max((c / maxSeries) * 100, c > 0 ? 4 : 1)
+                        const v = Number(s[metric] || 0)
+                        const h = Math.max((v / maxSeries) * 100, v > 0 ? 4 : 1)
+                        const tip = `${chartLabel(s.date, granularity)} · ${Number(s.credits || 0)} cr. · ${Number(s.generations || 0)} ger.`
                         return (
-                          <div key={s.date} className="group flex flex-1 flex-col items-center justify-end gap-1.5" title={`${chartLabel(s.date, granularity)}: ${c} créditos`}>
-                            <span className="text-[10px] font-bold text-ink opacity-0 transition-opacity group-hover:opacity-100">{c}</span>
+                          <div key={s.date} className="group flex flex-1 flex-col items-center justify-end gap-1.5" title={tip}>
+                            <span className="text-[10px] font-bold text-ink opacity-0 transition-opacity group-hover:opacity-100">{v}</span>
                             <div
                               className="w-full rounded-md transition-all"
-                              style={{ height: `${h}%`, background: 'linear-gradient(to top, #7C3AED, #EC4899)' }}
+                              style={{
+                                height: `${h}%`,
+                                background: v > 0 ? 'linear-gradient(to top, #7C3AED, #EC4899)' : 'var(--color-surface-muted)',
+                              }}
                             />
                           </div>
                         )
                       })}
                     </div>
                   )}
-                  {series.length > 0 && (
+                  {series.length > 0 && metricTotal > 0 && (
                     <div className="mt-2 flex justify-between text-[10px] font-medium text-ink-muted">
                       <span>{chartLabel(series[0].date, granularity)}</span>
                       <span>{chartLabel(series[series.length - 1].date, granularity)}</span>
@@ -467,39 +511,75 @@ function UsageSection() {
             </div>
           )}
 
-          {/* Recent generations */}
-          {recent.length > 0 && (
+          {/* Recent generations — the full, filterable, paged log */}
+          {hasActivity && (
             <Card className="mt-5">
               <CardContent className="p-0">
-                <p className="flex items-center gap-2 border-b border-border px-5 py-3 font-display text-sm font-bold text-ink">
-                  <Clock size={15} className="text-ink-muted" /> Gerações recentes
-                </p>
-                <ul className="divide-y divide-border">
-                  {recent.map((g) => {
-                    const meta = KIND_META[g.kind] || { label: g.kind, icon: Sparkles, color: '#7C3AED' }
-                    const status = GEN_STATUS[g.status] || { label: g.status, className: 'bg-ink/8 text-ink-muted' }
-                    const credits = Number(g.credits || 0)
-                    return (
-                      <li key={g.id} className="flex items-center justify-between gap-3 px-5 py-2.5">
-                        <div className="flex min-w-0 items-center gap-2.5">
-                          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg" style={{ background: `${meta.color}16`, color: meta.color }}>
-                            <meta.icon size={16} strokeWidth={2.2} />
-                          </span>
-                          <div className="min-w-0">
-                            <p className="flex items-center gap-2 text-sm font-semibold text-ink">
-                              {meta.label}
-                              <span className={cn('rounded-md px-1.5 py-0.5 text-[10px] font-bold', status.className)}>{status.label}</span>
-                            </p>
-                            <p className="text-xs text-ink-muted">{dt(g.created_at)}{g.provider ? ` · ${g.provider}` : ''}</p>
+                <div className="flex flex-wrap items-center gap-2 border-b border-border px-5 py-3">
+                  <p className="mr-auto flex items-center gap-2 font-display text-sm font-bold text-ink">
+                    <Clock size={15} className="text-ink-muted" /> Gerações recentes
+                    {total > 0 && <span className="text-xs font-medium text-ink-muted">· {total.toLocaleString('pt-BR')}</span>}
+                  </p>
+                  <Select value={kind} onValueChange={changeKind}>
+                    <SelectTrigger className="h-9 w-auto min-w-32.5"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {KIND_FILTERS.map((f) => <SelectItem key={f.key} value={f.key}>{f.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Select value={status} onValueChange={changeStatus}>
+                    <SelectTrigger className="h-9 w-auto min-w-32.5"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {STATUS_FILTERS.map((f) => <SelectItem key={f.key} value={f.key}>{f.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {recent.length === 0 ? (
+                  <div className="px-5 py-12 text-center text-sm text-ink-muted">
+                    Nenhuma geração {filtered ? 'com esses filtros' : 'no período'}.
+                  </div>
+                ) : (
+                  <ul className={cn('max-h-112 divide-y divide-border overflow-y-auto transition-opacity', isFetching && 'opacity-60')}>
+                    {recent.map((g) => {
+                      const km = KIND_META[g.kind] || { label: g.kind, icon: Sparkles, color: '#7C3AED' }
+                      const st = GEN_STATUS[g.status] || { label: g.status, className: 'bg-ink/8 text-ink-muted' }
+                      const credits = Number(g.credits || 0)
+                      return (
+                        <li key={g.id} className="flex items-center justify-between gap-3 px-5 py-2.5">
+                          <div className="flex min-w-0 items-center gap-2.5">
+                            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg" style={{ background: `${km.color}16`, color: km.color }}>
+                              <km.icon size={16} strokeWidth={2.2} />
+                            </span>
+                            <div className="min-w-0">
+                              <p className="flex items-center gap-2 text-sm font-semibold text-ink">
+                                {km.label}
+                                <span className={cn('rounded-md px-1.5 py-0.5 text-[10px] font-bold', st.className)}>{st.label}</span>
+                              </p>
+                              <p className="text-xs text-ink-muted">{dt(g.created_at)}{g.provider ? ` · ${g.provider}` : ''}</p>
+                            </div>
                           </div>
-                        </div>
-                        <span className={cn('shrink-0 font-display text-sm font-extrabold', credits > 0 ? 'text-ink' : 'text-emerald')}>
-                          {credits > 0 ? `${credits.toLocaleString('pt-BR')} cr.` : 'Incluso'}
-                        </span>
-                      </li>
-                    )
-                  })}
-                </ul>
+                          <span className={cn('shrink-0 font-display text-sm font-extrabold', credits > 0 ? 'text-ink' : 'text-emerald')}>
+                            {credits > 0 ? `${credits.toLocaleString('pt-BR')} cr.` : 'Incluso'}
+                          </span>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+
+                {total > per && (
+                  <div className="flex items-center justify-between gap-3 border-t border-border px-5 py-3">
+                    <p className="text-xs text-ink-muted">{from}–{to} de {total.toLocaleString('pt-BR')}</p>
+                    <div className="flex items-center gap-1.5">
+                      <Button variant="outline" size="sm" disabled={page <= 1 || isFetching} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                        <ChevronLeft size={15} /> Anterior
+                      </Button>
+                      <Button variant="outline" size="sm" disabled={!meta.has_more || isFetching} onClick={() => setPage((p) => p + 1)}>
+                        Próxima <ChevronRight size={15} />
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}

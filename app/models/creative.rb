@@ -10,6 +10,7 @@ class Creative < ApplicationRecord
 
   has_many :versions, class_name: 'Creative', foreign_key: :parent_id, dependent: :nullify, inverse_of: :parent
   has_one  :generation, dependent: :nullify
+  has_many :video_scenes, -> { ordered }, dependent: :destroy, inverse_of: :creative
   has_many_attached :assets
 
   enum :source, { uploaded: 0, generated: 1 }, prefix: true
@@ -18,6 +19,24 @@ class Creative < ApplicationRecord
   validates :creative_type, presence: true
 
   def spec = Creatives.spec_for(creative_type)
+
+  # --- Video editor chat -----------------------------------------------------
+  # The conversation for editing a generated video, stored on the creative's
+  # metadata (role: 'user' | 'assistant'). Windowed so it never grows unbounded.
+  CHAT_KEY = 'chat'
+  CHAT_WINDOW = 100
+
+  def chat_messages = Array((metadata || {})[CHAT_KEY])
+
+  # `kind` tags a non-conversational message the UI renders specially
+  # ('alert' = a render problem explained; 'credit' = a completed edit's cost).
+  # Plain replies omit it.
+  def push_chat_message(role:, content:, kind: nil)
+    entry = { 'role' => role.to_s, 'content' => content.to_s }
+    entry['kind'] = kind.to_s if kind.present?
+    self.metadata = (metadata || {}).merge(CHAT_KEY => (chat_messages + [entry]).last(CHAT_WINDOW))
+    entry
+  end
 
   # The publishable media kind (image / video / carousel), used to check whether
   # a network supports this creative before posting. Derived from the actual

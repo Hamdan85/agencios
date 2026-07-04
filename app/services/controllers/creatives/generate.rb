@@ -30,8 +30,11 @@ module Controllers
           )
         when 'video'
           Operations::Creatives::GenerateUgcVideo.call(
-            ticket: ticket, script: gen_params[:script],
-            avatar: gen_params[:avatar], voice: gen_params[:voice],
+            ticket: ticket, mode: gen_params[:mode], script: gen_params[:script],
+            prompt: gen_params[:prompt], avatar: gen_params[:avatar], voice: gen_params[:voice],
+            aspect_ratio: gen_params[:aspect_ratio], duration: gen_params[:duration],
+            reference_image_urls: gen_params.fetch(:reference_image_urls, []),
+            with_audio: gen_params.fetch(:with_audio, true),
             creative_type: @params[:type].presence
           )
         when 'image'

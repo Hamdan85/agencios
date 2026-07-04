@@ -11,6 +11,7 @@ class Workspace < ApplicationRecord
   has_many :invoices, dependent: :destroy
   has_many :social_accounts, dependent: :destroy
   has_many :creatives, dependent: :destroy
+  has_many :video_scenes, dependent: :destroy
   has_many :posts, dependent: :destroy
   has_many :generations, dependent: :destroy
   has_many :strategy_sessions, dependent: :destroy

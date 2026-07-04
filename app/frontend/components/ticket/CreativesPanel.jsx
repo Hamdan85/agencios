@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { creativeMeta, CREATIVE_TYPE_META, GENERATION_KIND_META, uploadAcceptFor, fileMatchesCreativeType, uploadableTypesForTicket, generatableKindsForTicket } from '@/lib/constants'
 import { useWorkspaceCreatives } from '@/hooks/useData'
@@ -17,17 +18,25 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { cn } from '@/lib/utils'
 import {
   ImagePlus, Sparkles, GalleryHorizontalEnd, Video, Image as ImageIcon, AlertCircle, CheckCircle2,
-  Loader2, Trash2, ChevronDown, UploadCloud, LibraryBig,
+  Loader2, Trash2, ChevronDown, UploadCloud, LibraryBig, Film,
 } from 'lucide-react'
+import { VideoScenesDialog } from './VideoScenesDialog'
 
 const MediaViewer = lazy(() => import('./MediaViewer'))
+
+// A generated video is scene-editable (reel / ugc_video).
+const isSceneEditable = (c) => c?.source === 'generated' && ['ugc_video', 'reel'].includes(c?.creative_type)
 
 // The three generatable kinds, each mapped to a sensible default creative type.
 const GENERATABLE = [
   { kind: 'carousel', type: 'carousel', label: 'Carrossel', desc: 'Padrão viral com marca + @handle', icon: GalleryHorizontalEnd, color: CREATIVE_TYPE_META.carousel.color },
-  { kind: 'video', type: 'ugc_video', label: 'Vídeo UGC', desc: 'Avatar narrando — HeyGen / HyperFrames', icon: Video, color: CREATIVE_TYPE_META.ugc_video.color },
+  { kind: 'video', type: 'ugc_video', label: 'Vídeo', desc: 'Avatar falando ou produto a partir de fotos', icon: Video, color: CREATIVE_TYPE_META.ugc_video.color },
   { kind: 'image', type: 'feed_image', label: 'Imagem', desc: 'Imagem única para o feed', icon: ImageIcon, color: CREATIVE_TYPE_META.feed_image.color },
 ]
+
+// A generated asset is a video when its URL carries a video extension (the
+// ActiveStorage blob URL keeps the original filename, e.g. .../video-80.mp4).
+const isVideoUrl = (url) => /\.(mp4|mov|webm|avi)(\?|$)/i.test(url || '')
 
 // Convert a creative's asset_urls to MediaViewer attachment objects. A carousel
 // is ONE creative with several slides — every slide shares the creative's name
@@ -40,7 +49,7 @@ function creativeToAttachments(creative) {
   const isCarousel = creative?.creative_type === 'carousel' || total > 1
 
   return urls.map((url, i) => {
-    const isVideo = /\.(mp4|mov|webm|avi)(\?|$)/i.test(url)
+    const isVideo = isVideoUrl(url)
     return {
       id: `${creative.id}-${i}`,
       url,
@@ -57,9 +66,11 @@ function creativeToAttachments(creative) {
 // ── Creative card (fixed square ratio, no size shift from title) ───
 // Root is a clickable <div> (not a <button>) so the delete control can nest as
 // a real <button> without invalid interactive-element nesting.
-function CreativeCard({ creative, onClick, onDelete, deleting }) {
+function CreativeCard({ creative, onClick, onDelete, onEditScenes, deleting }) {
   const m = creativeMeta(creative?.creative_type)
-  const thumb = creative?.asset_urls?.[0]
+  // While generating, the first rendered scene stands in (preview_url) so the
+  // card shows the video taking shape instead of a blind spinner.
+  const thumb = creative?.asset_urls?.[0] || creative?.preview_url
   const generating = creative?.status === 'generating'
   const failed = creative?.status === 'failed'
   const hasAssets = (creative?.asset_urls?.length || 0) > 0
@@ -80,11 +91,23 @@ function CreativeCard({ creative, onClick, onDelete, deleting }) {
       <div className="relative w-full" style={{ paddingBottom: '100%' }}>
         <div className="absolute inset-0 overflow-hidden" style={{ background: `${m.color}10` }}>
           {thumb ? (
-            <img
-              src={thumb}
-              alt={m.label}
-              className="size-full object-cover transition-transform group-hover:scale-105"
-            />
+            isVideoUrl(thumb) ? (
+              <video
+                // #t=0.1 nudges the browser to paint the first frame as a poster
+                // instead of a blank/broken box. Muted + no controls = a still thumb.
+                src={`${thumb}#t=0.1`}
+                muted
+                playsInline
+                preload="metadata"
+                className="size-full object-cover transition-transform group-hover:scale-105"
+              />
+            ) : (
+              <img
+                src={thumb}
+                alt={m.label}
+                className="size-full object-cover transition-transform group-hover:scale-105"
+              />
+            )
           ) : (
             // No thumbnail yet — one calm, status-aware placeholder. The type name
             // already lives in the footer, so we never repeat it here; the state
@@ -116,6 +139,19 @@ function CreativeCard({ creative, onClick, onDelete, deleting }) {
               className="absolute right-2 top-2 z-10 grid size-7 place-items-center rounded-full bg-white/90 text-ink-muted opacity-100 shadow-sm backdrop-blur transition focus:opacity-100 focus:outline-none hover:bg-danger hover:text-white disabled:opacity-50 sm:opacity-0 sm:group-hover:opacity-100"
             >
               <Trash2 size={14} />
+            </button>
+          )}
+          {/* Scenes editor — video creatives only. Top-left so it never overlaps
+              the delete control. Available WHILE generating too: the editor is
+              where the live progress (and the chat) lives. */}
+          {onEditScenes && (
+            <button
+              type="button"
+              aria-label="Editar cenas"
+              onClick={(e) => { e.stopPropagation(); onEditScenes(creative) }}
+              className="absolute left-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-brand px-2.5 py-1 text-[11px] font-bold text-white shadow-sm transition hover:bg-brand/90"
+            >
+              <Film size={12} /> Cenas
             </button>
           )}
           {hasAssets && (
@@ -299,7 +335,11 @@ function StudioPickerDialog({ open, onOpenChange, onAttach, attaching }) {
                   <div className="relative w-full" style={{ paddingBottom: '100%' }}>
                     <div className="absolute inset-0 overflow-hidden" style={{ background: `${m.color}10` }}>
                       {thumb ? (
-                        <img src={thumb} alt={m.label} className="size-full object-cover transition-transform group-hover:scale-105" />
+                        isVideoUrl(thumb) ? (
+                          <video src={`${thumb}#t=0.1`} muted playsInline preload="metadata" className="size-full object-cover transition-transform group-hover:scale-105" />
+                        ) : (
+                          <img src={thumb} alt={m.label} className="size-full object-cover transition-transform group-hover:scale-105" />
+                        )
                       ) : (
                         <div className="flex size-full items-center justify-center" style={{ color: m.color }}>
                           <m.icon size={22} strokeWidth={2.1} />
@@ -348,6 +388,11 @@ export default function CreativesPanel({
   const [viewerIndex, setViewerIndex] = useState(0)
   const [viewerAttachments, setViewerAttachments] = useState([])
   const [pendingDelete, setPendingDelete] = useState(null)
+  // Deep link: ?creative=<id> opens that video's editor (it shows its own
+  // loading state while it fetches), so a reload reopens the dialog.
+  const [urlParams] = useSearchParams()
+  const deepId = urlParams.get('creative')
+  const [scenesFor, setScenesFor] = useState(deepId ? { id: Number(deepId) } : null)
   const items = creatives || []
   const busy = generating || uploading || attaching
 
@@ -440,6 +485,7 @@ export default function CreativesPanel({
                   creative={c}
                   onClick={pending ? undefined : () => openViewer(c)}
                   onDelete={onDelete && !pending ? setPendingDelete : undefined}
+                  onEditScenes={!pending && isSceneEditable(c) ? setScenesFor : undefined}
                   deleting={deleting}
                 />
               )
@@ -527,6 +573,9 @@ export default function CreativesPanel({
 
       {/* Studio picker dialog */}
       <StudioPickerDialog open={pickerOpen} onOpenChange={setPickerOpen} onAttach={onAttach} attaching={attaching} />
+
+      {/* Video scenes editor */}
+      <VideoScenesDialog creative={scenesFor} open={!!scenesFor} onOpenChange={(v) => { if (!v) setScenesFor(null) }} />
 
       {/* Delete confirmation */}
       <Dialog open={!!pendingDelete} onOpenChange={(v) => { if (!v) setPendingDelete(null) }}>

@@ -24,9 +24,15 @@ module Operations
         when 'video'
           Operations::Creatives::GenerateUgcVideo.call(
             ticket: ticket,
+            mode: @params[:mode],
             script: @params[:script],
+            prompt: @params[:prompt],
             avatar: @params[:avatar],
             voice: @params[:voice],
+            aspect_ratio: @params[:aspect_ratio],
+            duration: @params[:duration],
+            reference_image_urls: @params.fetch(:reference_image_urls, []),
+            with_audio: @params.fetch(:with_audio, true),
             client_id: @params[:client_id]
           )
         when 'image'

@@ -187,6 +187,19 @@ export const reportsApi = {
 export const studioApi = {
   get: () => api.get('/studio'),
   generate: (kind, params) => api.post('/studio/generate', { kind, params }),
+  // The "melhorar esse prompt" wand — returns { prompt } improved with the
+  // client's brand + the current video setup as context.
+  improvePrompt: (payload) => api.post('/studio/improve_prompt', payload),
+}
+
+export const uploadsApi = {
+  // Upload product reference photos → [{ signed_id, url }]. Multipart FormData
+  // (the axios client strips the JSON content-type for FormData bodies).
+  referenceImages: (files = []) => {
+    const form = new FormData()
+    Array.from(files).forEach((f) => form.append('files[]', f))
+    return api.post('/uploads/reference_images', form)
+  },
 }
 
 export const creativesApi = {
@@ -197,6 +210,18 @@ export const creativesApi = {
 
 export const generationsApi = {
   list: (params) => api.get('/generations', { params }),
+}
+
+export const videoScenesApi = {
+  list: (creativeId) => api.get(`/creatives/${creativeId}/scenes`),
+  // { caption } is a free edit; { prompt } re-renders just this scene (charged).
+  update: (id, data) => api.patch(`/video_scenes/${id}`, { scene: data }),
+  // Conversational editor: send a message (+ optional reference image URLs the
+  // user attached); the agent decides what to re-render.
+  chat: (creativeId, { message, reference_image_urls = [] }) =>
+    api.post(`/creatives/${creativeId}/video_chat`, { message, reference_image_urls }),
+  // Approve the draft → re-render everything with the final (best) model.
+  finalize: (creativeId) => api.post(`/creatives/${creativeId}/video_finalize`),
 }
 
 // Social networks are connected per CLIENT (the agency connects each client's
@@ -252,7 +277,7 @@ export const billingApi = {
 // Prepaid credit wallet (video/image generation) + top-up checkout.
 export const creditsApi = {
   get: () => api.get('/credits'),
-  usage: (range = '30d') => api.get('/credits/usage', { params: { range } }),
+  usage: (params = {}) => api.get('/credits/usage', { params }),
   checkout: (pack) => api.post('/credits/checkout', { pack }),
 }
 

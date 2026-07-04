@@ -215,12 +215,24 @@ Rails.application.routes.draw do
       # Creative studio
       get  'studio', to: 'studio#index'
       post 'studio/generate', to: 'studio#generate'
+      post 'studio/improve_prompt', to: 'studio#improve_prompt'
       resources :generations, only: %i[index show]
+
+      # Ad-hoc uploads (e.g. product reference photos for the video generator)
+      post 'uploads/reference_images', to: 'uploads#reference_images'
 
       # Workspace-level creative management (Studio gallery)
       get    'creatives',     to: 'creatives#workspace_index'
       patch  'creatives/:id', to: 'creatives#update', as: :creative
       delete 'creatives/:id', to: 'creatives#workspace_destroy'
+
+      # Video scenes (per-scene edit / re-render of a generated video)
+      get   'creatives/:creative_id/scenes',     to: 'video_scenes#index'
+      patch 'video_scenes/:id',                  to: 'video_scenes#update'
+      # Conversational video editor — talk to the video (or parts of it)
+      post  'creatives/:creative_id/video_chat',     to: 'video_scenes#chat'
+      # Approve the draft → re-render the storyboard with the final model
+      post  'creatives/:creative_id/video_finalize', to: 'video_scenes#finalize'
 
       # Meetings, billing (social accounts are nested under clients above)
       resources :meetings

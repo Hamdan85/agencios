@@ -5,9 +5,10 @@ module Operations
     # Creates a Creative on the active workspace. The ticket is optional — the
     # creative studio can create standalone creatives not yet attached to a ticket.
     class Create < Operations::Base
-      def initialize(creative_type:, ticket: nil, source: :uploaded, status: nil, provider: nil, caption: nil,
-                     metadata: {})
+      def initialize(creative_type:, ticket: nil, client: nil, source: :uploaded, status: nil, provider: nil,
+                     caption: nil, metadata: {})
         @ticket = ticket
+        @client = client
         @creative_type = creative_type
         @source = source
         @status = status
@@ -19,6 +20,7 @@ module Operations
       def call
         creative = workspace.creatives.new(
           ticket: @ticket,
+          client: @client || @ticket&.project&.client,
           creative_type: @creative_type,
           source: @source,
           provider: @provider,

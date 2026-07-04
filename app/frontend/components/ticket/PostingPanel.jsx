@@ -19,12 +19,16 @@ const MediaViewer = lazy(() => import('./MediaViewer'))
 
 const MEDIA_LABEL = { image: 'imagem', carousel: 'carrossel', video: 'vídeo', text: 'texto' }
 
+// A generated asset is a video when its URL carries a video extension (the
+// ActiveStorage blob URL keeps the original filename, e.g. .../video-80.mp4).
+const isVideoUrl = (url) => /\.(mp4|mov|webm|avi)(\?|$)/i.test(url || '')
+
 // Turn a creative's asset_urls into MediaViewer attachment objects so a creative
 // in the posting bundle can be previewed full-size, not just selected.
 function creativeToAttachments(creative) {
   const m = creativeMeta(creative?.creative_type)
   return (creative?.asset_urls || []).map((url, i) => {
-    const isVideo = /\.(mp4|mov|webm|avi)(\?|$)/i.test(url)
+    const isVideo = isVideoUrl(url)
     return {
       id: `${creative.id}-${i}`,
       url,
@@ -218,7 +222,11 @@ export default function PostingPanel({
                             <div className="relative w-full" style={{ paddingBottom: '100%' }}>
                               <div className="absolute inset-0 overflow-hidden" style={{ background: `${tm.color}10` }}>
                                 {thumb ? (
-                                  <img src={thumb} alt={tm.label} className="size-full object-cover" />
+                                  isVideoUrl(thumb) ? (
+                                    <video src={`${thumb}#t=0.1`} muted playsInline preload="metadata" className="size-full object-cover" />
+                                  ) : (
+                                    <img src={thumb} alt={tm.label} className="size-full object-cover" />
+                                  )
                                 ) : (
                                   <div className="flex size-full items-center justify-center"><TmIcon size={24} style={{ color: tm.color }} /></div>
                                 )}
@@ -382,15 +390,19 @@ export default function PostingPanel({
               const st = POST_STATUS[post.status] || POST_STATUS.scheduled
               const StIcon = st.icon
               return (
-                <div key={post.id} className="flex items-center justify-between gap-2 rounded-xl border border-border bg-surface px-3.5 py-2.5">
-                  <div className="flex items-center gap-2">
-                    <ChannelIcons channels={[post.provider]} />
-                    <span className="text-sm font-semibold text-ink">{channelMeta(post.provider).label}</span>
+                <div key={post.id} className="flex items-start justify-between gap-2 rounded-xl border border-border bg-surface px-3.5 py-2.5 sm:items-center">
+                  {/* Mobile stacks network + date on the left and badge + action on
+                      the right; from sm up it's the original single row. */}
+                  <div className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <ChannelIcons channels={[post.provider]} />
+                      <span className="truncate text-sm font-semibold text-ink">{channelMeta(post.provider).label}</span>
+                    </div>
                     {post.scheduled_at && post.status === 'scheduled' && (
-                      <span className="text-xs text-ink-muted">· {dt(post.scheduled_at)}</span>
+                      <span className="text-xs text-ink-muted"><span className="hidden sm:inline">· </span>{dt(post.scheduled_at)}</span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex shrink-0 flex-col items-end gap-1.5 sm:flex-row sm:items-center sm:gap-2">
                     <Badge variant={st.variant}>
                       <StIcon size={11} className={cn('mr-0.5', post.status === 'publishing' && 'animate-spin')} />
                       {st.label}

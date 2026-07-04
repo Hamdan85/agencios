@@ -6,6 +6,7 @@ import {
   dashboardApi, calendarApi, tasksApi, ticketsApi, clientsApi, projectsApi, reportsApi, studioApi,
   generationsApi, creativesApi, socialApi, meetingsApi, invoicesApi, settingsApi, billingApi,
   creditsApi, pricingApi, workspaceApi, subtasksApi, connectionsApi, connectorApi, accountApi,
+  videoScenesApi,
 } from '@/api'
 import { keys } from '@/api/queryKeys'
 import { useCurrentUser } from '@/hooks/useAuth'
@@ -186,9 +187,109 @@ export function useGenerate() {
       qc.invalidateQueries({ queryKey: ['tickets'] })
       // Activation + usage tracking (video/image consume credits; carousels are included).
       analytics.track(EVENTS.CREATIVE_GENERATED, { kind: variables?.kind, source: 'studio' })
-      toast.success('Geração concluída ✨')
+      // Video runs async (storyboard + render off-request) — it only STARTED here.
+      toast.success(variables?.kind === 'video' ? 'Geração iniciada ✨' : 'Geração concluída ✨')
     },
     onError: onErr('Erro ao gerar criativo.'),
+  })
+}
+
+// ── Video scenes (per-scene edit / re-render) ─────────────────
+// Returns the full payload ({ scenes, messages }) so the editor can render the
+// timeline AND the chat history from one query.
+export function useVideoScenes(creativeId, { enabled = true } = {}) {
+  const qc = useQueryClient()
+  return useQuery({
+    queryKey: ['video-scenes', creativeId],
+    queryFn: () => videoScenesApi.list(creativeId),
+    enabled: enabled && !!creativeId,
+    // While any scene is still rendering, poll so the preview/timeline update
+    // live (no reload). Stops once every scene is terminal (ready/failed).
+    // Paused while a chat turn is in flight so a poll can't clobber the
+    // optimistic user bubble with a not-yet-persisted server history.
+    refetchInterval: (query) => {
+      if (qc.isMutating({ mutationKey: ['video-chat', creativeId] })) return false
+      const scenes = query.state.data?.scenes || []
+      // Covers the storyboard-planning phase too (creative generating, 0 scenes).
+      const busy = query.state.data?.creative?.status === 'generating' ||
+        scenes.some((s) => ['rendering', 'fresh', 'stale'].includes(s.render_state))
+      return busy ? 4000 : false
+    },
+  })
+}
+
+export function useEditScene(creativeId) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => videoScenesApi.update(id, data),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ['video-scenes', creativeId] })
+      qc.invalidateQueries({ queryKey: ['creatives'] })
+      qc.invalidateQueries({ queryKey: ['tickets'] })
+      if (variables?.data?.prompt) qc.invalidateQueries({ queryKey: ['credits'] }) // a prompt change re-renders (charged)
+      toast.success(variables?.data?.prompt ? 'Refazendo a cena…' : 'Cena atualizada')
+    },
+    onError: onErr('Não foi possível editar a cena.'),
+  })
+}
+
+// Approve the draft: re-render the whole storyboard with the final model.
+export function useFinalizeVideo(creativeId) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => videoScenesApi.finalize(creativeId),
+    onSuccess: (data) => {
+      qc.setQueryData(['video-scenes', creativeId], (prev) => ({
+        ...(prev || {}),
+        creative: data.creative ?? prev?.creative,
+        scenes: data.scenes ?? prev?.scenes,
+      }))
+      qc.invalidateQueries({ queryKey: ['creatives'] })
+      qc.invalidateQueries({ queryKey: ['credits'] }) // the upgrade spent credits
+      toast.success('Gerando em alta qualidade ✨')
+    },
+    onError: onErr('Não foi possível iniciar o upgrade.'),
+  })
+}
+
+// Conversational video editor: send a message; the agent replies and may
+// re-render one/some/all scenes. The response carries the fresh scenes + the
+// full message history, which we write straight into the scenes query cache.
+export function useVideoChat(creativeId) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationKey: ['video-chat', creativeId],
+    mutationFn: ({ message, referenceUrls = [] }) =>
+      videoScenesApi.chat(creativeId, { message, reference_image_urls: referenceUrls }),
+    // Optimistic: the user's message lands in the transcript IMMEDIATELY (the
+    // typing dots then show while the agent thinks); the server response later
+    // replaces the whole history, so no reconciliation is needed on success.
+    onMutate: ({ message }) => {
+      const prev = qc.getQueryData(['video-scenes', creativeId])
+      qc.setQueryData(['video-scenes', creativeId], (cur) => ({
+        ...(cur || {}),
+        messages: [...(cur?.messages || []), { role: 'user', content: message }],
+      }))
+      return { prev }
+    },
+    onError: (err, _msg, ctx) => {
+      if (ctx?.prev) qc.setQueryData(['video-scenes', creativeId], ctx.prev)
+      onErr('Não foi possível conversar com o editor.')(err)
+    },
+    onSuccess: (data) => {
+      qc.setQueryData(['video-scenes', creativeId], (prev) => ({
+        ...(prev || {}),
+        creative: data.creative ?? prev?.creative,
+        scenes: data.scenes ?? prev?.scenes,
+        messages: data.messages ?? prev?.messages,
+      }))
+      qc.invalidateQueries({ queryKey: ['creatives'] })
+      qc.invalidateQueries({ queryKey: ['tickets'] })
+      // A re-render spent credits — refresh the wallet balance + the ledger now
+      // (the debit already happened). The COST is shown to the user only when the
+      // render finishes, as a light pill — handled in the dialog, not here.
+      if (data.credits_spent > 0) qc.invalidateQueries({ queryKey: ['credits'] })
+    },
   })
 }
 
@@ -482,8 +583,14 @@ export function useBillingMutations() {
 export const useCredits = () => useQuery({ queryKey: keys.credits(), queryFn: creditsApi.get })
 
 // Credit-usage breakdown for the "Uso" tab (spend by kind + trend + recent runs).
-export const useCreditUsage = (range = '30d') =>
-  useQuery({ queryKey: keys.creditUsage(range), queryFn: () => creditsApi.usage(range) })
+// `params` carries the time range plus the recent-log filters (kind/status/page),
+// so changing a filter refetches; previous data is kept for smooth paging.
+export const useCreditUsage = (params = {}) =>
+  useQuery({
+    queryKey: keys.creditUsage(params),
+    queryFn: () => creditsApi.usage(params),
+    placeholderData: keepPreviousData,
+  })
 
 export function useCreditsMutations() {
   return {

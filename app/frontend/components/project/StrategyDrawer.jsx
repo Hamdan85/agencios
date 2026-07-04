@@ -1,9 +1,8 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Sparkles, Send, CalendarClock, CheckCircle2, Loader2, X } from 'lucide-react'
+import { Sparkles, CalendarClock, CheckCircle2, Loader2, X } from 'lucide-react'
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/input'
-import { Markdown } from '@/components/ui/markdown'
+import { Bubble, TypingDots, ChatComposer } from '@/components/ui/chat'
 import { useStartStrategy, useApplyStrategy, useStrategyChat } from '@/hooks/useStrategy'
 import { useStrategyChannel } from '@/hooks/useRealtime'
 
@@ -82,20 +81,11 @@ export function StrategyDrawer({ open, onOpenChange, projectId, session, cards =
   // turn can't kick off a competing plan job on the same session.
   const busy = streaming || generating
 
-  const submit = (e) => {
-    e.preventDefault()
+  const submit = () => {
     const text = input.trim()
     if (!text || busy || !sessionId) return
     setInput('')
     send(text, sessionId)
-  }
-
-  // Enter sends; Shift+Enter inserts a newline.
-  const onKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      submit(e)
-    }
   }
 
   return (
@@ -193,66 +183,18 @@ export function StrategyDrawer({ open, onOpenChange, projectId, session, cards =
             </p>
           )}
 
-          <form onSubmit={submit} className="flex items-stretch gap-2">
-            <Textarea
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={onKeyDown}
-              rows={2}
-              maxRows={2}
-              placeholder="Responda ao estrategista…  (Enter envia · Shift+Enter quebra linha)"
-              className="h-[52px] flex-1 resize-none"
-              disabled={busy}
-            />
-            <Button
-              type="submit"
-              className="h-auto w-[52px] shrink-0 self-stretch p-0"
-              disabled={busy || !input.trim() || !sessionId}
-            >
-              {busy ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
-            </Button>
-          </form>
+          <ChatComposer
+            value={input}
+            onChange={setInput}
+            onSend={submit}
+            sending={busy}
+            disabled={!sessionId}
+            inputRef={inputRef}
+            placeholder="Responda ao estrategista…  (Enter envia · Shift+Enter quebra linha)"
+          />
         </div>
       </SheetContent>
     </Sheet>
-  )
-}
-
-function Bubble({ role, content, streaming }) {
-  const isUser = role === 'user'
-  return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <div
-        className={`max-w-[85%] cursor-text select-text rounded-2xl px-4 py-2.5 text-sm ${
-          isUser ? 'whitespace-pre-wrap bg-brand text-white' : 'bg-surface-muted text-ink'
-        }`}
-      >
-        {/* User text is plain; the agent replies in markdown (bold, lists, …). */}
-        {isUser
-          ? content
-          : <Markdown className="prose-p:first:mt-0 prose-p:last:mb-0">{content}</Markdown>}
-        {streaming && <span className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse bg-current align-middle" />}
-      </div>
-    </div>
-  )
-}
-
-// Three bouncing dots — the agent is "thinking" (waiting for the first token, or
-// building the plan tool-call, which streams no visible text).
-function TypingDots() {
-  return (
-    <div className="flex justify-start">
-      <div className="flex items-center gap-1 rounded-2xl bg-surface-muted px-4 py-3">
-        {[0, 1, 2].map((i) => (
-          <span
-            key={i}
-            className="size-1.5 animate-bounce rounded-full bg-ink-faint"
-            style={{ animationDelay: `${i * 0.16}s` }}
-          />
-        ))}
-      </div>
-    </div>
   )
 }
 

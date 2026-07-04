@@ -26,7 +26,9 @@ const DialogContent = React.forwardRef(({ className, children, ...props }, ref) 
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 rounded-2xl border border-border bg-surface p-6 shadow-2xl duration-200',
+        // focus:outline-none — Radix focuses the content on open; without this the
+        // browser draws a stray focus ring around the whole dialog.
+        'fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 rounded-2xl border border-border bg-surface p-6 shadow-2xl duration-200 focus:outline-none',
         // Mobile: take over the full screen so forms have room and never get
         // clipped by a narrow viewport. Desktop (sm+) keeps the centered card
         // above untouched, including any caller-provided max-w-*.

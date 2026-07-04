@@ -26,14 +26,15 @@ module Controllers
       def call
         range = RANGES.key?(@params[:range].to_s) ? @params[:range].to_s : '30d'
         since = RANGES[range].days.ago.beginning_of_day
+        trunc = GRANULARITY[range]
 
         {
           range: range,
           since: since.iso8601,
-          granularity: GRANULARITY[range],
+          granularity: trunc,
           totals: totals(since),
           by_kind: by_kind(since),
-          series: series(since, GRANULARITY[range]),
+          series: series(since, trunc),
           recent: recent(since),
           costs: Pricing.public_catalog[:credit_costs]
         }
@@ -74,31 +75,78 @@ module Controllers
         end
       end
 
-      # Credit spend bucketed over time for the trend chart. `trunc` is from a
-      # fixed whitelist (GRANULARITY), never user input, so the interpolation is
-      # safe.
+      # Credit spend AND generation activity bucketed over time for the trend
+      # chart. Zero-filled across the whole range so the axis is continuous (never
+      # a lonely bar or a blank card). Each point carries both `credits` (real
+      # spend, from debits) and `generations` (activity count) so the chart can
+      # fall back to plotting activity when a period spent 0 credits (e.g. only
+      # free carousels, or a godfathered workspace). `trunc` is from a fixed
+      # whitelist (GRANULARITY), never user input, so the interpolation is safe.
       def series(since, trunc)
-        raw = workspace.credit_transactions.debits
-                       .where(created_at: since..)
-                       .group(Arel.sql("date_trunc('#{trunc}', created_at)"))
-                       .sum(:amount)
+        group = bucket_sql(trunc)
+        spend = workspace.credit_transactions.debits
+                         .where(created_at: since..)
+                         .group(group).sum(:amount)
+        counts = workspace.generations
+                          .where(created_at: since..)
+                          .group(group).count
 
-        raw.sort_by { |bucket, _| bucket }.map do |bucket, amount|
-          { date: bucket.to_date.iso8601, credits: -amount.to_i }
+        buckets(since, trunc).map do |bucket|
+          {
+            date: bucket.iso8601,
+            credits: -spend.fetch(bucket, 0).to_i,
+            generations: counts.fetch(bucket, 0)
+          }
         end
       end
 
-      # The latest generations with the credits each one cost. Listed from the
-      # generations table so free carousels appear too; the debit (if any) gives
-      # the credit cost.
+      # Groups by the truncated bucket in the APP timezone, cast to a Ruby `Date`,
+      # so the grouped keys line up exactly with the `buckets` zero-fill (which is
+      # also in local time). `created_at` is `timestamp WITHOUT time zone` holding
+      # UTC, so it must first be tagged UTC (`AT TIME ZONE 'UTC'` → timestamptz)
+      # and THEN converted to the app zone; a single conversion mis-reads the
+      # naive UTC value as local and shifts the date by the offset (buckets past
+      # ~21:00 UTC land on tomorrow and fall outside the range). `trunc` and the
+      # zone are config-derived (never user input), so the interpolation is safe.
+      def bucket_sql(trunc)
+        zone = ActiveRecord::Base.connection.quote(Time.zone.tzinfo.name)
+        Arel.sql("date_trunc('#{trunc}', (created_at AT TIME ZONE 'UTC') AT TIME ZONE #{zone})::date")
+      end
+
+      # The bucket start dates from `since` to today, aligned to Postgres
+      # date_trunc boundaries (week → Monday, month → 1st) so they match the
+      # grouped query keys exactly.
+      def buckets(since, trunc)
+        step, cursor = case trunc
+                       when 'week'  then [1.week, since.to_date.beginning_of_week]
+                       when 'month' then [1.month, since.to_date.beginning_of_month]
+                       else [1.day, since.to_date]
+                       end
+        today = Date.current
+        out = []
+        while cursor <= today
+          out << cursor
+          cursor += step
+        end
+        out
+      end
+
+      # The generations log — filterable by kind/status and paginated. Listed from
+      # the generations table so free carousels appear too; the debit (if any)
+      # gives the credit cost. Returns `{ items:, meta: }` so the client can page
+      # with confidence it's seeing the full history, not a silent top-N.
       def recent(since)
-        gens = workspace.generations.where(created_at: since..)
-                        .order(created_at: :desc).limit(12)
+        scope = workspace.generations.where(created_at: since..)
+        scope = scope.where(kind: @params[:kind]) if KINDS.include?(@params[:kind].to_s)
+        scope = scope.where(status: @params[:status]) if Generation.statuses.key?(@params[:status].to_s)
+        scope = scope.order(created_at: :desc)
+
+        records, meta = paginate(scope, @params, default_per: 20, max_per: 20)
         spent_by_gen = workspace.credit_transactions.debits
-                                .where(generation_id: gens.map(&:id))
+                                .where(generation_id: records.map(&:id))
                                 .group(:generation_id).sum(:amount)
 
-        gens.map do |g|
+        items = records.map do |g|
           {
             id: g.id,
             kind: g.kind,
@@ -108,6 +156,7 @@ module Controllers
             created_at: g.created_at.iso8601
           }
         end
+        { items: items, meta: meta }
       end
     end
   end

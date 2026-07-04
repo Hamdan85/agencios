@@ -1,7 +1,8 @@
 import { lazy, Suspense, useState, useMemo, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   Sparkles, GalleryHorizontalEnd, Video, Image as ImageIcon,
-  Loader2, Images, Pencil, Trash2, Check, X,
+  Loader2, Images, Pencil, Trash2, Check, X, Film,
 } from 'lucide-react'
 import { useStudio, useGenerate, useWorkspaceCreatives, useCreativeMutations } from '@/hooks/useData'
 import { useCurrentUser } from '@/hooks/useAuth'
@@ -23,14 +24,19 @@ import { FilterBar } from '@/components/ui/filter-bar'
 import { CREATIVE_TYPE_META, creativeMeta } from '@/lib/constants'
 import { GeneratorCard } from '@/components/studio/GeneratorCard'
 import { GenerateDialog } from '@/components/studio/GenerateDialog'
+import { VideoScenesDialog } from '@/components/ticket/VideoScenesDialog'
 
 const MediaViewer = lazy(() => import('@/components/ticket/MediaViewer'))
+
+// A generated video is scene-editable (reel / ugc_video) — its scenes can be
+// re-rendered one at a time in the scenes editor.
+const isSceneEditable = (c) => c?.source === 'generated' && ['ugc_video', 'reel'].includes(c?.creative_type)
 
 const HERO = '#F43F5E'
 
 const GENERATORS = [
   { kind: 'carousel', icon: GalleryHorizontalEnd, title: 'Carrossel', subtitle: 'Viral · ideia, texto ou link', color: '#7C3AED' },
-  { kind: 'video', icon: Video, title: 'Vídeo UGC', subtitle: 'Avatar + voz a partir do roteiro', color: '#F43F5E' },
+  { kind: 'video', icon: Video, title: 'Vídeo', subtitle: 'Avatar falando ou produto a partir de fotos', color: '#F43F5E' },
   { kind: 'image', icon: ImageIcon, title: 'Imagem', subtitle: 'Imagem original via prompt', color: '#0EA5E9' },
 ]
 
@@ -46,9 +52,25 @@ export default function StudioIndex() {
   useGenerationsChannel(workspaceId)
 
   const [dialogKind, setDialogKind] = useState(null)
+  // The active video editor (chat + timeline) — opened by a just-generated video
+  // OR by a ?creative=<id> deep link. It shows its own loading state while it
+  // fetches, so on a reload the dialog opens immediately (even before the studio
+  // page finishes loading below).
+  const [params] = useSearchParams()
+  const deepId = params.get('creative')
+  const [editorCreative, setEditorCreative] = useState(deepId ? { id: Number(deepId) } : null)
   const generate = useGenerate()
 
-  if (isLoading) return <PageLoader />
+  const videoEditor = (
+    <VideoScenesDialog
+      creative={editorCreative}
+      open={!!editorCreative}
+      onOpenChange={(v) => { if (!v) setEditorCreative(null) }}
+    />
+  )
+
+  // Reload with a deep link: open the editor over the page loader right away.
+  if (isLoading) return <>{<PageLoader />}{videoEditor}</>
 
   const clients = studio?.clients || []
 
@@ -87,7 +109,13 @@ export default function StudioIndex() {
         onOpenChange={(o) => !o && setDialogKind(null)}
         generate={generate}
         clients={clients}
+        onGenerated={(gen) => {
+          if (gen?.kind === 'video' && gen?.creative_id) setEditorCreative({ id: gen.creative_id })
+        }}
       />
+
+      {/* Editor for a just-generated OR deep-linked video */}
+      {videoEditor}
     </Page>
   )
 }
@@ -100,6 +128,7 @@ function CreativesGallery() {
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerItems, setViewerItems] = useState([])
   const [editCreative, setEditCreative] = useState(null)
+  const [scenesFor, setScenesFor] = useState(null)
 
   const filters = useMemo(() => ({
     q: q || undefined,
@@ -169,6 +198,7 @@ function CreativesGallery() {
               onClick={() => openViewer(c)}
               onEdit={() => setEditCreative(c)}
               onDelete={() => mutations.destroy.mutate(c.id)}
+              onEditScenes={isSceneEditable(c) ? () => setScenesFor(c) : undefined}
             />
           ))}
         </div>
@@ -198,9 +228,20 @@ function CreativesGallery() {
           saving={mutations.update.isPending}
         />
       )}
+
+      {/* Per-scene editor for a generated video */}
+      <VideoScenesDialog
+        creative={scenesFor}
+        open={!!scenesFor}
+        onOpenChange={(v) => { if (!v) setScenesFor(null) }}
+      />
     </div>
   )
 }
+
+// A generated asset is a video when its URL carries a video extension (the
+// ActiveStorage blob URL keeps the original filename, e.g. .../video-80.mp4).
+const isVideoUrl = (url) => /\.(mp4|mov|webm|avi)(\?|$)/i.test(url || '')
 
 // One creative → its slide attachments. A carousel's slides share the creative's
 // name and are captioned "Slide i de N", so the viewer reads as one carousel.
@@ -211,7 +252,7 @@ function creativeToAttachments(creative) {
   const isCarousel = creative.creative_type === 'carousel' || total > 1
 
   return urls.map((url, i) => {
-    const isVideo = /\.(mp4|mov|webm|avi)(\?|$)/i.test(url)
+    const isVideo = isVideoUrl(url)
     return {
       id: `${creative.id}-${i}`,
       url,
@@ -226,10 +267,12 @@ function creativeToAttachments(creative) {
 }
 
 // ── Gallery card ───────────────────────────────────────────────────
-function GalleryCard({ creative, onClick, onEdit, onDelete }) {
+function GalleryCard({ creative, onClick, onEdit, onDelete, onEditScenes }) {
   const m = creativeMeta(creative.creative_type)
   const st = CREATIVE_STATUS_META[creative.status]
-  const thumb = creative.asset_urls?.[0]
+  // While a video is still generating, the first rendered scene stands in as the
+  // early preview (preview_url) so the card never sits on a blind spinner.
+  const thumb = creative.asset_urls?.[0] || creative.preview_url
   const generating = creative.status === 'generating'
 
   return (
@@ -243,7 +286,11 @@ function GalleryCard({ creative, onClick, onEdit, onDelete }) {
       >
         <div className="absolute inset-0 overflow-hidden" style={{ background: `${m.color}12` }}>
           {thumb ? (
-            <img src={thumb} alt={m.label} className="size-full object-cover transition-transform group-hover:scale-105" />
+            isVideoUrl(thumb) ? (
+              <video src={`${thumb}#t=0.1`} muted playsInline preload="metadata" className="size-full object-cover transition-transform group-hover:scale-105" />
+            ) : (
+              <img src={thumb} alt={m.label} className="size-full object-cover transition-transform group-hover:scale-105" />
+            )
           ) : (
             <div className="flex size-full flex-col items-center justify-center gap-2">
               <div className="flex size-12 items-center justify-center rounded-2xl" style={{ background: `${m.color}1F`, color: m.color }}>
@@ -273,6 +320,20 @@ function GalleryCard({ creative, onClick, onEdit, onDelete }) {
           <p className="truncate text-[11px] text-ink-faint">{creative.client_name}</p>
         )}
       </div>
+
+      {/* Primary action for a generated video: edit its scenes. Always visible
+          (not hover-gated, and available WHILE generating — the editor shows the
+          live progress) — it's the whole point of a scene-based video. */}
+      {onEditScenes && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onEditScenes() }}
+          className="absolute bottom-13 left-2 inline-flex items-center gap-1 rounded-full bg-brand px-2.5 py-1 text-[11px] font-bold text-white shadow-sm transition hover:bg-brand/90"
+          title="Editar cenas"
+        >
+          <Film size={12} /> Cenas
+        </button>
+      )}
 
       <div className="absolute bottom-13 right-2 flex gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
         <button

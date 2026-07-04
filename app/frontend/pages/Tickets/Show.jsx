@@ -11,6 +11,7 @@ import { Page } from '@/components/ui/page'
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
 import StatusStepper from '@/components/ticket/StatusStepper'
 import TicketBody from '@/components/ticket/TicketBody'
 import AutopilotButton from '@/components/ticket/AutopilotButton'
@@ -119,7 +120,20 @@ export default function Show() {
                 </span>
               )}
             </div>
-            <h1 className="font-display text-[22px] font-extrabold leading-tight tracking-tight text-ink sm:text-[30px]">
+            {/* Mobile: the title is clamped to one line — tapping it opens a
+                tooltip-style popover with the full text. Desktop keeps the
+                original multi-line h1 untouched. */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <h1 className="block w-full cursor-pointer truncate text-left font-display text-[22px] font-extrabold leading-tight tracking-tight text-ink sm:hidden">
+                  {ticket.display_title || ticket.title}
+                </h1>
+              </PopoverTrigger>
+              <PopoverContent side="bottom" align="start" className="max-w-[85vw] border-0 bg-brand-ink px-3 py-2 text-sm font-semibold leading-snug text-surface">
+                {ticket.display_title || ticket.title}
+              </PopoverContent>
+            </Popover>
+            <h1 className="hidden font-display font-extrabold leading-tight tracking-tight text-ink sm:block sm:text-[30px]">
               {ticket.display_title || ticket.title}
             </h1>
           </div>

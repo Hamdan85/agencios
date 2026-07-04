@@ -192,6 +192,7 @@
 @keyframes ag-gradient-x { 0%,100% { background-position: 0% 50% } 50% { background-position: 100% 50% } }
 @keyframes ag-draw       { to { stroke-dashoffset: 0 } }
 @keyframes ag-shimmer    { 0% { background-position: -150% 0 } 100% { background-position: 250% 0 } }
+@keyframes ag-indeterminate { 0% { transform: translateX(-120%) } 100% { transform: translateX(320%) } }
 @keyframes ag-pulse-ring { 0% { transform: scale(.7); opacity: .7 } 100% { transform: scale(2.4); opacity: 0 } }
 @keyframes ag-travel {
   0%,8%    { transform: translate(0,0)        rotate(-2deg); }
@@ -292,6 +293,7 @@
   .anim-caret::after { animation: ag-caret 1s step-end infinite; }
   .pulse-ring::after { animation: ag-pulse-ring 2.4s ease-out infinite; }
   .shimmer         { animation: ag-shimmer 1.8s linear infinite; }
+  .anim-indeterminate { animation: ag-indeterminate 1.2s ease-in-out infinite; }
   .draw-line       { stroke-dasharray: var(--len, 600); stroke-dashoffset: var(--len, 600); }
   .draw-line.is-drawn { animation: ag-draw 1.4s var(--ease-spring) forwards; }
   .anim-sheen::before {

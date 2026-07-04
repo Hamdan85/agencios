@@ -15,10 +15,11 @@ FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 WORKDIR /rails
 
 # Install base packages. `chromium` (+ fonts) powers the headless HTML→PNG
-# renderer (Ferrum) used to compose branded carousel slides.
+# renderer (Ferrum) used to compose branded carousel slides. `ffmpeg` concatenates
+# the per-scene clips into the final generated video (Vendors::Ffmpeg::Concat).
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y curl libjemalloc2 libvips postgresql-client \
-      chromium fonts-liberation fonts-dejavu-core fonts-noto-color-emoji && \
+      chromium fonts-liberation fonts-dejavu-core fonts-noto-color-emoji ffmpeg && \
     ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
