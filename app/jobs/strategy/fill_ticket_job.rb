@@ -21,6 +21,10 @@ module Strategy
       Broadcaster.ticket(ticket, 'ai_fill_done', status: ticket.status,
                                                  filled: Array(result.is_a?(Hash) ? result[:filled] : nil))
       Operations::Ai::BuildScope.call(ticket: ticket)
+      # BuildScope creates the production checklist AFTER the ai_fill_done broadcast,
+      # and Subtasks::Create doesn't broadcast on its own — without this nudge the
+      # freshly-generated subtasks only surface on a manual reload.
+      Broadcaster.ticket(ticket, 'ticket_updated', status: ticket.status)
     rescue Operations::Errors::Invalid => e
       # BuildScope bails when there's no context to plan from — non-fatal.
       Rails.logger.warn("[Strategy::FillTicketJob] ticket ##{ticket_id}: #{e.message}")

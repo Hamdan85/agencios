@@ -84,7 +84,7 @@ RSpec.describe Operations::Creatives::GenerateUgcVideo do
     run_start_render(generation)
 
     expect(Vendors::OpenRouter::Actions::GenerateVideo).to have_received(:call).with(
-      hash_including(mode: 'product', input_references: [{ url: 'https://cdn.example.com/cup.jpg' }])
+      hash_including(mode: 'product', input_references: [{ url: 'https://cdn.example.com/cup.jpg', type: 'image_url' }])
     ).at_least(:once)
   end
 

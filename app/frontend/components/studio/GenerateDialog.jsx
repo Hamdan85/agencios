@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { Sparkles, Loader2, CheckCircle2, Wand2, AtSign, UserRound, Package, Plus, X } from 'lucide-react'
+import { Sparkles, Loader2, CheckCircle2, Wand2, AtSign, Plus, X, MessageSquare } from 'lucide-react'
 import { studioApi, uploadsApi } from '@/api'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -36,17 +36,6 @@ function BrandPreview({ client, className }) {
   )
 }
 
-// The two video generation modes — the brief adapts to each. The ENGINE is
-// chosen by the backend (VideoConfig) per mode; the user never picks one.
-const VIDEO_MODES = [
-  { value: 'avatar', label: 'Avatar UGC', hint: 'Alguém falando', icon: UserRound },
-  { value: 'product', label: 'Produto', hint: 'A partir de fotos', icon: Package },
-]
-const VOICES = [
-  { value: 'pt_br_warm', label: 'Acolhedora' },
-  { value: 'pt_br_energetic', label: 'Energética' },
-  { value: 'pt_br_pro', label: 'Profissional' },
-]
 // 9:16 default (reel). Format is a visual choice, not a dropdown.
 const VIDEO_FORMATS = [
   { value: '9:16', label: '9:16', hint: 'Reels' },
@@ -84,8 +73,8 @@ const META = {
     description: 'Um carrossel viral a partir de uma ideia, texto ou link — copy, slides e identidade da marca.',
   },
   video: {
-    title: 'Gerar Vídeo',
-    description: 'Um reel vertical com avatar falando ou a partir de fotos do produto.',
+    title: 'Novo vídeo',
+    description: 'Diga o essencial e gere o rascunho — estilo, referências e ajustes você faz conversando no editor.',
   },
   image: {
     title: 'Gerar Imagem',
@@ -103,15 +92,16 @@ const CAROUSEL_SOURCES = [
 const emptyForm = () => ({
   source_mode: 'idea', idea: '', text: '', url: '',
   slides: 'auto', objective: '',
-  // video
-  video_mode: 'avatar', script: '', video_brief: '', reference_urls: [],
+  // video — a single brief; the director infers the type. voice keeps the warm
+  // default for whenever it lands on a talking-head.
+  video_brief: '', reference_urls: [],
   voice: 'pt_br_warm', aspect_ratio: '9:16', duration: 16, with_audio: true,
   prompt: '',
 })
 
 const isHttpUrl = (v) => /^https?:\/\/\S+\.\S+/i.test(String(v || '').trim())
 
-export function GenerateDialog({ kind, open, onOpenChange, generate, clients = [], onGenerated }) {
+export function GenerateDialog({ kind, open, onOpenChange, generate, startVideo, clients = [], onGenerated }) {
   const [form, setForm] = useState(emptyForm)
   const [done, setDone] = useState(false)
   const [clientId, setClientId] = useState(null)
@@ -120,7 +110,8 @@ export function GenerateDialog({ kind, open, onOpenChange, generate, clients = [
   const meta = META[kind] || META.carousel
   const kindMeta = GENERATION_KIND_META[kind] || GENERATION_KIND_META.carousel
   const KindIcon = kindMeta.icon
-  const pending = generate?.isPending
+  // Video opens an interview (startVideo); the other kinds generate directly.
+  const pending = kind === 'video' ? startVideo?.isPending : generate?.isPending
 
   // Reset the form + default the client whenever the dialog (re)opens.
   useEffect(() => {
@@ -143,7 +134,7 @@ export function GenerateDialog({ kind, open, onOpenChange, generate, clients = [
   useEffect(() => () => clearTimeout(typeTimer.current), [])
 
   const improvePrompt = async () => {
-    const field = form.video_mode === 'avatar' ? 'script' : 'video_brief'
+    const field = 'video_brief'
     const original = form[field]
     if (original.trim().length < 2 || improving || pending) return
     setImproving('thinking')
@@ -151,12 +142,12 @@ export function GenerateDialog({ kind, open, onOpenChange, generate, clients = [
     try {
       const { prompt } = await studioApi.improvePrompt({
         client_id: clientId,
-        mode: form.video_mode,
+        // No mode from the form — the backend improver uses a neutral default;
+        // the director picks the real mode from the brief.
         prompt: original,
         aspect_ratio: form.aspect_ratio,
         duration: form.duration,
         with_audio: form.with_audio,
-        voice: form.video_mode === 'avatar' ? form.voice : undefined,
         reference_count: form.reference_urls.length,
       })
       const text = String(prompt || '').slice(0, LIMITS[field])
@@ -189,7 +180,7 @@ export function GenerateDialog({ kind, open, onOpenChange, generate, clients = [
     if (room <= 0) { toast.error(`Máximo de ${MAX_REFS} fotos.`); return }
     setUploading(true)
     try {
-      const { reference_images: uploaded } = await uploadsApi.referenceImages(files.slice(0, room))
+      const { references: uploaded } = await uploadsApi.references(files.slice(0, room))
       setForm((f) => ({ ...f, reference_urls: [...f.reference_urls, ...uploaded].slice(0, MAX_REFS) }))
     } catch {
       toast.error('Não foi possível enviar a foto. Tente outra imagem (JPG, PNG ou WEBP).')
@@ -211,9 +202,7 @@ export function GenerateDialog({ kind, open, onOpenChange, generate, clients = [
     isHttpUrl(form.url)
   )
 
-  const videoValid = form.video_mode === 'avatar'
-    ? form.script.trim().length > 1
-    : form.video_brief.trim().length > 1
+  const videoValid = form.video_brief.trim().length > 1
 
   const isValid = !!clientId && (
     kind === 'carousel' ? carouselSourceValid :
@@ -234,9 +223,14 @@ export function GenerateDialog({ kind, open, onOpenChange, generate, clients = [
     }
     const refUrls = form.reference_urls.map((r) => r.url).filter(Boolean)
     if (kind === 'video') {
-      const common = { ...base, mode: form.video_mode, aspect_ratio: form.aspect_ratio, duration: form.duration, with_audio: form.with_audio, reference_image_urls: refUrls }
-      if (form.video_mode === 'avatar') return { ...common, script: form.script.trim(), voice: form.voice }
-      return { ...common, prompt: form.video_brief.trim() }
+      // No `mode` — the backend infers it (references present ⇒ product-leaning)
+      // and the storyboard director makes the final call. `voice` keeps the
+      // warm default for whenever the director lands on a talking-head.
+      return {
+        ...base, aspect_ratio: form.aspect_ratio, duration: form.duration,
+        with_audio: form.with_audio, reference_image_urls: refUrls,
+        prompt: form.video_brief.trim(), voice: form.voice,
+      }
     }
     return { ...base, prompt: form.prompt.trim(), ref_images: refUrls }
   }
@@ -244,12 +238,26 @@ export function GenerateDialog({ kind, open, onOpenChange, generate, clients = [
   const submit = (e) => {
     e?.preventDefault?.()
     if (!isValid || pending) return
+
+    // Video does NOT generate here — it opens the editor as a chat INTERVIEW;
+    // the agent gathers context and decides when to build.
+    if (kind === 'video') {
+      startVideo.mutate(
+        { params: buildParams() },
+        {
+          onSuccess: (data) => {
+            onOpenChange?.(false)
+            onGenerated?.({ kind: 'video', creative_id: data?.creative?.id })
+          },
+        },
+      )
+      return
+    }
+
     generate.mutate(
       { kind, params: buildParams() },
       {
         onSuccess: (data) => {
-          // Video generation is async (storyboard + render run off-request):
-          // hand off to the editor immediately — progress lives THERE, not here.
           if (onGenerated && data?.generation) {
             onOpenChange?.(false)
             onGenerated(data.generation)
@@ -287,7 +295,7 @@ export function GenerateDialog({ kind, open, onOpenChange, generate, clients = [
         {done ? (
           <SuccessState />
         ) : pending ? (
-          <GeneratingState color={kindMeta.color} label={kindMeta.label} />
+          <GeneratingState color={kindMeta.color} label={kindMeta.label} video={kind === 'video'} />
         ) : (
           <form onSubmit={submit} className="space-y-5">
             <div className="grid gap-4 sm:grid-cols-2">
@@ -380,90 +388,33 @@ export function GenerateDialog({ kind, open, onOpenChange, generate, clients = [
 
             {kind === 'video' && (
               <>
-                <Field label="Tipo de vídeo">
-                  <div className="grid grid-cols-2 gap-2">
-                    {VIDEO_MODES.map((m) => {
-                      const Icon = m.icon
-                      const active = form.video_mode === m.value
-                      return (
-                        <button
-                          key={m.value} type="button" onClick={() => set('video_mode')(m.value)}
-                          className={cn(
-                            'flex items-center gap-2.5 rounded-xl border p-3 text-left transition',
-                            active ? 'border-brand bg-brand-soft/60' : 'border-border hover:border-brand/40',
-                          )}
-                        >
-                          <span className={cn('grid size-9 place-items-center rounded-lg', active ? 'bg-brand text-white' : 'bg-surface-muted text-ink-secondary')}>
-                            <Icon size={18} strokeWidth={2.2} />
-                          </span>
-                          <span className="min-w-0">
-                            <span className={cn('block text-sm font-bold', active ? 'text-brand' : 'text-ink')}>{m.label}</span>
-                            <span className="block text-xs text-ink-muted">{m.hint}</span>
-                          </span>
-                        </button>
-                      )
-                    })}
+                {/* No "tipo" pick — the director infers avatar / product / scene /
+                    character from what you describe (part of the interview). */}
+                <Field
+                  label="O que é o vídeo?" htmlFor="gen-vbrief" count={form.video_brief.length} max={LIMITS.video_brief}
+                  action={<ImproveWand onClick={improvePrompt} improving={improving} disabled={form.video_brief.trim().length < 2 || pending} />}
+                >
+                  <div className="relative">
+                    <Textarea
+                      id="gen-vbrief" value={form.video_brief} onChange={(e) => set('video_brief')(e.target.value)}
+                      placeholder={improving ? '' : 'Descreva o vídeo: quem/o que aparece, o que deve dizer, o clima. Pode colar um roteiro. O resto você ajusta conversando no editor.'}
+                      rows={4} maxRows={6} maxLength={LIMITS.video_brief} autoFocus className="min-h-24"
+                      readOnly={!!improving}
+                    />
+                    {improving === 'thinking' && <PromptShimmer />}
                   </div>
                 </Field>
+                {/* Optional references — product photos (kept faithful), a style
+                    or a person to feature. The director types each; anything else
+                    is refined by chatting in the editor. */}
+                <RefUploader
+                  urls={form.reference_urls} fileRef={fileRef} uploading={uploading}
+                  onPick={() => fileRef.current?.click()} onRemove={removeRef} onFiles={pickRefs}
+                  label="Referências (opcional)"
+                  hint={`Até ${MAX_REFS} — fotos do produto, um estilo ou alguém que deve aparecer.`}
+                />
 
-                {form.video_mode === 'avatar' ? (
-                  <>
-                    <Field
-                      label="Prompt" htmlFor="gen-script" count={form.script.length} max={LIMITS.script}
-                      action={<ImproveWand onClick={improvePrompt} improving={improving} disabled={form.script.trim().length < 2 || pending} />}
-                    >
-                      <div className="relative">
-                        <Textarea
-                          id="gen-script" value={form.script} onChange={(e) => set('script')(e.target.value)}
-                          placeholder={improving ? '' : 'Descreva o vídeo e o que o avatar deve dizer — você pode colar um roteiro completo.'}
-                          rows={4} maxRows={6} maxLength={LIMITS.script} autoFocus className="min-h-24"
-                          readOnly={!!improving}
-                        />
-                        {improving === 'thinking' && <PromptShimmer />}
-                      </div>
-                    </Field>
-                    <RefUploader
-                      urls={form.reference_urls} fileRef={fileRef} uploading={uploading}
-                      onPick={() => fileRef.current?.click()} onRemove={removeRef} onFiles={pickRefs}
-                      label="Imagens de referência (opcional)"
-                      hint={`Até ${MAX_REFS} — estilo, cenário ou algo que deve aparecer no vídeo.`}
-                    />
-                  </>
-                ) : (
-                  <>
-                    <Field
-                      label="Prompt" htmlFor="gen-vbrief" count={form.video_brief.length} max={LIMITS.video_brief}
-                      action={<ImproveWand onClick={improvePrompt} improving={improving} disabled={form.video_brief.trim().length < 2 || pending} />}
-                    >
-                      <div className="relative">
-                        <Textarea
-                          id="gen-vbrief" value={form.video_brief} onChange={(e) => set('video_brief')(e.target.value)}
-                          placeholder={improving ? '' : 'Descreva o vídeo — o que aparece, o movimento e o clima. Pode incluir um roteiro de cenas.'}
-                          rows={4} maxRows={6} maxLength={LIMITS.video_brief} autoFocus className="min-h-24"
-                          readOnly={!!improving}
-                        />
-                        {improving === 'thinking' && <PromptShimmer />}
-                      </div>
-                    </Field>
-                    <RefUploader
-                      urls={form.reference_urls} fileRef={fileRef} uploading={uploading}
-                      onPick={() => fileRef.current?.click()} onRemove={removeRef} onFiles={pickRefs}
-                      label="Fotos do produto" hint={`Até ${MAX_REFS} fotos — mantêm o produto fiel no vídeo.`}
-                    />
-                  </>
-                )}
-
-                <div className={cn('grid gap-4', form.video_mode === 'avatar' ? 'sm:grid-cols-2' : 'sm:grid-cols-3')}>
-                  {form.video_mode === 'avatar' && (
-                    <Field label="Voz">
-                      <Select value={form.voice} onValueChange={set('voice')}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {VOICES.map((v) => <SelectItem key={v.value} value={v.value}>{v.label}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                  )}
+                <div className="grid gap-4 sm:grid-cols-3">
                   <Field label="Formato">
                     <PillGroup options={VIDEO_FORMATS} value={form.aspect_ratio} onChange={set('aspect_ratio')} />
                   </Field>
@@ -498,7 +449,10 @@ export function GenerateDialog({ kind, open, onOpenChange, generate, clients = [
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={() => onOpenChange?.(false)}>Cancelar</Button>
               <Button type="submit" disabled={!isValid || !!improving}>
-                <Wand2 size={16} /> Gerar agora
+                {/* Video doesn't generate here — it opens the chat editor to refine first. */}
+                {kind === 'video'
+                  ? <><MessageSquare size={16} /> Continuar no editor</>
+                  : <><Wand2 size={16} /> Gerar agora</>}
               </Button>
             </DialogFooter>
           </form>
@@ -615,15 +569,20 @@ function PromptShimmer() {
   )
 }
 
-function GeneratingState({ color, label }) {
+function GeneratingState({ color, label, video = false }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
       <div className="relative grid size-16 place-items-center rounded-2xl" style={{ background: `${color}14`, color }}>
         <Loader2 size={30} className="animate-spin" strokeWidth={2.4} />
         <Sparkles size={14} className="absolute right-2 top-2 animate-pulse" />
       </div>
-      <p className="font-display text-lg font-bold text-ink">Gerando {label.toLowerCase()}…</p>
-      <p className="max-w-xs text-sm text-ink-muted">A IA está criando seu criativo. Isso leva alguns instantes.</p>
+      {/* Video opens an interview (no generation yet) — don't say "gerando". */}
+      <p className="font-display text-lg font-bold text-ink">
+        {video ? 'Abrindo o editor…' : `Gerando ${label.toLowerCase()}…`}
+      </p>
+      <p className="max-w-xs text-sm text-ink-muted">
+        {video ? 'Vou fazer algumas perguntas para acertar o vídeo.' : 'A IA está criando seu criativo. Isso leva alguns instantes.'}
+      </p>
     </div>
   )
 }

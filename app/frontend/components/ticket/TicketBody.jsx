@@ -3,7 +3,6 @@ import { Layers, MessageSquare } from 'lucide-react'
 import { useAiFillStatus } from '@/hooks/useRealtime'
 import { useConfirm } from '@/components/ui/confirm-dialog'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import AiSummaryCard from './AiSummaryCard'
 import AiFillDialog from './AiFillDialog'
 import FieldGroup from './FieldGroup'
 import PostingPanel from './PostingPanel'
@@ -59,7 +58,6 @@ export default function TicketBody({
 
   const main = (
     <div className="space-y-5">
-      <AiSummaryCard status={status} summary={ticket.ai_summaries?.[status]} />
       {status === 'scheduled' ? (
         <PostingPanel
           ticket={ticket}

@@ -50,6 +50,14 @@ RSpec.describe Controllers::Credits::Usage, type: :model do
     today = result[:series].last
     expect(today[:credits]).to eq(18)
     expect(today[:generations]).to eq(4)
+
+    # Each bucket breaks the spend/activity down per creative type so the trend
+    # can draw one line per type; the parts always sum back to the bucket total.
+    expect(today[:by_kind]['video']).to eq(credits: 16, generations: 1)
+    expect(today[:by_kind]['image']).to eq(credits: 2, generations: 2)
+    expect(today[:by_kind]['carousel']).to eq(credits: 0, generations: 1)
+    expect(result[:series].sum { |p| p[:by_kind].values.sum { |v| v[:credits] } }).to eq(18)
+    expect(result[:series].sum { |p| p[:by_kind].values.sum { |v| v[:generations] } }).to eq(4)
   end
 
   it 'filters and paginates the recent generations log' do

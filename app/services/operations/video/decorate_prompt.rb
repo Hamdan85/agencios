@@ -26,7 +26,10 @@ module Operations
         'first-frame image IS the previous scene\'s final frame — pick up from it ' \
         'seamlessly and CONTINUE the action forward. Keep the SAME world, subject, ' \
         'framing style, lighting and color grade. Never restart, re-establish or retake ' \
-        'the concept; no cut, no scene reset, no new location.'
+        'the concept; no cut, no scene reset, no new location. If the shot widens or ' \
+        'pulls back to reveal more of the cast/scene, those elements ALREADY EXIST in ' \
+        'the world and must come into frame NATURALLY through the camera move — never ' \
+        'let characters or objects POP/APPEAR out of nowhere.'
 
       # A KEEP-LOOK re-render: the seed is the scene's own current opening frame.
       SELF_CONTINUITY_DIRECTIVE =
@@ -52,22 +55,30 @@ module Operations
       DECORATED_MARKER = 'On-screen text rule:'
 
       def initialize(prompt:, mode:, ctx:, continuation: false, with_audio: nil,
-                     dialogue: nil, on_screen_text: nil, voice_tone: nil,
-                     guardrails: nil, reference_labels: [])
-        @prompt           = clean(prompt)
-        @mode             = mode.to_s
-        @ctx              = ctx
-        @continuation     = continuation
-        @with_audio       = with_audio
-        @dialogue         = dialogue.to_s.strip.presence
-        @on_screen_text   = on_screen_text.to_s.strip.presence
-        @voice_tone       = voice_tone.to_s.strip.presence
-        @guardrails       = guardrails.to_s.strip.presence
-        @reference_labels = Array(reference_labels)
+                     dialogue: nil, on_screen_text: nil, voice_tone: nil, voiced: false,
+                     guardrails: nil, references: [], identity: nil, aspect_ratio: nil)
+        @prompt         = clean(prompt)
+        @mode           = mode.to_s
+        @ctx            = ctx
+        @aspect         = aspect_ratio.to_s.presence || ctx.try(:aspect_ratio).to_s
+        @continuation   = continuation
+        @with_audio     = with_audio
+        @dialogue       = dialogue.to_s.strip.presence
+        @on_screen_text = on_screen_text.to_s.strip.presence
+        @voice_tone     = voice_tone.to_s.strip.presence
+        # True when a FIXED-voice audio track is attached as a reference — the
+        # model must lip-sync to it, not invent its own voice.
+        @voiced         = voiced == true
+        @guardrails     = guardrails.to_s.strip.presence
+        # Typed entries from Operations::Video::References ({ id:, url:, role:,
+        # kind: }) in the SAME order the inputs are attached to the submission.
+        @references     = Array(references)
+        @identity       = identity.is_a?(Hash) ? identity : {}
       end
 
       def call
         lines = [@prompt, '']
+        lines << identity_line
         lines << "Continuity: #{CONTINUATION_DIRECTIVES.fetch(@continuation, CONTINUITY_DIRECTIVE)}" if @continuation
         lines.concat(audio_lines)
         lines << text_line
@@ -99,7 +110,11 @@ module Operations
         return ['Audio: SILENT video — no speech, no voice-over, no on-camera talking.'] if @with_audio == false
 
         lines =
-          if @dialogue
+          if @dialogue && @voiced
+            # A fixed-voice audio track is provided as a reference — lip-sync to it.
+            ["Dialogue (Brazilian Portuguese; NOTHING else may be spoken in this scene): " \
+             "\"#{@dialogue}\". #{VOICE_POLICY}"]
+          elsif @dialogue
             tone = @voice_tone ? " Delivered in a #{@voice_tone} tone." : ''
             ['Dialogue (Brazilian Portuguese — spoken EXACTLY as written; NOTHING else may be ' \
              "spoken in this scene): \"#{@dialogue}\".#{tone}"]
@@ -110,15 +125,53 @@ module Operations
         lines.compact
       end
 
+      # A single FIXED voice is used for the WHOLE video: the exact spoken audio is
+      # provided as an audio reference. The character must lip-sync to THAT audio
+      # and reproduce that exact voice — never invent a different voice/timbre —
+      # so the voice is identical across every scene.
+      VOICE_POLICY =
+        'The spoken line is provided as an AUDIO REFERENCE (a fixed voice). The on-camera ' \
+        'speaker must lip-sync to that exact audio and keep that exact voice and timbre — ' \
+        'do NOT generate a different voice, accent or delivery.'
+
       # The video model NEVER generates music: the platform picks ONE royalty-free
       # track and burns it under the whole video at compose. So each clip must have
       # NO music — only the spoken dialogue and natural/ambient/diegetic sound. This
       # is what keeps the soundtrack continuous (one track, added in post) instead
       # of a different AI-generated track per clip.
+      # Best-practice for the current engines (Veo/Seedance): POSITIVELY name the
+      # only audio wanted (dialogue + natural diegetic sound) AND state the
+      # exclusion as an explicit negative — these models honor negatives like
+      # "(no music)". The soundtrack is a single track added in post; any music
+      # generated in the clip would double up with it.
       MUSIC_POLICY =
-        'Background music: add NONE — no soundtrack, score or background song of any kind. ' \
-        'Only the spoken dialogue and natural/ambient/diegetic sound. The music is added ' \
-        'later in post-production, so any music in the clip would clash — keep it music-free.'
+        'Audio contains ONLY the spoken dialogue and the natural, diegetic sound that physically ' \
+        'belongs to this scene (room tone, footsteps, ambient noise, the sounds of the objects/place ' \
+        'shown). Absolutely NO music of any kind — no soundtrack, score, song, jingle, hum or ' \
+        'background music. (no music, no background music, no musical score, no soundtrack.) ' \
+        'The music is added separately in post-production; any music here would clash with it.'
+
+      # The LOCKED project identity — the character/wardrobe/setting/palette/style
+      # that must stay IDENTICAL across every scene of the video. This is the
+      # director's continuity constraint: models otherwise drift (a new face, a
+      # different outfit) between clips. Reapplied to every scene, not just
+      # continuations.
+      def identity_line
+        bits = []
+        if @identity['has_character'] && @identity['character'].present?
+          bits << "the SAME character throughout (identical face and appearance): #{@identity['character']}"
+        elsif @identity['has_character'] == false
+          bits << 'no recurring character/person — this video has no on-camera protagonist'
+        end
+        bits << "wardrobe/styling: #{@identity['wardrobe']}" if @identity['wardrobe'].present?
+        bits << "setting/world: #{@identity['scenario']}" if @identity['scenario'].present?
+        bits << "color palette: #{@identity['palette']}" if @identity['palette'].present?
+        bits << "visual style: #{@identity['style']}" if @identity['style'].present?
+        return nil if bits.empty?
+
+        "Project identity — keep IDENTICAL in every scene (never drift between " \
+          "scenes): #{bits.join('; ')}."
+      end
 
       # Hard brand "avoid" constraints — the render model invents props, wardrobe
       # and set beyond the visual prompt, so these must reach it as a do-not list
@@ -130,23 +183,41 @@ module Operations
         "Hard brand constraints — the scene must NOT contain any of: #{@guardrails}."
       end
 
-      # Lettering contract: the exact text, or none at all — garbled/invented
-      # typography ruins an otherwise good scene.
+      # Per-format typography: placement + safe area so the text is legible and
+      # not cropped/clipped by the platform UI in each aspect ratio.
+      FONT_GUIDANCE = {
+        '9:16' => 'large, bold, high-contrast sans-serif; centered in the LOWER THIRD, well inside ' \
+                  'safe margins — keep clear of the top ~10% and bottom ~15% (the platform UI zones)',
+        '4:5'  => 'bold, high-contrast sans-serif; centered, generous safe margins',
+        '1:1'  => 'bold, high-contrast sans-serif; centered, generous safe margins',
+        '16:9' => 'clean, bold sans-serif as a lower-third; inside title-safe margins (~5% from every edge)'
+      }.freeze
+
+      # Lettering contract: the exact text, styled/placed for the format, or none
+      # at all — garbled/invented or cropped typography ruins an otherwise good scene.
       def text_line
-        if @on_screen_text
-          'On-screen text (must appear EXACTLY as written, correctly spelled and legible): ' \
-            "\"#{@on_screen_text}\". No other lettering, captions or watermarks anywhere."
-        else
-          'On-screen text: NONE — never invent lettering, captions, subtitles, logos or watermarks.'
-        end
+        return 'On-screen text: NONE — never invent lettering, captions, subtitles, logos or watermarks.' unless @on_screen_text
+
+        font = FONT_GUIDANCE[@aspect] || FONT_GUIDANCE['9:16']
+        'On-screen text (must appear EXACTLY as written, correctly spelled and fully legible): ' \
+          "\"#{@on_screen_text}\". Typography: #{font}. Render it crisp and unobstructed; " \
+          'no other lettering, captions or watermarks anywhere.'
       end
 
-      # Positional manifest so the model knows what EACH attached reference is
-      # for — an unlabeled pile of images reads as "put all of this in the video".
+      # The reference MANIFEST: each attached input anchored by position (the
+      # API carries no names), named by its stable identifier (img_character_v1,
+      # vid_camera_ref_v1, …) and bound to its role's ONE-job contract — an
+      # unlabeled pile of inputs reads as "put all of this in the video". The
+      # scene prompt cites the identifiers; the manifest is what resolves them.
       def references_line
-        return nil if @reference_labels.empty?
+        return nil if @references.empty?
 
-        "Reference images: #{@reference_labels.join('; ')}."
+        lines = References.manifest_lines(@references)
+        "Reference manifest — the attached inputs in order; each has exactly ONE job, " \
+          "never blend jobs across references:\n" \
+          "#{lines.map { |l| "- #{l}" }.join("\n")}\n" \
+          'When this prompt cites an identifier above, follow that reference exactly for ' \
+          'its job and nothing else.'
       end
 
       # Look-and-feel GUIDANCE — never machine-metadata. Brand colors are given

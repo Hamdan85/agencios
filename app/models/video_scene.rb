@@ -18,6 +18,10 @@ class VideoScene < ApplicationRecord
   # The scene's final frame, extracted after render. Seeds the NEXT scene's first
   # frame so consecutive scenes flow without a jump-cut (visual continuity).
   has_one_attached :last_frame
+  # The scene's spoken line synthesized in the video's FIXED voice (Cartesia).
+  # Fed to the render as an audio reference (lip-sync) and/or dubbed in post, so
+  # the voice is identical across every scene. Cached via metadata['voice_fingerprint'].
+  has_one_attached :voice_clip
 
   enum :render_state, { fresh: 0, rendering: 1, ready: 2, failed: 3, stale: 4 }, prefix: :state
 
@@ -27,16 +31,20 @@ class VideoScene < ApplicationRecord
 
   def reference_urls = Array(reference_image_urls)
 
-  # Each reference image paired with the ROLE captured at plan time
-  # ('product' | 'logo' | 'avatar'), so the render manifest can label images by
-  # what they ARE without re-deriving the role by URL equality (which breaks when
-  # a brand asset or the app host changes between plan and render). Falls back to
-  # a mode-based guess for scenes created before roles were persisted.
+  # Each reference paired with the ROLE captured at plan time and a STABLE
+  # identifier (img_character_v1, vid_camera_ref_v1, …) — the same id the render
+  # manifest lists and scene prompts cite (Operations::Video::References). Roles
+  # are persisted so the manifest never re-derives them by URL equality (which
+  # breaks when a brand asset or the app host changes between plan and render).
+  # Preserves the STORED order (it is the submitted input order); falls back to
+  # a mode-based role guess for scenes created before roles were persisted.
   def labeled_references
     roles = Array(metadata['reference_roles'])
-    reference_urls.each_with_index.map do |url, i|
-      { url: url, role: roles[i].presence || default_reference_role(i) }
+    entries = reference_urls.each_with_index.map do |url, i|
+      role = roles[i].presence || default_reference_role(i)
+      { url: url, role: role, kind: Operations::Video::References.kind_for(url) }
     end
+    Operations::Video::References.number(entries)
   end
 
   # A scene the compose step can use: rendered and with an attached clip.
@@ -48,6 +56,16 @@ class VideoScene < ApplicationRecord
     return nil unless last_frame.attached?
 
     Rails.application.routes.url_helpers.rails_blob_url(last_frame, host: SystemConfig.app_host)
+  rescue StandardError
+    nil
+  end
+
+  # Publicly-fetchable URL of the synthesized voice clip (for the render's audio
+  # reference), or nil when not synthesized.
+  def voice_clip_url
+    return nil unless voice_clip.attached?
+
+    Rails.application.routes.url_helpers.rails_blob_url(voice_clip, host: SystemConfig.app_host)
   rescue StandardError
     nil
   end

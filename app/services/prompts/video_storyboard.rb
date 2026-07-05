@@ -12,9 +12,9 @@ module Prompts
   # System/tool text is ENGLISH (code); only the user-facing outputs (scene
   # captions) are produced in PT-BR, per the language rules.
   #
-  # Context keys: mode ('avatar' | 'product'), brief, script, total_duration,
-  # aspect_ratio, max_scenes (int), has_references (bool), has_logo (bool),
-  # has_avatar (bool).
+  # Context keys: mode (VideoConfig::MODES), brief, script, total_duration,
+  # aspect_ratio, max_scenes (int), has_references (bool), media_references
+  # (typed entries from Operations::Video::References — identifier + role).
   class VideoStoryboard < Base
     STORYBOARD_TOOL = 'storyboard'
     MIN_SCENE_SECONDS = 4  # mirrors Operations::Video::PlanScenes
@@ -33,6 +33,28 @@ module Prompts
         #{identity_assets_block}
 
         Rules:
+        - LOCK THE PROJECT IDENTITY FIRST (fill `identity`). You are the director:
+          decide the SCOPE — does the video have a recurring on-camera CHARACTER
+          (a person/mascot/spokesperson, has_character = true) or not (product,
+          scenery, abstract, has_character = false)? Then fix the consistent
+          identity every scene must share: character (same face/appearance, only
+          if has_character), wardrobe, setting/world, color palette and visual
+          style. These are LOCKED — every scene reuses them so the video reads as
+          one piece; do not drift between scenes. WRITE the identity descriptions
+          (character, wardrobe, setting, palette, style) in BRAZILIAN PORTUGUESE —
+          they are shown to the user in the editor.
+        - CONSISTENCY ANCHORS (optional, you decide): when a recurring CHARACTER or
+          a distinctive SCENARIO must stay identical across scenes AND the user gave
+          NO photo of it, request a generated reference image in `generated_references`
+          — each entry { role: "character" | "scene", prompt: "<a detailed depiction
+          of ONE subject on a neutral background>" }. Generated ONCE and fed to EVERY
+          scene, locking the look. If the video features MORE THAN ONE recurring
+          person/character (e.g. two people talking, a duo, a host + guest, several
+          avatars), request ONE character entry PER person — each with its own prompt
+          — so every one gets its own locked reference, never a single shared one.
+          Each costs an image credit, so request them ONLY when they materially help
+          consistency (recurring characters/presenters, or a signature set), one per
+          DISTINCT subject; skip generic/one-off visuals or when a good photo exists.
         - #{scene_budget_rule}
         - GET THE MESSAGE RIGHT, grounded ONLY in the brief and positioning above
           (never in outside assumptions). Say truthfully what the brand DOES for
@@ -59,9 +81,7 @@ module Prompts
         - Keep ONE cohesive world across the whole video: same subjects, brand
           look, lighting family and color grade — cuts included. It must read as
           one piece, not random clips.
-        - duration_seconds (optional, #{MIN_SCENE_SECONDS}–#{SCENE_UNIT_SECONDS}s
-          per scene): pace the edit — short beats for quick cuts, longer for a
-          held moment. Omit to use an even split.
+        - #{duration_rule}
         - The brand block and positioning above are BACKGROUND CONTEXT: they
           guide tone, styling, casting and message. Never paste them into a
           scene as spoken lines, captions or on-screen text.
@@ -90,41 +110,98 @@ module Prompts
         'This video is SILENT: leave every dialogue field EMPTY — no scene may ' \
           'contain speech or a voice-over.'
       else
-        'Sound is ON: put each scene\'s EXACT spoken line(s) in its dialogue ' \
-          'field (Brazilian Portuguese, final wording — it is spoken verbatim). ' \
-          'A scene with an empty dialogue field renders with ambient sound only. ' \
-          'Never write spoken words inside the visual prompt. Scenes carry NO ' \
-          'background music — a single royalty-free track is searched from an open ' \
-          'base and burned in post. In `music`, write the search `query` (English ' \
-          'mood + genre) and the mix (`volume`, `fade_in`, `fade_out`, `duck`) that ' \
-          'fit the video; omit `music` entirely for no music.'
+        ['Sound is ON: put each scene\'s EXACT spoken line(s) in its dialogue ' \
+         'field (Brazilian Portuguese, final wording — it is spoken verbatim). ' \
+         'A scene with an empty dialogue field renders with ambient sound only. ' \
+         'Never write spoken words inside the visual prompt. Scenes carry NO ' \
+         'background music — a single royalty-free track is searched from an open ' \
+         'base and burned in post. In `music`, write the search `query` (English ' \
+         'mood + genre) and the mix (`volume`, `fade_in`, `fade_out`, `duck`) that ' \
+         'fit the video; omit `music` entirely for no music.', voice_rule].compact.join(' ')
       end
+    end
+
+    # ONE fixed voice for the WHOLE video (a real TTS speaker synthesized per
+    # scene) so the voice never drifts between clips. Offered from the live voice
+    # library; picked to MATCH the character (gender/persona/energy). Empty ⇒ the
+    # model's native audio is used as-is.
+    def voice_rule
+      opts = Array(context[:voices]).first(14).filter_map do |v|
+        name = v.is_a?(Hash) ? v[:name].to_s.strip : v.to_s.strip
+        next if name.blank?
+
+        desc = v.is_a?(Hash) ? [v[:gender], v[:country], v[:description]].map(&:to_s).reject(&:blank?).join(', ') : ''
+        desc.present? ? "#{name} (#{desc})" : name
+      end
+      return nil if opts.empty?
+
+      'The spoken voice is ONE fixed voice for the whole video (same speaker in ' \
+        'every scene). In `voice`, pick exactly ONE NAME that best fits the ' \
+        "CHARACTER (gender/persona/energy) from: #{opts.join('; ')}. Omit `voice` to use the default."
+    end
+
+    # The engine renders FIXED-length clips: each scene's duration must be ONE of
+    # the supported lengths, never an arbitrary number. State the options.
+    def clip_seconds
+      opts = Array(context[:clip_seconds]).map(&:to_i).reject(&:zero?).uniq.sort
+      opts.presence || [SCENE_UNIT_SECONDS]
+    end
+
+    def duration_rule
+      opts = clip_seconds
+      "duration_seconds: the engine renders FIXED-length clips, so EACH scene's duration MUST be " \
+        "exactly one of these supported lengths: #{opts.join(', ')}s. YOU estimate each scene's " \
+        'length — scenes can (and should) have DIFFERENT lengths, chosen to fit their beat (shorter ' \
+        'for a quick cut, longer for a held moment). The sum of all durations must be about the total.'
     end
 
     # The duration → scene-count contract, stated as an unmissable rule.
     def scene_budget_rule
+      total = context[:total_duration].to_i
       max = context[:max_scenes].to_i.clamp(1, 12)
-      base = "The video is ~#{context[:total_duration]}s TOTAL at #{context[:aspect_ratio]}; " \
-             'each scene renders as ONE continuous shot of about 8 seconds.'
+      base = "The video is ~#{total}s TOTAL at #{context[:aspect_ratio]}. The SUM of your scenes' " \
+             "duration_seconds must add up to ~#{total}s and NEVER exceed it — each scene is one " \
+             'rendered clip.'
       if max == 1
-        "#{base} This video fits a SINGLE scene — return EXACTLY ONE scene."
+        "#{base} At this length it is a SINGLE clip — return EXACTLY ONE scene. If you want an " \
+          'internal cut/beat change, describe it INSIDE that one scene\'s prompt (a mid-shot cut), ' \
+          'do NOT add a second scene.'
       else
-        "#{base} HARD LIMIT: at most #{max} scenes."
+        "#{base} Use the FEWEST scenes that tell it well, at most #{max}. Give each scene the length " \
+          "that fits its beat so the durations add up to ~#{total}s (e.g. #{budget_example(total)})."
       end
     end
 
-    # What visual-identity assets ride along to the RENDERER as reference images,
-    # so the storyboard can write scenes knowing they exist.
-    def identity_assets_block
-      bits = []
-      if context[:has_logo]
-        bits << '- the brand LOGO (context only — the video does not need to show any logo; ' \
-                'if branding naturally appears, it must be exactly this one)'
+    # A concrete "durations that sum to the total" example, from the supported
+    # lengths — so the model sees the shape it must match.
+    def budget_example(total)
+      opts = clip_seconds
+      combo = []
+      remaining = total
+      while remaining >= opts.min && combo.size < 6
+        pick = opts.select { |o| o <= remaining }.max || opts.min
+        combo << pick
+        remaining -= pick
       end
-      bits << '- the creator AVATAR (the on-camera person must faithfully match this face)' if context[:has_avatar]
-      return '' if bits.empty?
+      combo = [opts.min] if combo.empty?
+      "#{combo.join('s + ')}s = #{combo.sum}s"
+    end
 
-      "Visual references the renderer receives with every scene:\n#{bits.join("\n")}"
+    # The TYPED media references the renderer receives with every scene — each
+    # with its stable identifier (img_product_v1, vid_camera_ref_v1, …) and its
+    # ONE job. The storyboard writes scenes knowing exactly what exists, and
+    # cites the identifiers in scene prompts (Operations::Video::References is
+    # the single source of these contracts).
+    def identity_assets_block
+      entries = Array(context[:media_references])
+      return '' if entries.empty?
+
+      lines = Operations::Video::References.manifest_lines(entries)
+      "Media references the renderer receives with every scene — each has ONE job:\n" \
+        "#{lines.map { |l| "- #{l}" }.join("\n")}\n" \
+        'When a scene should draw on a reference, cite it by its identifier in the scene ' \
+        "prompt (e.g. \"#{citation_example(entries.first)}\") — the renderer maps " \
+        'identifiers to the attached inputs. Never invent identifiers that are not listed.'
     end
 
     # Everything the storyboard is built from — the full planning direction, so
@@ -142,7 +219,9 @@ module Prompts
       if context[:positioning_brief].present?
         parts << "Client positioning (shapes the message and tone — do NOT recite verbatim):\n#{context[:positioning_brief]}"
       end
-      parts << 'Product reference photos are attached — keep the product faithful.' if context[:has_references]
+      # Attachments are described precisely by the typed manifest (identity_assets_block,
+      # each with its role + contract) — no generic "product photos" line here, which
+      # would contradict a style/camera/motion reference's "never copy its subject".
       parts.join("\n")
     end
 
@@ -156,6 +235,46 @@ module Prompts
         'input_schema' => {
           'type' => 'object', 'required' => %w[scenes],
           'properties' => {
+            'mode' => {
+              'type' => 'string', 'enum' => VideoConfig::MODES,
+              'description' => 'The video KIND — keep the user\'s pick or switch to a better fit ' \
+                               '(you may use modes the UI doesn\'t offer). Respect the assets the user gave.'
+            },
+            'identity' => {
+              'type' => 'object',
+              'description' => 'The LOCKED project identity — the consistent look every scene shares ' \
+                               '(the director\'s decision). Descriptions in BRAZILIAN PORTUGUESE (they ' \
+                               'are shown to the user in the editor).',
+              'properties' => {
+                'has_character' => { 'type' => 'boolean', 'description' => 'true = a recurring on-camera person/mascot/spokesperson; false = product/scenery/abstract (no character).' },
+                'character' => { 'type' => 'string', 'description' => 'The character (same face/appearance in every scene) — only when has_character.' },
+                'wardrobe' => { 'type' => 'string', 'description' => 'Consistent clothing/styling.' },
+                'scenario' => { 'type' => 'string', 'description' => 'The consistent setting/world.' },
+                'palette' => { 'type' => 'string', 'description' => 'Color identity (words, not hex).' },
+                'style' => { 'type' => 'string', 'description' => 'Overall visual style/grade (e.g. "warm golden-hour realistic UGC").' }
+              }
+            },
+            'voice' => {
+              'type' => 'string',
+              'description' => 'The ONE fixed voice for the whole video — pick a label from the ' \
+                               'voice options in the rules (same speaker in every scene). Omit for the default.'
+            },
+            'generated_references' => {
+              'type' => 'array',
+              'description' => 'OPTIONAL: reference images to GENERATE (via an image model) to lock ' \
+                               'recurring characters/scenario across scenes when the user gave no photo. ' \
+                               'Request ONE "character" entry PER recurring person/character (several people ' \
+                               '=> several entries), plus optionally one "scene". Each is generated once and ' \
+                               'used as a reference in every scene. Costs an image credit each — only when it ' \
+                               'materially helps consistency. Max 4.',
+              'items' => {
+                'type' => 'object', 'required' => %w[role prompt],
+                'properties' => {
+                  'role' => { 'type' => 'string', 'enum' => %w[character scene], 'description' => 'character = the recurring subject; scene = the signature setting.' },
+                  'prompt' => { 'type' => 'string', 'description' => 'A detailed depiction of the subject on a neutral background (English), matching the locked identity.' }
+                }
+              }
+            },
             'music' => {
               'type' => 'object',
               'description' => 'The single royalty-free background track added in post (scenes carry ' \
@@ -179,7 +298,7 @@ module Prompts
                   'dialogue' => { 'type' => 'string', 'description' => 'EXACT spoken line(s) of the scene, Brazilian Portuguese, final wording — spoken verbatim. Empty/omitted = no speech in the scene.' },
                   'on_screen_text' => { 'type' => 'string', 'description' => 'EXACT on-screen text, Brazilian Portuguese, correctly spelled. Empty/omitted = a text-free scene (the default).' },
                   'caption' => { 'type' => 'string', 'description' => 'Short scene summary in Brazilian Portuguese (for the editor).' },
-                  'duration_seconds' => { 'type' => 'integer', 'description' => "Optional pacing for this shot, #{MIN_SCENE_SECONDS}–#{SCENE_UNIT_SECONDS}s. Omit for an even split." },
+                  'duration_seconds' => { 'type' => 'integer', 'description' => 'Optional pacing for this shot — MUST be one of the engine\'s supported clip lengths listed in the rules (fixed-length clips). Omit for an even split.' },
                   'continues_previous' => { 'type' => 'boolean', 'description' => 'true (default) = continues the previous shot seamlessly from its final frame; false = a CUT (new shot/scenario, same characters and world, does NOT start from the previous frame). Ignored for the first scene.' }
                 }
               }
@@ -191,14 +310,33 @@ module Prompts
 
     private
 
+    # A citation example matched to the FIRST reference's actual role, so the
+    # hint never says "the product from img_avatar_v1". Falls back to a neutral
+    # phrasing for roles without a natural noun.
+    CITATION_PHRASES = {
+      'character' => 'the character from', 'avatar' => 'the person from',
+      'product' => 'the product from', 'scene' => 'the setting from',
+      'style' => 'match the style of', 'camera' => 'use the camera move of',
+      'motion' => 'match the motion of', 'logo' => 'the brand mark from'
+    }.freeze
+
+    def citation_example(entry)
+      phrase = CITATION_PHRASES.fetch(entry[:role], 'draw on')
+      "#{phrase} #{entry[:id]}"
+    end
+
+    # The video MODE. The user picked one, but YOU (the director) may keep it or
+    # switch to a better fit — including modes the UI never offers. Respect what
+    # the user actually gave: if there are product photos, stay PRODUCT; if they
+    # asked for a person talking, stay AVATAR.
     def mode_guidance
-      if context[:mode].to_s == 'product'
-        'PRODUCT mode: the product is the hero. Show it in angles and motion that sell, ' \
-          'always faithful to the reference photos (shape, colors, label).'
-      else
-        'AVATAR mode: a person talking to camera (authentic UGC, selfie framing, natural light). ' \
-          'Distribute the script naturally across the scenes.'
+      current = context[:mode].to_s
+      lines = VideoConfig::MODES.map do |m|
+        mark = m == current ? ' (the user picked this)' : ''
+        "#{m} — #{VideoConfig::MODE_GUIDANCE[m]}#{mark}"
       end
+      "MODE: set `mode` to the best fit for the content (default: keep the user's). Options:\n" \
+        "#{lines.join("\n")}"
     end
   end
 end

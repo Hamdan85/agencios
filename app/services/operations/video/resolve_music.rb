@@ -6,10 +6,11 @@ module Operations
     # parameters it chose) into the concrete generation-params the compose step
     # burns in: the resolved track URL + the mix knobs (volume, fades, duck).
     #
-    # Source: Jamendo (an open royalty-free base with a real search API); falls
-    # back to the admin catalog (VideoConfig.music_tracks) when Jamendo is not
-    # configured or returns nothing, else no music. The orchestrator OWNS every
-    # ffmpeg parameter, so compose is deterministic.
+    # Source: the active music provider (Vendors::Music — Jamendo by default,
+    # Epidemic Sound optional), falling back to the admin catalog
+    # (VideoConfig.music_tracks) when the provider isn't configured or returns
+    # nothing, else no music. The orchestrator OWNS every ffmpeg parameter, so
+    # compose is deterministic.
     #
     # spec keys (all optional): query, mood, volume, fade_in, fade_out, duck.
     # Returns the params hash to MERGE onto the generation (empty ⇒ no music).
@@ -46,11 +47,11 @@ module Operations
 
       private
 
-      # Jamendo first (the open base the orchestrator searched), then the manual
-      # catalog by mood, else nil (no music).
+      # The active provider first (the catalog the orchestrator searched), then
+      # the manual catalog by mood, else nil (no music).
       def find_track(query, mood)
         term = query.presence || mood
-        track = Vendors::Jamendo::Actions::SearchTracks.call(query: term, tags: mood)
+        track = Vendors::Music.search(query: term, tags: mood)
         return track if track
 
         mood.present? ? VideoConfig.instance.music_track_for(mood) : nil

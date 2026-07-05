@@ -2,24 +2,15 @@ import { lazy, Suspense, useState, useMemo, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
   Sparkles, GalleryHorizontalEnd, Video, Image as ImageIcon,
-  Loader2, Images, Pencil, Trash2, Check, X, Film,
+  Loader2, Images, Trash2,
 } from 'lucide-react'
-import { useStudio, useGenerate, useWorkspaceCreatives, useCreativeMutations } from '@/hooks/useData'
+import { useStudio, useGenerate, useStartVideo, useWorkspaceCreatives, useCreativeMutations } from '@/hooks/useData'
 import { useCurrentUser } from '@/hooks/useAuth'
 import { useGenerationsChannel } from '@/hooks/useRealtime'
 import { PageHeader } from '@/components/ui/page-header'
 import { PageLoader, EmptyState, Spinner } from '@/components/ui/feedback'
 import { Badge } from '@/components/ui/badge'
 import { Page } from '@/components/ui/page'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose,
-} from '@/components/ui/dialog'
-import {
-  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
-} from '@/components/ui/select'
 import { FilterBar } from '@/components/ui/filter-bar'
 import { CREATIVE_TYPE_META, creativeMeta } from '@/lib/constants'
 import { GeneratorCard } from '@/components/studio/GeneratorCard'
@@ -60,6 +51,7 @@ export default function StudioIndex() {
   const deepId = params.get('creative')
   const [editorCreative, setEditorCreative] = useState(deepId ? { id: Number(deepId) } : null)
   const generate = useGenerate()
+  const startVideo = useStartVideo()
 
   const videoEditor = (
     <VideoScenesDialog
@@ -108,6 +100,7 @@ export default function StudioIndex() {
         open={!!dialogKind}
         onOpenChange={(o) => !o && setDialogKind(null)}
         generate={generate}
+        startVideo={startVideo}
         clients={clients}
         onGenerated={(gen) => {
           if (gen?.kind === 'video' && gen?.creative_id) setEditorCreative({ id: gen.creative_id })
@@ -127,8 +120,8 @@ function CreativesGallery() {
   const [clientFilter, setClientFilter] = useState('')
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerItems, setViewerItems] = useState([])
-  const [editCreative, setEditCreative] = useState(null)
-  const [scenesFor, setScenesFor] = useState(null)
+  // A generated video opens the EDITOR on click; everything else opens the viewer.
+  const [editorCreative, setEditorCreative] = useState(null)
 
   const filters = useMemo(() => ({
     q: q || undefined,
@@ -195,10 +188,8 @@ function CreativesGallery() {
             <GalleryCard
               key={c.id}
               creative={c}
-              onClick={() => openViewer(c)}
-              onEdit={() => setEditCreative(c)}
+              onClick={() => (isSceneEditable(c) ? setEditorCreative(c) : openViewer(c))}
               onDelete={() => mutations.destroy.mutate(c.id)}
-              onEditScenes={isSceneEditable(c) ? () => setScenesFor(c) : undefined}
             />
           ))}
         </div>
@@ -214,26 +205,11 @@ function CreativesGallery() {
         />
       </Suspense>
 
-      {/* Edit dialog */}
-      {editCreative && (
-        <EditCreativeDialog
-          creative={editCreative}
-          clients={clients}
-          onClose={() => setEditCreative(null)}
-          onSave={(payload) => {
-            mutations.update.mutate({ id: editCreative.id, ...payload }, {
-              onSuccess: () => setEditCreative(null),
-            })
-          }}
-          saving={mutations.update.isPending}
-        />
-      )}
-
-      {/* Per-scene editor for a generated video */}
+      {/* Video editor — opened by clicking a generated video card */}
       <VideoScenesDialog
-        creative={scenesFor}
-        open={!!scenesFor}
-        onOpenChange={(v) => { if (!v) setScenesFor(null) }}
+        creative={editorCreative}
+        open={!!editorCreative}
+        onOpenChange={(v) => { if (!v) setEditorCreative(null) }}
       />
     </div>
   )
@@ -267,7 +243,7 @@ function creativeToAttachments(creative) {
 }
 
 // ── Gallery card ───────────────────────────────────────────────────
-function GalleryCard({ creative, onClick, onEdit, onDelete, onEditScenes }) {
+function GalleryCard({ creative, onClick, onDelete }) {
   const m = creativeMeta(creative.creative_type)
   const st = CREATIVE_STATUS_META[creative.status]
   // While a video is still generating, the first rendered scene stands in as the
@@ -321,29 +297,7 @@ function GalleryCard({ creative, onClick, onEdit, onDelete, onEditScenes }) {
         )}
       </div>
 
-      {/* Primary action for a generated video: edit its scenes. Always visible
-          (not hover-gated, and available WHILE generating — the editor shows the
-          live progress) — it's the whole point of a scene-based video. */}
-      {onEditScenes && (
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onEditScenes() }}
-          className="absolute bottom-13 left-2 inline-flex items-center gap-1 rounded-full bg-brand px-2.5 py-1 text-[11px] font-bold text-white shadow-sm transition hover:bg-brand/90"
-          title="Editar cenas"
-        >
-          <Film size={12} /> Cenas
-        </button>
-      )}
-
       <div className="absolute bottom-13 right-2 flex gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onEdit() }}
-          className="flex size-7 items-center justify-center rounded-lg bg-surface/90 shadow backdrop-blur hover:bg-surface"
-          title="Editar"
-        >
-          <Pencil size={13} className="text-ink-muted" />
-        </button>
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onDelete() }}
@@ -357,65 +311,3 @@ function GalleryCard({ creative, onClick, onEdit, onDelete, onEditScenes }) {
   )
 }
 
-// ── Edit creative dialog ───────────────────────────────────────────
-function EditCreativeDialog({ creative, clients, onClose, onSave, saving }) {
-  const m = creativeMeta(creative.creative_type)
-  const [name, setName] = useState(creative.name || '')
-  const [clientId, setClientId] = useState(String(creative.client_id || ''))
-
-  const submit = (e) => {
-    e.preventDefault()
-    onSave({ name: name.trim() || null, client_id: clientId || null })
-  }
-
-  return (
-    <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-xl" style={{ background: `${m.color}18`, color: m.color }}>
-              <m.icon size={16} strokeWidth={2.2} />
-            </div>
-            Editar criativo
-          </DialogTitle>
-        </DialogHeader>
-        <form onSubmit={submit} className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="cr-name">Nome</Label>
-            <Input
-              id="cr-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={m.label}
-            />
-          </div>
-          {clients.length > 0 && (
-            <div className="space-y-1.5">
-              <Label>Cliente</Label>
-              <Select value={clientId} onValueChange={setClientId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Nenhum cliente" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Nenhum cliente</SelectItem>
-                  {clients.map((c) => (
-                    <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="ghost" size="sm"><X size={15} /> Cancelar</Button>
-            </DialogClose>
-            <Button type="submit" size="sm" disabled={saving}>
-              {saving ? <Spinner size={14} className="border-white/30 border-t-white" /> : <Check size={15} />}
-              Salvar
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  )
-}

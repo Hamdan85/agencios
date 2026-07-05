@@ -68,8 +68,8 @@ RSpec.describe Operations::Video::UpgradeQuality do
   end
 
   it 'uses the FINAL model on the upgraded render' do
-    VideoConfig.first_or_create!.update!(mode_models: { 'avatar' => 'google/veo-3.1' },
-                                         draft_models: { 'avatar' => 'google/veo-3.1-fast' })
+    VideoConfig.first_or_create!.update!(default_model: 'google/veo-3.1',
+                                         draft_model: 'google/veo-3.1-fast')
 
     described_class.call(creative: creative)
 

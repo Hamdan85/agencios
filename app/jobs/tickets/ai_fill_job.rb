@@ -23,6 +23,11 @@ module Tickets
       result = run(ticket, instruction)
 
       Broadcaster.ticket(ticket, 'ai_fill_done', status: status, filled: Array(result.is_a?(Hash) ? result[:filled] : nil))
+
+      # The manual per-stage refill is a real content change — cascade it into the
+      # later stages too. Skipped on the read-only summary stages (nothing upstream
+      # to propagate from there).
+      Tickets::CascadeFieldsJob.perform_later(ticket.id, status.to_s) unless %w[published done].include?(status.to_s)
     rescue StandardError => e
       Rails.logger.warn("[Tickets::AiFillJob] ticket ##{ticket_id}: #{e.class}: #{e.message}")
       Broadcaster.ticket(ticket, 'ai_fill_failed', status: ticket&.status) if ticket

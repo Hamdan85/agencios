@@ -32,9 +32,9 @@ RSpec.describe Operations::Video::ChangeMusic do
   before do
     Current.workspace = workspace
     Current.actor = user
-    # Jamendo (the open base) returns a track for any search.
-    allow(Vendors::Jamendo::Actions::SearchTracks).to receive(:call).and_return(
-      { url: 'https://jamendo/upbeat.mp3', title: 'Upbeat One', attribution: 'Upbeat One — Artist' }
+    # The active music provider returns a track for any search.
+    allow(Vendors::Music).to receive(:search).and_return(
+      { url: 'https://prov/upbeat.mp3', title: 'Upbeat One', attribution: 'Upbeat One — Artist' }
     )
     allow(Operations::Video::Compose).to receive(:call)
     generation && scene # force creation now that Current is set
@@ -47,7 +47,7 @@ RSpec.describe Operations::Video::ChangeMusic do
       described_class.call(creative: creative, mood: 'upbeat')
     end.not_to change { workspace.credit_transactions.count }
 
-    expect(generation.reload.params).to include('music_mood' => 'upbeat', 'music_url' => 'https://jamendo/upbeat.mp3')
+    expect(generation.reload.params).to include('music_mood' => 'upbeat', 'music_url' => 'https://prov/upbeat.mp3')
     expect(Operations::Video::Compose).to have_received(:call).with(creative: creative, remix: true)
   end
 

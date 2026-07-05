@@ -29,11 +29,18 @@ class Creative < ApplicationRecord
   def chat_messages = Array((metadata || {})[CHAT_KEY])
 
   # `kind` tags a non-conversational message the UI renders specially
-  # ('alert' = a render problem explained; 'credit' = a completed edit's cost).
-  # Plain replies omit it.
-  def push_chat_message(role:, content:, kind: nil)
+  # ('alert' = a render problem explained). `credits` stamps how many credits the
+  # turn that produced this message SPENT, so the UI shows a "−N créditos" badge
+  # under that exact bubble (0/absent = a free turn). `images` = reference image/
+  # video URLs the user attached with the message — kept in the transcript so the
+  # UI can show a clickable thumbnail and the agent can re-use them as context.
+  # Plain replies omit all three.
+  def push_chat_message(role:, content:, kind: nil, credits: nil, images: nil)
     entry = { 'role' => role.to_s, 'content' => content.to_s }
     entry['kind'] = kind.to_s if kind.present?
+    entry['credits'] = credits.to_i if credits.to_i.positive?
+    imgs = Array(images).map { |u| u.to_s.strip }.reject(&:blank?)
+    entry['images'] = imgs if imgs.any?
     self.metadata = (metadata || {}).merge(CHAT_KEY => (chat_messages + [entry]).last(CHAT_WINDOW))
     entry
   end

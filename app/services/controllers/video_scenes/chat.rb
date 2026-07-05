@@ -17,7 +17,8 @@ module Controllers
         creative = workspace.creatives.find(@params[:creative_id])
 
         result = Operations::Video::Chat::ResolveTurn.call(
-          creative: creative, message: message, reference_image_urls: reference_image_urls
+          creative: creative, message: message, reference_image_urls: reference_image_urls,
+          annotations: annotations
         )
         creative.reload
 
@@ -43,10 +44,16 @@ module Controllers
         raw.to_s
       end
 
-      # Reference images the user attached this turn (already-uploaded public
-      # URLs from the reference-images endpoint).
+      # Media references the user attached this turn (already-uploaded public
+      # URLs from the uploads endpoint).
       def reference_image_urls
         Array(@params[:reference_image_urls]).map { |u| u.to_s.strip }.reject(&:blank?)
+      end
+
+      # Structured per-scene notes from the UI balloons:
+      # [{ scene: <1-based number>, note: <text> }] — validated in ResolveTurn.
+      def annotations
+        Array(@params[:annotations])
       end
     end
   end

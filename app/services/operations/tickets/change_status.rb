@@ -80,7 +80,12 @@ module Operations
         )
       end
 
+      # The contextual case-study summary is now surfaced ONLY on the "Concluído"
+      # screen (the per-stage "Resumo IA" card was removed), so generate it just
+      # when the ticket completes — not on every transition.
       def enqueue_summary
+        return unless @to_status == 'done'
+
         SummarizeTicketJob.perform_later(@ticket.id, @to_status)
       rescue StandardError => e
         Rails.logger.warn("[ChangeStatus] could not enqueue summary: #{e.message}")

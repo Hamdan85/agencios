@@ -194,6 +194,22 @@ export function useGenerate() {
   })
 }
 
+// Video opens as a chat INTERVIEW: no immediate generation — the editor's chat
+// gathers context and decides when to build. Returns { creative } to open the
+// editor on.
+export function useStartVideo() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ params }) => studioApi.startVideo(params),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.studio() })
+      qc.invalidateQueries({ queryKey: ['creatives'] })
+      analytics.track(EVENTS.CREATIVE_GENERATED, { kind: 'video', source: 'studio', phase: 'interview' })
+    },
+    onError: onErr('Não foi possível abrir o editor de vídeo.'),
+  })
+}
+
 // ── Video scenes (per-scene edit / re-render) ─────────────────
 // Returns the full payload ({ scenes, messages }) so the editor can render the
 // timeline AND the chat history from one query.
@@ -259,16 +275,20 @@ export function useVideoChat(creativeId) {
   const qc = useQueryClient()
   return useMutation({
     mutationKey: ['video-chat', creativeId],
-    mutationFn: ({ message, referenceUrls = [] }) =>
-      videoScenesApi.chat(creativeId, { message, reference_image_urls: referenceUrls }),
+    mutationFn: ({ message, referenceUrls = [], annotations = [] }) =>
+      videoScenesApi.chat(creativeId, { message, reference_image_urls: referenceUrls, annotations }),
     // Optimistic: the user's message lands in the transcript IMMEDIATELY (the
     // typing dots then show while the agent thinks); the server response later
     // replaces the whole history, so no reconciliation is needed on success.
-    onMutate: ({ message }) => {
+    // Pinned scene annotations are rendered the same way the server stores them.
+    onMutate: ({ message, referenceUrls = [], annotations = [] }) => {
       const prev = qc.getQueryData(['video-scenes', creativeId])
+      const notes = annotations.map((a) => `- Cena ${a.scene}: ${a.note}`).join('\n')
+      const content = annotations.length ? [message, `Notas por cena:\n${notes}`].filter(Boolean).join('\n\n') : message
       qc.setQueryData(['video-scenes', creativeId], (cur) => ({
         ...(cur || {}),
-        messages: [...(cur?.messages || []), { role: 'user', content: message }],
+        // Show the attached references as thumbnails right away (server echoes them back).
+        messages: [...(cur?.messages || []), { role: 'user', content, images: referenceUrls }],
       }))
       return { prev }
     },
@@ -285,11 +305,76 @@ export function useVideoChat(creativeId) {
       }))
       qc.invalidateQueries({ queryKey: ['creatives'] })
       qc.invalidateQueries({ queryKey: ['tickets'] })
-      // A re-render spent credits — refresh the wallet balance + the ledger now
-      // (the debit already happened). The COST is shown to the user only when the
-      // render finishes, as a light pill — handled in the dialog, not here.
+      // A re-render spent credits — refresh the wallet counter + the ledger now
+      // (the debit already happened). The COST is shown per-bubble (the server
+      // stamps `credits` on the assistant message), so nothing else is needed here.
       if (data.credits_spent > 0) qc.invalidateQueries({ queryKey: ['credits'] })
     },
+  })
+}
+
+// ── Video assets tab (characters / scenarios / music) ─────────
+// The video's created assets, listed for the Assets tab. Only fetched when the
+// tab is open (enabled), and reused across regenerations.
+export function useVideoAssets(creativeId, { enabled = true } = {}) {
+  return useQuery({
+    queryKey: ['video-assets', creativeId],
+    queryFn: () => videoScenesApi.assets(creativeId),
+    enabled: enabled && !!creativeId,
+  })
+}
+
+// Regenerate ONE element from a prompt. Characters/scenarios spend an image credit
+// (and don't re-render the video — the new image is used on the next render);
+// music is a free re-search + re-mix. The response carries the fresh element list.
+export function useRegenerateAsset(creativeId) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ type, prompt, ref_url }) => videoScenesApi.regenerateAsset(creativeId, { type, prompt, ref_url }),
+    onSuccess: (data, variables) => {
+      if (data.assets) qc.setQueryData(['video-assets', creativeId], { assets: data.assets })
+      // A music change re-mixes the composed file → refresh the scenes/preview.
+      if (variables?.type === 'music') qc.invalidateQueries({ queryKey: ['video-scenes', creativeId] })
+      else qc.invalidateQueries({ queryKey: ['credits'] }) // an image generation was charged
+      toast.success(variables?.type === 'music' ? 'Trilha atualizada ✨' : 'Elemento regenerado ✨')
+    },
+    onError: onErr('Não foi possível regenerar o elemento.'),
+  })
+}
+
+// Reusable library elements to add to a video (brand assets + other videos' refs).
+export function useAssetLibrary(creativeId, { enabled = true } = {}) {
+  return useQuery({
+    queryKey: ['video-asset-library', creativeId],
+    queryFn: () => videoScenesApi.assetLibrary(creativeId),
+    enabled: enabled && !!creativeId,
+  })
+}
+
+// Add an element (uploaded URL or a library asset) under a role — free, no
+// re-render (used on the next render). Response carries the fresh element list.
+export function useAddAsset(creativeId) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ url, role, description }) => videoScenesApi.addAsset(creativeId, { url, role, description }),
+    onSuccess: (data) => {
+      if (data.assets) qc.setQueryData(['video-assets', creativeId], { assets: data.assets })
+      toast.success('Elemento adicionado ✨')
+    },
+    onError: onErr('Não foi possível adicionar o elemento.'),
+  })
+}
+
+// Remove an element from the video — free, no re-render.
+export function useRemoveAsset(creativeId) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ key }) => videoScenesApi.removeAsset(creativeId, { key }),
+    onSuccess: (data) => {
+      if (data.assets) qc.setQueryData(['video-assets', creativeId], { assets: data.assets })
+      toast.success('Elemento removido')
+    },
+    onError: onErr('Não foi possível remover o elemento.'),
   })
 }
 

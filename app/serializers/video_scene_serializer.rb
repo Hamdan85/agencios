@@ -2,9 +2,14 @@
 
 class VideoSceneSerializer < ActiveModel::Serializer
   attributes :id, :position, :mode, :caption, :prompt, :render_state,
-             :duration_seconds, :aspect_ratio, :clip_url, :thumbnail_url, :created_at
+             :duration_seconds, :aspect_ratio, :clip_url, :thumbnail_url,
+             :references, :created_at
 
   def render_state = object.render_state
+
+  # The scene's typed media references — stable identifier + role + kind
+  # (img_character_v1, vid_camera_ref_v1, ...), same order as submitted.
+  def references = object.labeled_references
 
   def clip_url
     return nil unless object.clip.attached?

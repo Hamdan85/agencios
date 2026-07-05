@@ -9,8 +9,11 @@ module Operations
     # FOLLOWING the insert, it goes stale (charged re-render) so the continuity
     # chain re-links through the new scene.
     class AddScene < Operations::Base
+      # extra_reference_urls: media references attached this turn for the new
+      # scene; reference_role declares their JOB (Operations::Video::References
+      # assignable roles), generic 'reference' when undeclared.
       def initialize(creative:, position:, prompt:, caption: nil, duration_seconds: nil,
-                     dialogue: nil, on_screen_text: nil, extra_reference_urls: [])
+                     dialogue: nil, on_screen_text: nil, extra_reference_urls: [], reference_role: nil)
         @creative       = creative
         @position       = position.to_i
         @prompt         = prompt.to_s.strip
@@ -19,6 +22,7 @@ module Operations
         @dialogue       = dialogue
         @on_screen_text = on_screen_text
         @extra_refs     = Array(extra_reference_urls).map { |u| u.to_s.strip }.reject(&:blank?)
+        @ref_role       = References.assignable_role(reference_role)
       end
 
       def call
@@ -31,8 +35,11 @@ module Operations
 
         generation = @creative.generation
         pos        = @position.clamp(0, scenes.size)
-        duration   = (@duration.presence || scenes.last&.duration_seconds || PlanScenes::SCENE_UNIT_SECONDS)
-                     .to_i.clamp(PlanScenes::MIN_SCENE_SECONDS, PlanScenes::SCENE_UNIT_SECONDS)
+        mode       = sibling_mode(scenes, generation)
+        # Snap to a clip length the scene's engine actually supports (not an
+        # arbitrary value) — same rule the storyboard follows.
+        seed_secs  = (@duration.presence || scenes.last&.duration_seconds || PlanScenes::SCENE_UNIT_SECONDS)
+        duration   = VideoConfig.instance.snap_seconds(seed_secs, mode)
 
         Operations::Credits::Debit.call(
           workspace: @creative.workspace,
@@ -47,13 +54,13 @@ module Operations
         base_urls  = sibling&.reference_urls || []
         base_roles = sibling&.metadata&.dig('reference_roles') || []
         scene = Scenes::Create.call(
-          creative: @creative, position: pos, mode: sibling_mode(scenes, generation),
+          creative: @creative, position: pos, mode: mode,
           prompt: @prompt, caption: @caption, duration_seconds: duration,
           dialogue: @dialogue, on_screen_text: @on_screen_text,
           aspect_ratio: sibling&.aspect_ratio || generation&.params&.dig('aspect_ratio'),
           seed: SecureRandom.hex(6),
           reference_image_urls: base_urls + @extra_refs,
-          reference_roles: base_roles + (['reference'] * @extra_refs.size)
+          reference_roles: base_roles + ([@ref_role] * @extra_refs.size)
         )
 
         relink_follower!(pos, generation)

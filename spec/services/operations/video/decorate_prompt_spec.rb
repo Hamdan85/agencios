@@ -36,14 +36,21 @@ RSpec.describe Operations::Video::DecoratePrompt do
     expect(out).not_to include('Look & feel') # nothing meaningful to say
   end
 
-  it 'renders the positional reference manifest' do
+  it 'renders the typed reference manifest — position, identifier and the role contract' do
     out = described_class.call(
       prompt: 'p', mode: 'product', ctx: ctx_double,
-      reference_labels: ['image 1: product reference photo — keep the product faithful',
-                         'image 2: the brand LOGO — context only']
+      references: [{ id: 'img_product_v1', url: 'https://x/p.jpg', role: 'product', kind: 'img' },
+                   { id: 'vid_camera_ref_v1', url: 'https://x/c.mp4', role: 'camera', kind: 'vid' },
+                   { id: 'img_logo_v1', url: 'https://x/l.png', role: 'logo', kind: 'img' }]
     )
 
-    expect(out).to include('Reference images: image 1: product reference photo', 'image 2: the brand LOGO')
+    expect(out).to include('Reference manifest')
+    expect(out).to include('input 1 = img_product_v1: PRODUCT reference')
+    expect(out).to include('input 2 = vid_camera_ref_v1: CAMERA reference (video)',
+                           'replicate ONLY its camera movement')
+    expect(out).to include('input 3 = img_logo_v1: the brand LOGO')
+    # Identifiers cited in the scene prompt resolve through the manifest.
+    expect(out).to include('When this prompt cites an identifier above')
   end
 
   it 'adds the right continuity contract per seed kind' do
@@ -65,7 +72,18 @@ RSpec.describe Operations::Video::DecoratePrompt do
     out = described_class.call(prompt: 'p', mode: 'avatar', ctx: ctx_double,
                                with_audio: true, dialogue: 'Oi')
 
-    expect(out).to include('Background music: add NONE', 'added later in post-production')
+    expect(out).to include('NO music of any kind', '(no music, no background music',
+                           'added separately in post-production')
+  end
+
+  it 'tells the model to lip-sync to the fixed-voice audio reference when voiced' do
+    out = described_class.call(prompt: 'p', mode: 'avatar', ctx: ctx_double,
+                               with_audio: true, dialogue: 'Com a gente, nenhum prazo escapa.', voiced: true)
+
+    expect(out).to include('"Com a gente, nenhum prazo escapa."', 'AUDIO REFERENCE (a fixed voice)',
+                           'lip-sync to that exact audio', 'do NOT generate a different voice')
+    # The free "delivery tone" phrasing is replaced by the fixed-voice contract.
+    expect(out).not_to include('Delivered in a')
   end
 
   it 'locks speech to the verbatim dialogue field' do
@@ -94,7 +112,7 @@ RSpec.describe Operations::Video::DecoratePrompt do
     without   = described_class.call(prompt: 'p', mode: 'avatar', ctx: ctx_double)
 
     expect(with_text).to include('EXACTLY as written', '"Nunca mais perca um prazo"',
-                                 'No other lettering')
+                                 'no other lettering', 'Typography:')
     expect(without).to include('On-screen text: NONE — never invent lettering')
   end
 
@@ -118,5 +136,23 @@ RSpec.describe Operations::Video::DecoratePrompt do
     out = described_class.call(prompt: 'p', mode: 'avatar', ctx: ctx_double,
                                with_audio: true, dialogue: 'Vem já!', voice_tone: 'energetic and upbeat')
     expect(out).to include('"Vem já!"', 'Delivered in a energetic and upbeat tone')
+  end
+
+  it 'injects the LOCKED identity into every scene (character, wardrobe, scenario, style)' do
+    out = described_class.call(prompt: 'p', mode: 'avatar', ctx: ctx_double, identity: {
+                                 'has_character' => true, 'character' => 'a cheetah lawyer',
+                                 'wardrobe' => 'navy suit', 'scenario' => 'modern office', 'style' => 'golden hour'
+                               })
+    expect(out).to include('Project identity — keep IDENTICAL in every scene',
+                           'the SAME character throughout', 'a cheetah lawyer',
+                           'wardrobe/styling: navy suit', 'setting/world: modern office', 'visual style: golden hour')
+  end
+
+  it 'states there is no character when the scope has none, and adds no identity line when unset' do
+    none = described_class.call(prompt: 'p', mode: 'product', ctx: ctx_double, identity: { 'has_character' => false })
+    unset = described_class.call(prompt: 'p', mode: 'product', ctx: ctx_double)
+
+    expect(none).to include('no recurring character/person')
+    expect(unset).not_to include('Project identity')
   end
 end

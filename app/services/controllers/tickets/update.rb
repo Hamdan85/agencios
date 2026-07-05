@@ -15,9 +15,16 @@ module Controllers
         ticket = workspace.tickets.find(@params[:id])
 
         if @params.dig(:ticket, :fields).present?
+          status = @params[:ticket][:status] || ticket.status
           Operations::Tickets::UpdateFields.call(
-            ticket: ticket, status: @params[:ticket][:status] || ticket.status,
+            ticket: ticket, status: status,
             values: @params[:ticket][:fields].to_unsafe_h
+          )
+          # A real content edit re-derives the LATER stages so they reflect the
+          # change. Debounced by the updated_at token: a burst of autosaves
+          # collapses to a single downstream regeneration (only the last one runs).
+          Tickets::CascadeFieldsJob.set(wait: 6.seconds).perform_later(
+            ticket.id, status.to_s, ticket.updated_at.utc.iso8601(6)
           )
         end
         Operations::Tickets::Update.call(ticket: ticket, params: ticket_params) if attribute_update?

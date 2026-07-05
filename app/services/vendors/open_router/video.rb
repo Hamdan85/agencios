@@ -30,14 +30,20 @@ module Vendors
       #   duration:         seconds (nil ⇒ model default)
       #   frame_images:     [{ url:, frame_type: 'first' | 'last' }]
       #   input_references: [{ url: }]  (product/subject reference photos)
-      def submit(model:, prompt:, aspect_ratio: nil, duration: nil, frame_images: [], input_references: [])
+      # audio_references: reference-to-video AUDIO inputs ([{ url: }]) — a fixed
+      # voice track the model should lip-sync to. Sent as `audio_url` input
+      # references alongside the visual ones (same discriminated-union list).
+      def submit(model:, prompt:, aspect_ratio: nil, duration: nil, frame_images: [],
+                 input_references: [], audio_references: [])
         require_credential!(@api_key, 'openrouter.api_key')
 
         payload = { model: model, prompt: prompt.to_s }
         payload[:aspect_ratio] = aspect_ratio if aspect_ratio.present?
         payload[:duration_seconds] = duration.to_i if duration.present?
         payload[:frame_images] = Array(frame_images).map { |f| frame_part(f) } if frame_images.present?
-        payload[:input_references] = Array(input_references).map { |ref| reference_part(ref) } if input_references.present?
+        refs = Array(input_references).map { |ref| reference_part(ref) } +
+               Array(audio_references).map { |a| reference_part((a.respond_to?(:to_h) ? a.to_h : { url: a }).merge(type: 'audio_url')) }
+        payload[:input_references] = refs if refs.present?
 
         body = handle(connection.post('/api/v1/videos') { |req| req.body = payload })
         job_id = body.is_a?(Hash) ? (body['id'] || body.dig('data', 'id')) : nil

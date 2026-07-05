@@ -10,6 +10,10 @@ module Api
       # POST /studio/generate — body { kind, params }
       def generate = render_created(Controllers::Studio::Generate.call(params:))
 
+      # POST /studio/video — body { params } — opens a video INTERVIEW (creates a
+      # draft creative + the chat's first question; no generation/credits yet).
+      def video = render_created(Controllers::Studio::StartVideo.call(params:))
+
       # POST /studio/improve_prompt — the "melhorar esse prompt" wand
       def improve_prompt = render_ok(Controllers::Studio::ImprovePrompt.call(params:))
     end

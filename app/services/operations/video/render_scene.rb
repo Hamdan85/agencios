@@ -26,6 +26,9 @@ module Operations
           Rails.logger.warn("[Video::RenderScene] scene #{@scene.id} (pos #{@scene.position}) " \
                             'rendering WITHOUT a continuity seed — it will look like a new video')
         end
+        # Synthesize this scene's line in the video's FIXED voice BEFORE compiling
+        # the prompt, so the prompt can tell the model to lip-sync to that audio.
+        ensure_voice_clip!
         prompt = render_prompt(continuation: kind)
 
         job_id = begin
@@ -51,10 +54,30 @@ module Operations
           model: VideoConfig.instance.model_for(@scene.mode, quality: quality),
           prompt: prompt,
           aspect_ratio: @scene.aspect_ratio,
-          duration: @scene.duration_seconds,
-          input_references: @scene.reference_urls.map { |url| { url: url } },
+          # Final guard: submit a clip length the engine supports (legacy/edited
+          # scenes may hold an off value) — the models render fixed lengths.
+          duration: VideoConfig.instance.snap_seconds(@scene.duration_seconds, @scene.mode),
+          # Typed by media kind: video references (camera/motion guides) go as
+          # video_url parts; everything else as image_url. Same order as the
+          # manifest in the prompt.
+          input_references: references.map do |ref|
+            { url: ref[:url], type: ref[:kind] == 'vid' ? 'video_url' : 'image_url' }
+          end,
+          # The fixed voice as a lip-sync audio reference (empty when no voice).
+          audio_references: voice_audio_references,
           frame_images: [frame].compact
         )
+      end
+
+      # The synthesized voice clip as an audio reference for the render (so the
+      # model lip-syncs to the fixed voice). Empty when there's no voice.
+      def voice_audio_references
+        url = voice_url
+        url.present? ? [{ url: url }] : []
+      end
+
+      def voice_url
+        @voice_url ||= @scene.voice_clip_url if @scene.voice_clip.attached?
       end
 
       # The generation's quality tier (draft-first; 'final' after the upgrade).
@@ -73,28 +96,50 @@ module Operations
           dialogue: @scene.metadata['dialogue'],
           on_screen_text: @scene.metadata['on_screen_text'],
           voice_tone: voice_tone,
+          # When a fixed-voice audio reference is attached, the prompt tells the
+          # model to lip-sync to it (VOICE_POLICY) instead of inventing a voice.
+          voiced: voice_url.present?,
           guardrails: ctx.guardrails,
-          reference_labels: reference_labels
+          references: references,
+          identity: @scene.creative.generation&.params&.dig('identity'),
+          aspect_ratio: @scene.aspect_ratio
         )
       end
 
-      REFERENCE_ROLE_TEXT = {
-        'logo' => 'the brand LOGO — context only: the scene does not need to show any logo; ' \
-                  'if branding naturally appears, use EXACTLY this mark, never an invented or altered one',
-        'avatar' => 'the CREATOR (the spokesperson) — the person on camera must faithfully match this face and appearance',
-        'product' => 'product reference photo — keep the product faithful: exact shape, colors and label, never distorted',
-        'reference' => 'a REFERENCE image the user attached (style / subject / scene guidance) — draw on it ' \
-                       'for what the scene should look like; use it only where the prompt calls for it'
-      }.freeze
+      # Ensure this scene's spoken line is synthesized in the video's FIXED voice
+      # (Cartesia), cached by a (voice_id + dialogue) fingerprint so a re-render
+      # only re-synthesizes when the line or the voice changed. Best-effort: a
+      # missing/failed synthesis leaves no clip → the render falls back to the
+      # model's native audio (never fails the render). Skipped on silent videos,
+      # scenes with no dialogue, or when no voice_id is configured.
+      def ensure_voice_clip!
+        line = @scene.metadata['dialogue'].to_s.strip
+        return if !with_audio || line.blank? || voice_id.blank?
 
-      # Labels each attached reference image BY the ROLE captured at plan time, so
-      # a changed brand asset or app host can never mislabel the logo/avatar as a
-      # product photo (the old URL-equality bug).
-      def reference_labels
-        @scene.labeled_references.each_with_index.map do |ref, i|
-          text = REFERENCE_ROLE_TEXT.fetch(ref[:role], REFERENCE_ROLE_TEXT['product'])
-          "image #{i + 1}: #{text}"
-        end
+        fingerprint = Digest::SHA256.hexdigest("#{voice_id}|#{@scene.creative.generation&.params&.dig('voice_speed')}|#{line}")
+        return if @scene.voice_clip.attached? && @scene.metadata['voice_fingerprint'] == fingerprint
+
+        audio = Vendors::Cartesia::Actions::Synthesize.call(
+          text: line, voice_id: voice_id, language: VideoConfig::VOICE_LANGUAGE,
+          speed: @scene.creative.generation&.params&.dig('voice_speed')
+        )
+        return if audio.nil?
+
+        @scene.voice_clip.attach(io: StringIO.new(audio[:bytes]), filename: "voice-#{@scene.id}.mp3",
+                                 content_type: audio[:content_type])
+        @scene.update!(metadata: @scene.metadata.merge('voice_fingerprint' => fingerprint))
+      rescue StandardError => e
+        Rails.logger.warn("[Video::RenderScene] voice synth failed for scene #{@scene.id}: #{e.class}: #{e.message}")
+      end
+
+      def voice_id = @scene.creative.generation&.params&.dig('voice_id').to_s.strip.presence
+
+      # The scene's typed references (identifier + role + kind, stored order) —
+      # the ONE list that feeds both the submitted inputs and the prompt
+      # manifest, so they can never desync. Memoized: submit may run twice
+      # (data-URL seed fallback).
+      def references
+        @references ||= @scene.labeled_references
       end
 
       # The requested vocal delivery (avatar mode) → a delivery tone the model

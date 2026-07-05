@@ -23,7 +23,14 @@ module Vendors
       # music_mix: the orchestrator-controlled parameters
       # { volume:, fade_in:, fade_out:, duck: } (duck lowers the music under the
       # speech via sidechain compression).
-      def initialize(input_paths:, width:, height:, output_path:, mute: false, music_path: nil, music_mix: {})
+      # voice_paths: an optional array PARALLEL to input_paths — a synthesized
+      # fixed-voice clip per scene (nil where none). When present the model's own
+      # audio is DROPPED (it drifts the voice + adds its own music) and DUBBED:
+      # each voice clip is laid at its scene's offset, music ducked under it. This
+      # is what makes the voice identical across scenes + guarantees music comes
+      # only from `music_path` (the model never contributes audio).
+      def initialize(input_paths:, width:, height:, output_path:, mute: false, music_path: nil,
+                     music_mix: {}, voice_paths: [])
         @inputs = Array(input_paths)
         @w = width.to_i
         @h = height.to_i
@@ -31,6 +38,7 @@ module Vendors
         @mute = mute
         @music = music_path
         @mix = (music_mix || {}).transform_keys(&:to_sym)
+        @voices = Array(voice_paths)
       end
 
       def call
@@ -44,7 +52,13 @@ module Vendors
           else
             join(normalized, joined)
           end
-          @music.present? ? mix_music(joined, @out) : FileUtils.cp(joined, @out)
+          if dub?
+            dub_audio(joined, scene_offsets(normalized), @out)
+          elsif @music.present?
+            mix_music(joined, @out)
+          else
+            FileUtils.cp(joined, @out)
+          end
         end
         @out
       end
@@ -52,6 +66,69 @@ module Vendors
       DEFAULT_MIX = { volume: 0.28, fade_in: 1.0, fade_out: 2.0, duck: true }.freeze
 
       private
+
+      # Dubbing replaces the model audio entirely (fixed voice + post music), so
+      # the clips are normalized muted.
+      def dub? = @voices.any?(&:present?)
+      def mute? = @mute || dub?
+
+      # Cumulative start time (seconds) of each scene in the joined video.
+      def scene_offsets(normalized)
+        acc = 0.0
+        normalized.map { |p| acc.tap { acc += probe_duration(p) } }
+      end
+
+      # DUB: the joined video is silent; lay each scene's fixed-voice clip at its
+      # offset, then the (looped, faded) music ducked under the combined voice.
+      # One continuous consistent voice + one controlled soundtrack; the model
+      # contributes no audio at all. Falls back to music-only / silent on error.
+      def dub_audio(joined, offsets, out)
+        voiced = @voices.each_with_index.filter_map { |vp, i| vp.present? ? [vp, offsets[i].to_f] : nil }
+        return @music.present? ? mix_music(joined, out) : FileUtils.cp(joined, out) if voiced.empty?
+
+        dur = probe_duration(joined)
+        inputs = %W[-y -i #{joined}]
+        voiced.each { |vp, _| inputs += ['-i', vp] }
+        inputs += %W[-stream_loop -1 -i #{@music}] if @music.present?
+
+        # Pin the output to the VIDEO length (`-t`): the ducked music sidechain
+        # ends with the last voice clip, so `-shortest` would clip the tail.
+        run(inputs + %W[-filter_complex #{dub_filter(voiced)} -map 0:v:0 -map [aout]
+                        -c:v copy -c:a aac -ar 44100 -t #{dur.round(3)} #{out}])
+      rescue StandardError => e
+        Rails.logger.warn("[Ffmpeg::Concat] dub failed, falling back: #{e.message}")
+        @music.present? ? (mix_music(joined, out) rescue FileUtils.cp(joined, out)) : FileUtils.cp(joined, out) # rubocop:disable Style/RescueModifier
+      end
+
+      # filter_complex for the dub: delay each voice to its scene offset, sum the
+      # voices into one bus, then (optionally) duck the looped/faded music under
+      # that bus. Voice inputs are 1..N; music (when present) is N+1.
+      def dub_filter(voiced)
+        parts = voiced.each_with_index.map do |(_, off), j|
+          "[#{j + 1}:a]adelay=#{(off * 1000).round}|#{(off * 1000).round}[v#{j}]"
+        end
+        if voiced.size == 1
+          parts << '[v0]anull[voice]'
+        else
+          parts << "#{voiced.each_index.map { |j| "[v#{j}]" }.join}amix=inputs=#{voiced.size}:duration=longest:dropout_transition=0[voice]"
+        end
+
+        return "#{parts.join(';')};[voice]anull[aout]" if @music.blank?
+
+        music_idx = voiced.size + 1
+        v = num(@mix[:volume], DEFAULT_MIX[:volume])
+        fin = num(@mix[:fade_in], DEFAULT_MIX[:fade_in])
+        fout = num(@mix[:fade_out], DEFAULT_MIX[:fade_out])
+        parts << "[#{music_idx}:a]volume=#{v},afade=t=in:st=0:d=#{fin}[m]"
+        if @mix.fetch(:duck, DEFAULT_MIX[:duck])
+          parts << '[voice]asplit=2[vmain][vsc]'
+          parts << '[m][vsc]sidechaincompress=threshold=0.03:ratio=6:attack=20:release=400[md]'
+          parts << '[vmain][md]amix=inputs=2:duration=longest:dropout_transition=0[aout]'
+        else
+          parts << '[voice][m]amix=inputs=2:duration=longest:dropout_transition=0[aout]'
+        end
+        parts.join(';')
+      end
 
       # Overlay the (looped) music under the joined video's audio, with the
       # orchestrator's volume + fades, optionally ducking it under the speech;
@@ -104,7 +181,7 @@ module Vendors
         vf = "scale=#{@w}:#{@h}:force_original_aspect_ratio=decrease," \
              "pad=#{@w}:#{@h}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30"
         args =
-          if has_audio?(src) && !@mute
+          if has_audio?(src) && !mute?
             %W[-y -i #{src} -vf #{vf} -map 0:v:0 -map 0:a:0
                -c:v libx264 -pix_fmt yuv420p -c:a aac -ar 44100 #{dst}]
           else

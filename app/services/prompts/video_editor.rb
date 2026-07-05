@@ -18,16 +18,37 @@ module Prompts
 
     def system
       <<~TXT.strip
-        You are a video editor who works by CHATTING with the user. The video is
-        made of SCENES numbered from 1 (Cena 1, Cena 2, …), rendered sequentially;
-        each scene continues visually from the previous one — continuity is
-        AUTOMATIC, never ask about it.
+        You are a video producer/editor who works by CHATTING with the user. The
+        video is made of SCENES numbered from 1 (Cena 1, Cena 2, …), rendered
+        sequentially; each scene continues visually from the previous one —
+        continuity is AUTOMATIC, never ask about it.
 
         #{brand_block}
 
         #{positioning_block}
 
-        How to act:
+        BEFORE the video exists (context PHASE = INTERVIEW, no scenes yet):
+        - Your job is to INTERVIEW the user to assemble the COMPLETE brief before
+          building. Ask SHORT, focused questions — ONE topic at a time — for the
+          real GAPS only. NEVER re-ask what the context already says you know.
+        - The COMPLETE context you are aiming for: (1) objective of the video;
+          (2) target audience; (3) the subject — a person talking, a product, a
+          character/mascot, a place/scene? (4) tone / energy; (5) what MUST appear
+          and what to AVOID; (6) the key message + any CTA; (7) references (ask the
+          user to attach an image/video if useful). Skip any the setup already
+          answers.
+        - Do NOT interrogate: a couple of good questions is enough. As soon as you
+          have enough to make a great video — OR the user tells you to go ("pode
+          gerar", "gera", "manda ver") — use action "generate": pass a consolidated
+          "brief" (everything you gathered, in English) and a short PT-BR "message".
+          Generating COSTS credits (see the context) — if the user can't afford it,
+          say so instead of generating.
+        - While interviewing, use action "reply" (a question/answer). NEVER use
+          edit/finalize/identity/music before the video exists.
+        - NEVER announce that you're "already building" during the interview — you
+          are still gathering. Only "generate" starts the build.
+
+        How to act (AFTER the video exists — it has scenes):
         - If the user asked for a change, APPLY it (action "edit"). Be decisive —
           don't keep asking questions: read the intent and re-render. Only use
           "reply" when they are just asking/chatting, or the request is truly
@@ -44,6 +65,18 @@ module Prompts
           * REMOVE a scene → remove: true (at least one must remain)
           Plus action "cancel" when the user wants to STOP an in-flight
           generation ("para", "cancela").
+        - Action "identity" when the user changes something that must stay
+          CONSISTENT across the WHOLE video — the character, wardrobe, setting,
+          palette or overall style ("mantém o mesmo personagem", "muda o figurino
+          para social", "outro cenário", "deixa tudo mais escuro"). Set only the
+          "identity" fields that change; the rest stay. This RE-RENDERS every
+          scene with the new look (charged). Use it instead of editing scenes one
+          by one when the change is project-wide.
+        - Action "voice" ONLY when the user asks to change the SPEAKING VOICE
+          ("troca a voz", "usa a voz feminina", "outro narrador"): set "voice" to
+          one of the voice options in the context (VOICE line). The video uses ONE
+          fixed voice in every scene; changing it RE-RENDERS every scene (charged),
+          like "identity". NEVER change the voice on your own — only when asked.
         - Action "music" ONLY when the user asks to change the background song
           ("troca a música", "põe algo mais animado", "tira a música"): set
           "music_mood" to one of #{VideoConfig::MUSIC_MOODS.join(', ')} (or
@@ -65,10 +98,21 @@ module Prompts
           cause. Rewrite the FIELD that caused it: a speech/audio-safety
           rejection → change the "dialogue"; a visual/copyright rejection →
           change the "prompt". Then re-render it via "edit".
-        - If the user ATTACHED reference image(s) this turn (stated at the top),
+        - If the user ATTACHED media reference(s) this turn (stated at the top),
           they auto-attach to the scene(s) you edit or add — so "edit"/"add" the
-          relevant scene and describe how to use them in its prompt (match this
-          product / person / style). A pure "reply" leaves them unused.
+          relevant scene and describe how to use them in its prompt. Also set
+          "reference_role" to what the user said the attachment IS (character /
+          product / scene / style / camera / motion); omit it when unclear. A
+          pure "reply" leaves attachments unused.
+        - Each scene's context line lists its references by IDENTIFIER
+          (img_character_v1, img_style_v1, vid_camera_ref_v1, …). When a prompt
+          should draw on one, CITE that identifier in the prompt text (e.g.
+          "the character from img_character_v1 walks in") — the renderer maps
+          identifiers to the attached inputs. Never invent identifiers.
+        - Per-scene ANNOTATIONS may arrive pinned to this turn (listed above the
+          scenes). Each annotation belongs to ITS scene only: apply it there,
+          combined with the typed message. Never spread one scene's note over
+          the others.
         - When a scene has failed MORE THAN ONCE (safety/copyright filters),
           the filter is blocking the CONCEPT, not the wording: propose a
           genuinely different take (change the subject, style or what is heard)
@@ -135,7 +179,7 @@ module Prompts
     # The scene list + the conversation, as the turn's user content.
     def turn_prompt(scenes_context, conversation)
       <<~TXT.strip
-        Current scenes of the video (numbered from 1):
+        Current state of the video (PHASE + scenes, numbered from 1):
         #{scenes_context}
 
         Conversation so far:
@@ -148,26 +192,49 @@ module Prompts
     def self.edit_tool
       {
         'name' => EDIT_TOOL,
-        'description' => 'Decides this editing turn: just reply, re-render one/some/all ' \
-                         'scenes with new prompts (and/or update captions), or finalize ' \
-                         'the approved draft in high quality.',
+        'description' => 'Decides this turn: interview the user, GENERATE the video once the ' \
+                         'context is complete, reply, re-render/add/move/remove scenes, change ' \
+                         'music/identity, or finalize the approved draft in high quality.',
         'input_schema' => {
           'type' => 'object', 'required' => %w[action message],
           'properties' => {
             'action' => {
-              'type' => 'string', 'enum' => %w[reply edit finalize cancel music],
-              'description' => 'reply = only answer/chat, no video change; ' \
+              'type' => 'string', 'enum' => %w[reply generate edit finalize cancel music identity voice],
+              'description' => 'reply = only answer/ask, no video change (use this to INTERVIEW before the video exists); ' \
+                               'generate = you have enough context (or the user said to go) — BUILD the video now ' \
+                               'from "brief" (only in the INTERVIEW phase, before any scene exists; costs credits); ' \
                                'edit = change/add/move/remove scenes (see "scenes"); ' \
                                'finalize = the user approved the DRAFT — re-render every scene ' \
                                'with the final high-quality model and deliver the finished video ' \
                                '(no "scenes" needed; only when the video is a draft and idle); ' \
                                'cancel = stop the in-flight generation (no "scenes" needed); ' \
-                               'music = change the background song (set "music_mood"; re-mixes only, free).'
+                               'music = change the background song (set "music_mood"; re-mixes only, free); ' \
+                               'identity = change the project-wide look (set "identity"; re-renders every scene, charged); ' \
+                               'voice = change the fixed speaking voice (set "voice" to a catalog option; re-renders every scene, charged).'
             },
             'message' => {
               'type' => 'string',
               'description' => 'Your reply to the user, short and in Brazilian Portuguese ' \
                                '(what you will do, or your question).'
+            },
+            'brief' => {
+              'type' => 'string',
+              'description' => 'Only for action "generate": the CONSOLIDATED brief in English — everything ' \
+                               'you gathered (subject, objective, audience, tone, must-show/avoid, key message/CTA). ' \
+                               'KEEP EVERY concrete detail the user gave — named characters/elements, must-shows, ' \
+                               'exact spoken lines, which references to use — do NOT drop or generalize them. It ' \
+                               'can be long; completeness matters more than brevity.'
+            },
+            'identity' => {
+              'type' => 'object',
+              'description' => 'Only for action "identity": the project-wide fields to CHANGE (others stay). ' \
+                               'English descriptions.',
+              'properties' => {
+                'has_character' => { 'type' => 'boolean' },
+                'character' => { 'type' => 'string' }, 'wardrobe' => { 'type' => 'string' },
+                'scenario' => { 'type' => 'string' }, 'palette' => { 'type' => 'string' },
+                'style' => { 'type' => 'string' }
+              }
             },
             'music_mood' => {
               'type' => 'string', 'enum' => VideoConfig::MUSIC_MOODS + ['none'],
@@ -177,6 +244,18 @@ module Prompts
               'type' => 'string',
               'description' => 'Only for action "music": optional free search terms for the new track ' \
                                '(English mood + genre), when the user described a specific vibe.'
+            },
+            'voice' => {
+              'type' => 'string',
+              'description' => 'Only for action "voice": the new fixed voice — a label from the VOICE ' \
+                               'options in the context (same speaker across every scene).'
+            },
+            'reference_role' => {
+              'type' => 'string', 'enum' => Operations::Video::References::ASSIGNABLE_ROLES,
+              'description' => 'What the attachment(s) of THIS turn are, from what the user said: ' \
+                               'character (identity/face/wardrobe), product (faithful product), scene ' \
+                               '(location/setting), style (palette/lighting/aesthetic only), camera ' \
+                               '(camera-movement video), motion (action/choreography video). Omit when unclear.'
             },
             'scenes' => {
               'type' => 'array',

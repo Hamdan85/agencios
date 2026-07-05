@@ -17,18 +17,31 @@ module Operations
       class ResolveTurn < Operations::Base
         # Generous ceiling: a truncated response loses the forced-tool call and
         # the turn degrades to the fallback reply.
-        MAX_TOKENS = 2000
-        CONTEXT_MESSAGES = 24
+        MAX_TOKENS = 3000
+        # Keep a long window so the agent doesn't lose earlier context (names,
+        # decisions, must-shows) as the conversation grows.
+        CONTEXT_MESSAGES = 40
 
-        def initialize(creative:, message:, reference_image_urls: [])
-          @creative = creative
-          @message  = message.to_s.strip
-          @refs     = Array(reference_image_urls).map { |u| u.to_s.strip }.reject(&:blank?)
+        # annotations: the STRUCTURED per-scene notes from the UI balloons —
+        # [{ scene: 1-based number, note: text }] — sent as JSON alongside the
+        # message (never concatenated into it by the client).
+        # kickoff: the FIRST turn of an interview creative — no user message; the
+        # agent opens the conversation (asks) instead of reacting to a message.
+        def initialize(creative:, message:, reference_image_urls: [], annotations: [], kickoff: false)
+          @creative    = creative
+          @message     = message.to_s.strip
+          @refs        = Array(reference_image_urls).map { |u| u.to_s.strip }.reject(&:blank?)
+          @annotations = normalize_annotations(annotations)
+          @kickoff     = kickoff
         end
 
         def call
-          @creative.push_chat_message(role: :user, content: @message)
-          @creative.save!
+          unless @kickoff
+            # The user's message keeps its attached images so the transcript shows
+            # a clickable thumbnail and the agent can re-use them as context.
+            @creative.push_chat_message(role: :user, content: user_message_content, images: @refs)
+            @creative.save!
+          end
 
           credits_before = credit_balance
           decision = decide
@@ -36,12 +49,21 @@ module Operations
           reply  = nil
           @apply_errors = []
           @credits_short = false
+          @edited_scene_ids = []
+          @removed_scene_ids = []
           case decision['action']
           when 'edit'     then edited = apply_edits(decision)
+          when 'generate' then reply  = generate(decision)
           when 'finalize' then reply  = finalize(decision)
           when 'cancel'   then reply  = cancel(decision)
           when 'music'    then reply  = change_music(decision)
+          when 'identity' then reply  = change_identity(decision)
+          when 'voice'    then reply  = change_voice(decision)
           end
+          # A reference pinned to a scene's balloon reaches that scene REGARDLESS
+          # of the agent's action (even a pure reply) — the user attached it there
+          # on purpose. Skips scenes already edited/removed this turn.
+          edited = (edited + apply_pinned_references(decision['reference_role'])).uniq
           spent = [credits_before - credit_balance, 0].max
 
           # Out of credits mid-apply → explain in the chat (the editor is already
@@ -50,11 +72,11 @@ module Operations
           reply = insufficient_credits_reply if @credits_short && edited.blank?
           reply ||= apply_error_reply if @apply_errors.present?
           reply ||= decision['message'].to_s.strip.presence || default_reply(edited)
-          @creative.push_chat_message(role: :assistant, content: reply)
+          # Stamp the cost ON this assistant bubble so the UI shows "−N créditos"
+          # right under it (and the wallet counter refreshes) — not a floating pill.
+          @creative.push_chat_message(role: :assistant, content: reply, credits: spent)
           @creative.save!
 
-          # credits_spent is surfaced to the UI, which shows the cost AFTER the
-          # render finishes (as a light "pronto" pill) — not up front in the reply.
           { reply: reply, edited_positions: edited, action: decision['action'], credits_spent: spent }
         end
 
@@ -81,14 +103,18 @@ module Operations
           edits    = specs - adds - moves - removals
 
           touched  = resolve(edits).filter_map do |scene, spec, position|
+            @edited_scene_ids << scene.id
             try_op(position) do
               Operations::Video::EditScene.call(scene: scene, caption: spec['caption'],
                                                 prompt: spec['prompt'], dialogue: spec['dialogue'],
                                                 on_screen_text: spec['on_screen_text'], restyle: spec['restyle'],
-                                                add_reference_urls: @refs)
+                                                # Global chat attachments + THIS scene's balloon references.
+                                                add_reference_urls: @refs + annotation_refs_for(position),
+                                                reference_role: decision['reference_role'])
             end
           end
           removal_targets = resolve(removals) # records stay valid across reindexing
+          @removed_scene_ids = removal_targets.map { |scene, _, _| scene.id }
 
           touched += adds.filter_map do |spec|
             position = [spec['scene'].to_i - 1, 0].max
@@ -96,7 +122,8 @@ module Operations
               Operations::Video::AddScene.call(creative: @creative, position: position,
                                                prompt: spec['prompt'], caption: spec['caption'],
                                                dialogue: spec['dialogue'], on_screen_text: spec['on_screen_text'],
-                                               extra_reference_urls: @refs)
+                                               extra_reference_urls: @refs,
+                                               reference_role: decision['reference_role'])
             end
           end
           touched += resolve(moves).filter_map do |scene, spec, position|
@@ -106,6 +133,32 @@ module Operations
             try_op(position) { Operations::Video::RemoveScene.call(scene: scene) }
           end
           touched
+        end
+
+        # For each annotated scene that carries balloon references and wasn't
+        # edited/removed this turn, append them to that scene and re-render it —
+        # so the reference reaches the exact scene the user pinned it to. Runs for
+        # ANY action (even a pure reply); edited scenes already got their refs
+        # threaded in apply_edits.
+        def apply_pinned_references(reference_role)
+          @annotations.filter_map do |a|
+            urls = Array(a[:reference_urls])
+            next if urls.empty?
+
+            position = a[:scene] - 1
+            scene = @creative.video_scenes.find_by(position: position)
+            next if scene.nil? || @edited_scene_ids.include?(scene.id) || @removed_scene_ids.include?(scene.id)
+
+            try_op(position) do
+              Operations::Video::EditScene.call(scene: scene, add_reference_urls: urls,
+                                                reference_role: reference_role)
+            end
+          end
+        end
+
+        # The balloon references pinned to a given 0-based scene position.
+        def annotation_refs_for(position)
+          @annotations.find { |a| a[:scene] - 1 == position }&.fetch(:reference_urls, nil).then { |u| Array(u) }
         end
 
         # Runs one scene operation; a validation problem (Invalid) is collected as
@@ -153,6 +206,48 @@ module Operations
           end
         end
 
+        # The interview gathered enough context (or the user ordered it): BUILD
+        # the video now. Reuses this (draft) creative so its chat carries over,
+        # then storyboard + render run off-request. Only valid before scenes
+        # exist; the agent's optional `brief` is the context it consolidated.
+        def generate(decision)
+          return already_generating_reply if @creative.video_scenes.exists?
+
+          intake = (@creative.metadata || {})['intake'] || {}
+          Operations::Creatives::GenerateUgcVideo.call(
+            ticket: @creative.ticket, creative: @creative, creative_type: @creative.creative_type,
+            client_id: intake['client_id'], mode: intake['mode'],
+            # Keep BOTH the agent's consolidated brief AND the user's original
+            # request — the storyboard should never lose the raw details the user
+            # gave (names, must-shows, exact lines) to an over-eager summary.
+            prompt: build_generate_brief(decision['brief'], intake['brief']),
+            voice: intake['voice'], aspect_ratio: intake['aspect_ratio'], duration: intake['duration'],
+            with_audio: intake['with_audio'], reference_image_urls: Array(intake['reference_image_urls'])
+          )
+          decision['message'].to_s.strip.presence ||
+            'Fechado! Já tenho o que preciso — montando seu vídeo agora. ✨'
+        rescue Operations::Errors::InsufficientCredits
+          insufficient_credits_reply
+        rescue Operations::Errors::Invalid => e
+          "Ainda não consigo gerar: #{e.message}"
+        end
+
+        def already_generating_reply
+          'O vídeo já está sendo montado — me diga o que quer ajustar nas cenas.'
+        end
+
+        # Combine the agent's consolidated brief with the user's ORIGINAL request
+        # so no concrete detail is lost. Skips the original if the agent already
+        # subsumes it (same text), and keeps whichever is present.
+        def build_generate_brief(consolidated, original)
+          c = consolidated.to_s.strip
+          o = original.to_s.strip
+          return o if c.blank?
+          return c if o.blank? || c.include?(o)
+
+          "#{c}\n\n--- Pedido original do usuário (mantenha todos os detalhes) ---\n#{o}"
+        end
+
         # "Para de gerar": abandon the in-flight renders and settle the ledger.
         def cancel(decision)
           Operations::Video::CancelRender.call(creative: @creative)
@@ -171,6 +266,30 @@ module Operations
             (decision['music_mood'].to_s == 'none' ? 'Pronto, tirei a música.' : 'Beleza, troquei a trilha!')
         rescue Operations::Errors::Invalid => e
           "Não deu para trocar a música: #{e.message}"
+        end
+
+        # The user asked to change the fixed voice (narrator/speaker): swap the
+        # voice_id and re-render every scene (the voice is baked via lip-sync).
+        def change_voice(decision)
+          Operations::Video::SetVoice.call(creative: @creative, voice: decision['voice'])
+          decision['message'].to_s.strip.presence ||
+            'Beleza, trocando a voz e refazendo as cenas com a nova voz…'
+        rescue Operations::Errors::InsufficientCredits
+          insufficient_credits_reply
+        rescue Operations::Errors::Invalid => e
+          "Não deu para trocar a voz: #{e.message}"
+        end
+
+        # The user changed something project-wide (character, wardrobe, setting,
+        # palette, style): update the locked identity and re-render every scene.
+        def change_identity(decision)
+          Operations::Video::SetIdentity.call(creative: @creative, changes: decision['identity'])
+          decision['message'].to_s.strip.presence ||
+            'Beleza, ajustando o visual do vídeo inteiro e refazendo as cenas…'
+        rescue Operations::Errors::InsufficientCredits
+          insufficient_credits_reply
+        rescue Operations::Errors::Invalid => e
+          "Não deu para ajustar: #{e.message}"
         end
 
         # The user approved the draft: kick the high-quality re-render of every
@@ -192,7 +311,8 @@ module Operations
             workspace: @creative.workspace, client: @creative.client, creative: @creative
           )
           client = Vendors::Ai.client(model: Vendors::Ai.model_for('video_editor'))
-          base_prompt = [attachment_note, editor.turn_prompt(scenes_context, conversation)].compact.join("\n\n")
+          base_prompt = [kickoff_note, attachment_note, annotations_note, shared_images_note,
+                         editor.turn_prompt(scenes_context, conversation)].compact.join("\n\n")
 
           # Weaker models sometimes answer WITHOUT the forced tool (the whole turn
           # then degrades to "não consegui processar"). Retry once with a blunt
@@ -212,15 +332,95 @@ module Operations
           fallback_decision
         end
 
-        # Tells the agent the user attached reference image(s) this turn — they
+        # The interview's opening turn. If the user already wrote a brief (it's
+        # the FIRST message above), acknowledge it and ask the first clarifying
+        # question; otherwise open cold. Never generate on this turn.
+        def kickoff_note
+          return nil unless @kickoff
+
+          if @creative.chat_messages.any? { |m| m['role'] == 'user' && m['content'].to_s.strip.present? }
+            'This is the START of the interview and the user OPENED WITH THE BRIEF above (their first ' \
+              'message). Acknowledge it briefly and warmly (Brazilian Portuguese), then ask your FIRST ' \
+              'clarifying question for the biggest gap (action "reply"). Do NOT generate the video yet.'
+          else
+            'This is the START of the interview: the user just opened it and has not written yet. ' \
+              'Open with a brief, warm Brazilian-Portuguese greeting and ask your FIRST question to ' \
+              'gather what is missing (action "reply"). Do NOT generate the video yet.'
+          end
+        end
+
+        # The references the user has shared ACROSS the whole chat remain in
+        # context — the agent can bring any back into the render (attach it to a
+        # scene it edits/adds) whenever a scene should use it.
+        def shared_images_note
+          urls = @creative.chat_messages.flat_map { |m| Array(m['images']) }.uniq
+          return nil if urls.empty?
+
+          "The user has shared #{urls.size} reference image(s)/video(s) in this chat; they stay available " \
+            'as context. When a scene should use one, attach it to that scene (edit/add) so the render ' \
+            'receives it again — decide per scene whether a reference is relevant.'
+        end
+
+        # Tells the agent the user attached media reference(s) this turn — they
         # are auto-applied to whatever scenes it EDITS or ADDS, so it must act on
-        # a scene (not just reply) for the references to land.
+        # a scene (not just reply) for the references to land, and it must
+        # DECLARE what the attachment is (reference_role) from what the user said.
         def attachment_note
           return nil if @refs.empty?
 
-          "The user attached #{@refs.size} reference image(s) this turn. They will be applied to the " \
-            'scene(s) you edit or add — so edit/add the relevant scene(s) and describe how to use them ' \
-            '(e.g. match this product/person/style). A pure reply will NOT attach them.'
+          kinds = @refs.map { |u| Operations::Video::References.kind_for(u) }
+          what  = kinds.include?('vid') ? 'media reference(s) (image/video)' : 'reference image(s)'
+          "The user attached #{@refs.size} #{what} this turn. They will be applied to the " \
+            'scene(s) you edit or add — so edit/add the relevant scene(s) and describe how to use them. ' \
+            "Set reference_role to what the user SAID the attachment is (#{Operations::Video::References::ASSIGNABLE_ROLES.join(' / ')}): " \
+            '"esse é o personagem" → character; "quero esse estilo" → style; a camera-movement video → camera; ' \
+            'an action/choreography video → motion; a location → scene; a product photo → product. ' \
+            'Unclear → omit it. A pure reply will NOT attach them.'
+        end
+
+        # Structured per-scene annotations (the UI balloons) as an explicit
+        # instruction block — each note targets ITS scene, never the video as a
+        # whole (free text buried notes; structure keeps the mapping exact). A
+        # pinned reference is flagged so the agent edits that scene to use it (it
+        # is also attached to the scene deterministically in apply_pinned_references).
+        def annotations_note
+          return nil if @annotations.empty?
+
+          lines = @annotations.map do |a|
+            ref = a[:reference_urls].present? ? " [#{a[:reference_urls].size} reference(s) attached to this scene]" : ''
+            "- Scene #{a[:scene]}: #{a[:note].presence || '(reference attached)'}#{ref}"
+          end
+          "Per-scene annotations the user pinned in the UI (apply EACH to its own scene — " \
+            "combine with the message below):\n#{lines.join("\n")}"
+        end
+
+        # Keeps well-formed annotations (1-based scene number) that carry EITHER
+        # a note OR a pinned reference. reference_urls ride with the scene they
+        # were pinned to (item: "a referência vai direto para o processo da cena").
+        def normalize_annotations(annotations)
+          Array(annotations).filter_map do |a|
+            h = a.respond_to?(:to_unsafe_h) ? a.to_unsafe_h : (a.respond_to?(:to_h) ? a.to_h : {})
+            h = h.stringify_keys
+            scene = h['scene'].to_i
+            note  = h['note'].to_s.strip
+            refs  = Array(h['reference_urls']).map { |u| u.to_s.strip }.reject(&:blank?)
+            next if scene < 1 || (note.blank? && refs.empty?)
+
+            { scene: scene, note: note, reference_urls: refs }
+          end.sort_by { |a| a[:scene] }
+        end
+
+        # What lands in the chat HISTORY as the user's message: the typed text
+        # plus the pinned notes rendered visibly (PT — user-facing), so past
+        # turns keep their full instructions when replayed as agent context.
+        def user_message_content
+          return @message if @annotations.empty?
+
+          notes = @annotations.map do |a|
+            ref = a[:reference_urls].present? ? ' 📎' : ''
+            "- Cena #{a[:scene]}: #{a[:note].presence || 'referência anexada'}#{ref}"
+          end.join("\n")
+          [@message.presence, "Notas por cena:\n#{notes}"].compact.join("\n\n")
         end
 
         def fallback_decision
@@ -247,6 +447,8 @@ module Operations
         # details the user asked to keep. Prefixed by the video's overall status
         # so it can't claim success on a failed/unfinished generation.
         def scenes_context
+          return intake_context if interview?
+
           lines = @creative.video_scenes.ordered.map do |s|
             state = STATE_LABELS.fetch(s.render_state, s.render_state)
             failure = ''
@@ -255,12 +457,66 @@ module Operations
               tag = attempts > 1 ? "; failure cause (#{attempts} attempts already failed)" : '; failure cause'
               failure = "#{tag}: #{s.metadata['failure'].to_s[0, 160]}"
             end
+            refs = Operations::Video::References.summary(s.labeled_references)
             "Scene #{s.position + 1} — #{state}#{failure}; caption (label only): #{s.caption.presence || '—'}\n" \
               "  dialogue (spoken verbatim): #{s.metadata['dialogue'].presence&.inspect || 'none'}; " \
               "on-screen text: #{s.metadata['on_screen_text'].presence&.inspect || 'none'}\n" \
+              "  references (cite by identifier in prompts): #{refs.presence || 'none'}\n" \
               "  full current visual prompt: #{s.prompt}"
           end
-          "#{video_status_line}\n#{quality_line}\n#{audio_line}\n#{credits_line}\n#{lines.join("\n")}"
+          "#{video_status_line}\n#{quality_line}\n#{audio_line}\n#{identity_line}\n#{voice_line}\n#{credits_line}\n#{lines.join("\n")}"
+        end
+
+        # The fixed voice (one speaker for the whole video) + the catalog options,
+        # so the agent can change it (action "voice") only when the user asks.
+        def voice_line
+          options = Operations::Video::VoiceOptions.list.map { |v| v[:name] }.reject(&:blank?)
+          return 'VOICE: no voices available (model native audio).' if options.empty?
+
+          current = @creative.generation&.params&.dig('voice_label').presence ||
+                    @creative.generation&.params&.dig('voice_id').presence || 'default'
+          "VOICE (one fixed speaker for the whole video — change project-wide via action " \
+            "\"voice\", which re-renders every scene): current #{current}. Options: #{options.first(14).join(', ')}."
+        end
+
+        # Before generation: the video has NO scenes yet — the agent is INTERVIEWING.
+        # Give it what's already known (from the setup) + the cost, so it only asks
+        # for the real gaps and knows what a "generate" will cost.
+        def interview?
+          @creative.metadata.is_a?(Hash) && @creative.metadata['phase'] == 'interview' &&
+            !@creative.video_scenes.exists?
+        end
+
+        def intake_context
+          intake = (@creative.metadata || {})['intake'] || {}
+          sound  = intake['with_audio'] == false ? 'silent (no speech)' : 'with sound'
+          known  = ["format #{intake['aspect_ratio'] || '9:16'}", "~#{intake['duration']}s", sound]
+          known << "initial brief: #{intake['brief']}" if intake['brief'].present?
+          cost   = Pricing.credits_for(kind: :video, seconds: intake['duration'].to_i.clamp(1, 120))
+          <<~TXT.strip
+            PHASE: INTERVIEW — no video generated yet, so there are NO scenes. Your job now is to
+            gather the COMPLETE context (see the checklist) BEFORE generating. Ask short, focused
+            questions for the real GAPS only; never re-ask what is already known.
+            ALREADY KNOWN (from the setup — do not ask again): #{known.join('; ')}.
+            CREDITS: generating this video will cost ~#{cost} credit(s) (the user has #{credit_balance}).
+            When you have enough — or the user tells you to go — use action "generate" to build it.
+            Do NOT use "edit"/"finalize"/"identity"/"music" here (there are no scenes yet).
+          TXT
+        end
+
+        # The locked project identity so the agent knows what to KEEP consistent
+        # and can change it project-wide (action "identity") when asked.
+        def identity_line
+          id = @creative.generation&.params&.dig('identity')
+          return 'IDENTITY: not set.' if id.blank?
+
+          parts = []
+          if id.key?('has_character')
+            parts << (id['has_character'] ? "character: #{id['character'].presence || 'yes'}" : 'no character')
+          end
+          %w[wardrobe scenario palette style].each { |k| parts << "#{k}: #{id[k]}" if id[k].present? }
+          "IDENTITY (locked, shared by every scene — change project-wide via action " \
+            "\"identity\"): #{parts.join('; ')}."
         end
 
         # The agent always knows the wallet balance and per-op costs, so it can
@@ -323,9 +579,21 @@ module Operations
               'To retry, use "edit" on the failed scene(s) — rewrite the prompt to avoid the error cause.'
           elsif @creative.status_ready?
             'VIDEO STATUS: ready (composed).'
+          elsif rendering?
+            'VIDEO STATUS: GENERATING right now — scenes are still rendering (~1–2 min each). ' \
+              'The user is waiting on this render. Acknowledge that the video is being generated ' \
+              'and ask them to hold on a moment; only note down any change they ask for. Do NOT ' \
+              'start a NEW render (edit/finalize/identity/voice) on top of the one in flight unless ' \
+              'they explicitly insist — reply warmly and ask for a little patience.'
           else
             'VIDEO STATUS: processing — not ready yet.'
           end
+        end
+
+        # A render is actively in flight (scenes rendering or queued behind one).
+        def rendering?
+          @creative.status_generating? ||
+            @creative.video_scenes.where(render_state: %i[rendering fresh stale]).exists?
         end
 
         def conversation

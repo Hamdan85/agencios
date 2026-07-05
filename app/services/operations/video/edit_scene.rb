@@ -16,11 +16,13 @@ module Operations
     class EditScene < Operations::Base
       # restyle: a re-render that should BREAK from the scene's current look
       # (RenderScene then skips the keep-look first-frame conditioning).
-      # add_reference_urls: reference images the user attached this turn, appended
-      # to the scene's references (role 'reference') and re-rendered so the model
-      # draws on them.
+      # add_reference_urls: media references (image or video) the user attached
+      # this turn, appended to the scene's references and re-rendered so the
+      # model draws on them. reference_role declares their JOB (character /
+      # product / scene / style / camera / motion — Operations::Video::
+      # References); falls back to the generic 'reference' when undeclared.
       def initialize(scene:, caption: nil, prompt: nil, dialogue: nil, on_screen_text: nil,
-                     restyle: nil, add_reference_urls: [])
+                     restyle: nil, add_reference_urls: [], reference_role: nil)
         @scene          = scene
         @caption        = caption
         @prompt         = prompt.to_s.strip.presence
@@ -30,6 +32,7 @@ module Operations
         @text           = on_screen_text.to_s.strip.presence
         @restyle        = restyle
         @new_refs       = Array(add_reference_urls).map { |u| u.to_s.strip }.reject(&:blank?)
+        @ref_role       = References.assignable_role(reference_role)
       end
 
       def call
@@ -63,13 +66,14 @@ module Operations
 
       def refs_added? = @new_refs.any?
 
-      # Append the attached references (role 'reference') to the scene, keeping
-      # the url list and the parallel role list in sync.
+      # Append the attached references under their declared role, keeping the
+      # url list and the parallel role list in sync. APPENDED (not re-sorted):
+      # existing positions keep their identifiers stable across edits.
       def append_references!
         return unless refs_added?
 
         roles = Array(@scene.metadata['reference_roles'])
-        roles += ['reference'] * @new_refs.size
+        roles += [@ref_role] * @new_refs.size
         @scene.update!(
           reference_image_urls: @scene.reference_urls + @new_refs,
           metadata: @scene.metadata.merge('reference_roles' => roles)

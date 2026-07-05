@@ -3,14 +3,21 @@
 class CreativeSerializer < ActiveModel::Serializer
   attributes :id, :name, :creative_type, :source, :status, :provider, :caption,
              :version, :metadata, :asset_urls, :preview_url, :ticket_id, :client_id,
-             :client_name, :music, :created_at
+             :client_name, :music, :identity, :created_at
 
   def source = object.source
   def status = object.status
 
-  # The background-music track chosen for a video (mood + royalty-free URL +
-  # credit). The composed file has it burned in; the editor plays it under the
-  # clip-hop preview (before compose) for continuity. Nil when there's none.
+  # The locked project identity of a video (character/wardrobe/scenario/palette/
+  # style) — the continuity the director set. Nil when there's none.
+  def identity
+    id = object.generation&.params&.dig('identity')
+    id.presence
+  end
+
+  # The background-music track chosen for a video (mood + track URL + credit).
+  # The composed file has it burned in; the editor plays it under the clip-hop
+  # preview (before compose) for continuity. Nil when there's none.
   def music
     params = object.generation&.params || {}
     url = params['music_url']

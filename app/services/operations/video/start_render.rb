@@ -33,16 +33,30 @@ module Operations
           with_audio: params.key?('with_audio') ? ActiveModel::Type::Boolean.new.cast(params['with_audio']) : nil
         )
 
-        scenes = scene_specs.map { |spec| Scenes::Create.call(creative: creative, **spec) }
+        # The orchestrator may request GENERATED reference images (a character
+        # sheet / scenario plate via Banana) to lock consistency when the user
+        # gave no photo — created ONCE and attached as a typed reference to every
+        # scene. Charged as image generations; a failure/broke wallet just skips it.
+        generated_refs = generate_references(scene_specs.generated_references, params['aspect_ratio'])
+        scenes = scene_specs.map do |spec|
+          Scenes::Create.call(creative: creative, **prepend_references(spec, generated_refs))
+        end
         # The video model generates NO music; the orchestrator searched an open
         # base and chose the mix — the compose step burns that track under the
         # audio. Silent videos get no music. Stored so it stays fixed unless the
         # user asks to change it (Operations::Video::ChangeMusic).
         music = silent?(params) ? {} : ResolveMusic.call(spec: scene_specs.music)
+        # The locked project identity (character/wardrobe/scenario/palette/style)
+        # — reapplied to every scene at render time for visual continuity.
+        identity = scene_specs.identity.present? ? { 'identity' => scene_specs.identity } : {}
+        # The fixed voice: ONE Cartesia voice_id for the whole video (synthesized
+        # per scene at render time), so the voice never drifts between clips.
+        # Silent videos get none; empty catalog degrades to model native audio.
+        voice = silent?(params) ? {} : ResolveVoice.call(spec: scene_specs.voice)
         @generation.update!(params: params.merge(
           'scene_count' => scenes.size,
           'estimated_seconds' => scenes.sum { |s| s.duration_seconds.to_i }
-        ).merge(music))
+        ).merge(identity).merge(music).merge(voice))
 
         # Sequential render for continuity: only the first scene starts here; each
         # completion (PollVideoSceneJob) chains the next seeded by its last frame.
@@ -54,6 +68,31 @@ module Operations
       end
 
       private
+
+      # Generate each requested reference (character/scenario) via Banana. Best-
+      # effort: an unconfigured vendor / broke wallet / error just yields fewer
+      # anchors — never blocks the video. Returns [{ url:, role: }].
+      def generate_references(requests, aspect)
+        Array(requests).filter_map do |req|
+          Operations::Video::GenerateReference.call(
+            generation: @generation, role: req['role'], prompt: req['prompt'], aspect_ratio: aspect
+          )
+        rescue Operations::Errors::InsufficientCredits
+          Rails.logger.info('[Video::StartRender] skipping generated reference — insufficient credits')
+          nil
+        end
+      end
+
+      # Prepend the generated references (as the SUBJECT anchors) to a scene spec's
+      # typed references, keeping the url/role arrays in sync.
+      def prepend_references(spec, generated)
+        return spec if generated.empty?
+
+        spec.merge(
+          reference_image_urls: generated.map { |r| r[:url] } + Array(spec[:reference_image_urls]),
+          reference_roles: generated.map { |r| r[:role] } + Array(spec[:reference_roles])
+        )
+      end
 
       def silent?(params)
         params.key?('with_audio') && ActiveModel::Type::Boolean.new.cast(params['with_audio']) == false

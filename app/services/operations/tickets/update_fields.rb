@@ -24,20 +24,10 @@ module Operations
         # when the content actually goes live.
         Operations::Posts::Reschedule.call(ticket: @ticket, scheduled_at: clean['scheduled_at']) if clean.key?('scheduled_at')
         Broadcaster.ticket(@ticket, 'ticket_updated', status: @ticket.status)
-        refresh_summary
         @ticket
       end
 
       private
-
-      # The contextual AI summary tracks the fields — regenerate it (once, async)
-      # whenever something in this status changes. The frontend debounces saves,
-      # so this fires on pauses, not on every keystroke.
-      def refresh_summary
-        SummarizeTicketJob.perform_later(@ticket.id, @status)
-      rescue StandardError => e
-        Rails.logger.warn("[UpdateFields] could not enqueue summary: #{e.message}")
-      end
 
       # A few field values are also first-class ticket columns. `creative_types` is
       # the multi-select source; `creative_type` mirrors its first entry so board

@@ -46,15 +46,35 @@ module Operations
           inputs = scenes.each_with_index.map { |s, i| download(s, File.join(dir, "s#{i}.mp4")) }
           w, h = dimensions
           out = File.join(dir, 'final.mp4')
-          # Keep the model's native audio (speech/ambient) unless the generation
-          # opted out of sound, and BURN the storyboard's music track under it —
-          # the one continuous soundtrack, added in post (models generate none).
+          # When a FIXED voice was synthesized, DUB it in: the model's audio is
+          # dropped (it drifts the voice between clips + adds its own music) and
+          # each scene's Cartesia voice clip is laid at its offset, with the
+          # music burned under it — one consistent voice, music only from post.
+          # No voice ⇒ keep the model's native audio + burn the music under it.
+          voices = with_audio? ? voice_paths(scenes, dir) : []
           Vendors::Ffmpeg::Concat.call(input_paths: inputs, width: w, height: h, output_path: out,
-                                       mute: !with_audio?, music_path: music_path(dir), music_mix: music_mix)
+                                       mute: !with_audio?, music_path: music_path(dir),
+                                       music_mix: music_mix, voice_paths: voices)
 
           @creative.assets.purge if @creative.assets.attached?
           @creative.assets.attach(io: File.open(out), filename: "video-#{@creative.id}.mp4", content_type: 'video/mp4')
         end
+      end
+
+      # The synthesized fixed-voice clip per scene (nil where none), parallel to
+      # the input clips — the dub inputs for Concat. Empty when no scene has one.
+      def voice_paths(scenes, dir)
+        paths = scenes.each_with_index.map do |s, i|
+          next nil unless s.voice_clip.attached?
+
+          p = File.join(dir, "voice#{i}.mp3")
+          s.voice_clip.open { |tmp| FileUtils.cp(tmp.path, p) }
+          p
+        rescue StandardError => e
+          Rails.logger.warn("[Video::Compose] voice clip #{s.id} unavailable: #{e.message}")
+          nil
+        end
+        paths.any? ? paths : []
       end
 
       # A remix only swapped the soundtrack — nudge the UI to reload the asset,

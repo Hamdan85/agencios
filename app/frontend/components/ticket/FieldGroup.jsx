@@ -286,6 +286,16 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
   const adoptAfterFill = useRef(false)
   useEffect(() => { if (filling) adoptAfterFill.current = true }, [filling])
 
+  // The server snapshot the current draft was last synced to. The draft only
+  // "diverges" when the USER edits away from this baseline — a background refetch
+  // that brings NEW server values (an async AI fill finishing, a teammate's edit)
+  // advances the baseline and is adopted, while genuine in-flight keystrokes are
+  // preserved. Comparing against this baseline (not the freshly-arrived values) is
+  // what fixes a strategy-born ticket whose fields are still being written: its
+  // empty untouched draft would otherwise read as "dirty" vs. the just-filled
+  // server and never adopt the brief until a manual reload.
+  const baseServer = useRef(serverValues)
+
   // Hard reset when navigating to a different ticket / status. The cleanup runs
   // on a ticket/status switch AND on unmount (closing the drawer or leaving the
   // page). We flush any pending draft on the way out — an edit made inside the
@@ -308,15 +318,20 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ticket?.id, status])
 
-  // Adopt server values that land while we have no unsaved edits — e.g. a realtime
-  // update. Skipped mid-edit so in-flight keystrokes are never clobbered by a
-  // background refetch — UNLESS a fill just ran (adoptAfterFill), where the user
-  // explicitly asked the AI to rewrite the fields, so its result must win.
+  // Adopt server values that land while the user has no unsaved edits — e.g. a
+  // realtime update (an async AI fill finishing, a teammate's change). "Unsaved
+  // edits" means the draft diverges from the baseline it was last synced to, NOT
+  // merely from the freshly-arrived server values — otherwise a ticket whose fields
+  // are still being written (empty draft vs. just-filled server) reads as "dirty"
+  // and the incoming fields never show until a reload. A fill the user explicitly
+  // triggered (adoptAfterFill) always wins.
   useEffect(() => {
-    if (adoptAfterFill.current || !dirtyRef.current) {
+    const userEdited = schema ? fieldsDirty(schema.fields, draftRef.current, baseServer.current) : false
+    if (adoptAfterFill.current || !userEdited) {
       setDraft(serverValues)
       adoptAfterFill.current = false
     }
+    baseServer.current = serverValues
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(serverValues)])
 

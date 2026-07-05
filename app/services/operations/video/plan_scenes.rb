@@ -22,11 +22,12 @@ module Operations
     # so chat edits keep them and the agent context stays lean. Scenes render
     # sequentially and continue from each other's last frame — see RenderScene.
     class PlanScenes < Operations::Base
-      # The scene specs PLUS the video-level MUSIC SPEC the orchestrator chose
-      # (search query + ffmpeg mix params). Acts as a plain Array (callers
-      # `.map`/`.size`/`.first` it) with an extra `music` reader.
+      # The scene specs PLUS the video-level decisions the orchestrator made: the
+      # locked IDENTITY (character/wardrobe/scenario/palette/style), the MUSIC
+      # spec, and the VOICE pick (one fixed voice for the whole video). Acts as a
+      # plain Array (callers `.map`/`.size`/`.first` it) with extra readers.
       class Plan < Array
-        attr_accessor :music
+        attr_accessor :identity, :music, :voice, :generated_references
       end
 
       MAX_SCENES = 6
@@ -34,7 +35,9 @@ module Operations
       # One scene ≈ one model clip. Veo/Seedance render ~8s per submission, so the
       # scene count must be derived from the requested duration, not invented.
       SCENE_UNIT_SECONDS = 8
-      STORYBOARD_MAX_TOKENS = 2000
+      # Generous ceiling so the storyboard keeps ALL the brief's concrete details
+      # (named characters, must-shows, exact lines) instead of truncating them.
+      STORYBOARD_MAX_TOKENS = 4000
 
       PRODUCT_BEATS = [
         { key: 'hook',    caption: 'Abertura que prende a atenção', hint: 'attention-grabbing opening shot of the product' },
@@ -61,19 +64,27 @@ module Operations
         beats = ai_beats.presence || deterministic_beats
         beats = beats.first(max_scenes)
         beats = [fallback_beat] if beats.empty?
-        even  = scene_duration(beats.size)
-        refs  = scene_references
+        # The orchestrator may keep the user's mode or switch to a better fit
+        # (@ai_mode set in ai_beats); that drives the ENGINE. The reference SET
+        # (roles + identifiers) stays the one the storyboard was shown and cited
+        # (built from @mode) — rebuilding it for a switched mode would rename or
+        # drop assets the scene prompts already reference by identifier.
+        mode  = effective_mode
+        refs  = media_references
+        # The even split, snapped to a length the effective engine supports.
+        even  = snap_seconds(scene_duration(beats.size), mode)
 
         specs = beats.each_with_index.map do |beat, i|
           {
             position: i,
-            mode: @mode,
+            mode: mode,
             prompt: beat[:prompt],
             caption: beat[:caption].to_s[0, 90],
             dialogue: beat[:dialogue],
             on_screen_text: beat[:on_screen_text],
-            # The storyboard may pace each shot (cutscenes); fall back to an even split.
-            duration_seconds: clamp_seconds(beat[:duration_seconds]) || even,
+            # The storyboard paces each shot by PICKING one of the engine's
+            # supported clip lengths (snapped defensively); else the even split.
+            duration_seconds: snap_seconds(beat[:duration_seconds], mode) || even,
             # Scene 1 always establishes; later scenes CONTINUE the previous shot
             # (seamless, seeded by its last frame) UNLESS the storyboard marked a
             # CUT — a new shot with the same characters/world but a fresh framing,
@@ -85,17 +96,49 @@ module Operations
             reference_roles: refs.map { |r| r[:role] }
           }
         end
+        specs = cap_to_total(specs)
 
-        Plan[*specs].tap { |plan| plan.music = @music }
+        # Guarantee the locked identity's recurring CHARACTER / signature SCENARIO
+        # get a GENERATED anchor image before the first render when the user gave
+        # no photo of them — the storyboard only requests these sometimes, so
+        # without this the look rests on the text alone and drifts between scenes.
+        @generated_references = ensure_identity_anchors(@generated_references, refs, mode)
+
+        Plan[*specs].tap do |plan|
+          plan.identity = @identity
+          plan.music = @music
+          plan.voice = @voice
+          plan.generated_references = @generated_references
+        end
       end
 
       private
 
-      # The scene budget CAP handed to the AI storyboard: how many ~4–8s shots
-      # the total could buy, so it can pace cutscenes (several short cuts) — but
-      # capped so cost stays bounded. The storyboard still uses the FEWEST needed.
+      # How many CLIPS (scenes) the total can hold — FLOOR of total/min-clip so the
+      # scenes' durations SUM to ~the total, never overshoot it (a 4–6s video is
+      # ONE clip, not two 4s clips = 8s). The storyboard still uses the fewest it
+      # needs; sub-clip cuts for a very short video are described in the prompt.
       def max_scenes
-        (@total / MIN_SCENE_SECONDS.to_f).ceil.clamp(1, MAX_SCENES)
+        (@total / MIN_SCENE_SECONDS.to_f).floor.clamp(1, MAX_SCENES)
+      end
+
+      # Keep scenes only until their durations FILL the requested total, so a
+      # storyboard that over-paces (e.g. two 8s clips for an 8s video) never
+      # balloons the length/cost. Always keeps at least the first scene; the last
+      # kept scene may overshoot by less than one clip. Reindexes positions +
+      # resets the new scene 1 to establish (no seed from a dropped predecessor).
+      def cap_to_total(specs)
+        return specs if specs.size <= 1
+
+        acc = 0
+        kept = specs.take_while do |s|
+          fill = acc < @total
+          acc += s[:duration_seconds].to_i
+          fill
+        end
+        kept = specs.first(1) if kept.empty?
+        kept.each_with_index { |s, i| s[:position] = i; s[:continues_previous] = false if i.zero? }
+        kept
       end
 
       # The DETERMINISTIC fallback stays conservative (one ~8s clip per beat) — it
@@ -104,18 +147,19 @@ module Operations
         (@total / SCENE_UNIT_SECONDS.to_f).ceil.clamp(1, MAX_SCENES)
       end
 
-      # Even split of the requested total across the scenes, clamped to one clip.
+      # Even split of the requested total across the scenes, clamped to one clip
+      # (snapped to a supported length by the caller).
       def scene_duration(count)
         (@total.to_f / count).round.clamp(MIN_SCENE_SECONDS, SCENE_UNIT_SECONDS)
       end
 
-      # A storyboard-provided per-scene duration, clamped to a single clip; nil
+      # Snap a storyboard-provided per-scene duration to the NEAREST clip length
+      # the given mode's engine actually supports (never an arbitrary value); nil
       # when absent (caller falls back to the even split).
-      def clamp_seconds(value)
-        secs = value.to_i
-        return nil unless secs.positive?
+      def snap_seconds(value, mode)
+        return nil unless value.to_i.positive?
 
-        secs.clamp(MIN_SCENE_SECONDS, SCENE_UNIT_SECONDS)
+        VideoConfig.instance.snap_seconds(value, mode)
       end
 
       # --- AI-planned storyboard (preferred) ------------------------------------
@@ -124,13 +168,22 @@ module Operations
           workspace: @ctx.workspace, client: @ctx.client, mode: @mode,
           brief: @brief, script: @script, total_duration: @total,
           aspect_ratio: @aspect, max_scenes: max_scenes, with_audio: @with_audio,
+          # The clip lengths the seeded mode's engine supports — the storyboard
+          # picks each scene's duration AMONG these, not an arbitrary value.
+          clip_seconds: VideoConfig.instance.clip_seconds_for(@mode),
           # The full planning direction — what the video must SAY/SHOW/AVOID.
           objective: @ctx.objective, persona: @ctx.persona,
           content_pillar: @ctx.content_pillar, production_scope: @ctx.production_scope,
           positioning_brief: @ctx.positioning_brief, references: @ctx.references.presence&.join('; '),
           has_references: @refs.any?,
-          has_logo: @mode == 'product' && @ctx.brand_logo_url.present?,
-          has_avatar: @mode == 'avatar' && @ctx.brand_avatar_url.present?
+          # The typed media references the renderer will receive (identifier +
+          # role) — the SAME set the final specs use, so every identifier the
+          # storyboard cites resolves in the render manifest.
+          media_references: media_references,
+          # The fixed-voice options the director may pick ONE from (LIVE from the
+          # Cartesia library + admin overrides) — so it matches the voice to the
+          # character. Empty ⇒ no external voice (model native audio).
+          voices: Operations::Video::VoiceOptions.list
         )
         client = Vendors::Ai.client(model: Vendors::Ai.model_for('video_storyboard'))
         result = client.generate(
@@ -140,10 +193,22 @@ module Operations
           max_tokens: STORYBOARD_MAX_TOKENS
         )
         tool = result.tool_input.is_a?(Hash) ? result.tool_input : {}
+        # The orchestrator may set the video MODE (keep the user's or switch).
+        @ai_mode = tool['mode'].to_s if VideoConfig::MODES.include?(tool['mode'].to_s)
+        # The orchestrator's LOCKED identity — the look every scene shares.
+        @identity = clean_identity(tool['identity'])
         # The orchestrator's music spec: the search query + the ffmpeg mix params
         # (one track per video, burned in post). Kept only when it has a query/mood.
         m = tool['music']
         @music = m if m.is_a?(Hash) && (m['query'].present? || m['mood'].present?)
+        # The orchestrator's VOICE pick — ONE fixed voice for the whole video
+        # (a catalog label or voice_id). Kept only when non-blank.
+        v = tool['voice']
+        @voice = { 'voice' => v.to_s } if v.is_a?(String) && v.strip.present?
+        # The orchestrator's request to GENERATE reference images (character sheet
+        # / scenario) for consistency — each { role, prompt }, kept only when the
+        # prompt is present. Charged as image generations at render time.
+        @generated_references = clean_generated_references(tool['generated_references'])
         scenes = tool['scenes']
         Array(scenes).filter_map do |s|
           prompt = s['prompt'].to_s.strip
@@ -162,6 +227,62 @@ module Operations
       rescue StandardError => e
         Rails.logger.warn("[Video::PlanScenes] storyboard AI failed, using fallback: #{e.class}: #{e.message}")
         nil
+      end
+
+      # Keep only well-formed generated-reference requests: a valid role + a
+      # non-blank prompt. Capped so a runaway plan can't spend on many images —
+      # but generous enough to hold ONE reference PER recurring character (a video
+      # may have several people/characters) plus a signature scenario.
+      GENERATED_REFERENCE_ROLES = %w[character scene].freeze
+      MAX_GENERATED_REFERENCES = 4
+      def clean_generated_references(value)
+        Array(value).filter_map do |r|
+          h = r.respond_to?(:to_unsafe_h) ? r.to_unsafe_h : (r.respond_to?(:to_h) ? r.to_h : {})
+          h = h.stringify_keys
+          role   = GENERATED_REFERENCE_ROLES.include?(h['role'].to_s) ? h['role'].to_s : 'character'
+          prompt = h['prompt'].to_s.strip
+          next if prompt.blank?
+
+          { 'role' => role, 'prompt' => prompt }
+        end.first(MAX_GENERATED_REFERENCES)
+      end
+
+      # Add a deterministic character/scenario anchor to the model's requests when
+      # the locked identity defines one and NO reference photo of it exists — so the
+      # anchor is always generated up front, not left to the model's discretion.
+      # Merges (one per role), capped like the model path.
+      #   character — only when the video has a recurring character (has_character)
+      #     and no face photo is attached (avatar) or character reference.
+      #   scene     — a signature setting with no location photo; skipped for avatar
+      #     UGC, where the selfie background is incidental.
+      def ensure_identity_anchors(requested, refs, mode)
+        out = Array(requested).dup
+        return out unless @identity.is_a?(Hash)
+
+        have   = out.map { |r| r['role'] }
+        photos = Array(refs).map { |r| r[:role].to_s }
+
+        if @identity['has_character'] && @identity['character'].present? &&
+           have.exclude?('character') && (photos & %w[character avatar]).empty?
+          out << { 'role' => 'character', 'prompt' => @identity['character'].to_s.strip }
+        end
+        if @identity['scenario'].present? && mode.to_s != 'avatar' &&
+           have.exclude?('scene') && photos.exclude?('scene')
+          out << { 'role' => 'scene', 'prompt' => @identity['scenario'].to_s.strip }
+        end
+        out.first(MAX_GENERATED_REFERENCES)
+      end
+
+      # Keep only the known identity fields (trimmed); has_character is boolean.
+      IDENTITY_TEXT_KEYS = %w[character wardrobe scenario palette style].freeze
+      def clean_identity(value)
+        return nil unless value.is_a?(Hash)
+
+        out = {}
+        out['has_character'] = ActiveModel::Type::Boolean.new.cast(value['has_character']) if value.key?('has_character')
+        IDENTITY_TEXT_KEYS.each { |k| out[k] = value[k].to_s.strip.presence }
+        out.compact!
+        out.presence
       end
 
       # --- deterministic fallback ----------------------------------------------
@@ -214,23 +335,42 @@ module Operations
         { prompt: @ctx.topic.to_s, caption: @ctx.topic.to_s[0, 90] }
       end
 
-      # The visual-identity references handed to the render, per mode, each with
-      # its ROLE persisted alongside the URL — so the render manifest labels every
-      # image by what it IS, without re-deriving the role by URL equality against
-      # a (possibly changed) brand asset at render time.
+      # The mode the render uses: the orchestrator's choice, else the requested.
+      def effective_mode
+        @ai_mode.presence || @mode
+      end
+
+      # The ONE typed reference set for this plan — built from the USER's mode
+      # and reused by both the storyboard (which cites the identifiers) and the
+      # final specs (which persist them), so the identifiers never diverge even
+      # when the orchestrator switches the engine mode. Memoized.
+      def media_references
+        @media_references ||= scene_references(@mode)
+      end
+
+      # The visual-identity references handed to the render, per mode — built
+      # through Operations::Video::References so every entry gets a typed ROLE, a
+      # media KIND and a stable IDENTIFIER (img_product_v1, vid_camera_ref_v1…),
+      # priority-sorted (subject first, logo last). The urls + roles are persisted
+      # on the scene in this order, so the manifest never re-derives a role by
+      # URL equality against a (possibly changed) brand asset at render time.
       #   product — the user's product photos + the brand logo (mark fidelity)
-      #   avatar  — the creator avatar (the spokesperson's face) + any reference
-      #             images the user attached to the prompt (style/subject/scene)
-      def scene_references
-        refs =
-          if @mode == 'product'
+      #   avatar  — the creator avatar (spokesperson's face) + attached refs
+      #   character/scene/motion — only the user's attached refs (style/subject),
+      #     no forced avatar/logo (the character is described, not a real face)
+      def scene_references(mode)
+        raw =
+          case mode
+          when 'product'
             @refs.map { |url| { url: url, role: 'product' } } +
               [{ url: @ctx.brand_logo_url, role: 'logo' }]
-          else
+          when 'avatar'
             [{ url: @ctx.brand_avatar_url, role: 'avatar' }] +
               @refs.map { |url| { url: url, role: 'reference' } }
+          else # character / scene / motion — user references only
+            @refs.map { |url| { url: url, role: 'reference' } }
           end
-        refs.select { |r| r[:url].present? }
+        References.build(raw)
       end
     end
   end

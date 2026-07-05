@@ -91,11 +91,29 @@ module Controllers
                           .where(created_at: since..)
                           .group(group).count
 
+        # Per-kind spend/activity per bucket, so the trend can draw one line per
+        # creative type alongside the yellow total. Keyed by [bucket, kind-label].
+        kind_group = bucket_sql(trunc, 'credit_transactions.created_at')
+        kind_spend = workspace.credit_transactions.debits
+                              .joins(:generation)
+                              .where(credit_transactions: { created_at: since.. })
+                              .group(kind_group, Arel.sql('generations.kind')).sum(:amount)
+        kind_counts = workspace.generations
+                               .where(created_at: since..)
+                               .group(group, :kind).count
+
         buckets(since, trunc).map do |bucket|
+          by_kind = KINDS.index_with do |k|
+            {
+              credits: -kind_spend.fetch([bucket, k], 0).to_i,
+              generations: kind_counts.fetch([bucket, k], 0)
+            }
+          end
           {
             date: bucket.iso8601,
             credits: -spend.fetch(bucket, 0).to_i,
-            generations: counts.fetch(bucket, 0)
+            generations: counts.fetch(bucket, 0),
+            by_kind: by_kind
           }
         end
       end
@@ -108,9 +126,9 @@ module Controllers
       # naive UTC value as local and shifts the date by the offset (buckets past
       # ~21:00 UTC land on tomorrow and fall outside the range). `trunc` and the
       # zone are config-derived (never user input), so the interpolation is safe.
-      def bucket_sql(trunc)
+      def bucket_sql(trunc, col = 'created_at')
         zone = ActiveRecord::Base.connection.quote(Time.zone.tzinfo.name)
-        Arel.sql("date_trunc('#{trunc}', (created_at AT TIME ZONE 'UTC') AT TIME ZONE #{zone})::date")
+        Arel.sql("date_trunc('#{trunc}', (#{col} AT TIME ZONE 'UTC') AT TIME ZONE #{zone})::date")
       end
 
       # The bucket start dates from `since` to today, aligned to Postgres

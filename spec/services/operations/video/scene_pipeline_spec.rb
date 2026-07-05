@@ -27,6 +27,8 @@ RSpec.describe 'video scene pipeline' do
     Operations::Credits::EnsureWallet.call(workspace: workspace).update!(purchased_balance: 10_000)
     # Force the deterministic storyboard fallback (no live AI in specs).
     allow(Vendors::Ai).to receive(:client).and_raise(StandardError, 'no ai in test')
+    # Voice discovery is a network call — keep it offline (no voices ⇒ model audio).
+    allow(Vendors::Cartesia::Actions::ListVoices).to receive(:call).and_return([])
   end
 
   after { Current.reset }
@@ -91,7 +93,7 @@ RSpec.describe 'video scene pipeline' do
       allow(ai).to receive(:generate).and_return(
         Vendors::Ai::Result.new(text: '', usage: {}, model: 'x', tool_input: {
           'scenes' => [
-            { 'prompt' => 'creator talks', 'caption' => 'fala', 'duration_seconds' => 5 },
+            { 'prompt' => 'creator talks', 'caption' => 'fala', 'duration_seconds' => 6 },
             { 'prompt' => 'wide shot of the office team', 'caption' => 'corte', 'continues_previous' => false }
           ]
         })
@@ -102,8 +104,66 @@ RSpec.describe 'video scene pipeline' do
       scenes = described_class.call(ctx: ctx, mode: 'avatar', script: 'oi', total_duration: 16, aspect_ratio: '9:16')
 
       expect(scenes.size).to eq(2)
-      expect(scenes.first[:duration_seconds]).to eq(5) # storyboard-paced
+      expect(scenes.first[:duration_seconds]).to eq(6) # storyboard-paced (a supported length)
       expect(scenes.last[:continues_previous]).to be(false) # a cut
+    end
+
+    it 'snaps a storyboard duration that is NOT a supported clip length to the nearest option' do
+      ai = instance_double('ai_client', provider_key: 'openrouter')
+      allow(ai).to receive(:generate).and_return(
+        Vendors::Ai::Result.new(text: '', usage: {}, model: 'x', tool_input: {
+          'scenes' => [{ 'prompt' => 'creator talks', 'caption' => 'fala', 'duration_seconds' => 7 }]
+        })
+      )
+      allow(Vendors::Ai).to receive(:client).and_return(ai)
+      allow(Vendors::Ai).to receive(:model_for).and_return('x')
+
+      scenes = described_class.call(ctx: ctx, mode: 'avatar', script: 'oi', total_duration: 8, aspect_ratio: '9:16')
+
+      # avatar → veo-3.1 family supports [4, 6, 8]; 7 snaps to 6 (tie rounds down).
+      expect(VideoConfig::DEFAULT_CLIP_SECONDS).to include(scenes.first[:duration_seconds])
+      expect(scenes.first[:duration_seconds]).to eq(6)
+    end
+
+    it 'caps scenes so their durations never overshoot the total (over-pacing → fewer scenes)' do
+      ai = instance_double('ai_client', provider_key: 'openrouter')
+      allow(ai).to receive(:generate).and_return(
+        Vendors::Ai::Result.new(text: '', usage: {}, model: 'x', tool_input: {
+          # Two full 8s clips = 16s for an 8s video — must be capped to fit.
+          'scenes' => [{ 'prompt' => 'a', 'duration_seconds' => 8 }, { 'prompt' => 'b', 'duration_seconds' => 8 }]
+        })
+      )
+      allow(Vendors::Ai).to receive(:client).and_return(ai)
+      allow(Vendors::Ai).to receive(:model_for).and_return('x')
+
+      scenes = described_class.call(ctx: ctx, mode: 'avatar', script: 'oi', total_duration: 8, aspect_ratio: '9:16')
+      expect(scenes.size).to eq(1) # 8s already fills the 8s total
+      expect(scenes.sum { |s| s[:duration_seconds] }).to be <= 8
+    end
+
+    it 'a short total is a SINGLE clip, never two min-length clips' do
+      # total 6 → floor(6/4)=1 scene (two 4s clips would be 8s > 6s).
+      scenes = described_class.call(ctx: ctx, mode: 'avatar', script: 'Um. Dois. Três.',
+                                    total_duration: 6, aspect_ratio: '9:16')
+      expect(scenes.size).to eq(1)
+    end
+
+    it 'captures the orchestrator request to GENERATE consistency references' do
+      ai = instance_double('ai_client', provider_key: 'openrouter')
+      allow(ai).to receive(:generate).and_return(
+        Vendors::Ai::Result.new(text: '', usage: {}, model: 'x', tool_input: {
+          'generated_references' => [
+            { 'role' => 'character', 'prompt' => 'a cheetah lawyer in a navy suit' },
+            { 'role' => 'bogus', 'prompt' => '' } # dropped (blank prompt)
+          ],
+          'scenes' => [{ 'prompt' => 'creator talks', 'caption' => 'fala' }]
+        })
+      )
+      allow(Vendors::Ai).to receive(:client).and_return(ai)
+      allow(Vendors::Ai).to receive(:model_for).and_return('x')
+
+      plan = described_class.call(ctx: ctx, mode: 'avatar', script: 'oi', total_duration: 8, aspect_ratio: '9:16')
+      expect(plan.generated_references).to eq([{ 'role' => 'character', 'prompt' => 'a cheetah lawyer in a navy suit' }])
     end
 
     it 'captures the orchestrator music spec (query + mix params), one per video' do
@@ -123,6 +183,42 @@ RSpec.describe 'video scene pipeline' do
       # The deterministic fallback picks no music.
       allow(Vendors::Ai).to receive(:client).and_raise(StandardError, 'offline')
       expect(described_class.call(ctx: ctx, mode: 'avatar', script: 'oi', total_duration: 8, aspect_ratio: '9:16').music).to be_nil
+    end
+
+    it 'lets the orchestrator switch the mode and attaches only user refs for non-avatar/product modes' do
+      ai = instance_double('ai_client', provider_key: 'openrouter')
+      allow(ai).to receive(:generate).and_return(
+        Vendors::Ai::Result.new(text: '', usage: {}, model: 'x', tool_input: {
+          'mode' => 'character',
+          'scenes' => [{ 'prompt' => 'an animated fox lawyer waves', 'caption' => 'raposa' }]
+        })
+      )
+      allow(Vendors::Ai).to receive(:client).and_return(ai)
+      allow(Vendors::Ai).to receive(:model_for).and_return('x')
+
+      # Requested as avatar, but the director switches to character.
+      scenes = described_class.call(ctx: ctx, mode: 'avatar', script: 'oi', total_duration: 8,
+                                    aspect_ratio: '9:16', reference_image_urls: ['https://x/ref.jpg'])
+
+      expect(scenes.first[:mode]).to eq('character')
+      # character mode: only the user's ref (role reference), no forced avatar/logo.
+      expect(scenes.first[:reference_roles]).to eq(['reference'])
+      expect(scenes.first[:reference_image_urls]).to eq(['https://x/ref.jpg'])
+    end
+
+    it 'captures the orchestrator-locked identity (scope + look)' do
+      ai = instance_double('ai_client', provider_key: 'openrouter')
+      allow(ai).to receive(:generate).and_return(
+        Vendors::Ai::Result.new(text: '', usage: {}, model: 'x', tool_input: {
+          'identity' => { 'has_character' => true, 'character' => 'a cheetah lawyer', 'wardrobe' => 'navy suit', 'palette' => '#000' },
+          'scenes' => [{ 'prompt' => 'creator talks', 'caption' => 'fala' }]
+        })
+      )
+      allow(Vendors::Ai).to receive(:client).and_return(ai)
+      allow(Vendors::Ai).to receive(:model_for).and_return('x')
+
+      plan = described_class.call(ctx: ctx, mode: 'avatar', script: 'oi', total_duration: 8, aspect_ratio: '9:16')
+      expect(plan.identity).to include('has_character' => true, 'character' => 'a cheetah lawyer', 'wardrobe' => 'navy suit')
     end
 
     it 'persists each reference image ROLE alongside the URL (avatar mode → avatar role)' do
@@ -156,6 +252,31 @@ RSpec.describe 'video scene pipeline' do
     end
 
     before { allow(Vendors::OpenRouter::Actions::GenerateVideo).to receive(:call).and_return('job_render') }
+
+    it 'passes the synthesized voice clip as an audio reference and demands lip-sync' do
+      generation.update!(params: generation.params.merge('with_audio' => true, 'voice_id' => 'voice_abc'))
+      scene.update!(metadata: scene.metadata.merge('dialogue' => 'Fala fixa', 'voice_fingerprint' => 'x'))
+      # Pre-attach a voice clip whose fingerprint matches → ensure_voice_clip! reuses it
+      # (no Cartesia call) and the render carries it as the lip-sync audio reference.
+      allow_any_instance_of(Operations::Video::RenderScene).to receive(:ensure_voice_clip!)
+      scene.voice_clip.attach(io: StringIO.new('AUDIO'), filename: 'v.mp3', content_type: 'audio/mpeg')
+
+      described_class.call(scene: scene)
+
+      expect(Vendors::OpenRouter::Actions::GenerateVideo).to have_received(:call).with(
+        hash_including(
+          audio_references: [hash_including(url: a_string_including('/rails/'))],
+          prompt: a_string_including('AUDIO REFERENCE (a fixed voice)')
+        )
+      )
+    end
+
+    it 'sends no audio reference when there is no synthesized voice' do
+      described_class.call(scene: scene)
+      expect(Vendors::OpenRouter::Actions::GenerateVideo).to have_received(:call).with(
+        hash_including(audio_references: [])
+      )
+    end
 
     it 'submits the COMPILED prompt but keeps the stored prompt clean' do
       described_class.call(scene: scene)
@@ -274,14 +395,28 @@ RSpec.describe 'video scene pipeline' do
       )
     end
 
-    it 'labels references by their persisted ROLE, not by URL equality (avatar stays the creator)' do
+    it 'labels references by their persisted ROLE with the stable identifier, not by URL equality' do
       scene.update!(reference_image_urls: ['https://stale-host/old-avatar.png'],
                     metadata: { 'reference_roles' => ['avatar'] })
 
       described_class.call(scene: scene)
 
       expect(Vendors::OpenRouter::Actions::GenerateVideo).to have_received(:call).with(
-        hash_including(prompt: a_string_including('image 1: the CREATOR (the spokesperson)'))
+        hash_including(prompt: a_string_including('input 1 = img_avatar_v1: the CREATOR (the spokesperson)'))
+      )
+    end
+
+    it 'submits a video reference as a video_url part and manifests it as a camera guide' do
+      scene.update!(reference_image_urls: ['https://cdn/guide.mp4'],
+                    metadata: { 'reference_roles' => ['camera'] })
+
+      described_class.call(scene: scene)
+
+      expect(Vendors::OpenRouter::Actions::GenerateVideo).to have_received(:call).with(
+        hash_including(
+          input_references: [{ url: 'https://cdn/guide.mp4', type: 'video_url' }],
+          prompt: a_string_including('input 1 = vid_camera_ref_v1: CAMERA reference (video)')
+        )
       )
     end
 

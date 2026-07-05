@@ -215,11 +215,15 @@ Rails.application.routes.draw do
       # Creative studio
       get  'studio', to: 'studio#index'
       post 'studio/generate', to: 'studio#generate'
+      # Video: open an interview (no immediate generation) — the chat gathers
+      # context and decides when to build.
+      post 'studio/video', to: 'studio#video'
       post 'studio/improve_prompt', to: 'studio#improve_prompt'
       resources :generations, only: %i[index show]
 
-      # Ad-hoc uploads (e.g. product reference photos for the video generator)
-      post 'uploads/reference_images', to: 'uploads#reference_images'
+      # Ad-hoc uploads: media references (photos / short guide videos) for the
+      # video generator
+      post 'uploads/references', to: 'uploads#references'
 
       # Workspace-level creative management (Studio gallery)
       get    'creatives',     to: 'creatives#workspace_index'
@@ -233,6 +237,13 @@ Rails.application.routes.draw do
       post  'creatives/:creative_id/video_chat',     to: 'video_scenes#chat'
       # Approve the draft → re-render the storyboard with the final model
       post  'creatives/:creative_id/video_finalize', to: 'video_scenes#finalize'
+      # Elementos tab — the video's characters/scenarios/references/music, plus
+      # regenerate / add (upload or library) / remove, and the reusable library.
+      get   'creatives/:creative_id/assets',            to: 'video_scenes#assets'
+      get   'creatives/:creative_id/assets/library',    to: 'video_scenes#asset_library'
+      post  'creatives/:creative_id/assets/regenerate', to: 'video_scenes#regenerate_asset'
+      post  'creatives/:creative_id/assets/add',        to: 'video_scenes#add_asset'
+      post  'creatives/:creative_id/assets/remove',     to: 'video_scenes#remove_asset'
 
       # Meetings, billing (social accounts are nested under clients above)
       resources :meetings

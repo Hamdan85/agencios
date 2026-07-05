@@ -25,17 +25,28 @@ module Operations
       PROVIDER = 'openrouter'
       MODES = VideoConfig::MODES
 
+      # creative: an EXISTING draft creative to launch (the chat interview built
+      # its context before deciding to generate) — reused instead of creating a
+      # new one, so the interview chat/history stays on it. Nil ⇒ create fresh
+      # (immediate generation: autopilot / ticket flows).
       def initialize(ticket: nil, mode: nil, script: nil, prompt: nil, avatar: nil, voice: nil,
                      aspect_ratio: nil, duration: nil, reference_image_urls: [],
-                     creative_type: nil, client_id: nil, with_audio: nil)
+                     creative_type: nil, client_id: nil, with_audio: nil, creative: nil)
         @ticket        = ticket
-        @mode          = MODES.include?(mode.to_s) ? mode.to_s : 'avatar'
+        @creative_arg  = creative
         @script        = script
         @prompt        = prompt
         @voice         = voice
         @aspect_ratio  = aspect_ratio
         @duration      = duration
         @ref_urls      = Array(reference_image_urls).map { |u| u.to_s.strip }.reject(&:blank?)
+        # The type is no longer a mandatory upfront pick — the creation form sends
+        # no mode; the storyboard DIRECTOR chooses the real one (avatar/product/
+        # character/scene/motion). This is only the SEED: honor an explicit mode,
+        # else lean on the attached references (photos ⇒ product) and default to
+        # avatar. Reference roles at plan time follow this seed; the director's
+        # switch drives the actual scene engines.
+        @mode          = MODES.include?(mode.to_s) ? mode.to_s : (@ref_urls.any? ? 'product' : 'avatar')
         @creative_type = creative_type
         @client_id     = client_id
         @with_audio    = with_audio.nil? ? true : ActiveModel::Type::Boolean.new.cast(with_audio)
@@ -50,13 +61,23 @@ module Operations
         duration = clamp_duration(@duration)
 
         # Videos render DRAFT-FIRST (fast/cheap preview model): the user iterates
-        # in the editor and upgrades to the final model on approval.
-        creative = Operations::Creatives::Create.call(
-          ticket: @ticket, client: ctx.client, creative_type: ctx.creative_type || type,
-          source: :generated, status: :generating, provider: PROVIDER,
-          metadata: { mode: @mode, aspect_ratio: aspect, duration: duration,
-                      with_audio: @with_audio, quality: 'draft' }
-        )
+        # in the editor and upgrades to the final model on approval. Reuse the
+        # interview's draft creative when given (keeps its chat history); else
+        # create a fresh one (immediate generation).
+        video_meta = { mode: @mode, aspect_ratio: aspect, duration: duration,
+                       with_audio: @with_audio, quality: 'draft' }
+        creative =
+          if @creative_arg
+            # Leave the interview phase and move into generation.
+            @creative_arg.update!(status: :generating,
+                                  metadata: (@creative_arg.metadata || {}).merge(video_meta.stringify_keys).except('phase', 'intake'))
+            @creative_arg
+          else
+            Operations::Creatives::Create.call(
+              ticket: @ticket, client: ctx.client, creative_type: ctx.creative_type || type,
+              source: :generated, status: :generating, provider: PROVIDER, metadata: video_meta
+            )
+          end
 
         generation = workspace.generations.create!(
           user: Current.user, creative: creative, kind: :video, status: :processing, provider: PROVIDER,

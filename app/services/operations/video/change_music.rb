@@ -40,7 +40,7 @@ module Operations
 
       def removing? = @mood == 'none' || @mood == 'nenhuma'
 
-      # Re-search the open base for the new mood/query, keeping the previous mix
+      # Re-search the licensed catalog for the new mood/query, keeping the previous mix
       # knobs (volume/fades/duck) so only the SONG changes.
       def resolved_music(params)
         return {} if removing? || (@mood.blank? && @query.blank?)

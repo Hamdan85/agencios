@@ -11,13 +11,14 @@ module Vendors
         def self.call(...) = new(...).call
 
         def initialize(mode:, prompt:, aspect_ratio: nil, duration: nil,
-                       frame_images: [], input_references: [], model: nil)
+                       frame_images: [], input_references: [], audio_references: [], model: nil)
           @mode             = mode.to_s
           @prompt           = prompt
           @aspect_ratio     = aspect_ratio
           @duration         = duration
           @frame_images     = frame_images || []
           @input_references = input_references || []
+          @audio_references = audio_references || []
           @model            = model
         end
 
@@ -28,7 +29,8 @@ module Vendors
             aspect_ratio: @aspect_ratio,
             duration: @duration,
             frame_images: @frame_images,
-            input_references: @input_references
+            input_references: @input_references,
+            audio_references: @audio_references
           )
         end
       end

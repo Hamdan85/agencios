@@ -3,59 +3,76 @@
 require 'rails_helper'
 
 RSpec.describe VideoConfig do
-  describe '#model_for' do
-    it 'prefers a per-mode override, else the default model, else the coded seed' do
-      cfg = described_class.new(default_model: 'google/veo-3.1-fast',
-                                mode_models: { 'product' => 'bytedance/seedance-2.0' })
-      expect(cfg.model_for('product')).to eq('bytedance/seedance-2.0')
-      expect(cfg.model_for('avatar')).to eq('google/veo-3.1-fast')
-    end
-
-    it 'falls back to the coded per-mode seed when nothing is configured' do
-      cfg = described_class.new
-      expect(cfg.model_for('avatar')).to eq(described_class::DEFAULT_MODE_MODELS['avatar'])
-      expect(cfg.model_for('product')).to eq(described_class::DEFAULT_MODE_MODELS['product'])
-    end
-  end
-
-  describe 'per-mode fields (ActiveAdmin editing)' do
-    it 'reads/writes one mode slug via model_<mode>' do
-      cfg = described_class.new
-      cfg.model_product = 'bytedance/seedance-2.0'
-      expect(cfg.mode_models).to eq('product' => 'bytedance/seedance-2.0')
-      expect(cfg.model_product).to eq('bytedance/seedance-2.0')
-    end
-
-    it 'clearing a field removes the override' do
-      cfg = described_class.new(mode_models: { 'avatar' => 'google/veo-3.1-fast' })
-      cfg.model_avatar = '  '
-      expect(cfg.mode_models).to eq({})
-    end
-  end
-
-  describe 'the setter always stores a clean map' do
-    it 'drops unknown modes and blank/whitespace slugs' do
-      cfg = described_class.new(mode_models: { 'bogus' => 'x/y', 'avatar' => '  ',
-                                               'product' => '  bytedance/seedance-2.0 ' })
-      expect(cfg.mode_models).to eq('product' => 'bytedance/seedance-2.0')
-    end
-
-    it 'cleans the draft map the same way' do
-      cfg = described_class.new(draft_models: { 'bogus' => 'x/y', 'avatar' => ' a/b ' })
-      expect(cfg.draft_models).to eq('avatar' => 'a/b')
-    end
-  end
-
-  describe '#model_for with quality tiers' do
-    it 'resolves draft from the draft map, falling back to the coded draft seed then the final chain' do
-      cfg = described_class.new(mode_models: { 'avatar' => 'final/model' },
-                                draft_models: { 'avatar' => 'draft/model' })
-      expect(cfg.model_for('avatar', quality: 'draft')).to eq('draft/model')
+  describe '#model_for (two engines, mode-independent)' do
+    it 'resolves final from default_model and draft from draft_model' do
+      cfg = described_class.new(default_model: 'final/model', draft_model: 'draft/model')
       expect(cfg.model_for('avatar')).to eq('final/model')
+      expect(cfg.model_for('product')).to eq('final/model')
+      expect(cfg.model_for('avatar', quality: 'draft')).to eq('draft/model')
+      # The mode never changes the model — same slug regardless of mode.
+      expect(cfg.model_for('scene', quality: 'draft')).to eq('draft/model')
+    end
 
+    it 'ignores the mode entirely (it is optional)' do
+      cfg = described_class.new(default_model: 'final/model', draft_model: 'draft/model')
+      expect(cfg.model_for).to eq('final/model')
+      expect(cfg.model_for(nil, quality: 'draft')).to eq('draft/model')
+    end
+
+    it 'falls back to the coded seeds when nothing is configured' do
       bare = described_class.new
-      expect(bare.model_for('avatar', quality: 'draft')).to eq(described_class::DEFAULT_DRAFT_MODELS['avatar'])
-      expect(bare.model_for('avatar')).to eq(described_class::DEFAULT_MODE_MODELS['avatar'])
+      expect(bare.model_for('avatar')).to eq(described_class::DEFAULT_MODEL)
+      expect(bare.model_for('avatar', quality: 'draft')).to eq(described_class::DEFAULT_DRAFT_MODEL)
+    end
+
+    it 'draft falls back to the final chain when no draft model is set' do
+      cfg = described_class.new(default_model: 'final/model', draft_model: nil)
+      # coded draft seed is used first; but with a bespoke final and no draft, the
+      # draft seed still applies (draft is independent of final).
+      expect(cfg.model_for('avatar', quality: 'draft')).to eq(described_class::DEFAULT_DRAFT_MODEL)
+    end
+  end
+
+  describe 'clip-length options + snapping' do
+    it 'returns the engines\' supported clip lengths (draft ∩ final)' do
+      # veo family (draft veo-3.1-fast, final veo-3.1), both [4,6,8].
+      cfg = described_class.new(default_model: 'google/veo-3.1', draft_model: 'google/veo-3.1-fast')
+      expect(cfg.clip_seconds_for('avatar')).to eq([4, 6, 8])
+    end
+
+    it 'falls back to the default set for an unknown/unlisted model' do
+      cfg = described_class.new(default_model: 'brand/new-engine', draft_model: 'brand/new-engine')
+      expect(cfg.clip_seconds_for).to eq(described_class::DEFAULT_CLIP_SECONDS)
+    end
+
+    it 'snaps an arbitrary duration to the nearest supported length (ties round down)' do
+      cfg = described_class.new(default_model: 'google/veo-3.1', draft_model: 'google/veo-3.1-fast') # [4, 6, 8]
+      expect(cfg.snap_seconds(8, 'avatar')).to eq(8) # already valid
+      expect(cfg.snap_seconds(7, 'avatar')).to eq(6) # tie 6/8 → down
+      expect(cfg.snap_seconds(5, 'avatar')).to eq(4) # tie 4/6 → down
+      expect(cfg.snap_seconds(100, 'avatar')).to eq(8) # clamp to max option
+      expect(cfg.snap_seconds(0)).to eq(4)             # blank/zero → shortest, mode optional
+    end
+  end
+
+  describe 'voice catalog (Cartesia)' do
+    it 'parses the admin text (label = voice_id per line) and drops incomplete rows' do
+      cfg = described_class.new
+      cfg.voice_catalog_text = "Feminina BR = voice_abc\n  Masculina BR = voice_xyz \n\nSó rótulo =\n= só_id"
+      expect(cfg.voices).to eq('Feminina BR' => 'voice_abc', 'Masculina BR' => 'voice_xyz')
+      expect(cfg.voice_catalog_text).to eq("Feminina BR = voice_abc\nMasculina BR = voice_xyz")
+    end
+
+    it 'resolves a label, a raw voice_id, or the default' do
+      cfg = described_class.new(voice_catalog: { 'Feminina BR' => 'voice_abc' }, default_voice_id: 'voice_def')
+      expect(cfg.resolved_voice_id('Feminina BR')).to eq('voice_abc') # by label
+      expect(cfg.resolved_voice_id('voice_abc')).to eq('voice_abc')   # by raw id in catalog
+      expect(cfg.resolved_voice_id('inexistente')).to eq('voice_def') # → default
+      expect(cfg.resolved_voice_id(nil)).to eq('voice_def')
+    end
+
+    it 'is off (nil) when nothing is configured' do
+      expect(described_class.new.resolved_voice_id('x')).to be_nil
     end
   end
 

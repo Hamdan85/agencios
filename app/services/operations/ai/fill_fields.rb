@@ -7,16 +7,22 @@ module Operations
     # via Prompts::FieldFill; writes through Operations::Tickets::UpdateFields so
     # the same sanitize + mirror-columns + broadcast path is reused.
     class FillFields < Operations::Base
+      # status: which stage's fields to fill — defaults to the ticket's current
+      # status, but the downstream cascade (Operations::Tickets::CascadeFields)
+      # passes a LATER stage to re-derive it while the ticket still sits earlier.
       # only_blank: when true, never overwrite fields the team already filled —
       # only the empty ones are completed. Used by the automatic carry-over on
       # status advance; the manual "Gerar com IA" button refills everything.
       # instruction: optional free-text steer from the user ("o que deve ser
       # mudado") — takes precedence in the prompt; blank means a plain refill.
-      def initialize(ticket:, only_blank: false, instruction: nil)
+      # note: whether to log an AI note per fill — the cascade suppresses the
+      # per-stage notes and writes a single consolidated one instead.
+      def initialize(ticket:, status: nil, only_blank: false, instruction: nil, note: true)
         @ticket = ticket
-        @status = ticket.status.to_s
+        @status = (status || ticket.status).to_s
         @only_blank = only_blank
         @instruction = instruction.to_s.strip.presence
+        @note = note
       end
 
       def call
@@ -34,10 +40,12 @@ module Operations
         return { filled: [] } if values.empty?
 
         Operations::Tickets::UpdateFields.call(ticket: @ticket, status: @status, values: values)
-        Operations::Notes::Create.call(
-          ticket: @ticket, user: nil, kind: :ai,
-          body: "Campos da etapa “#{label}” preenchidos com IA: #{values.keys.join(', ')}."
-        )
+        if @note
+          Operations::Notes::Create.call(
+            ticket: @ticket, user: nil, kind: :ai,
+            body: "Campos da etapa “#{label}” preenchidos com IA: #{values.keys.join(', ')}."
+          )
+        end
         { filled: values.keys }
       end
 

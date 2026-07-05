@@ -258,6 +258,23 @@ function chartLabel(iso, granularity) {
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
 }
 
+// The trend chart plots on a normalized 100×100 viewBox stretched to the card
+// (preserveAspectRatio="none"); strokes stay crisp via vector-effect. Yellow is
+// the total; each creative type gets its own KIND_META color.
+const TOTAL_COLOR = '#F59E0B'
+function linePath(values, max) {
+  const n = values.length
+  if (n === 0) return ''
+  return values
+    .map((v, i) => {
+      const x = n === 1 ? 50 : (i / (n - 1)) * 100
+      // Map into [4, 100] so the peak line isn't clipped by the top edge.
+      const y = 4 + (1 - Math.max(0, Number(v) || 0) / max) * 96
+      return `${i === 0 ? 'M' : 'L'}${x.toFixed(2)},${y.toFixed(2)}`
+    })
+    .join(' ')
+}
+
 function UsageStat({ icon: Icon, label, value, sub, color }) {
   return (
     <div className="flex items-center gap-3 rounded-2xl border border-border bg-canvas px-4 py-3.5">
@@ -320,11 +337,25 @@ function UsageSection() {
   // godfathered workspace) — so the card is never blank. The user can switch.
   const seriesCredits = series.reduce((s, p) => s + Number(p.credits || 0), 0)
   const metric = metricOverride ?? (seriesCredits > 0 ? 'credits' : 'generations')
-  const maxSeries = Math.max(1, ...series.map((s) => Number(s[metric] || 0)))
   // The selected metric can be all-zero (e.g. "Créditos" on a period that only
   // ran free carousels) — bars would render at 1px and read as a blank card, so
   // show an explicit empty state for that metric instead.
   const metricTotal = series.reduce((s, p) => s + Number(p[metric] || 0), 0)
+
+  // One line per creative type (its own color) plus the yellow total envelope.
+  // The total is the y-scale max since it dominates every per-kind line.
+  const totalValues = series.map((s) => Number(s[metric] || 0))
+  const chartMax = Math.max(1, ...totalValues)
+  const chartLines = [
+    { key: 'total', label: 'Total', color: TOTAL_COLOR, width: 2.25, values: totalValues },
+    ...['video', 'image', 'carousel'].map((k) => ({
+      key: k,
+      label: KIND_META[k]?.label || k,
+      color: KIND_META[k]?.color || '#7C3AED',
+      width: 1.5,
+      values: series.map((s) => Number(s.by_kind?.[k]?.[metric] || 0)),
+    })),
+  ]
 
   // Range / filter changes reset paging.
   const changeRange = (r) => { setRange(r); setPage(1) }
@@ -480,31 +511,52 @@ function UsageSection() {
                       {metric === 'credits' ? 'Nenhum crédito gasto no período.' : 'Nenhuma geração no período.'}
                     </p>
                   ) : (
-                    <div className="flex h-44 items-end gap-1">
-                      {series.map((s) => {
-                        const v = Number(s[metric] || 0)
-                        const h = Math.max((v / maxSeries) * 100, v > 0 ? 4 : 1)
-                        const tip = `${chartLabel(s.date, granularity)} · ${Number(s.credits || 0)} cr. · ${Number(s.generations || 0)} ger.`
-                        return (
-                          <div key={s.date} className="group flex flex-1 flex-col items-center justify-end gap-1.5" title={tip}>
-                            <span className="text-[10px] font-bold text-ink opacity-0 transition-opacity group-hover:opacity-100">{v}</span>
-                            <div
-                              className="w-full rounded-md transition-all"
-                              style={{
-                                height: `${h}%`,
-                                background: v > 0 ? 'linear-gradient(to top, #7C3AED, #EC4899)' : 'var(--color-surface-muted)',
-                              }}
+                    <>
+                      <div className="relative h-44 w-full overflow-hidden rounded-xl bg-surface-muted/30">
+                        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full">
+                          {chartLines.map((line) => (
+                            <path
+                              key={line.key}
+                              d={linePath(line.values, chartMax)}
+                              fill="none"
+                              stroke={line.color}
+                              strokeWidth={line.width}
+                              strokeLinejoin="round"
+                              strokeLinecap="round"
+                              vectorEffect="non-scaling-stroke"
+                              opacity={line.key === 'total' ? 1 : 0.85}
                             />
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
-                  {series.length > 0 && metricTotal > 0 && (
-                    <div className="mt-2 flex justify-between text-[10px] font-medium text-ink-muted">
-                      <span>{chartLabel(series[0].date, granularity)}</span>
-                      <span>{chartLabel(series[series.length - 1].date, granularity)}</span>
-                    </div>
+                          ))}
+                          {/* Transparent hit columns give a hover tooltip per bucket. */}
+                          {series.map((s, i) => {
+                            const w = 100 / series.length
+                            const unit = metric === 'credits' ? 'cr.' : 'ger.'
+                            const tip = `${chartLabel(s.date, granularity)} · Total ${Number(s[metric] || 0)} ${unit}`
+                              + ['video', 'image', 'carousel']
+                                .map((k) => ` · ${KIND_META[k]?.label}: ${Number(s.by_kind?.[k]?.[metric] || 0)}`)
+                                .join('')
+                            return (
+                              <rect key={s.date} x={i * w} y="0" width={w} height="100" fill="transparent">
+                                <title>{tip}</title>
+                              </rect>
+                            )
+                          })}
+                        </svg>
+                      </div>
+                      <div className="mt-2 flex justify-between text-[10px] font-medium text-ink-muted">
+                        <span>{chartLabel(series[0].date, granularity)}</span>
+                        <span>{chartLabel(series[series.length - 1].date, granularity)}</span>
+                      </div>
+                      {/* Legend — yellow total + one swatch per creative type. */}
+                      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                        {chartLines.map((line) => (
+                          <span key={line.key} className="flex items-center gap-1.5 text-xs font-semibold text-ink-secondary">
+                            <span className="h-0.5 w-4 rounded-full" style={{ background: line.color }} />
+                            {line.label}
+                          </span>
+                        ))}
+                      </div>
+                    </>
                   )}
                 </CardContent>
               </Card>
@@ -732,8 +784,12 @@ export default function BillingIndex() {
         </CardContent>
       </Card>
 
+      {/* Credit wallet — an active subscriber cares about their balance first,
+          so it leads; a prospect still choosing a plan sees Planos first. */}
+      {subscribed && <CreditsSection />}
+
       {/* Pricing cards */}
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+      <div className={cn('mb-3 flex flex-wrap items-center justify-between gap-3', subscribed && 'mt-10')}>
         <div className="flex items-center gap-2">
           <Sparkles size={18} className="text-brand" />
           <h2 className="font-display text-lg font-bold text-ink">Planos</h2>
@@ -762,8 +818,7 @@ export default function BillingIndex() {
         </div>
       )}
 
-      {/* Credit wallet */}
-      <CreditsSection />
+      {!subscribed && <CreditsSection />}
 
       {/* Actions */}
       <Card className="mt-8">

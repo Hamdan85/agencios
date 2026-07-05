@@ -187,18 +187,21 @@ export const reportsApi = {
 export const studioApi = {
   get: () => api.get('/studio'),
   generate: (kind, params) => api.post('/studio/generate', { kind, params }),
+  // Video opens as a chat INTERVIEW (no immediate generation) → { creative }.
+  startVideo: (params) => api.post('/studio/video', { params }),
   // The "melhorar esse prompt" wand — returns { prompt } improved with the
   // client's brand + the current video setup as context.
   improvePrompt: (payload) => api.post('/studio/improve_prompt', payload),
 }
 
 export const uploadsApi = {
-  // Upload product reference photos → [{ signed_id, url }]. Multipart FormData
-  // (the axios client strips the JSON content-type for FormData bodies).
-  referenceImages: (files = []) => {
+  // Upload media references (photos / short guide videos) →
+  // [{ signed_id, url, kind: 'img' | 'vid' }]. Multipart FormData (the axios
+  // client strips the JSON content-type for FormData bodies).
+  references: (files = []) => {
     const form = new FormData()
     Array.from(files).forEach((f) => form.append('files[]', f))
-    return api.post('/uploads/reference_images', form)
+    return api.post('/uploads/references', form)
   },
 }
 
@@ -216,12 +219,27 @@ export const videoScenesApi = {
   list: (creativeId) => api.get(`/creatives/${creativeId}/scenes`),
   // { caption } is a free edit; { prompt } re-renders just this scene (charged).
   update: (id, data) => api.patch(`/video_scenes/${id}`, { scene: data }),
-  // Conversational editor: send a message (+ optional reference image URLs the
-  // user attached); the agent decides what to re-render.
-  chat: (creativeId, { message, reference_image_urls = [] }) =>
-    api.post(`/creatives/${creativeId}/video_chat`, { message, reference_image_urls }),
+  // Conversational editor: send a message + optional attached media reference
+  // URLs + the structured per-scene annotations ([{ scene, note }]); the agent
+  // decides what to re-render.
+  chat: (creativeId, { message, reference_image_urls = [], annotations = [] }) =>
+    api.post(`/creatives/${creativeId}/video_chat`, { message, reference_image_urls, annotations }),
   // Approve the draft → re-render everything with the final (best) model.
   finalize: (creativeId) => api.post(`/creatives/${creativeId}/video_finalize`),
+  // Elementos tab: the video's characters/scenarios/references/music.
+  assets: (creativeId) => api.get(`/creatives/${creativeId}/assets`),
+  // Reusable library elements to add (brand avatar/logo + other videos' refs).
+  assetLibrary: (creativeId) => api.get(`/creatives/${creativeId}/assets/library`),
+  // Regenerate ONE element from a prompt. type: 'character' | 'scene' | 'music';
+  // ref_url identifies which existing image to replace (character/scene only).
+  regenerateAsset: (creativeId, { type, prompt, ref_url }) =>
+    api.post(`/creatives/${creativeId}/assets/regenerate`, { type, prompt, ref_url }),
+  // Add an element (uploaded URL or a library asset) under a role.
+  addAsset: (creativeId, { url, role, description }) =>
+    api.post(`/creatives/${creativeId}/assets/add`, { url, role, description }),
+  // Remove an element (a reference URL, or an "identity:<field>" key).
+  removeAsset: (creativeId, { key }) =>
+    api.post(`/creatives/${creativeId}/assets/remove`, { key }),
 }
 
 // Social networks are connected per CLIENT (the agency connects each client's
