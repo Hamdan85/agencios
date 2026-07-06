@@ -179,6 +179,16 @@ class Ticket < ApplicationRecord
     set.any? && set.all?(&:approval_approved?)
   end
 
+  # The team member accountable for this ticket — notified of client decisions.
+  # Assignee first, then whoever last ran it on autopilot, then its creator, then
+  # the workspace owner as a final fallback.
+  def responsible_user
+    assignee ||
+      autopilot_runs.order(created_at: :desc).first&.user ||
+      created_by ||
+      workspace.owner
+  end
+
   # The reviewer (User or Client) of the most recently decided approved creative
   # — drives "Aprovado por <actor>".
   def approval_actor

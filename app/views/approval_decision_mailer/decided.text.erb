@@ -1,0 +1,10 @@
+<%= @approved ? "O cliente aprovou o conteúdo" : "O cliente pediu ajustes" %>
+
+<%= @client&.name.presence || "O cliente" %> <%= @approved ? "aprovou" : "pediu ajustes em" %> <%= @ticket.display_title %> (<%= @project.name %>)<%= @creative ? " — peça: #{@creative.creative_type}" : "" %>.
+<% if !@approved && @feedback.present? %>
+Feedback do cliente:
+<%= @feedback %>
+<% end %>
+<%= @approved ? "Ver conteúdo" : "Tratar os ajustes" %>: <%= @url %>
+
+<%= @approved ? "O conteúdo seguiu para a fase de publicação." : "O conteúdo continua na fase de produção aguardando os ajustes." %>
