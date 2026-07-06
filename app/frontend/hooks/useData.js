@@ -149,6 +149,11 @@ export function useProjectMutations() {
     // Autopilot ("GO mode") over the whole project.
     autopilotEstimate: useMutation({ mutationFn: projectsApi.autopilotEstimate, onError: onErr('Erro ao estimar os créditos.') }),
     autopilot: useMutation({ mutationFn: ({ id, payload }) => projectsApi.autopilotStart(id, payload), onSuccess: () => { inv(); qc.invalidateQueries({ queryKey: ['board'] }); toast.success('Piloto automático iniciado 🚀') }, onError: onErr('Erro ao iniciar o piloto automático.') }),
+    updateSettings: useMutation({
+      mutationFn: ({ id, settings }) => projectsApi.updateSettings(id, settings),
+      onSuccess: () => { inv(); toast.success('Configurações da campanha salvas!') },
+      onError: onErr('Erro ao salvar as configurações.'),
+    }),
   }
 }
 

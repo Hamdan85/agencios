@@ -176,6 +176,8 @@ export const projectsApi = {
   // Autopilot ("GO mode") over the whole project — estimate then launch.
   autopilotEstimate: (id) => api.post(`/projects/${id}/autopilot_estimate`),
   autopilotStart: (id, payload = {}) => api.post(`/projects/${id}/autopilot_start`, payload),
+  // Approval/publishing/scheduling config for the campaign (Configurações tab).
+  updateSettings: (id, settings) => api.patch(`/projects/${id}/settings`, { settings }),
 }
 
 // End-of-run project audit reports (the finalize deck).

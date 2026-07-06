@@ -87,6 +87,7 @@ const router = createBrowserRouter(
           <Route path="/tarefas" element={<Tasks />} />
           <Route path="/campanhas" element={<Projects />} />
           <Route path="/campanhas/:id" element={<ProjectShow />} />
+          <Route path="/campanhas/:id/:tab" element={<ProjectShow />} />
           {/* Legacy URLs — the entity was renamed Projeto → Campanha; old
               bookmarks/links keep working. */}
           <Route path="/projetos" element={<Navigate to="/campanhas" replace />} />

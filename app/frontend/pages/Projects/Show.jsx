@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import {
   ArrowLeft, Wallet, CalendarRange, ListChecks, KanbanSquare, Pencil, Building2,
   FileText, CheckCircle2, Play, Plus, Sparkles, MoreHorizontal, Archive, ArchiveRestore,
-  Trash2, Receipt, Send, Loader2, AlertTriangle, Target, Eye, Heart,
+  Trash2, Receipt, Send, Loader2, AlertTriangle, Target, Eye, Heart, FolderKanban, Settings,
 } from 'lucide-react'
 import {
   useProject, useProjectMutations, useTicketArchiveMutations, useTicketBulkDelete,
@@ -19,6 +19,7 @@ import { canManage } from '@/lib/roles'
 import { StrategyDrawer } from '@/components/project/StrategyDrawer'
 import { PlanBuildingLoader } from '@/components/project/PlanBuildingLoader'
 import { ProjectFormDialog } from '@/components/project/ProjectFormDialog'
+import ProjectSettingsTab from '@/components/project/ProjectSettingsTab'
 import { SendScopeDialog } from '@/components/project/SendScopeDialog'
 import AutopilotButton from '@/components/ticket/AutopilotButton'
 import { InvoiceFormDialog } from '@/components/billing/InvoiceFormDialog'
@@ -28,6 +29,7 @@ import { PageLoader, EmptyState } from '@/components/ui/feedback'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
 } from '@/components/ui/dropdown-menu'
@@ -107,9 +109,17 @@ function AutopilotProgress({ batch }) {
   )
 }
 
+const TAB_TO_SEG = { tickets: '', config: 'configuracoes' }
+const SEG_TO_TAB = { configuracoes: 'config' }
+
 export default function ProjectShow() {
-  const { id } = useParams()
+  const { id, tab: seg } = useParams()
   const navigate = useNavigate()
+  const tab = SEG_TO_TAB[seg] || 'tickets'
+  const setTab = (value) => {
+    const s = TAB_TO_SEG[value] || ''
+    navigate(`/campanhas/${id}${s ? `/${s}` : ''}`, { replace: true })
+  }
   const qc = useQueryClient()
   const [filters, setFilters] = useUrlFilters(FILTER_KEYS)
   const [drawerId, setDrawerId] = useUrlParam('ticket')
@@ -404,6 +414,13 @@ export default function ProjectShow() {
         </div>
       </Card>
 
+      <Tabs value={tab} onValueChange={setTab}>
+        <TabsList className="mb-5">
+          <TabsTrigger value="tickets"><FolderKanban size={15} /> Tickets</TabsTrigger>
+          <TabsTrigger value="config"><Settings size={15} /> Configurações</TabsTrigger>
+        </TabsList>
+        <TabsContent value="tickets" className="animate-rise">
+
       {/* GO mode walking the project — live progress bar (hides while none runs). */}
       <AutopilotProgress batch={autopilotBatch} />
 
@@ -521,6 +538,11 @@ export default function ProjectShow() {
           ))}
         </div>
       )}
+        </TabsContent>
+        <TabsContent value="config" className="animate-rise">
+          <ProjectSettingsTab project={project} />
+        </TabsContent>
+      </Tabs>
 
       <TicketDrawer
         ticketId={drawerId}
