@@ -163,7 +163,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_06_120000) do
     t.index ["batch_id"], name: "index_autopilot_runs_on_batch_id"
     t.index ["ticket_id", "state"], name: "index_autopilot_runs_on_ticket_id_and_state"
     t.index ["ticket_id"], name: "index_autopilot_runs_on_ticket_id"
-    t.index ["ticket_id"], name: "index_autopilot_runs_one_active_per_ticket", unique: true, where: "(((scope)::text = 'ticket'::text) AND ((state)::text = ANY ((ARRAY['pending'::character varying, 'scoping'::character varying, 'generating'::character varying, 'awaiting_generation'::character varying, 'publishing'::character varying])::text[])))"
+    t.index ["ticket_id"], name: "index_autopilot_runs_one_active_per_ticket", unique: true, where: "(((scope)::text = 'ticket'::text) AND ((state)::text = ANY ((ARRAY['pending'::character varying, 'scoping'::character varying, 'generating'::character varying, 'awaiting_generation'::character varying])::text[])))"
     t.index ["user_id"], name: "index_autopilot_runs_on_user_id"
     t.index ["workspace_id", "state"], name: "index_autopilot_runs_on_workspace_id_and_state"
     t.index ["workspace_id"], name: "index_autopilot_runs_on_workspace_id"
@@ -212,14 +212,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_06_120000) do
   end
 
   create_table "creatives", force: :cascade do |t|
+    t.string "approval_state", default: "pending", null: false
     t.text "caption"
+    t.text "client_feedback"
     t.bigint "client_id"
     t.datetime "created_at", null: false
     t.string "creative_type", null: false
+    t.datetime "decided_at"
     t.jsonb "metadata", default: {}, null: false
     t.string "name"
     t.bigint "parent_id"
     t.string "provider"
+    t.bigint "reviewed_by_id"
+    t.string "reviewed_by_type"
     t.integer "source", default: 0, null: false
     t.integer "status", default: 0, null: false
     t.bigint "ticket_id"
@@ -228,6 +233,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_06_120000) do
     t.bigint "workspace_id", null: false
     t.index ["client_id"], name: "index_creatives_on_client_id"
     t.index ["parent_id"], name: "index_creatives_on_parent_id"
+    t.index ["reviewed_by_type", "reviewed_by_id"], name: "index_creatives_on_reviewed_by"
     t.index ["ticket_id"], name: "index_creatives_on_ticket_id"
     t.index ["workspace_id", "status"], name: "index_creatives_on_workspace_id_and_status"
     t.index ["workspace_id"], name: "index_creatives_on_workspace_id"
@@ -536,6 +542,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_06_120000) do
     t.text "description"
     t.date "ends_on"
     t.string "name", null: false
+    t.jsonb "settings", default: {}, null: false
     t.date "starts_on"
     t.integer "status", default: 4, null: false
     t.datetime "updated_at", null: false
@@ -699,6 +706,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_06_120000) do
   create_table "tickets", force: :cascade do |t|
     t.jsonb "ai_summaries", default: {}, null: false
     t.string "alert_reason"
+    t.datetime "approval_requested_at"
+    t.string "approval_token"
     t.datetime "archived_at"
     t.bigint "assignee_id"
     t.string "channels", default: [], null: false, array: true
@@ -718,6 +727,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_06_120000) do
     t.string "title"
     t.datetime "updated_at", null: false
     t.bigint "workspace_id", null: false
+    t.index ["approval_token"], name: "index_tickets_on_approval_token", unique: true
     t.index ["assignee_id"], name: "index_tickets_on_assignee_id"
     t.index ["created_by_id"], name: "index_tickets_on_created_by_id"
     t.index ["project_id"], name: "index_tickets_on_project_id"

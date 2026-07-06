@@ -3,7 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, Mail, Phone, FileText, FolderKanban, Receipt, Wallet,
   Building2, StickyNote, Pencil, Plus, ListChecks, Sparkles, Palette, AtSign,
-  Plug, Link2, Check, RefreshCw, Unplug, Copy, Share2, Video,
+  Plug, Link2, Check, RefreshCw, Unplug, Copy, Share2, Video, BarChart3,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { socialApi } from '@/api'
@@ -384,6 +384,11 @@ function BasicColumn({ client, projects, invoices, totalPaid, archived, onEdit }
           )}
           <Button variant="outline" size="sm" className="mt-4 w-full" onClick={onEdit}>
             <Pencil size={15} /> Editar cliente
+          </Button>
+          <Button asChild variant="outline" size="sm" className="mt-2 w-full">
+            <Link to={`/publicacoes?client=${client.id}`}>
+              <BarChart3 size={15} /> Ver desempenho
+            </Link>
           </Button>
         </div>
 

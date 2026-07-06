@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { keys } from '@/api/queryKeys'
 import { Layers, MessageSquare } from 'lucide-react'
 import { useAiFillStatus } from '@/hooks/useRealtime'
 import { useConfirm } from '@/components/ui/confirm-dialog'
@@ -6,6 +8,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import AiFillDialog from './AiFillDialog'
 import FieldGroup from './FieldGroup'
 import PostingPanel from './PostingPanel'
+import ApprovalPanel from './ApprovalPanel'
 import CreativesPanel from './CreativesPanel'
 import AttachmentsPanel from './AttachmentsPanel'
 import MetaCard from './MetaCard'
@@ -46,6 +49,7 @@ export default function TicketBody({
   // Cancel a scheduled publication: confirmed, then the post is deleted before
   // it goes live (it can be scheduled again from this same step).
   const confirm = useConfirm()
+  const qc = useQueryClient()
   const cancelPost = async (postId) => {
     const ok = await confirm({
       title: 'Cancelar agendamento?',
@@ -58,6 +62,11 @@ export default function TicketBody({
 
   const main = (
     <div className="space-y-5">
+      {/* Client approval: actions in Produção; the "Aprovado por <actor>" badge
+          persists in Publicação (scheduled) since full approval advanced it there. */}
+      {(status === 'production' || (status === 'scheduled' && ticket.approval?.fully_approved)) && (
+        <ApprovalPanel ticket={ticket} onChanged={() => qc.invalidateQueries({ queryKey: keys.ticket(id) })} />
+      )}
       {status === 'scheduled' ? (
         <PostingPanel
           ticket={ticket}

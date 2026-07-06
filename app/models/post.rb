@@ -23,6 +23,21 @@ class Post < ApplicationRecord
 
   def latest_metric = post_metrics.order(captured_at: :desc).first
 
+  scope :for_workspace, ->(ws) { where(workspace_id: ws.id) }
+
+  # First asset of the creative this post publishes (for a list/detail thumbnail).
+  def thumbnail_url
+    publishable_creative&.then do |c|
+      urls = CreativeSerializer.new(c).as_json[:asset_urls]
+      Array(urls).first
+    end
+  end
+
+  # Best-effort creative type for filtering/breakdowns (mirrors the aggregate).
+  def resolved_creative_type
+    publishable_creative&.creative_type || ticket&.creative_type
+  end
+
   # The creative this post should publish. The team picks it at the posting step
   # (stored as media["creative_id"]); otherwise fall back to the most recent
   # creative that actually has assets attached. This is the single source of

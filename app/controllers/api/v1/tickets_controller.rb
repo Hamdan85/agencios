@@ -15,6 +15,8 @@ module Api
 
       # POST /api/v1/tickets/:id/advance  { to_status, position }
       def advance  = render_ok(Controllers::Tickets::Advance.call(params:))
+      def request_approval = render_ok(Controllers::Approvals::RequestApproval.call(params:))
+      def approve          = render_ok(Controllers::Approvals::Approve.call(params:))
 
       # POST /api/v1/tickets/:id/publish  { creative_id, mode, scheduled_at }
       def publish  = render_ok(Controllers::Tickets::Publish.call(params:))

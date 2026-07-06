@@ -141,4 +141,34 @@ class Ticket < ApplicationRecord
     list = Array(creative_types).map(&:to_s).compact_blank if list.blank?
     list.presence || Array(creative_type).map(&:to_s).compact_blank
   end
+
+  # A ticket's random, revocable approval-link secret. Lazily minted; stable
+  # across calls so "reenviar link" reuses the same URL. Powers /aprovar/:token.
+  def approval_token!
+    return approval_token if approval_token.present?
+
+    update!(approval_token: "apv_#{SecureRandom.urlsafe_base64(32)}")
+    approval_token
+  end
+
+  # The creatives the client approves: ready, and not superseded by a newer
+  # version (a creative referenced as another creative's parent is superseded).
+  def approvable_creatives
+    ready = creatives.select(&:status_ready?)
+    superseded_ids = creatives.filter_map(&:parent_id).to_set
+    ready.reject { |c| superseded_ids.include?(c.id) }
+  end
+
+  # Approved iff there is at least one approvable creative and all are approved.
+  def fully_approved?
+    set = approvable_creatives
+    set.any? && set.all?(&:approval_approved?)
+  end
+
+  # The reviewer (User or Client) of the most recently decided approved creative
+  # — drives "Aprovado por <actor>".
+  def approval_actor
+    approvable_creatives.select(&:approval_approved?)
+                        .max_by { |c| c.decided_at || Time.at(0) }&.reviewed_by
+  end
 end

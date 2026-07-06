@@ -28,6 +28,7 @@ function LegacyBoardRedirect() {
 const Login = lazy(() => import('@/pages/Auth/Login'))
 const Register = lazy(() => import('@/pages/Auth/Register'))
 const ConfirmEmailChange = lazy(() => import('@/pages/Auth/ConfirmEmailChange'))
+const ApprovalShow = lazy(() => import('@/pages/Approval/Show'))
 const Account = lazy(() => import('@/pages/Account/Index'))
 const Dashboard = lazy(() => import('@/pages/Dashboard/Index'))
 const Calendar = lazy(() => import('@/pages/Calendar/Index'))
@@ -41,6 +42,8 @@ const Clients = lazy(() => import('@/pages/Clients/Index'))
 const ClientShow = lazy(() => import('@/pages/Clients/Show'))
 const TicketsList = lazy(() => import('@/pages/Tickets/Index'))
 const TicketShow = lazy(() => import('@/pages/Tickets/Show'))
+const PostsIndex = lazy(() => import('@/pages/Posts/Index'))
+const PostShow = lazy(() => import('@/pages/Posts/Show'))
 const Studio = lazy(() => import('@/pages/Studio/Index'))
 const Meetings = lazy(() => import('@/pages/Meetings/Index'))
 const Invoices = lazy(() => import('@/pages/Invoices/Index'))
@@ -74,6 +77,9 @@ const router = createBrowserRouter(
       {/* Public: the link mailed to a user's new address to confirm an e-mail change. */}
       <Route path="/confirmar-troca-email/:token" element={<ConfirmEmailChange />} />
 
+      {/* Public: login-less client content approval (token is the credential). */}
+      <Route path="/aprovar/:token" element={<ApprovalShow />} />
+
       <Route path="/erro/acesso-negado" element={<Forbidden />} />
 
       <Route element={<ProtectedRoute />}>
@@ -87,6 +93,7 @@ const router = createBrowserRouter(
           <Route path="/tarefas" element={<Tasks />} />
           <Route path="/campanhas" element={<Projects />} />
           <Route path="/campanhas/:id" element={<ProjectShow />} />
+          <Route path="/campanhas/:id/:tab" element={<ProjectShow />} />
           {/* Legacy URLs — the entity was renamed Projeto → Campanha; old
               bookmarks/links keep working. */}
           <Route path="/projetos" element={<Navigate to="/campanhas" replace />} />
@@ -99,6 +106,8 @@ const router = createBrowserRouter(
           <Route path="/tickets" element={<TicketsList />} />
           <Route path="/tickets/:id" element={<TicketShow />} />
           <Route path="/tickets/:id/:tab" element={<TicketShow />} />
+          <Route path="/publicacoes" element={<PostsIndex />} />
+          <Route path="/publicacoes/:id" element={<PostShow />} />
           <Route path="/estudio" element={<Studio />} />
           <Route path="/cobrancas" element={<Invoices />} />
           <Route path="/conta" element={<Account />} />

@@ -22,7 +22,6 @@ module Operations
         when 'pending'             then WalkToProduction.call(run: @run)
         when 'generating'          then KickGenerations.call(run: @run)
         when 'awaiting_generation' then OnGenerationSettled.reconcile(run: @run)
-        when 'publishing'          then PublishStep.call(run: @run)
         end
         @run
       rescue Operations::Errors::InsufficientCredits => e

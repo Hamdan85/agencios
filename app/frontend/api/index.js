@@ -70,6 +70,8 @@ export const ticketsApi = {
   destroy: (id) => api.delete(`/tickets/${id}`),
   advance: (id, toStatus, position) => api.post(`/tickets/${id}/advance`, { to_status: toStatus, position }),
   publish: (id, payload) => api.post(`/tickets/${id}/publish`, payload),
+  requestApproval: (id) => api.post(`/tickets/${id}/request_approval`),
+  approve: (id) => api.post(`/tickets/${id}/approve`),
   reorder: (id, position) => api.patch(`/tickets/${id}/reorder`, { position }),
   summarize: (id) => api.post(`/tickets/${id}/summarize`),
   aiAction: (id, payload) => api.post(`/tickets/${id}/ai_action`, payload),
@@ -176,6 +178,24 @@ export const projectsApi = {
   // Autopilot ("GO mode") over the whole project — estimate then launch.
   autopilotEstimate: (id) => api.post(`/projects/${id}/autopilot_estimate`),
   autopilotStart: (id, payload = {}) => api.post(`/projects/${id}/autopilot_start`, payload),
+  // Approval/publishing/scheduling config for the campaign (Configurações tab).
+  updateSettings: (id, settings) => api.patch(`/projects/${id}/settings`, { settings }),
+}
+
+// Public client content approval (login-less; the path token is the credential).
+export const approvalsApi = {
+  get: (token) => api.get(`/public/approvals/${token}`),
+  approve: (token, creativeId) => api.post(`/public/approvals/${token}/creatives/${creativeId}/approve`),
+  requestChanges: (token, creativeId, feedback) =>
+    api.post(`/public/approvals/${token}/creatives/${creativeId}/request_changes`, { feedback }),
+}
+
+// The posts hub: workspace-wide filterable list, a single post detail, and the
+// analytics overview (KPIs + breakdowns) that heads the index page.
+export const postsApi = {
+  list: (params) => api.get('/posts', { params }),
+  get: (id) => api.get(`/posts/${id}`),
+  overview: (params) => api.get('/posts/overview', { params }),
 }
 
 // End-of-run project audit reports (the finalize deck).

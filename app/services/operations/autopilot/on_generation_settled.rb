@@ -41,14 +41,13 @@ module Operations
           if gens.any?(&:status_failed?)
             action = :fail
           elsif pending.empty?
-            run.update!(state: 'publishing')
-            action = :advance
+            action = :complete
           end
         end
 
         case action
-        when :advance then AutopilotAdvanceJob.perform_later(run.id)
-        when :fail    then Operations::Autopilot::Fail.call(run: run, reason: 'Uma geração de criativo falhou.')
+        when :complete then Operations::Autopilot::Complete.call(run: run)
+        when :fail     then Operations::Autopilot::Fail.call(run: run, reason: 'Uma geração de criativo falhou.')
         end
         run
       end

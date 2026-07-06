@@ -40,14 +40,14 @@ RSpec.describe 'Autopilot (GO mode) API', type: :request do
   end
 
   it 'blocks the start with 402 when the wallet is short of the estimate' do
-    video = build_ticket(%w[ugc_video]) # needs 16 credits, wallet empty
+    video = build_ticket(%w[ugc_video]) # wallet empty
 
     post "/api/v1/tickets/#{video.id}/autopilot_start", params: { mode: 'scheduled' }, as: :json
 
     expect(response).to have_http_status(:payment_required)
     body = JSON.parse(response.body)
     expect(body['code']).to eq('insufficient_credits')
-    expect(body['required']).to eq(16)
+    expect(body['required']).to eq(Pricing.credits_for(kind: :video, seconds: Pricing::DEFAULT_VIDEO_SECONDS))
   end
 
   it 'launches a run when credits cover the estimate' do

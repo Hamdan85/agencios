@@ -28,4 +28,8 @@ export const keys = {
   workspaceMembers: () => ['workspace', 'memberships'],
   connections: () => ['connections'],
   mcpConnector: () => ['mcp_connector'],
+  publicApproval: (token) => ['public', 'approvals', token],
+  posts: (f = {}) => ['posts', 'list', f],
+  post: (id) => ['posts', String(id)],
+  postsOverview: (f = {}) => ['posts', 'overview', f],
 }

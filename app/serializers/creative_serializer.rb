@@ -3,7 +3,8 @@
 class CreativeSerializer < ActiveModel::Serializer
   attributes :id, :name, :creative_type, :source, :status, :provider, :caption,
              :version, :metadata, :asset_urls, :preview_url, :ticket_id, :client_id,
-             :client_name, :music, :identity, :created_at
+             :client_name, :music, :identity, :created_at,
+             :approval_state, :client_feedback, :decided_at, :reviewed_by_name
 
   def source = object.source
   def status = object.status
@@ -60,4 +61,6 @@ class CreativeSerializer < ActiveModel::Serializer
   end
 
   def created_at = object.created_at&.iso8601
+  def decided_at = object.decided_at&.iso8601
+  def reviewed_by_name = object.reviewed_by.respond_to?(:name) ? object.reviewed_by&.name : nil
 end

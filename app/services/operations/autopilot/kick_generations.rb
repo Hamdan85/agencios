@@ -26,7 +26,7 @@ module Operations
         pending = generations.any? { |g| g.status_queued? || g.status_processing? }
 
         @run.update!(
-          state: pending ? 'awaiting_generation' : 'publishing',
+          state: 'awaiting_generation',
           progress: @run.progress.merge(
             'generation_ids' => ids, 'creative_ids' => creative_ids, 'total_creatives' => ids.size
           )
@@ -34,10 +34,11 @@ module Operations
         Broadcaster.ticket(@ticket, 'autopilot_progress',
                            run_id: @run.id, state: @run.state, total: ids.size)
 
-        if @run.state == 'publishing'
-          AutopilotAdvanceJob.perform_later(@run.id)
-        else
+        if pending
           AutopilotWatchdogJob.set(wait: AutopilotWatchdogJob::TIMEOUT).perform_later(@run.id)
+        else
+          # All creatives are ready synchronously — GO stops at production.
+          Operations::Autopilot::Complete.call(run: @run)
         end
       end
 

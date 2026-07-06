@@ -97,6 +97,13 @@ Rails.application.routes.draw do
   # ── JSON API ───────────────────────────────────────────────────────
   namespace :api do
     namespace :v1 do
+      # Login-less client approval — the path token is the credential.
+      namespace :public do
+        get  'approvals/:token', to: 'approvals#show'
+        post 'approvals/:token/creatives/:creative_id/approve', to: 'approvals#approve'
+        post 'approvals/:token/creatives/:creative_id/request_changes', to: 'approvals#request_changes'
+      end
+
       # Auth & identity
       resource  :session, only: %i[create destroy], controller: 'sessions'
       resource  :registration, only: %i[create], controller: 'registrations'
@@ -159,6 +166,7 @@ Rails.application.routes.draw do
           post :send_scope
           post :autopilot_estimate
           post :autopilot_start
+          patch :settings
         end
         # End-of-run audit reports (the finalize deck). Listed under a project;
         # a single report is fetched by its own id (the deck page).
@@ -167,6 +175,11 @@ Rails.application.routes.draw do
         resource :strategy_session, only: %i[show create], controller: 'strategy_sessions'
       end
       resources :reports, only: %i[show]
+
+      # Global posts hub — workspace-wide, filterable list + a single post detail.
+      # `overview` declared BEFORE the resource so it isn't captured as `:id`.
+      get 'posts/overview', to: 'posts#overview'
+      resources :posts, only: %i[index show]
 
       # Strategy planning: apply/discard the proposed plan, and the SSE chat turn.
       resources :strategy_sessions, only: [] do
@@ -198,6 +211,8 @@ Rails.application.routes.draw do
           post  :unarchive
           post  :autopilot_estimate
           post  :autopilot_start
+          post  :request_approval
+          post  :approve
         end
         resources :subtasks, only: %i[create update destroy]
         resources :creatives, only: %i[index create destroy] do

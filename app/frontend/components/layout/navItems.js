@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, KanbanSquare, CalendarDays, CalendarRange, ListChecks, ListTodo,
-  FolderKanban, Users, Sparkles, Video, Receipt, Settings, CreditCard,
+  FolderKanban, Users, Sparkles, Video, Receipt, Settings, CreditCard, Megaphone,
 } from 'lucide-react'
 
 // The Portuguese route segments are user-facing (browser address bar) by design.
@@ -22,6 +22,7 @@ export const NAV_ITEMS = [
   { to: '/calendario', label: 'Calendário', icon: CalendarDays, color: '#0EA5E9' },
   { to: '/campanhas', label: 'Campanhas', icon: FolderKanban, color: '#10B981' },
   { to: '/clientes', label: 'Clientes', icon: Users, color: '#6366F1' },
+  { to: '/publicacoes', label: 'Publicações', icon: Megaphone, color: '#0EA5E9' },
   { to: '/estudio', label: 'Estúdio', icon: Sparkles, color: '#F43F5E' },
   { to: '/cobrancas', label: 'Cobranças', icon: Receipt, color: '#F97316' },
 ]

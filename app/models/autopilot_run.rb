@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
 # A single "GO mode" run. Autopilot walks an eligible ticket from its current
-# stage through to `scheduled` on its own: fills every briefing field, generates
-# all of its creatives (carousel/image/video) and schedules the posts.
+# stage through to `production` on its own: fills every briefing field and
+# generates all of its creatives (carousel/image/video). Publishing no longer
+# happens here — the ticket stops at production for client approval, which then
+# advances it into the Publication phase (see Operations::Approvals::*).
 #
 # This is a PURE state record — every transition goes through an
 # `Operations::Autopilot::*` operation (mirroring the "ChangeStatus is the only
@@ -23,7 +25,7 @@ class AutopilotRun < ApplicationRecord
   SCOPES = %w[ticket batch].freeze
 
   # Ticket-run lifecycle.
-  ACTIVE_STATES   = %w[pending scoping generating awaiting_generation publishing].freeze
+  ACTIVE_STATES   = %w[pending scoping generating awaiting_generation].freeze
   TERMINAL_STATES = %w[completed failed cancelled].freeze
   STATES          = (ACTIVE_STATES + TERMINAL_STATES).freeze
 

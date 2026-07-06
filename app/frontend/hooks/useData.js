@@ -6,13 +6,34 @@ import {
   dashboardApi, calendarApi, tasksApi, ticketsApi, clientsApi, projectsApi, reportsApi, studioApi,
   generationsApi, creativesApi, socialApi, meetingsApi, invoicesApi, settingsApi, billingApi,
   creditsApi, pricingApi, workspaceApi, subtasksApi, connectionsApi, connectorApi, accountApi,
-  videoScenesApi,
+  videoScenesApi, approvalsApi, postsApi,
 } from '@/api'
 import { keys } from '@/api/queryKeys'
 import { useCurrentUser } from '@/hooks/useAuth'
 import analytics, { EVENTS } from '@/lib/analytics'
 
 const onErr = (msg) => (err) => toast.error(err?.error || msg)
+
+// Public (login-less) client approval bundle — the path token is the credential.
+export const usePublicApproval = (token) =>
+  useQuery({ queryKey: keys.publicApproval(token), queryFn: () => approvalsApi.get(token), enabled: !!token })
+
+// The posts hub. `usePosts` is the infinite-scroll list; `usePost` a single
+// detail; `usePostsOverview` the analytics header (KPIs + breakdowns).
+export const usePosts = (filters = {}) =>
+  useInfiniteQuery({
+    queryKey: keys.posts(filters),
+    queryFn: ({ pageParam = 1 }) => postsApi.list({ ...filters, page: pageParam, per: 30 }),
+    initialPageParam: 1,
+    getNextPageParam: (last, pages) => (last?.meta?.has_more ? pages.length + 1 : undefined),
+    placeholderData: keepPreviousData,
+  })
+
+export const usePost = (id) =>
+  useQuery({ queryKey: keys.post(id), queryFn: () => postsApi.get(id), select: (d) => d.post, enabled: !!id })
+
+export const usePostsOverview = (filters = {}) =>
+  useQuery({ queryKey: keys.postsOverview(filters), queryFn: () => postsApi.overview(filters), select: (d) => d.overview })
 
 // Opens a ticket that may live in another team (the cross-team Você views). If the
 // ticket belongs to the active workspace, navigates within the SPA; otherwise it
@@ -149,6 +170,11 @@ export function useProjectMutations() {
     // Autopilot ("GO mode") over the whole project.
     autopilotEstimate: useMutation({ mutationFn: projectsApi.autopilotEstimate, onError: onErr('Erro ao estimar os créditos.') }),
     autopilot: useMutation({ mutationFn: ({ id, payload }) => projectsApi.autopilotStart(id, payload), onSuccess: () => { inv(); qc.invalidateQueries({ queryKey: ['board'] }); toast.success('Piloto automático iniciado 🚀') }, onError: onErr('Erro ao iniciar o piloto automático.') }),
+    updateSettings: useMutation({
+      mutationFn: ({ id, settings }) => projectsApi.updateSettings(id, settings),
+      onSuccess: () => { inv(); toast.success('Configurações da campanha salvas!') },
+      onError: onErr('Erro ao salvar as configurações.'),
+    }),
   }
 }
 

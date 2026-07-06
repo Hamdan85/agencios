@@ -84,11 +84,10 @@ const SCHEMAS = {
   production: {
     icon: Wand2,
     title: 'Produção & Legenda',
-    helper: 'A copy final, hashtags e o status de aprovação do cliente.',
+    helper: 'A copy final e as hashtags. A aprovação do cliente vira ações abaixo.',
     fields: [
       { key: 'caption', label: 'Legenda', kind: 'textarea', rows: 5, icon: MessageSquareText, placeholder: 'Escreva ou gere a legenda final…', full: true },
       { key: 'hashtags', label: 'Hashtags', kind: 'chips', icon: Hash, placeholder: 'Digite e tecle Enter…', full: true, hint: 'Enter ou vírgula adiciona; clique no × para remover' },
-      { key: 'approval_status', label: 'Aprovação', kind: 'select', icon: ShieldCheck, options: 'approval' },
       { key: 'production_scope', label: 'Escopo de Produção', kind: 'textarea', rich: true, rows: 3, icon: FileText, placeholder: 'Direções de produção — orientam a geração dos criativos (referências, o que mostrar/evitar, elementos obrigatórios)…', full: true },
     ],
   },
@@ -116,11 +115,6 @@ const SCHEMAS = {
   },
 }
 
-const APPROVAL_OPTIONS = [
-  { value: 'pending', label: 'Pendente' },
-  { value: 'approved', label: 'Aprovado' },
-  { value: 'changes_requested', label: 'Ajustes solicitados' },
-]
 const REPEAT_OPTIONS = [
   { value: 'repeat', label: 'Repetir' },
   { value: 'iterate', label: 'Iterar' },
@@ -415,9 +409,7 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
         )
         break
       case 'radio': {
-        const opts =
-          f.options === 'approval' ? APPROVAL_OPTIONS :
-          f.options === 'repeat' ? REPEAT_OPTIONS : []
+        const opts = f.options === 'repeat' ? REPEAT_OPTIONS : []
         control = (
           <div className="flex flex-wrap gap-2">
             {opts.map((o) => {
@@ -475,7 +467,7 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
         )
         break
       case 'select': {
-        const opts = f.options === 'approval' ? APPROVAL_OPTIONS : REPEAT_OPTIONS
+        const opts = REPEAT_OPTIONS
         control = (
           <Select value={value || ''} onValueChange={(v) => setField(f.key, v)}>
             <SelectTrigger>
