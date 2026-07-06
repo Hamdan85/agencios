@@ -151,6 +151,20 @@ class Ticket < ApplicationRecord
     approval_token
   end
 
+  # Coarse SQL filter for the client-approval queue: approval was requested and
+  # the ticket has at least one ready creative still pending a decision. Refined
+  # by #pending_client_approval? (which also excludes superseded creatives).
+  scope :awaiting_client_approval, lambda {
+    where.not(approval_requested_at: nil)
+         .where(id: Creative.where(approval_state: 'pending', status: Creative.statuses[:ready]).select(:ticket_id))
+  }
+
+  # In the client portal iff approval was requested and there is still an
+  # approvable creative awaiting the client's decision.
+  def pending_client_approval?
+    approval_requested_at.present? && approvable_creatives.any?(&:approval_pending?)
+  end
+
   # The creatives the client approves: ready, and not superseded by a newer
   # version (a creative referenced as another creative's parent is superseded).
   def approvable_creatives

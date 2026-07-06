@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_06_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_06_221242) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -191,6 +191,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_06_120000) do
   end
 
   create_table "clients", force: :cascade do |t|
+    t.string "approval_token"
     t.jsonb "attribution", default: {}, null: false
     t.string "brand_primary_color", default: "#7C3AED", null: false
     t.string "brand_secondary_color", default: "#F59E0B", null: false
@@ -207,6 +208,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_06_120000) do
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
     t.bigint "workspace_id", null: false
+    t.index ["approval_token"], name: "index_clients_on_approval_token", unique: true
     t.index ["workspace_id", "status"], name: "index_clients_on_workspace_id_and_status"
     t.index ["workspace_id"], name: "index_clients_on_workspace_id"
   end
