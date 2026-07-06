@@ -1,5 +1,9 @@
 # Client "Performance" Tab Implementation Plan
 
+> **⚠️ SUPERSEDED (2026-07-05)** by the client-approval-and-posts-hub design/plan. Do NOT implement
+> this plan as-is — the Performance analytics move into the global posts hub (`/publicacoes`). Kept
+> for reference only.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add a **Performance** tab to the client detail page (`/clientes/:id/desempenho`) showing that client's post analytics + an AI-written analysis, filterable by date range, campaign, network, and creative type.

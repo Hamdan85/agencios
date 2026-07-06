@@ -1,7 +1,12 @@
 # Client "Performance" tab — design
 
+> **⚠️ SUPERSEDED (2026-07-05)** by
+> `2026-07-05-client-approval-and-posts-hub-design.md`. The per-client Performance tab is not built;
+> its analytics are absorbed into the global posts hub (`/publicacoes`), reachable from the client
+> page via a "Ver desempenho" deep link. Kept for reference (aggregation shape, metric-support notes).
+
 **Date:** 2026-07-05
-**Status:** Approved (pending spec review)
+**Status:** Superseded
 
 ## Goal
 
