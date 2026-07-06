@@ -705,6 +705,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_06_120000) do
   create_table "tickets", force: :cascade do |t|
     t.jsonb "ai_summaries", default: {}, null: false
     t.string "alert_reason"
+    t.datetime "approval_requested_at"
+    t.string "approval_token"
     t.datetime "archived_at"
     t.bigint "assignee_id"
     t.string "channels", default: [], null: false, array: true
@@ -724,6 +726,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_06_120000) do
     t.string "title"
     t.datetime "updated_at", null: false
     t.bigint "workspace_id", null: false
+    t.index ["approval_token"], name: "index_tickets_on_approval_token", unique: true
     t.index ["assignee_id"], name: "index_tickets_on_assignee_id"
     t.index ["created_by_id"], name: "index_tickets_on_created_by_id"
     t.index ["project_id"], name: "index_tickets_on_project_id"
