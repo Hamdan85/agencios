@@ -176,6 +176,11 @@ Rails.application.routes.draw do
       end
       resources :reports, only: %i[show]
 
+      # Global posts hub — workspace-wide, filterable list + a single post detail.
+      # `overview` declared BEFORE the resource so it isn't captured as `:id`.
+      get 'posts/overview', to: 'posts#overview'
+      resources :posts, only: %i[index show]
+
       # Strategy planning: apply/discard the proposed plan, and the SSE chat turn.
       resources :strategy_sessions, only: [] do
         member do
