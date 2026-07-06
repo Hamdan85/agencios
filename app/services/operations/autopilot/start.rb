@@ -39,7 +39,7 @@ module Operations
       def create_run
         AutopilotRun.create!(
           workspace: @ticket.workspace, ticket: @ticket, user: @user, batch: @batch,
-          scope: 'ticket', state: 'pending',
+          scope: 'ticket', state: 'pending', target_status: 'production',
           mode: effective_mode, scheduled_at: resolved_scheduled_at,
           estimated_credits: estimated_credits, started_at: Time.current, progress: {}
         )

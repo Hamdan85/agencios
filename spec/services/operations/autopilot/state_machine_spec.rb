@@ -67,7 +67,7 @@ RSpec.describe 'Operations::Autopilot state machine' do
 
   def advance(run) = Operations::Autopilot::Advance.call(run: run.reload)
 
-  it 'walks a sync-only ticket straight through to completed with scheduled posts' do
+  it 'walks a sync-only ticket to completed, stopping at production (GO no longer publishes)' do
     connect('instagram')
     ticket = eligible_ticket(%w[feed_image carousel], %w[instagram])
     run = Operations::Autopilot::Start.call(ticket: ticket, user: user)
@@ -75,13 +75,10 @@ RSpec.describe 'Operations::Autopilot state machine' do
     advance(run) # pending → generating (ticket now in production)
     expect(ticket.reload.status).to eq('production')
 
-    advance(run) # generating → publishing (both creatives are sync)
-    expect(run.reload.state).to eq('publishing')
-
-    advance(run) # publishing → completed
+    advance(run) # generating → (both creatives sync) → Complete
     expect(run.reload.state).to eq('completed')
-    expect(ticket.reload.status).to eq('scheduled')
-    expect(ticket.posts.count).to be >= 1
+    expect(ticket.reload.status).to eq('production') # GO stops at production; approval schedules
+    expect(ticket.posts.count).to eq(0)              # no posts until client approval
   end
 
   it 'parks on an async video then resumes when the render settles' do
@@ -98,10 +95,8 @@ RSpec.describe 'Operations::Autopilot state machine' do
     gen.update!(status: :completed)
     gen.creative.update!(status: :ready)
     Operations::Autopilot::OnGenerationSettled.reconcile(run: run.reload)
-    expect(run.reload.state).to eq('publishing')
-
-    advance(run)
     expect(run.reload.state).to eq('completed')
+    expect(ticket.reload.status).to eq('production')
   end
 
   it 'halts the run when a generation fails' do
