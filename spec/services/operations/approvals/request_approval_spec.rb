@@ -31,7 +31,7 @@ RSpec.describe Operations::Approvals::RequestApproval do
     expect(mail.to).to eq(['cliente@ex.co'])
     # Decode the multipart body (quoted-printable soft-wraps the long link).
     decoded = "#{mail.html_part&.body&.decoded} #{mail.text_part&.body&.decoded}"
-    expect(decoded).to include("/aprovar/#{ticket.approval_token}")
+    expect(decoded).to include("/aprovar/#{client.reload.approval_token}") # per-client portal link
   end
 
   it 'sends no email and records an honest note when the client has no e-mail' do
