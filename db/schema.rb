@@ -212,14 +212,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_06_120000) do
   end
 
   create_table "creatives", force: :cascade do |t|
+    t.string "approval_state", default: "pending", null: false
     t.text "caption"
+    t.text "client_feedback"
     t.bigint "client_id"
     t.datetime "created_at", null: false
     t.string "creative_type", null: false
+    t.datetime "decided_at"
     t.jsonb "metadata", default: {}, null: false
     t.string "name"
     t.bigint "parent_id"
     t.string "provider"
+    t.bigint "reviewed_by_id"
+    t.string "reviewed_by_type"
     t.integer "source", default: 0, null: false
     t.integer "status", default: 0, null: false
     t.bigint "ticket_id"
@@ -228,6 +233,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_06_120000) do
     t.bigint "workspace_id", null: false
     t.index ["client_id"], name: "index_creatives_on_client_id"
     t.index ["parent_id"], name: "index_creatives_on_parent_id"
+    t.index ["reviewed_by_type", "reviewed_by_id"], name: "index_creatives_on_reviewed_by"
     t.index ["ticket_id"], name: "index_creatives_on_ticket_id"
     t.index ["workspace_id", "status"], name: "index_creatives_on_workspace_id_and_status"
     t.index ["workspace_id"], name: "index_creatives_on_workspace_id"

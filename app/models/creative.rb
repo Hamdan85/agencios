@@ -7,6 +7,7 @@ class Creative < ApplicationRecord
   belongs_to :ticket, optional: true
   belongs_to :client, optional: true
   belongs_to :parent, class_name: 'Creative', optional: true
+  belongs_to :reviewed_by, polymorphic: true, optional: true
 
   has_many :versions, class_name: 'Creative', foreign_key: :parent_id, dependent: :nullify, inverse_of: :parent
   has_one  :generation, dependent: :nullify
@@ -15,6 +16,9 @@ class Creative < ApplicationRecord
 
   enum :source, { uploaded: 0, generated: 1 }, prefix: true
   enum :status, { draft: 0, generating: 1, ready: 2, failed: 3 }, prefix: :status
+  enum :approval_state,
+       { pending: 'pending', approved: 'approved', changes_requested: 'changes_requested' },
+       prefix: :approval, default: 'pending', scopes: false
 
   validates :creative_type, presence: true
 
