@@ -25,7 +25,7 @@ RSpec.describe Tickets::ProjectSettings do
     project = Project.create!(workspace: ws, client: client, name: 'P', status: :active)
 
     resolved = described_class.resolve(project)
-    expect(resolved['require_client_approval']).to be(false) # default
+    expect(resolved['require_client_approval']).to be(true) # default (GO requests client approval)
     expect(resolved['auto_publish_after_approval']).to be(true) # from workspace
     expect(resolved['posting_window']['weekdays']).to eq([1, 2, 3, 4, 5])
   end

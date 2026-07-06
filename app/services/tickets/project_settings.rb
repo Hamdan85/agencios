@@ -10,7 +10,7 @@ module Tickets
 
     def defaults
       {
-        'require_client_approval' => false,
+        'require_client_approval' => true,
         'auto_publish_after_approval' => false,
         'posting_window' => {
           'weekdays' => [1, 2, 3, 4, 5], # 0=Sun .. 6=Sat

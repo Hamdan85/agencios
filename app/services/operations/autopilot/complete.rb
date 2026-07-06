@@ -21,8 +21,11 @@ module Operations
         Broadcaster.ticket(@ticket, 'autopilot_completed', run_id: @run.id, posts: 0)
         Broadcaster.board(@run.workspace_id, 'autopilot_completed', ticket_id: @ticket.id, run_id: @run.id)
         notify_owner
-        request_approval_if_needed
+        # Batch coordination first: a (rare) approval-request failure below raises
+        # loudly instead of being swallowed, and must not strand the batch — on a
+        # job retry `claim!` no-ops, so anything after a raise never re-runs.
         Operations::Autopilot::RecomputeBatch.call(batch_id: @run.batch_id) if @run.batch_id
+        request_approval_if_needed
         @run
       end
 
@@ -43,8 +46,6 @@ module Operations
         return unless @ticket.project.setting('require_client_approval')
 
         Operations::Approvals::RequestApproval.call(ticket: @ticket, sent_by: @run.user)
-      rescue StandardError => e
-        Rails.logger.warn("[Autopilot::Complete] approval request failed: #{e.message}")
       end
 
       def computed_spent
