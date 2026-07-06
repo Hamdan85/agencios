@@ -10,17 +10,20 @@ module Operations
     class GenerateImage < Operations::Base
       PROVIDER = 'google_banana'
 
-      def initialize(ticket: nil, prompt: nil, ref_images: [], aspect_ratio: nil, creative_type: nil, client_id: nil)
-        @ticket        = ticket
-        @prompt        = prompt
-        @ref_images    = ref_images || []
-        @aspect_ratio  = aspect_ratio
-        @creative_type = creative_type
-        @client_id     = client_id
+      def initialize(ticket: nil, prompt: nil, ref_images: [], aspect_ratio: nil, creative_type: nil,
+                     client_id: nil, revision_notes: nil)
+        @ticket         = ticket
+        @prompt         = prompt
+        @ref_images     = ref_images || []
+        @aspect_ratio   = aspect_ratio
+        @creative_type  = creative_type
+        @client_id      = client_id
+        @revision_notes = revision_notes
       end
 
       def call
-        ctx    = ::Tickets::CreativeContext.for(@ticket, creative_type: type, client: resolve_client)
+        ctx    = ::Tickets::CreativeContext.for(@ticket, creative_type: type, client: resolve_client,
+                                                         overrides: { revision_notes: @revision_notes })
         ensure_client_active!(ctx.client)
         aspect = @aspect_ratio.presence || ctx.banana_aspect_ratio
         refs   = ctx.reference_images

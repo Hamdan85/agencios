@@ -120,9 +120,15 @@ module Tickets
     end
 
     # The message/source material: an explicit text/url-extracted source wins,
-    # then the scoping copy brief.
+    # then the scoping copy brief. A regeneration folds the client's requested
+    # changes in here so BOTH the image prompt (Escopo) and the carousel copy
+    # incorporate the feedback.
     def copy_brief
-      @overrides[:source_text].presence || @overrides[:text].presence || scoping['copy_brief']
+      base = @overrides[:source_text].presence || @overrides[:text].presence || scoping['copy_brief']
+      notes = @overrides[:revision_notes].to_s.strip.presence
+      return base unless notes
+
+      [base, "Ajustes solicitados pelo cliente: #{notes}"].compact.join('. ')
     end
 
     def channels
