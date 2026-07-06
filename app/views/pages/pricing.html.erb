@@ -1,5 +1,5 @@
 <% content_for :title, "Preços — agencios" %>
-<% content_for :description, "Planos que crescem com a sua agência: Solo, Agência e Enterprise. #{@trial_days} dias de teste (com cartão). Vídeos e imagens por créditos pré-pagos; carrosséis e legendas com IA inclusos." %>
+<% content_for :description, "Planos que crescem com a sua agência: Solo, Agência e Enterprise. #{@trial_days} dias de teste (com cartão). Vídeos e imagens por créditos pré-pagos; carrosséis com IA inclusos." %>
 
 <%# ── Hero ──────────────────────────────────────────────────────── %>
 <section class="relative overflow-hidden bg-shell-gradient">
@@ -13,7 +13,7 @@
     </h1>
     <p class="mx-auto mt-5 max-w-xl text-lg text-white/70">
       <%= @trial_days %> dias de teste em qualquer plano — com cartão. Vídeos e imagens usam créditos
-      pré-pagos; carrosséis e legendas com IA são inclusos.
+      pré-pagos; carrosséis com IA são inclusos.
     </p>
   </div>
 </section>
@@ -77,11 +77,10 @@
       <div class="p-8 sm:p-10">
         <span class="inline-flex items-center gap-2 rounded-full bg-brand-soft px-3 py-1.5 text-xs font-bold text-brand"><%= icon "zap", size: 13 %> Créditos pré-pagos</span>
         <h2 class="mt-4 font-display text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">Vídeo e imagem por créditos</h2>
-        <p class="mt-3 text-ink-muted">A assinatura cobre a plataforma, os assentos e uma cota mensal de créditos. Vídeos e imagens consomem créditos da sua carteira; carrosséis e legendas com IA são inclusos. <strong class="text-ink">1 crédito = R$ 1.</strong></p>
+        <p class="mt-3 text-ink-muted">A assinatura cobre a plataforma, os assentos e uma cota mensal de créditos. Vídeos e imagens consomem créditos da sua carteira; carrosséis com IA são inclusos. <strong class="text-ink">1 crédito = R$ 1.</strong></p>
         <ul class="mt-6 space-y-3">
           <% [
             ["palette", "#7C3AED", "Carrosséis", "Inclusos — não gastam créditos."],
-            ["sparkles", "#10B981", "Legendas com IA", "Inclusas — não gastam créditos."],
             ["image", "#0EA5E9", "Imagens", "#{@credit_costs[:image]} crédito por imagem."],
             ["video", "#EC4899", "Vídeos UGC", "A partir de #{@credit_costs[:video_standard_15s]} créditos por 15s."],
           ].each do |ic, cc, title, desc| %>
