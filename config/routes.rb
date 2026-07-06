@@ -99,6 +99,13 @@ Rails.application.routes.draw do
     namespace :v1 do
       # Login-less client approval — the path token is the credential.
       namespace :public do
+        # Per-CLIENT portal (one link per client → their queue of pending tickets).
+        get  'client_approvals/:token', to: 'client_approvals#show'
+        post 'client_approvals/:token/tickets/:ticket_id/approve', to: 'client_approvals#approve'
+        post 'client_approvals/:token/tickets/:ticket_id/request_changes', to: 'client_approvals#request_changes'
+        post 'client_approvals/:token/tickets/:ticket_id/undo', to: 'client_approvals#undo'
+
+        # Legacy per-ticket approval (superseded by the per-client portal).
         get  'approvals/:token', to: 'approvals#show'
         post 'approvals/:token/creatives/:creative_id/approve', to: 'approvals#approve'
         post 'approvals/:token/creatives/:creative_id/request_changes', to: 'approvals#request_changes'
