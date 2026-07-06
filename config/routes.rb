@@ -159,6 +159,7 @@ Rails.application.routes.draw do
           post :send_scope
           post :autopilot_estimate
           post :autopilot_start
+          patch :settings
         end
         # End-of-run audit reports (the finalize deck). Listed under a project;
         # a single report is fetched by its own id (the deck page).
