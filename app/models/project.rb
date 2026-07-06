@@ -21,6 +21,16 @@ class Project < ApplicationRecord
   # The most recent report (the one a finalized project links to).
   def latest_report = reports.order(created_at: :desc).first
 
+  # Approval/publishing/scheduling config: defaults + workspace fallback merged
+  # with the project's own stored `settings` (see Tickets::ProjectSettings).
+  def resolved_settings
+    Tickets::ProjectSettings.resolve(self)
+  end
+
+  def setting(key)
+    resolved_settings[key.to_s]
+  end
+
   # The in-flight project-level "GO mode" batch, if any. A batch coordinator has
   # no project of its own — it's linked only through the ticket-runs it spawned,
   # so we resolve it from this project's tickets. At most one is active in

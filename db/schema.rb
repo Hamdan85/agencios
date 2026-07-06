@@ -542,6 +542,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_06_120000) do
     t.text "description"
     t.date "ends_on"
     t.string "name", null: false
+    t.jsonb "settings", default: {}, null: false
     t.date "starts_on"
     t.integer "status", default: 4, null: false
     t.datetime "updated_at", null: false
