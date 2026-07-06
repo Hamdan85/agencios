@@ -23,7 +23,9 @@ module Controllers
           # A real content edit re-derives the LATER stages so they reflect the
           # change. Debounced by the updated_at token: a burst of autosaves
           # collapses to a single downstream regeneration (only the last one runs).
-          Tickets::CascadeFieldsJob.set(wait: 6.seconds).perform_later(
+          # Leading :: — inside Controllers::Tickets a bare `Tickets::` would
+          # resolve to Controllers::Tickets::CascadeFieldsJob (nonexistent).
+          ::Tickets::CascadeFieldsJob.set(wait: 6.seconds).perform_later(
             ticket.id, status.to_s, ticket.updated_at.utc.iso8601(6)
           )
         end
