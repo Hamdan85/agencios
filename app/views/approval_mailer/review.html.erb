@@ -1,0 +1,18 @@
+<% content_for :preheader do %>Revise e aprove os criativos de <%= @project.name %>.<% end %>
+<% content_for :eyebrow do %>Aprovação<% end %>
+
+<h1 style="margin:0 0 16px;font-family:'Sora','Inter',Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#18122B;">
+  Conteúdo pronto para sua aprovação
+</h1>
+
+<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#564F6F;">
+  Olá<%= @client&.name.present? ? ", #{@client.name}" : "" %>. Preparamos o conteúdo de
+  <strong><%= @project.name %></strong> e gostaríamos da sua aprovação. É rápido: revise cada
+  criativo e aprove — ou peça ajustes.
+</p>
+
+<%= email_button('Revisar e aprovar', @url) %>
+
+<p style="margin:16px 0 0;font-size:13px;line-height:1.5;color:#8B86A3;">
+  Assim que tudo estiver aprovado, agendamos a publicação automaticamente.
+</p>

@@ -1,0 +1,8 @@
+Olá<%= @client&.name.present? ? ", #{@client.name}" : "" %>!
+
+O conteúdo de <%= @project.name %> está pronto para sua aprovação.
+Revise e aprove (ou peça ajustes) aqui:
+
+<%= @url %>
+
+Assim que tudo estiver aprovado, agendamos a publicação automaticamente.
