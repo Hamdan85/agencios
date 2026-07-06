@@ -15,12 +15,14 @@ module Operations
         @ticket.update!(approval_requested_at: Time.current)
 
         recipients = self.class.recipients_for(@ticket)
-        ApprovalMailer.review(ticket: @ticket, recipients: recipients).deliver_later if recipients.any?
+        if recipients.any?
+          ApprovalMailer.review(ticket: @ticket, recipients: recipients).deliver_later
+          note = 'Link de aprovação enviado ao cliente.'
+        else
+          note = 'Cliente sem e-mail cadastrado — link de aprovação não enviado.'
+        end
 
-        Operations::Notes::Create.call(
-          ticket: @ticket, user: @sent_by, kind: :system,
-          body: 'Link de aprovação enviado ao cliente.'
-        )
+        Operations::Notes::Create.call(ticket: @ticket, user: @sent_by, kind: :system, body: note)
         @ticket
       end
 

@@ -33,4 +33,17 @@ RSpec.describe Operations::Approvals::RequestApproval do
     decoded = "#{mail.html_part&.body&.decoded} #{mail.text_part&.body&.decoded}"
     expect(decoded).to include("/aprovar/#{ticket.approval_token}")
   end
+
+  it 'sends no email and records an honest note when the client has no e-mail' do
+    Current.workspace = ws
+    client.update!(email: nil)
+    ActionMailer::Base.deliveries.clear
+
+    perform_enqueued_jobs do
+      described_class.call(ticket: ticket, sent_by: user)
+    end
+
+    expect(ActionMailer::Base.deliveries).to be_empty
+    expect(ticket.reload.notes.last.body).to include('sem e-mail')
+  end
 end
