@@ -7,7 +7,7 @@ class TicketSerializer < ActiveModel::Serializer
              :ai_summaries, :fields, :workflow_step, :next_status,
              :project, :assignee, :created_by, :allowed_field_keys, :created_at,
              :archived, :archived_at, :relations, :connected_channels, :overdue,
-             :autopilot_eligible, :autopilot_run, :in_alert, :alert_reason
+             :autopilot_eligible, :autopilot_run, :in_alert, :alert_reason, :approval
 
   def display_title = object.display_title
   def overdue = object.overdue?
@@ -65,6 +65,15 @@ class TicketSerializer < ActiveModel::Serializer
   def autopilot_run
     run = object.active_autopilot_run
     run && AutopilotRunSerializer.new(run).as_json
+  end
+
+  # Approval summary for the production/publication view (drives ApprovalPanel).
+  def approval
+    {
+      requested_at: object.approval_requested_at&.iso8601,
+      fully_approved: object.fully_approved?,
+      actor_name: object.approval_actor&.then { |a| a.respond_to?(:name) ? a.name : nil }
+    }
   end
 
   private

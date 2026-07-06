@@ -206,6 +206,8 @@ Rails.application.routes.draw do
           post  :unarchive
           post  :autopilot_estimate
           post  :autopilot_start
+          post  :request_approval
+          post  :approve
         end
         resources :subtasks, only: %i[create update destroy]
         resources :creatives, only: %i[index create destroy] do
