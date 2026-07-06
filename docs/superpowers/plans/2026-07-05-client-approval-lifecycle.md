@@ -30,7 +30,7 @@
 - `app/services/tickets/project_settings.rb` — project-settings value object (keys, defaults, sanitize).
 - `app/services/controllers/projects/update_settings.rb`
 - `app/services/operations/scheduling/next_slot.rb`
-- `app/services/operations/approvals/{request_approval,decide_creative,approve_all,on_fully_approved,schedule_approved}.rb`
+- `app/services/operations/approvals/{request_approval,decide_creative,approve_all,on_fully_approved,auto_publish_approved}.rb`
 - `app/services/operations/autopilot/complete.rb`
 - `app/services/controllers/approvals/{request_approval,approve}.rb` (internal ticket actions)
 - `app/services/controllers/public/approvals/{show,approve_creative,request_changes}.rb`
@@ -987,15 +987,20 @@ git commit -m "feat(approvals): RequestApproval + agency-branded ApprovalMailer"
 
 ---
 
-### Task B3: DecideCreative → OnFullyApproved → ScheduleApproved
+### Task B3: DecideCreative → OnFullyApproved → AutoPublishApproved
+
+> **Design note (2026-07-06):** Full approval **always advances the ticket INTO the Publication phase**
+> (`production → scheduled`, the preserved `PostingPanel` review surface) with a reasonable schedule
+> pre-filled. It **only auto-creates the scheduled posts** when the project's `auto_publish_after_approval`
+> is on; otherwise the team confirms in the Publication phase. Approval never skips that phase.
 
 **Files:**
-- Create: `app/services/operations/approvals/decide_creative.rb`, `on_fully_approved.rb`, `schedule_approved.rb`
+- Create: `app/services/operations/approvals/decide_creative.rb`, `on_fully_approved.rb`, `auto_publish_approved.rb`
 - Test: `spec/services/operations/approvals/decide_creative_spec.rb`
 
 **Interfaces:**
 - Consumes: `Ticket#fully_approved?` (A2), `Scheduling::NextSlot` (B1), `Operations::Tickets::ChangeStatus`, `Operations::Tickets::Publish`, `project.setting('auto_publish_after_approval')`.
-- Produces: `Operations::Approvals::DecideCreative.call(creative:, decision:, actor:, feedback: nil)`, `OnFullyApproved.call(ticket:)`, `ScheduleApproved.call(ticket:, user: nil)`.
+- Produces: `Operations::Approvals::DecideCreative.call(creative:, decision:, actor:, feedback: nil)`, `OnFullyApproved.call(ticket:)`, `AutoPublishApproved.call(ticket:, user: nil)`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1023,14 +1028,25 @@ RSpec.describe Operations::Approvals::DecideCreative do
     expect(ticket.reload.status).to eq('production')
   end
 
-  it 'approves and, when fully approved + auto-publish, schedules the ticket' do
+  it 'approves and, when fully approved + auto-publish ON, advances to Publication AND creates posts' do
     allow(Operations::Tickets::Publish).to receive(:call).and_return({ posts: [1], skipped: [] })
     described_class.call(creative: creative, decision: 'approved', actor: client)
 
     expect(creative.reload.approval_approved?).to be(true)
     expect(creative.reviewed_by).to eq(client)
-    expect(ticket.reload.status).to eq('scheduled')
+    expect(ticket.reload.status).to eq('scheduled')          # entered the Publication phase
+    expect(ticket.scheduled_at).to be_present                # reasonable slot pre-filled
     expect(Operations::Tickets::Publish).to have_received(:call).with(hash_including(mode: 'scheduled'))
+  end
+
+  it 'with auto-publish OFF, advances to Publication phase but does NOT create posts' do
+    project.update!(settings: project.settings.merge('auto_publish_after_approval' => false))
+    allow(Operations::Tickets::Publish).to receive(:call)
+    described_class.call(creative: creative, decision: 'approved', actor: client)
+
+    expect(ticket.reload.status).to eq('scheduled')          # phase still entered
+    expect(ticket.scheduled_at).to be_present                # default schedule pre-filled
+    expect(Operations::Tickets::Publish).not_to have_received(:call) # team confirms in the phase
   end
 end
 ```
@@ -1100,13 +1116,19 @@ end
 module Operations
   module Approvals
     # Reached when every approvable creative on a ticket is approved. Records the
-    # "Aprovado por <actor>" note; if the project auto-publishes, schedules it.
+    # "Aprovado por <actor>" note, pre-fills a reasonable schedule, and ALWAYS
+    # advances the ticket into the (preserved) Publication phase (production →
+    # scheduled). Only when the project auto-publishes does it also create the
+    # scheduled posts hands-off; otherwise the team confirms in the Publication
+    # phase (PostingPanel).
     class OnFullyApproved < Operations::Base
       def initialize(ticket:)
         @ticket = ticket
       end
 
       def call
+        return unless @ticket.production?
+
         actor = @ticket.approval_actor
         actor_name = actor.respond_to?(:name) ? actor.name : 'Cliente'
         Operations::Notes::Create.call(
@@ -1115,7 +1137,17 @@ module Operations
         )
         Broadcaster.ticket(@ticket, 'approval_completed', actor: actor_name)
 
-        ScheduleApproved.call(ticket: @ticket) if @ticket.project.setting('auto_publish_after_approval')
+        # Reasonable default for the Publication phase (keep planned date if future,
+        # else next open window slot). Stored so PostingPanel opens pre-scheduled.
+        slot = Operations::Scheduling::NextSlot.call(project: @ticket.project, desired_at: @ticket.scheduled_at)
+        @ticket.update!(scheduled_at: slot)
+
+        # ALWAYS enter the Publication phase — never skip it.
+        Operations::Tickets::ChangeStatus.call(@ticket, 'scheduled', user: nil, force: true)
+        @ticket.reload
+
+        # Only the hands-off branch actually creates the posts here.
+        AutoPublishApproved.call(ticket: @ticket) if @ticket.project.setting('auto_publish_after_approval')
         @ticket
       end
     end
@@ -1124,31 +1156,29 @@ end
 ```
 
 ```ruby
-# app/services/operations/approvals/schedule_approved.rb
+# app/services/operations/approvals/auto_publish_approved.rb
 # frozen_string_literal: true
 
 module Operations
   module Approvals
-    # Auto-schedule an approved ticket: compute a reasonable slot, move the ticket
-    # production→scheduled (authoritative), then reuse Tickets::Publish to create
-    # the scheduled posts. Mirrors the retired autopilot PublishStep.
-    class ScheduleApproved < Operations::Base
+    # The hands-off branch (auto_publish_after_approval ON): with the ticket already
+    # in the Publication phase and its scheduled_at pre-filled by OnFullyApproved,
+    # reuse Tickets::Publish to create the scheduled posts. They remain reviewable /
+    # editable / cancelable in the Publication phase until they fire. This is the
+    # only publish path — no new one. (Replaces the earlier ScheduleApproved.)
+    class AutoPublishApproved < Operations::Base
       def initialize(ticket:, user: nil)
         @ticket = ticket
         @user = user
       end
 
       def call
-        return unless @ticket.production?
-
-        slot = Operations::Scheduling::NextSlot.call(project: @ticket.project, desired_at: @ticket.scheduled_at)
-        Operations::Tickets::ChangeStatus.call(@ticket, 'scheduled', user: @user, force: true)
-        @ticket.reload
+        return unless @ticket.scheduled?
 
         Operations::Tickets::Publish.call(
           ticket: @ticket, user: @user,
           creative_ids: @ticket.approvable_creatives.map { |c| c.id.to_s },
-          mode: 'scheduled', scheduled_at: slot
+          mode: 'scheduled', scheduled_at: @ticket.scheduled_at
         )
         @ticket
       end
@@ -1165,8 +1195,8 @@ Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add app/services/operations/approvals/decide_creative.rb app/services/operations/approvals/on_fully_approved.rb app/services/operations/approvals/schedule_approved.rb spec/services/operations/approvals/decide_creative_spec.rb
-git commit -m "feat(approvals): per-creative decisions drive full-approval scheduling"
+git add app/services/operations/approvals/decide_creative.rb app/services/operations/approvals/on_fully_approved.rb app/services/operations/approvals/auto_publish_approved.rb spec/services/operations/approvals/decide_creative_spec.rb
+git commit -m "feat(approvals): approval advances into Publication phase; auto-publish creates posts only when set"
 ```
 
 ---
@@ -2203,11 +2233,17 @@ export default function ApprovalPanel({ ticket, onChanged }) {
 
 ```jsx
 // app/frontend/components/ticket/TicketBody.jsx
-// import ApprovalPanel and render it in the production branch (where showCreativesInMain is true),
-// above or below the creatives panel:
+// Import ApprovalPanel and render it ABOVE the status-specific body (i.e. before the
+// FieldGroup/PostingPanel dispatch), NOT inside the production branch — because the
+// "Aprovado por <actor>" badge must also show in `scheduled` (the Publication phase),
+// where PostingPanel (not FieldGroup) renders.
 import ApprovalPanel from '@/components/ticket/ApprovalPanel'
-// ...in the production render region:
-{status === 'production' && <ApprovalPanel ticket={ticket} onChanged={() => qc.invalidateQueries({ queryKey: keys.ticket(ticket.id) })} />}
+// ...just before the `status === 'scheduled' ? <PostingPanel/> : <FieldGroup/>` dispatch:
+{/* Production: aguardando + actions. Scheduled (Publication phase): the "Aprovado por <actor>"
+    badge persists there, since full approval advanced the ticket out of production. */}
+{(status === 'production' || (status === 'scheduled' && ticket.approval?.fully_approved)) && (
+  <ApprovalPanel ticket={ticket} onChanged={() => qc.invalidateQueries({ queryKey: keys.ticket(ticket.id) })} />
+)}
 ```
 
 > Use the ticket-invalidation already available in `TicketBody` (it uses `useTicketMutations`/query client). If `qc`/`keys` aren't in scope there, import `useQueryClient` from `@tanstack/react-query` and `keys` from `@/api/queryKeys`, mirroring other components.
@@ -2230,6 +2266,6 @@ git commit -m "feat(tickets): production approval panel (resend link / approve) 
 
 - **Spec coverage:** Approval link (C1/C3), per-creative approval (A1/B3/C1), GO stops at production (B5), approval→auto-schedule keeping planned date else next slot (B1/B3), project settings + which behaviors (A3/A4/A5), approval email to client (B2, wired in B5/D2), production step redesign to actions + "Aprovado por <actor>" with confirmations (D1/D2), all-confirmations (C3/D2 use `useConfirm`/prompt). Posts hub is Plan 2. ✓
 - **No placeholders:** every step has concrete code/commands. The only "read the exact helper name" note is the request-spec sign-in helper (repo-specific) — flagged explicitly, not a code placeholder.
-- **Type consistency:** `DecideCreative.call(creative:, decision:, actor:, feedback:)`, `RequestApproval.call(ticket:, sent_by:)`, `ApproveAll.call(ticket:, actor:)`, `ScheduleApproved.call(ticket:, user:)`, `NextSlot.call(project:, desired_at:)`, `Complete.call(run:)` — used consistently across tasks. `approval_state` values `pending/approved/changes_requested` consistent backend↔frontend. `ticketsApi.requestApproval/approve` match routes `request_approval/approve`.
+- **Type consistency:** `DecideCreative.call(creative:, decision:, actor:, feedback:)`, `RequestApproval.call(ticket:, sent_by:)`, `ApproveAll.call(ticket:, actor:)`, `OnFullyApproved.call(ticket:)` (always advances into the Publication phase), `AutoPublishApproved.call(ticket:, user:)` (hands-off post creation, only when the setting is on), `NextSlot.call(project:, desired_at:)`, `Complete.call(run:)` — used consistently across tasks. `approval_state` values `pending/approved/changes_requested` consistent backend↔frontend. `ticketsApi.requestApproval/approve` match routes `request_approval/approve`.
 
 **Open item to confirm during execution:** the request-spec login/billing helper name (`sign_in_as_manager` used illustratively) — replace with this repo's actual shared context per `spec/support`.

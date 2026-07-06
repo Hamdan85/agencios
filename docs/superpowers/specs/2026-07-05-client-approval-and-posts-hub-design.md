@@ -14,8 +14,11 @@ lifecycle:
 1. A unique, login-less **approval link per ticket** where the client experiences the creatives in
    their native form and approves (or requests changes) **per creative**.
 2. **GO (autopilot) stops at `production`** with creatives generated. When every creative is approved
-   the ticket **auto-schedules** (respecting its planned date + the project's posting window) and
-   later posts. The team can always **post manually** instead.
+   the ticket **advances into the Publication phase** (`scheduled` / "Postagem") — the existing review
+   surface (`PostingPanel`: per-channel captions, creative pick, routing preview, schedule vs.
+   publish-now) is **preserved, not skipped** — with a reasonable schedule pre-filled. Whether it is
+   then auto-scheduled hands-off or handed to the team to confirm is the `auto_publish_after_approval`
+   project setting. The team can always **post manually** at any time.
 3. A **project configuration** surface holding the approval + publishing + scheduling behavior
    (migrating the workspace-level `auto_publish_default` down to the project).
 4. A global, filterable **posts hub** (`/publicacoes`) with aggregate analytics + a **post detail
@@ -83,13 +86,22 @@ lifecycle:
 2. **Project settings hold:** `require_client_approval`, `auto_publish_after_approval` (migrated from
    workspace `auto_publish_default`), and the posting **window/cadence**. Recipients are **not** a
    project setting — they default to `client.email`.
-3. **Scheduling on approval:** keep the ticket's planned `scheduled_at` if it is still in the future;
-   otherwise roll to the next open slot in the project's posting window, avoiding collisions with the
-   project's other scheduled posts.
+3. **On full approval:** the ticket **always advances into the Publication phase** (`production →
+   scheduled`) — that phase (`PostingPanel`) is preserved and reviews everything. A **reasonable
+   schedule** is pre-computed (keep the ticket's planned `scheduled_at` if still future; else the next
+   open slot in the project's posting window, avoiding collisions) and stored as the phase's default.
+   If `auto_publish_after_approval` is on, the scheduled posts are also created automatically (still
+   reviewable/editable in the phase until they fire); if off, the team confirms in the phase (schedule
+   or publish immediately).
 4. **Posts hub = global, absorbing the Performance analytics.** One hub (`/publicacoes`) with
    aggregate analytics + filterable list + post detail. The per-client Performance tab is superseded.
 5. *(locked default)* **AI performance insight is deferred** to a follow-up — not in v1.
 6. *(locked default)* **Project settings UI = a "Configurações" tab** on the campaign detail page.
+7. *(clarified 2026-07-06)* **The Publication phase (`scheduled` / "Postagem") is never removed** — it
+   reviews too much (captions/routing/creative pick/schedule-vs-publish-now). Only autopilot's
+   *internal* `PublishStep` is retired. Approval advances the ticket **into** the Publication phase
+   (never past it); `auto_publish_after_approval` decides whether posts are auto-created there or the
+   team confirms.
 
 ## Data model
 
@@ -140,13 +152,16 @@ New namespace `Operations::Approvals::*`:
   note/notification path). Then evaluate `fully_approved?` → `OnFullyApproved` when true.
 - `ApproveAll(ticket:, actor:)` — internal "Aprovar": mark the whole approvable set approved with
   `reviewed_by = actor` (a User). Then `OnFullyApproved`.
-- `OnFullyApproved(ticket:)` — write the "Aprovado por &lt;actor&gt;" Note; if the project resolves
-  `auto_publish_after_approval` true → `ScheduleApproved`; else leave approved in `production`.
-- `ScheduleApproved(ticket:)` — compute the moment via `Scheduling::NextSlot`, move the ticket
-  `production → scheduled` via `Operations::Tickets::ChangeStatus(force: true)` (the authoritative
-  transition, exactly as the retired `PublishStep` did), then **reuse**
-  `Operations::Tickets::Publish(ticket:, creative_ids: <approved set>, mode: :scheduled,
-  scheduled_at: <computed>)` to create the scheduled posts. This is the only publish path — no new one.
+- `OnFullyApproved(ticket:)` — write the "Aprovado por &lt;actor&gt;" Note; compute a reasonable moment
+  via `Scheduling::NextSlot` and store it on `ticket.scheduled_at` (the Publication phase's default);
+  **always** advance `production → scheduled` via `Operations::Tickets::ChangeStatus(force: true)` so the
+  ticket **enters the (preserved) Publication phase**. Then, **only if** the project resolves
+  `auto_publish_after_approval` true, call `AutoPublishApproved`; otherwise stop — the team reviews and
+  confirms in the Publication phase (`PostingPanel`).
+- `AutoPublishApproved(ticket:)` — the hands-off branch: **reuse** `Operations::Tickets::Publish(ticket:,
+  user: nil, creative_ids: <approved set>, mode: 'scheduled', scheduled_at: ticket.scheduled_at)` to
+  create the scheduled posts (still reviewable/editable in the Publication phase until they fire). This
+  is the only publish path — no new one. (Replaces the earlier `ScheduleApproved`.)
 
 New `Operations::Scheduling::NextSlot(project:, desired_at:)` — **pure**, unit-tested: returns
 `desired_at` if it is in the future, inside the window, and collision-free (≥ `min_gap_minutes` from
@@ -160,8 +175,10 @@ Surgical edits to the ticket-run:
 - `Advance`: remove the `publishing` case. When generations settle
   (`KickGenerations` all-sync path and `OnGenerationSettled.reconcile`), transition the run to
   `completed` at ticket status `production` instead of `publishing`/`scheduled`.
-- Delete/retire `PublishStep` from the autopilot chain (its scheduling responsibility now lives in
-  `Operations::Tickets::Publish`, invoked by `ScheduleApproved`).
+- Delete/retire autopilot's **internal** `PublishStep` only (an autopilot *code* phase — **not** the UI
+  Publication phase, which stays). Its post-creation responsibility now lives in
+  `Operations::Tickets::Publish`, invoked by `AutoPublishApproved` on approval (when auto-publish is on)
+  or by the team directly in the Publication phase.
 - On run completion at production, if `project.setting(:require_client_approval)` → call
   `Approvals::RequestApproval(ticket:, sent_by: run.user)` so the client is emailed automatically.
 - Batch (project) GO: unchanged orchestration; children now finish at production.
@@ -200,6 +217,11 @@ Surgical edits to the ticket-run:
   (→ `RequestApproval`) and **"Aprovar"** (→ `ApproveAll`).
 - Any creative `changes_requested` → its `client_feedback` shown inline so the team can regenerate.
 - **Fully approved** → **"Aprovado por &lt;actor&gt; · &lt;data&gt;"** (actor = User or Client name).
+- **Badge persists into the Publication phase.** Because full approval advances the ticket into
+  `scheduled` (§Decision 7), the "Aprovado por &lt;actor&gt;" state is shown wherever the ticket now is:
+  the Approval panel renders in **both** `production` (aguardando + actions) and `scheduled` (the
+  "Aprovado por &lt;actor&gt;" badge). The approval summary is a ticket-level derivation, not a
+  production-only field.
 - Manual posting stays available in the `scheduled` step; when `require_client_approval` is on and the
   ticket is not approved, the posting action shows a soft confirmation ("Postar sem aprovação?").
 
