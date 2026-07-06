@@ -42,39 +42,46 @@ RSpec.describe 'Operations::Autopilot eligibility + estimate' do
   end
 
   describe Operations::Autopilot::Estimate do
-    it 'sums credits with the same math the debit uses (video + image + carousel)' do
+    it 'excludes video from the total (never auto-generated) and flags pending video' do
       ticket = ticket_with(%w[ugc_video feed_image carousel])
-      total = Pricing.credits_for(kind: :video, seconds: Pricing::DEFAULT_VIDEO_SECONDS) +
-              Pricing.credits_for(kind: :image) + Pricing.credits_for(kind: :carousel)
+      total = Pricing.credits_for(kind: :image) + Pricing.credits_for(kind: :carousel)
       Operations::Credits::Purchase.call(workspace: workspace, amount: total, reference: 'seed')
 
       est = described_class.call(tickets: [ticket], workspace: workspace)
 
-      expect(est[:total_credits]).to eq(total)
+      expect(est[:total_credits]).to eq(total) # video contributes 0
       expect(est[:eligible]).to be(true)
       expect(est[:shortfall]).to eq(0)
       expect(est[:tickets].first[:subtotal]).to eq(total)
+      expect(est[:has_pending_video]).to be(true)
+      expect(est[:pending_video_types]).to include('ugc_video')
+    end
+
+    it 'has no pending video when nothing is a video type' do
+      est = described_class.call(tickets: [ticket_with(%w[carousel feed_image])], workspace: workspace)
+      expect(est[:has_pending_video]).to be(false)
+      expect(est[:pending_video_types]).to be_empty
     end
 
     it 'reports a shortfall and suggests a pack when the wallet is short' do
-      ticket = ticket_with(%w[ugc_video]) # empty wallet
-      video = Pricing.credits_for(kind: :video, seconds: Pricing::DEFAULT_VIDEO_SECONDS)
+      ticket = ticket_with(%w[feed_image]) # empty wallet; image is metered, carousel is 0
+      image = Pricing.credits_for(kind: :image)
       est = described_class.call(tickets: [ticket], workspace: workspace)
 
-      expect(est[:total_credits]).to eq(video)
+      expect(est[:total_credits]).to eq(image)
       expect(est[:available]).to eq(0)
-      expect(est[:shortfall]).to eq(video)
+      expect(est[:shortfall]).to eq(image)
       expect(est[:packs_suggestion]).not_to be_empty
     end
 
     it 'treats an unlimited godfathered workspace as infinite (no shortfall, available nil)' do
       workspace.update!(godfathered: true, monthly_credit_limit: nil)
-      ticket = ticket_with(%w[ugc_video]) # wallet is empty / absent
-      video = Pricing.credits_for(kind: :video, seconds: Pricing::DEFAULT_VIDEO_SECONDS)
+      ticket = ticket_with(%w[feed_image]) # wallet is empty / absent
+      image = Pricing.credits_for(kind: :image)
 
       est = described_class.call(tickets: [ticket], workspace: workspace)
 
-      expect(est[:total_credits]).to eq(video)
+      expect(est[:total_credits]).to eq(image)
       expect(est[:unlimited]).to be(true)
       expect(est[:available]).to be_nil
       expect(est[:shortfall]).to eq(0)

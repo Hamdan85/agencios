@@ -16,6 +16,8 @@ RSpec.describe Operations::Autopilot::Complete do
   end
 
   it 'completes the run at production and requests approval' do
+    # A ready creative to approve (video-only tickets generate nothing and skip approval).
+    Creative.create!(workspace: ws, ticket: ticket, creative_type: 'carousel', status: :ready)
     expect(Operations::Approvals::RequestApproval).to receive(:call).with(hash_including(ticket: ticket))
     Operations::Autopilot::Complete.call(run: run)
     expect(run.reload.state).to eq('completed')

@@ -44,6 +44,9 @@ module Operations
 
       def request_approval_if_needed
         return unless @ticket.project.setting('require_client_approval')
+        # Nothing to approve yet — e.g. a video-only ticket that GO didn't generate
+        # (video waits for manual production). Don't drop an empty item in the portal.
+        return unless @ticket.approvable_creatives.any?
 
         Operations::Approvals::RequestApproval.call(ticket: @ticket, sent_by: @run.user)
       end

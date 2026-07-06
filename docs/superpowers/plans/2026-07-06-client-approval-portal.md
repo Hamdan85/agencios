@@ -94,6 +94,31 @@ alerts the workspace admins; approval continues the ticket's normal flow.
   "feito com ✳ Agencios" signature. Reuse the design system; no native dialogs.
 - Verify: `bin/vite build` clean.
 
+## Task V (video exception — added 2026-07-06)
+Rule: **video generations never auto-generate, even in GO** — they wait in `production` for manual
+generation.
+- `Autopilot::KickGenerations#kick_all` skips `spec[:kind] == 'video'` types. A video-only ticket
+  therefore generates nothing and simply stops in production.
+- `Autopilot::Complete#request_approval_if_needed` fires `RequestApproval` **only when the ticket
+  has an approvable creative** (so a video-only ticket with nothing generated doesn't enter the
+  portal empty).
+- `Autopilot::Estimate` excludes video from the credit total (it won't be generated) and returns
+  `has_pending_video: true` + the video types, so the GO dialog can warn "os vídeos não serão
+  gerados automaticamente; ficarão em produção".
+- `Autopilot::Eligibility` no longer blocks a ticket for containing video (video is allowed, just
+  deferred) — confirm it doesn't already treat video as a blocker.
+- Rejection routing (Task 3): a **video** creative rejected by the client **stays in production**
+  and never auto-regenerates — only the responsible user is emailed. Non-video under GO regenerates
+  (Task 5); non-video manual stays in production + notify.
+
+## Task N (history + responsible-user email — added 2026-07-06)
+- Every client decision (approve ticket / request changes on a creative) writes a **history note**
+  on the ticket (kind: system) — "Cliente aprovou …" / "Cliente pediu ajustes em … : <feedback>".
+- The **responsible user is emailed** on each decision. `Ticket#responsible_user` =
+  `assignee || last autopilot run's user || created_by || workspace owner`. New
+  `Operations::Approvals::NotifyDecision` + `ApprovalDecisionMailer` (branded). Reused by Task 3
+  (reject) and Task 4 (approve). Skip silently only if no responsible user resolves.
+
 ## Task 10: Cleanup old per-ticket public path
 - Remove/redirect the per-ticket `Controllers::Public::Approvals::*` + routes now that the client
   portal supersedes them (keep internal ticket approval actions — D2 — intact).

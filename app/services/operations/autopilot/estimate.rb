@@ -29,6 +29,8 @@ module Operations
         available = @workspace.credits_available.to_i
         shortfall = unlimited ? 0 : [total - available, 0].max
 
+        video_types = @tickets.flat_map(&:creative_types_list).select { |type| video_type?(type) }.uniq
+
         {
           eligible: blocking.empty?,
           unlimited: unlimited,
@@ -37,7 +39,11 @@ module Operations
           shortfall: shortfall,
           packs_suggestion: shortfall.positive? ? suggested_packs(shortfall) : [],
           tickets: rows,
-          blocking_tickets: blocking.map { |r| r.slice(:ticket_id, :title, :blocking_types) }
+          blocking_tickets: blocking.map { |r| r.slice(:ticket_id, :title, :blocking_types) },
+          # Video is never auto-generated in GO — it waits in production. Surfaced so
+          # the GO dialog can warn the user (and excluded from total_credits below).
+          has_pending_video: video_types.any?,
+          pending_video_types: video_types
         }
       end
 
@@ -61,13 +67,17 @@ module Operations
         kind = spec&.dig(:kind)
         credits =
           case kind
-          when 'video' then Pricing.credits_for(kind: :video, seconds: Pricing::DEFAULT_VIDEO_SECONDS)
+          # Video is deferred to manual production — the GO run never generates it,
+          # so it costs nothing here (and is flagged via has_pending_video).
+          when 'video' then 0
           when 'image' then Pricing.credits_for(kind: :image)
           when 'carousel' then Pricing.credits_for(kind: :carousel)
           else 0
           end
-        { type: type, kind: kind, credits: credits }
+        { type: type, kind: kind, credits: credits, deferred: kind == 'video' }
       end
+
+      def video_type?(type) = ::Creatives.spec_for(type)&.dig(:kind) == 'video'
 
       # The cheapest single pack that covers the shortfall (or the largest pack if
       # none is big enough — the UI can suggest buying more than one).
