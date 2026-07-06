@@ -97,6 +97,13 @@ Rails.application.routes.draw do
   # ── JSON API ───────────────────────────────────────────────────────
   namespace :api do
     namespace :v1 do
+      # Login-less client approval — the path token is the credential.
+      namespace :public do
+        get  'approvals/:token', to: 'approvals#show'
+        post 'approvals/:token/creatives/:creative_id/approve', to: 'approvals#approve'
+        post 'approvals/:token/creatives/:creative_id/request_changes', to: 'approvals#request_changes'
+      end
+
       # Auth & identity
       resource  :session, only: %i[create destroy], controller: 'sessions'
       resource  :registration, only: %i[create], controller: 'registrations'
