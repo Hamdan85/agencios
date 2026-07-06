@@ -8,7 +8,7 @@ module Tickets
     ALLOWED = {
       'ideation' => %w[brief objective target_persona references content_pillar format_hypothesis],
       'scoping' => %w[creative_type creative_types channels copy_brief script deliverables due_date effort_estimate],
-      'production' => %w[creative_id caption hashtags approval_status production_scope],
+      'production' => %w[creative_id caption hashtags production_scope],
       'scheduled' => %w[creative_id creative_ids post_mode scheduled_at schedule first_comment link_in_bio
                         auto_publish captions],
       'published' => %w[posts metrics monitor_alerts],
