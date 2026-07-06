@@ -6,13 +6,17 @@ import {
   dashboardApi, calendarApi, tasksApi, ticketsApi, clientsApi, projectsApi, reportsApi, studioApi,
   generationsApi, creativesApi, socialApi, meetingsApi, invoicesApi, settingsApi, billingApi,
   creditsApi, pricingApi, workspaceApi, subtasksApi, connectionsApi, connectorApi, accountApi,
-  videoScenesApi,
+  videoScenesApi, approvalsApi,
 } from '@/api'
 import { keys } from '@/api/queryKeys'
 import { useCurrentUser } from '@/hooks/useAuth'
 import analytics, { EVENTS } from '@/lib/analytics'
 
 const onErr = (msg) => (err) => toast.error(err?.error || msg)
+
+// Public (login-less) client approval bundle — the path token is the credential.
+export const usePublicApproval = (token) =>
+  useQuery({ queryKey: keys.publicApproval(token), queryFn: () => approvalsApi.get(token), enabled: !!token })
 
 // Opens a ticket that may live in another team (the cross-team Você views). If the
 // ticket belongs to the active workspace, navigates within the SPA; otherwise it

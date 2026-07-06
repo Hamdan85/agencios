@@ -180,6 +180,14 @@ export const projectsApi = {
   updateSettings: (id, settings) => api.patch(`/projects/${id}/settings`, { settings }),
 }
 
+// Public client content approval (login-less; the path token is the credential).
+export const approvalsApi = {
+  get: (token) => api.get(`/public/approvals/${token}`),
+  approve: (token, creativeId) => api.post(`/public/approvals/${token}/creatives/${creativeId}/approve`),
+  requestChanges: (token, creativeId, feedback) =>
+    api.post(`/public/approvals/${token}/creatives/${creativeId}/request_changes`, { feedback }),
+}
+
 // End-of-run project audit reports (the finalize deck).
 export const reportsApi = {
   listByProject: (projectId) => api.get(`/projects/${projectId}/reports`),

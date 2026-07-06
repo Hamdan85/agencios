@@ -28,4 +28,5 @@ export const keys = {
   workspaceMembers: () => ['workspace', 'memberships'],
   connections: () => ['connections'],
   mcpConnector: () => ['mcp_connector'],
+  publicApproval: (token) => ['public', 'approvals', token],
 }

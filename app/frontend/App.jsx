@@ -28,6 +28,7 @@ function LegacyBoardRedirect() {
 const Login = lazy(() => import('@/pages/Auth/Login'))
 const Register = lazy(() => import('@/pages/Auth/Register'))
 const ConfirmEmailChange = lazy(() => import('@/pages/Auth/ConfirmEmailChange'))
+const ApprovalShow = lazy(() => import('@/pages/Approval/Show'))
 const Account = lazy(() => import('@/pages/Account/Index'))
 const Dashboard = lazy(() => import('@/pages/Dashboard/Index'))
 const Calendar = lazy(() => import('@/pages/Calendar/Index'))
@@ -73,6 +74,9 @@ const router = createBrowserRouter(
 
       {/* Public: the link mailed to a user's new address to confirm an e-mail change. */}
       <Route path="/confirmar-troca-email/:token" element={<ConfirmEmailChange />} />
+
+      {/* Public: login-less client content approval (token is the credential). */}
+      <Route path="/aprovar/:token" element={<ApprovalShow />} />
 
       <Route path="/erro/acesso-negado" element={<Forbidden />} />
 
