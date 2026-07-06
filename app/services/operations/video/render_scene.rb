@@ -128,6 +128,15 @@ module Operations
         @scene.voice_clip.attach(io: StringIO.new(audio[:bytes]), filename: "voice-#{@scene.id}.mp3",
                                  content_type: audio[:content_type])
         @scene.update!(metadata: @scene.metadata.merge('voice_fingerprint' => fingerprint))
+
+        # Record the real Cartesia voice cost (per character) in the unified ledger
+        # so it enters the cost-plus credit charge. Best-effort — never raises.
+        gen = @scene.creative.generation
+        Operations::Ai::LogUsage.call(
+          provider: AiUsageLog::PROVIDER_CARTESIA, operation: 'synthesize_voice',
+          model: voice_id, units: line.length, unit_kind: AiUsageLog::UNIT_CHARACTER,
+          subject: @scene.creative, workspace: @scene.workspace, user: gen&.user
+        )
       rescue StandardError => e
         Rails.logger.warn("[Video::RenderScene] voice synth failed for scene #{@scene.id}: #{e.class}: #{e.message}")
       end

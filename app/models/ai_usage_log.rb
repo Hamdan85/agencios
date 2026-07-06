@@ -23,7 +23,10 @@ class AiUsageLog < ApplicationRecord
   PROVIDER_OPENROUTER    = 'openrouter'
   PROVIDER_GOOGLE_BANANA = 'google_banana'
   PROVIDER_HEYGEN        = 'heygen'
-  PROVIDERS = [PROVIDER_ANTHROPIC, PROVIDER_OPENROUTER, PROVIDER_GOOGLE_BANANA, PROVIDER_HEYGEN].freeze
+  # Cartesia (voice/TTS) — billed 1 credit per character.
+  PROVIDER_CARTESIA      = 'cartesia'
+  PROVIDERS = [PROVIDER_ANTHROPIC, PROVIDER_OPENROUTER, PROVIDER_GOOGLE_BANANA,
+               PROVIDER_HEYGEN, PROVIDER_CARTESIA].freeze
   TOKEN_PROVIDERS = [PROVIDER_ANTHROPIC, PROVIDER_OPENROUTER].freeze
 
   # --- pricing ---------------------------------------------------------------
@@ -50,12 +53,16 @@ class AiUsageLog < ApplicationRecord
   # explicit cost_cents instead.
   UNIT_PRICING = {
     PROVIDER_GOOGLE_BANANA => { unit_kind: 'image', cents_per_unit: 4.0 }, # ~ $0.039 / image
-    PROVIDER_HEYGEN => { unit_kind: 'second', cents_per_unit: 1.667 } # ~ $1.00 / min standard avatar
+    PROVIDER_HEYGEN => { unit_kind: 'second', cents_per_unit: 1.667 }, # ~ $1.00 / min standard avatar
+    # ~ $50 / 1M characters — the conservative Pro-plan rate ($5 / 100K credits,
+    # 1 credit = 1 char). Sonic TTS; tune if on a higher-volume plan.
+    PROVIDER_CARTESIA => { unit_kind: 'character', cents_per_unit: 0.005 }
   }.freeze
 
-  UNIT_TOKEN  = 'token'
-  UNIT_IMAGE  = 'image'
-  UNIT_SECOND = 'second'
+  UNIT_TOKEN     = 'token'
+  UNIT_IMAGE     = 'image'
+  UNIT_SECOND    = 'second'
+  UNIT_CHARACTER = 'character'
 
   scope :recent_first, -> { order(created_at: :desc) }
   scope :for_provider, ->(p) { where(provider: p) }
