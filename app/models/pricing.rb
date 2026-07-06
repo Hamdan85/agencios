@@ -28,8 +28,9 @@ module Pricing
   # ── Seed / fallback defaults ──────────────────────────────────────────────
   DEFAULT_CONFIG = {
     trial_days: 7, annual_discount_percent: 15, credit_unit_cents: 100,
-    margin_multiplier: 5, usd_brl: 5.40,
+    margin_multiplier: 6.5, usd_brl: 6.00, video_usd_per_sec: 0.16,
     image_credits: 1, carousel_credits: 0,
+    # deprecated — video is cost-based now (see credits_for); kept for the admin form
     video_standard_credits_per_15s: 8, video_photoreal_credits_per_15s: 30
   }.freeze
 
@@ -89,6 +90,7 @@ module Pricing
   def trial_days = config.trial_days
   def credit_unit_cents = config.credit_unit_cents
   def usd_brl = config.usd_brl.to_f
+  def markup = config.margin_multiplier.to_f
   def annual_discount_percent = config.annual_discount_percent
 
   # The yearly amount (BRL cents): the Stripe-synced value if present, else 12×
@@ -112,22 +114,33 @@ module Pricing
   end
 
   # ── Credit cost of a generation ───────────────────────────────────────────
+  # Cost-plus: credits track the REAL vendor cost of the operation, converted at
+  # a FIXED conservative rate (usd_brl) and marked up (markup). 1 credit = R$1.
+  # `credits_for` ESTIMATES the up-front hold (video: per-second USD rate × secs);
+  # `credits_for_cost` charges the exact real cost at true-up.
   def credits_for(kind:, seconds: nil, engine: nil)
     c = config
     case kind.to_s
     when 'image'    then c.image_credits
     when 'carousel' then c.carousel_credits
     when 'video'
-      secs  = (seconds || DEFAULT_VIDEO_SECONDS).to_f
-      per15 = if photoreal_engine?(engine)
-                c.video_photoreal_credits_per_15s
-              else
-                c.video_standard_credits_per_15s
-              end
-      (secs * per15 / 15.0).ceil
+      secs = (seconds || DEFAULT_VIDEO_SECONDS).to_f
+      credits_for_cost(cost_cents: c.video_usd_per_sec.to_f * 100.0 * secs)
     else
       0
     end
+  end
+
+  # Credits for a KNOWN real vendor cost (USD cents) — the authoritative charge
+  # at true-up. revenue = markup × (cost_usd × usd_brl); 1 credit = R$1, so the
+  # credit count IS that BRL amount. Rounds up ⇒ realized margin is always ≥ the
+  # target (1 − 1/markup). A zero/absent cost charges nothing (callers floor to
+  # the estimate so a real render is never billed at 0).
+  def credits_for_cost(cost_cents:)
+    cents = cost_cents.to_f
+    return 0 if cents <= 0
+
+    (cents * usd_brl * markup / 100.0).ceil
   end
 
   def photoreal_engine?(engine) = PHOTOREAL_ENGINES.include?(engine.to_s)

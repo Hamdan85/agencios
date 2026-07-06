@@ -143,7 +143,7 @@ module Operations
           cost_cents: cost.positive? ? cost : generation.cost_cents,
           result: generation.result.merge('duration' => total_seconds, 'scene_count' => scenes.size)
         )
-        reconcile_credits!(generation, total_seconds)
+        reconcile_credits!(generation, total_seconds, cost)
         log_cost!(generation, total_seconds, cost)
       end
 
@@ -152,8 +152,14 @@ module Operations
       # and the high-quality upgrade hold. Per-scene edit debits are already
       # exact — reconciling against them would re-charge the whole video on
       # every recompose after an edit.
-      def reconcile_credits!(generation, total_seconds)
-        actual = Pricing.credits_for(kind: :video, seconds: total_seconds)
+      def reconcile_credits!(generation, total_seconds, cost)
+        # True-up to the REAL summed scene cost; fall back to the seconds estimate
+        # if the vendor reported no cost, so a render is never trued-up to zero.
+        actual = if cost.to_i.positive?
+                   Pricing.credits_for_cost(cost_cents: cost)
+                 else
+                   Pricing.credits_for(kind: :video, seconds: total_seconds)
+                 end
         debits = generation.workspace.credit_transactions.debits
                            .where(generation_id: generation.id).order(:created_at).to_a
         debit = debits.last

@@ -465,9 +465,9 @@ RSpec.describe 'video scene pipeline' do
       expect(creative.assets).to be_attached
       expect(generation.reload.status).to eq('completed')
       expect(generation.result['duration']).to eq(16)
-      # Held 30s, real 16s → net debit equals the 16s cost.
+      # Held a 30s estimate, trued-up to the REAL summed scene cost (2 × 50¢ = 100¢).
       net = -workspace.credit_transactions.where(generation_id: generation.id).sum(:amount)
-      expect(net).to eq(Pricing.credits_for(kind: :video, seconds: 16))
+      expect(net).to eq(Pricing.credits_for_cost(cost_cents: 100))
     end
 
     it 'is idempotent — a completed generation short-circuits' do

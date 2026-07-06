@@ -7,7 +7,7 @@
 class PricingConfig < ApplicationRecord
   validates :trial_days, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 90 }
   validates :annual_discount_percent, numericality: { greater_than_or_equal_to: 0, less_than: 100 }
-  validates :credit_unit_cents, :margin_multiplier,
+  validates :credit_unit_cents, :margin_multiplier, :usd_brl, :video_usd_per_sec,
             :image_credits, :carousel_credits,
             :video_standard_credits_per_15s, :video_photoreal_credits_per_15s,
             numericality: { greater_than_or_equal_to: 0 }
@@ -18,7 +18,8 @@ class PricingConfig < ApplicationRecord
 
   def self.ransackable_attributes(_auth = nil)
     %w[id trial_days annual_discount_percent credit_unit_cents margin_multiplier usd_brl
-       image_credits carousel_credits video_standard_credits_per_15s video_photoreal_credits_per_15s]
+       video_usd_per_sec image_credits carousel_credits
+       video_standard_credits_per_15s video_photoreal_credits_per_15s]
   end
 
   def self.ransackable_associations(_auth = nil) = []

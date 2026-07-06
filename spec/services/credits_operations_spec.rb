@@ -13,9 +13,12 @@ RSpec.describe 'Operations::Credits', type: :model do
       expect(Pricing.credits_for(kind: :carousel)).to eq(0)
     end
 
-    it 'charges standard vs photoreal video per second' do
-      expect(Pricing.credits_for(kind: :video, seconds: 30)).to eq(16)                       # 8/15 * 30
-      expect(Pricing.credits_for(kind: :video, seconds: 30, engine: 'avatar_iv')).to eq(60)  # 2 * 30
+    it 'charges video by real vendor cost (cost-plus), not by final duration' do
+      PricingConfig.first_or_create!.update!(usd_brl: 6.00, margin_multiplier: 6.5, video_usd_per_sec: 0.16)
+      # HOLD estimate: 30s × $0.16/s = $4.80 = 480 USD¢ → ceil(480 × 6 × 6.5 ÷ 100) = 188
+      expect(Pricing.credits_for(kind: :video, seconds: 30)).to eq(188)
+      # TRUE-UP by the real cost: an 8s clip that really cost $1.28 (128 USD¢) → 50
+      expect(Pricing.credits_for_cost(cost_cents: 128)).to eq(50)
     end
   end
 

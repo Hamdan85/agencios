@@ -53,7 +53,7 @@ module Operations
           result: @generation.result.merge(result_payload(url))
         )
 
-        reconcile_credits!
+        reconcile_credits!(cost_cents)
         log_ai_cost!(cost_cents)
         broadcast!(creative)
         # Re-enter autopilot if this generation belongs to a GO run (rescued
@@ -121,10 +121,16 @@ module Operations
       # real duration + engine now that the render is done. Refunds the difference
       # if the video came out shorter, charges the difference (best-effort) if
       # longer/photoreal. Images/carousels were charged exactly — nothing to do.
-      def reconcile_credits!
+      def reconcile_credits!(cost_cents)
         return unless @generation.kind == 'video'
 
-        actual = Pricing.credits_for(kind: :video, seconds: video_seconds, engine: engine)
+        # Charge the REAL vendor cost when known; fall back to the seconds estimate
+        # so a render is never trued-up to zero if the vendor didn't report a cost.
+        actual = if cost_cents.to_i.positive?
+                   Pricing.credits_for_cost(cost_cents: cost_cents)
+                 else
+                   Pricing.credits_for(kind: :video, seconds: video_seconds, engine: engine)
+                 end
         debit = @generation.workspace.credit_transactions
                            .debits.where(generation_id: @generation.id).order(:created_at).last
         return unless debit

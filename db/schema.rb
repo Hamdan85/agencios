@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_05_180000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_06_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -468,12 +468,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_05_180000) do
     t.datetime "created_at", null: false
     t.integer "credit_unit_cents", default: 100, null: false
     t.integer "image_credits", default: 1, null: false
-    t.integer "margin_multiplier", default: 5, null: false
+    t.decimal "margin_multiplier", precision: 5, scale: 2, default: "6.5", null: false
     t.integer "trial_days", default: 7, null: false
     t.datetime "updated_at", null: false
     t.decimal "usd_brl", precision: 8, scale: 4, default: "5.4", null: false
     t.integer "video_photoreal_credits_per_15s", default: 30, null: false
     t.integer "video_standard_credits_per_15s", default: 8, null: false
+    t.decimal "video_usd_per_sec", precision: 6, scale: 4, default: "0.16", null: false
   end
 
   create_table "pricing_packs", force: :cascade do |t|

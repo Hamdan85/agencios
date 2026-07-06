@@ -23,10 +23,9 @@ RSpec.describe Pricing, type: :model do
 
     it 'reflects an admin edit to the credit-cost config immediately' do
       cfg = PricingConfig.first_or_create!
-      cfg.update!(image_credits: 3, video_standard_credits_per_15s: 10)
+      cfg.update!(image_credits: 3)
 
       expect(Pricing.credits_for(kind: :image)).to eq(3)
-      expect(Pricing.credits_for(kind: :video, seconds: 30)).to eq(20) # 10/15*30
     end
 
     it 'reflects a trial-length change from config' do
@@ -69,6 +68,50 @@ RSpec.describe Pricing, type: :model do
       PricingPlan.find_by(key: 'solo').update!(price_cents: 15_000)
       Pricing.seed_defaults! # run again
       expect(PricingPlan.find_by(key: 'solo').price_cents).to eq(15_000)
+    end
+  end
+
+  # The credit charge tracks the REAL vendor cost of each operation (cost-plus),
+  # not the video's final duration. The dollar is passed through via a FIXED,
+  # conservative internal rate (usd_brl) + a markup (margin_multiplier), so every
+  # operation clears the target margin. See docs/pricing-model.md.
+  describe 'cost-based credit pricing' do
+    before do
+      PricingConfig.first_or_create!.update!(
+        usd_brl: 6.00, margin_multiplier: 6.5, image_credits: 1, video_usd_per_sec: 0.16
+      )
+    end
+
+    it 'charges credits = ceil(cost_usd_cents × usd_brl × markup ÷ 100) for a real cost' do
+      # 8s clip real cost $1.28 = 128 USD cents → ceil(128 × 6.00 × 6.5 ÷ 100) = 50
+      expect(Pricing.credits_for_cost(cost_cents: 128)).to eq(50)
+      # image real cost $0.04 = 4 USD cents → ceil(4 × 6.00 × 6.5 ÷ 100) = 2
+      expect(Pricing.credits_for_cost(cost_cents: 4)).to eq(2)
+    end
+
+    it 'guarantees ≥80% margin on the charge (rounds up, never down)' do
+      [4, 37, 64, 128, 200].each do |cost_cents|
+        credits    = Pricing.credits_for_cost(cost_cents: cost_cents)
+        revenue_br = credits * 1.0                          # 1 credit = R$1 nominal
+        cost_br    = cost_cents / 100.0 * 6.00              # USD → BRL at the internal rate
+        margin     = (revenue_br - cost_br) / revenue_br
+        expect(margin).to be >= 0.80
+      end
+    end
+
+    it 'charges nothing for a zero real cost' do
+      expect(Pricing.credits_for_cost(cost_cents: 0)).to eq(0)
+    end
+
+    it 'estimates a video HOLD from the per-second USD cost rate' do
+      # 8s × $0.16/s = $1.28 = 128 USD cents → same 50 credits as the real 8s clip
+      expect(Pricing.credits_for(kind: :video, seconds: 8)).to eq(50)
+      # 4s × $0.16/s = $0.64 = 64 USD cents → ceil(64 × 6 × 6.5 ÷ 100) = 25
+      expect(Pricing.credits_for(kind: :video, seconds: 4)).to eq(25)
+    end
+
+    it 'keeps image at the flat image_credits (cheap, stable operation)' do
+      expect(Pricing.credits_for(kind: :image)).to eq(1)
     end
   end
 end

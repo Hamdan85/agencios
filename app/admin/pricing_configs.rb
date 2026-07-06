@@ -8,7 +8,7 @@ ActiveAdmin.register PricingConfig do
   actions :index, :edit, :update
 
   permit_params :trial_days, :annual_discount_percent, :credit_unit_cents, :margin_multiplier,
-                :usd_brl, :image_credits, :carousel_credits,
+                :usd_brl, :video_usd_per_sec, :image_credits, :carousel_credits,
                 :video_standard_credits_per_15s, :video_photoreal_credits_per_15s
 
   action_item :restore_defaults, only: :index do
@@ -38,14 +38,19 @@ ActiveAdmin.register PricingConfig do
               label: 'Desconto do plano anual (%)',
               hint: 'Aplicado sobre 12× o preço mensal para calcular o preço anual padrão.'
     end
-    f.inputs 'Economia de créditos' do
+    f.inputs 'Economia de créditos (cost-plus por operação)' do
       f.input :credit_unit_cents, label: 'Valor do crédito em centavos (BRL) — 100 = R$1'
-      f.input :margin_multiplier, label: 'Multiplicador de margem (5 ≈ 80%) — referência'
-      f.input :usd_brl, label: 'Câmbio USD→BRL (display)'
+      f.input :margin_multiplier,
+              label: 'Markup sobre o custo (6,5 ⇒ ~80% líquido)',
+              hint: 'Cada operação cobra markup × custo real do vendor. 6,5 cobre IOF + gateway + desconto do maior pacote.'
+      f.input :usd_brl,
+              label: 'Câmbio fixo USD→BRL (conservador)',
+              hint: 'Use o spot + colchão (~10–15%) e revise mensalmente. NÃO é ao vivo — é preço fixo, reajustado por você (evita indexação cambial).'
+      f.input :video_usd_per_sec,
+              label: 'Custo estimado de vídeo por segundo (USD)',
+              hint: 'Usado só para a ESTIMATIVA/hold antes de rodar; o custo real do vendor faz o true-up no fim.'
       f.input :image_credits, label: 'Créditos por imagem'
       f.input :carousel_credits, label: 'Créditos por carrossel (0 = incluso)'
-      f.input :video_standard_credits_per_15s, label: 'Créditos por 15s de vídeo padrão'
-      f.input :video_photoreal_credits_per_15s, label: 'Créditos por 15s de vídeo photoreal'
     end
     f.actions
   end
