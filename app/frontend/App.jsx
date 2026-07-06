@@ -42,6 +42,8 @@ const Clients = lazy(() => import('@/pages/Clients/Index'))
 const ClientShow = lazy(() => import('@/pages/Clients/Show'))
 const TicketsList = lazy(() => import('@/pages/Tickets/Index'))
 const TicketShow = lazy(() => import('@/pages/Tickets/Show'))
+const PostsIndex = lazy(() => import('@/pages/Posts/Index'))
+const PostShow = lazy(() => import('@/pages/Posts/Show'))
 const Studio = lazy(() => import('@/pages/Studio/Index'))
 const Meetings = lazy(() => import('@/pages/Meetings/Index'))
 const Invoices = lazy(() => import('@/pages/Invoices/Index'))
@@ -104,6 +106,8 @@ const router = createBrowserRouter(
           <Route path="/tickets" element={<TicketsList />} />
           <Route path="/tickets/:id" element={<TicketShow />} />
           <Route path="/tickets/:id/:tab" element={<TicketShow />} />
+          <Route path="/publicacoes" element={<PostsIndex />} />
+          <Route path="/publicacoes/:id" element={<PostShow />} />
           <Route path="/estudio" element={<Studio />} />
           <Route path="/cobrancas" element={<Invoices />} />
           <Route path="/conta" element={<Account />} />

@@ -190,6 +190,14 @@ export const approvalsApi = {
     api.post(`/public/approvals/${token}/creatives/${creativeId}/request_changes`, { feedback }),
 }
 
+// The posts hub: workspace-wide filterable list, a single post detail, and the
+// analytics overview (KPIs + breakdowns) that heads the index page.
+export const postsApi = {
+  list: (params) => api.get('/posts', { params }),
+  get: (id) => api.get(`/posts/${id}`),
+  overview: (params) => api.get('/posts/overview', { params }),
+}
+
 // End-of-run project audit reports (the finalize deck).
 export const reportsApi = {
   listByProject: (projectId) => api.get(`/projects/${projectId}/reports`),
