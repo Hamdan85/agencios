@@ -22,8 +22,8 @@ RSpec.describe Operations::Approvals::RequestApproval do
       described_class.call(ticket: ticket, sent_by: user)
     end
 
-    expect(ticket.reload.approval_token).to be_present
-    expect(ticket.approval_requested_at).to be_present
+    expect(client.reload.approval_token).to be_present # per-client portal token
+    expect(ticket.reload.approval_requested_at).to be_present
     expect(ticket.notes.count).to eq(1)
 
     expect(ActionMailer::Base.deliveries.size).to eq(1)
