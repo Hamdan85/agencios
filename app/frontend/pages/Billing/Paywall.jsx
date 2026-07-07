@@ -5,9 +5,11 @@ import {
 import { Link } from 'react-router-dom'
 import { useBilling, useBillingMutations } from '@/hooks/useData'
 import { useCurrentUser, useLogout } from '@/hooks/useAuth'
+import { ColorBadge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { PageLoader } from '@/components/ui/feedback'
+import { IconTile } from '@/components/ui/icon-tile'
 import { BrandMark } from '@/components/brand/BrandMark'
 import { IntervalToggle } from '@/components/billing/IntervalToggle'
 import { PLAN_META } from '@/lib/constants'
@@ -43,13 +45,11 @@ function PaywallPlan({ plan, highlight, interval, discountPercent, onSubscribe, 
       )}
       <div className="px-5 pt-6 pb-4 text-white" style={{ background: gradient }}>
         <div className="flex items-center justify-between">
-          <div className="flex size-11 items-center justify-center rounded-xl bg-white/20 backdrop-blur">
-            <Icon size={22} strokeWidth={2.2} />
-          </div>
+          <IconTile icon={Icon} color="#FFFFFF" tint="33" size="sm" className="size-11 backdrop-blur" iconSize={22} />
           {annual && discountPercent > 0 && (
-            <span className="rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur">
+            <ColorBadge color="#FFFFFF" tint="33" className="py-1 text-[11px] backdrop-blur">
               Economize {discountPercent}%
-            </span>
+            </ColorBadge>
           )}
         </div>
         <h3 className="mt-3 font-display text-xl font-extrabold">{plan.name || meta.label}</h3>

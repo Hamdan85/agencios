@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   ListChecks, ListTodo, Search, CheckCircle2, Circle, AlarmClock, Inbox,
   ArrowUpRight, CalendarClock, PartyPopper, Building2,
 } from 'lucide-react'
 import { useTasks, useTaskMutations, useOpenTicket } from '@/hooks/useData'
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll'
 import { PageHeader } from '@/components/ui/page-header'
+import { Badge, ColorBadge } from '@/components/ui/badge'
 import { EmptyState, Spinner } from '@/components/ui/feedback'
 import { SearchInput } from '@/components/ui/search-input'
 import { Page } from '@/components/ui/page'
@@ -55,18 +57,7 @@ export default function TasksIndex({ scope } = {}) {
 
   const toggle = (task) => mutate.mutate({ id: task.id, data: { done: !task.done } })
 
-  // Infinite scroll: load the next page as the sentinel nears the viewport.
-  const sentinelRef = useRef(null)
-  useEffect(() => {
-    const el = sentinelRef.current
-    if (!el) return
-    const io = new IntersectionObserver(
-      (entries) => { if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) fetchNextPage() },
-      { rootMargin: '300px' },
-    )
-    io.observe(el)
-    return () => io.disconnect()
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage, tasks.length])
+  const sentinelRef = useInfiniteScroll({ hasNextPage, isFetchingNextPage, fetchNextPage, deps: [tasks.length] })
 
   const emptyMeta = EMPTY[tab]
 
@@ -198,27 +189,24 @@ function TaskRow({ task, overdue, showWorkspace, onOpenTicket, onToggle }) {
         </p>
         <div className="mt-1.5 flex flex-wrap items-center gap-2">
           {showWorkspace && task.workspace_name && (
-            <span className="inline-flex max-w-[11rem] items-center gap-1.5 truncate rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-bold text-ink-secondary">
+            <Badge variant="muted" className="max-w-[11rem] gap-1.5 truncate px-2 text-[11px] tracking-normal text-ink-secondary">
               <Building2 size={11} strokeWidth={2.6} className="shrink-0 text-ink-muted" />
               <span className="truncate">{task.workspace_name}</span>
-            </span>
+            </Badge>
           )}
           {task.project_name && (
-            <span
-              className="inline-flex max-w-[12rem] items-center gap-1.5 truncate rounded-full px-2 py-0.5 text-[11px] font-bold"
-              style={{ background: `${projectColor}16`, color: projectColor }}
-            >
+            <ColorBadge color={projectColor} tint="16" className="max-w-[12rem] truncate px-2 text-[11px]">
               <span className="size-1.5 shrink-0 rounded-full" style={{ background: projectColor }} />
               <span className="truncate">{task.project_name}</span>
-            </span>
+            </ColorBadge>
           )}
           {task.ticket_id && (
             // Non-interactive label — the whole row is the click target (opens the
             // ticket, switching teams first for cross-workspace items).
-            <span className="inline-flex max-w-[16rem] items-center gap-1 truncate rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-bold text-ink-muted transition-colors group-hover:bg-brand-soft group-hover:text-brand">
+            <Badge variant="muted" className="max-w-[16rem] truncate px-2 text-[11px] tracking-normal group-hover:bg-brand-soft group-hover:text-brand">
               <span className="truncate">{task.ticket_title || 'Ticket'}</span>
               <ArrowUpRight size={11} strokeWidth={2.6} className="shrink-0" />
-            </span>
+            </Badge>
           )}
         </div>
       </div>

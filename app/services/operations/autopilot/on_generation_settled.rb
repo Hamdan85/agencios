@@ -3,7 +3,7 @@
 module Operations
   module Autopilot
     # Re-enters the engine when an async generation reaches a terminal state.
-    # Called from inside FinalizeGeneration / FailGeneration (the RELIABLE seam —
+    # Called from inside Operations::Video::Compose / FailGeneration (the RELIABLE seam —
     # broadcasts are fire-and-forget and can be dropped). Also used by the watchdog
     # and by Advance's `awaiting_generation` branch via `.reconcile`.
     #

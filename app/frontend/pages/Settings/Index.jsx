@@ -16,6 +16,8 @@ import { Input, Textarea } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { useCopyToClipboard } from '@/components/ui/copy-button'
+import { IconTile } from '@/components/ui/icon-tile'
 import { Switch } from '@/components/ui/switch'
 import { Avatar } from '@/components/ui/avatar'
 import { PageLoader } from '@/components/ui/feedback'
@@ -199,6 +201,7 @@ function TeamTab() {
   const [email, setEmail] = useState('')
   const [role, setRole] = useState('member')
   const [link, setLink] = useState(null)
+  const [, copy] = useCopyToClipboard()
 
   const list = members || []
 
@@ -215,7 +218,7 @@ function TeamTab() {
   }
 
   const copyLink = async () => {
-    try { await navigator.clipboard.writeText(link); toast.success('Link copiado!') } catch { /* noop */ }
+    if (await copy(link)) toast.success('Link copiado!')
   }
 
   return (
@@ -299,9 +302,7 @@ function IntegrationCard({ icon: Icon, color, name, connected, sub, onConnect, o
   return (
     <Card className="flex flex-col p-5">
       <div className="flex items-start justify-between gap-2">
-        <div className="flex size-11 items-center justify-center rounded-xl" style={{ background: `${color}16`, color }}>
-          <Icon size={22} strokeWidth={2.2} />
-        </div>
+        <IconTile icon={Icon} color={color} size="sm" className="size-11" iconSize={22} />
         {connected ? (
           <Badge variant="success"><Check size={12} /> Conectado</Badge>
         ) : (

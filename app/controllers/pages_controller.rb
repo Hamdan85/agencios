@@ -156,7 +156,7 @@ class PagesController < ApplicationController
   INTEGRATIONS = [
     ['Instagram', 'instagram'], ['Facebook', 'facebook'], ['Threads', 'at-sign'],
     ['TikTok', 'music'], ['YouTube', 'youtube'], ['LinkedIn', 'linkedin'],
-    ['X', 'twitter-x'], ['HeyGen', 'video'],
+    ['X', 'twitter-x'], ['Claude', 'sparkles'],
     ['Google Meet', 'calendar-days'], ['Mercado Pago', 'receipt'], ['Stripe', 'shield-check']
   ].freeze
 
@@ -249,7 +249,7 @@ class PagesController < ApplicationController
         { icon: 'image',    title: 'Carrosséis virais',
           desc: 'Geração com padrões de viralização: identidade da marca, @handle, avatar do criador e imagens de apoio — inclusos, sem gastar créditos.' },
         { icon: 'video',    title: 'Vídeos UGC',
-          desc: 'Vídeos com avatar e voz realistas via HeyGen e HyperFrames, renderizados de forma assíncrona.' },
+          desc: 'Vídeos com avatar e voz realistas gerados por IA cena a cena, renderizados de forma assíncrona.' },
         { icon: 'palette',  title: 'Identidade aplicada',
           desc: 'Cores, logo, tom de voz e avatar padrão da marca aplicados automaticamente em cada peça.' },
         { icon: 'sparkles', title: 'Legendas por rede',

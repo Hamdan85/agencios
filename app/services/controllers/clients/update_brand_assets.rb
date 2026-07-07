@@ -12,8 +12,8 @@ module Controllers
       def call
         require_manager!
         client = workspace.clients.find(@params[:id])
-        Operations::Clients::UpdateBrandAssets.call(
-          client: client, logo: @params[:logo], default_creator_avatar: @params[:default_creator_avatar]
+        Operations::BrandAssets::Attach.call(
+          owner: client, logo: @params[:logo], default_creator_avatar: @params[:default_creator_avatar]
         )
         { client: serialize(client.reload, ClientSerializer) }
       end

@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
+import { IconTile } from '@/components/ui/icon-tile'
 import { useWorkspaceMutations } from '@/hooks/useData'
 
 const ACCENT = '#6366F1'
@@ -30,9 +31,7 @@ export default function CreateWorkspaceDialog({ open, onOpenChange }) {
     <Dialog open={open} onOpenChange={(v) => (v ? onOpenChange(true) : close())}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <div className="mb-1 flex size-11 items-center justify-center rounded-2xl" style={{ background: `${ACCENT}16`, color: ACCENT }}>
-            <Building2 size={22} strokeWidth={2.2} />
-          </div>
+          <IconTile icon={Building2} color={ACCENT} className="mb-1 size-11" iconSize={22} />
           <DialogTitle>Novo workspace</DialogTitle>
           <DialogDescription>
             Crie uma nova agência. Você será o owner e entrará nela automaticamente.

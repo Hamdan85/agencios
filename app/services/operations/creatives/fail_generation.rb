@@ -4,7 +4,7 @@ module Operations
   module Creatives
     # Marks a generation (and its creative) failed and refunds any credits held
     # for it. Idempotent — a generation already terminal is left untouched (and
-    # Refund itself is idempotent). Used by the HeyGen webhook + poll safety net.
+    # Refund itself is idempotent). Used by the video poll safety net + cancel.
     class FailGeneration < Operations::Base
       def initialize(generation:, reason: nil)
         @generation = generation

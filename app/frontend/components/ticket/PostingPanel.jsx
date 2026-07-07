@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button'
 import { Input, Textarea } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { IconTile } from '@/components/ui/icon-tile'
+import { MediaThumb } from '@/components/ui/media-thumb'
 import { Spinner, EmptyState, AiRewritingOverlay } from '@/components/ui/feedback'
 import { DateTimePicker } from '@/components/ui/date-picker'
 import { ChannelIcons } from '@/components/ui/iconography'
@@ -160,9 +162,7 @@ export default function PostingPanel({
     <Card className="overflow-hidden animate-rise">
       <div className="flex items-center justify-between gap-3 border-b border-border p-5" style={{ background: `${color}0A` }}>
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl" style={{ background: `${color}1A`, color }}>
-            <Send size={18} strokeWidth={2.3} />
-          </div>
+          <IconTile icon={Send} color={color} size="sm" tint="1A" strokeWidth={2.3} />
           <div className="min-w-0">
             <h3 className="truncate font-display text-base font-bold text-ink">Postagem</h3>
             <p className="truncate text-xs text-ink-muted">Escolha um criativo por tipo e publique — agora ou agendado.</p>
@@ -222,11 +222,7 @@ export default function PostingPanel({
                             <div className="relative w-full" style={{ paddingBottom: '100%' }}>
                               <div className="absolute inset-0 overflow-hidden" style={{ background: `${tm.color}10` }}>
                                 {thumb ? (
-                                  isVideoUrl(thumb) ? (
-                                    <video src={`${thumb}#t=0.1`} muted playsInline preload="metadata" className="size-full object-cover" />
-                                  ) : (
-                                    <img src={thumb} alt={tm.label} className="size-full object-cover" />
-                                  )
+                                  <MediaThumb url={thumb} alt={tm.label} />
                                 ) : (
                                   <div className="flex size-full items-center justify-center"><TmIcon size={24} style={{ color: tm.color }} /></div>
                                 )}
@@ -247,9 +243,9 @@ export default function PostingPanel({
                                     <Eye size={13} />
                                   </button>
                                 )}
-                                <span className="absolute bottom-1.5 left-1.5 rounded-full bg-white/85 px-2 py-0.5 text-[10px] font-bold text-ink shadow-sm backdrop-blur">
+                                <Badge className="absolute bottom-1.5 left-1.5 bg-white/85 px-2 text-[10px] tracking-normal text-ink shadow-sm backdrop-blur">
                                   {MEDIA_LABEL[creativeMediaKind(c)] || tm.label}
-                                </span>
+                                </Badge>
                               </div>
                             </div>
                           </div>

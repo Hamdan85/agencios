@@ -2,10 +2,10 @@
 
 # Unified AI cost ledger — one row per AI vendor call across the platform.
 #
-# Three providers, two cost shapes:
-#   * Anthropic     — token-based (input/output/cache tokens × per-million price)
-#   * Google Banana — unit-based  (image count × per-image price)
-#   * HeyGen        — unit-based  (video seconds × per-second price)
+# Two cost shapes:
+#   * token-based (Anthropic/OpenRouter — input/output/cache tokens, or the
+#     REAL USD cost the vendor reports per call)
+#   * unit-based  (Google Banana per image, Cartesia per character)
 #
 # `Generation.cost_cents` remains the Stripe *billing* meter (what the workspace
 # is charged); this table is the internal *cost* trail (what agencios pays its
@@ -22,11 +22,10 @@ class AiUsageLog < ApplicationRecord
   # cost returned per generation — LogUsage stores that verbatim (no price table).
   PROVIDER_OPENROUTER    = 'openrouter'
   PROVIDER_GOOGLE_BANANA = 'google_banana'
-  PROVIDER_HEYGEN        = 'heygen'
   # Cartesia (voice/TTS) — billed 1 credit per character.
   PROVIDER_CARTESIA      = 'cartesia'
   PROVIDERS = [PROVIDER_ANTHROPIC, PROVIDER_OPENROUTER, PROVIDER_GOOGLE_BANANA,
-               PROVIDER_HEYGEN, PROVIDER_CARTESIA].freeze
+               PROVIDER_CARTESIA].freeze
   TOKEN_PROVIDERS = [PROVIDER_ANTHROPIC, PROVIDER_OPENROUTER].freeze
 
   # --- pricing ---------------------------------------------------------------
@@ -48,12 +47,10 @@ class AiUsageLog < ApplicationRecord
   CACHE_WRITE_FACTOR = 1.25
   BATCH_FACTOR       = 0.5
 
-  # Unit-based providers: USD cents per unit. HeyGen varies by engine, so the
-  # default is the standard-avatar rate; callers that know the engine pass an
-  # explicit cost_cents instead.
+  # Unit-based providers: USD cents per unit. Callers that know the real cost
+  # pass an explicit cost_cents instead.
   UNIT_PRICING = {
     PROVIDER_GOOGLE_BANANA => { unit_kind: 'image', cents_per_unit: 4.0 }, # ~ $0.039 / image
-    PROVIDER_HEYGEN => { unit_kind: 'second', cents_per_unit: 1.667 }, # ~ $1.00 / min standard avatar
     # ~ $50 / 1M characters — the conservative Pro-plan rate ($5 / 100K credits,
     # 1 credit = 1 char). Sonic TTS; tune if on a higher-volume plan.
     PROVIDER_CARTESIA => { unit_kind: 'character', cents_per_unit: 0.005 }

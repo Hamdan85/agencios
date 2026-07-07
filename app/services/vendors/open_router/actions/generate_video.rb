@@ -5,8 +5,7 @@ module Vendors
     module Actions
       # Submit a video render to OpenRouter and return the job id. The MODEL is
       # resolved from VideoConfig by generation mode (avatar/product) — the caller
-      # never picks an engine (platform decides best cost/benefit). Mirrors
-      # Vendors::Heygen::Actions::GenerateVideo's call shape.
+      # never picks an engine (platform decides best cost/benefit).
       class GenerateVideo
         def self.call(...) = new(...).call
 

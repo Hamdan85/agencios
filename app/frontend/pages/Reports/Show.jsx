@@ -1,28 +1,25 @@
 import { Link, useParams } from 'react-router-dom'
 import {
-  ArrowLeft, FileBarChart, Loader2, AlertTriangle, TrendingUp, TrendingDown,
+  ArrowLeft, FileBarChart, AlertTriangle, TrendingUp, TrendingDown,
   CheckCircle2, Sparkles, Target, Lightbulb, Rocket, CalendarClock, Users,
   Eye, Share2, Repeat, Heart, BarChart3, MessageCircle,
 } from 'lucide-react'
 import { useReport } from '@/hooks/useData'
 import { Page } from '@/components/ui/page'
 import { Card } from '@/components/ui/card'
-import { PageLoader, EmptyState } from '@/components/ui/feedback'
-import { date } from '@/lib/formatters'
+import { IconTile } from '@/components/ui/icon-tile'
+import { SectionLabel } from '@/components/ui/section-label'
+import { PageLoader, EmptyState, InlineSpinner } from '@/components/ui/feedback'
+import { date, num, pct } from '@/lib/formatters'
 
 // Compact pt-BR number ("16,8 mil", "3,0 mi") for the headline tiles.
+// Unlike formatters.compact(), null/NaN render as "—" (missing metric).
 function compact(n) {
   if (n == null || Number.isNaN(Number(n))) return '—'
   const v = Number(n)
   if (Math.abs(v) >= 1_000_000) return `${(v / 1_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} mi`
   if (Math.abs(v) >= 1_000) return `${(v / 1_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} mil`
-  return v.toLocaleString('pt-BR')
-}
-
-function pct(n) {
-  if (n == null) return null
-  const v = Number(n)
-  return `${v > 0 ? '+' : ''}${v.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`
+  return num(v)
 }
 
 const scoreColor = (s) => (s >= 7 ? '#10B981' : s >= 5 ? '#F59E0B' : '#EF4444')
@@ -30,9 +27,7 @@ const scoreColor = (s) => (s >= 7 ? '#10B981' : s >= 5 ? '#F59E0B' : '#EF4444')
 function SectionTitle({ icon: Icon, children, color = '#7C3AED' }) {
   return (
     <div className="mb-3 mt-8 flex items-center gap-2.5">
-      <div className="flex size-8 items-center justify-center rounded-lg" style={{ background: `${color}18`, color }}>
-        <Icon size={16} strokeWidth={2.3} />
-      </div>
+      <IconTile icon={Icon} color={color} size="xs" tint="18" strokeWidth={2.3} />
       <h2 className="font-display text-lg font-bold text-ink">{children}</h2>
     </div>
   )
@@ -44,7 +39,7 @@ function KpiTile({ label, value, delta, icon: Icon }) {
     <Card className="p-4">
       <div className="flex items-center gap-2 text-ink-muted">
         {Icon && <Icon size={14} />}
-        <span className="text-[11px] font-semibold uppercase tracking-wide">{label}</span>
+        <SectionLabel as="span" className="font-semibold tracking-wide text-inherit">{label}</SectionLabel>
       </div>
       <p className="mt-1.5 font-display text-2xl font-extrabold text-ink">{value}</p>
       {delta != null && (
@@ -143,7 +138,7 @@ export default function ReportShow() {
       <Page>
         <BackLink to={back} />
         <Card className="flex flex-col items-center gap-3 p-12 text-center">
-          <Loader2 size={32} className="animate-spin text-brand" />
+          <InlineSpinner size={32} className="text-brand" />
           <h1 className="font-display text-xl font-bold text-ink">Gerando a auditoria…</h1>
           <p className="text-sm text-ink-secondary">Estamos agregando as métricas e a análise estratégica da campanha. Isso atualiza sozinho.</p>
         </Card>
@@ -179,7 +174,7 @@ export default function ReportShow() {
         <div className="p-6">
           <div className="flex items-center gap-2 text-brand">
             <FileBarChart size={18} />
-            <span className="text-xs font-bold uppercase tracking-widest">Auditoria de redes sociais</span>
+            <SectionLabel as="span" className="text-xs tracking-widest text-inherit">Auditoria de redes sociais</SectionLabel>
           </div>
           <h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink">{report.project_name}</h1>
           <p className="mt-1 text-sm font-semibold text-ink-secondary">

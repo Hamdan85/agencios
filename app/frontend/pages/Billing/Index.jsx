@@ -12,16 +12,18 @@ import { useCurrentUser } from '@/hooks/useAuth'
 import { useParams, useNavigate } from 'react-router-dom'
 import { PageHeader } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Badge, ColorBadge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { PageLoader } from '@/components/ui/feedback'
+import { PageLoader, Skeleton } from '@/components/ui/feedback'
+import { IconTile } from '@/components/ui/icon-tile'
+import { SectionLabel } from '@/components/ui/section-label'
 import { Page } from '@/components/ui/page'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select'
 import { IntervalToggle } from '@/components/billing/IntervalToggle'
 import { ConfirmDialog, useConfirm } from '@/components/ui/confirm-dialog'
 import { PLAN_META } from '@/lib/constants'
-import { brl, date, dt } from '@/lib/formatters'
+import { brl, date, dt, num } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 
 const STATUS_VARIANT = {
@@ -64,13 +66,11 @@ function PlanCard({ plan, current, samePlan, subscribed, interval, discountPerce
       )}
       <div className="px-5 pt-6 pb-4 text-white" style={{ background: gradient }}>
         <div className="flex items-center justify-between">
-          <div className="flex size-11 items-center justify-center rounded-xl bg-white/20 backdrop-blur">
-            <Icon size={22} strokeWidth={2.2} />
-          </div>
+          <IconTile icon={Icon} color="#FFFFFF" tint="33" size="sm" className="size-11 backdrop-blur" iconSize={22} />
           {annual && discountPercent > 0 && (
-            <span className="rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur">
+            <ColorBadge color="#FFFFFF" tint="33" className="py-1 text-[11px] backdrop-blur">
               Economize {discountPercent}%
-            </span>
+            </ColorBadge>
           )}
         </div>
         <h3 className="mt-3 font-display text-xl font-extrabold">{plan.name || meta.label}</h3>
@@ -145,7 +145,7 @@ function CreditsSection() {
   const { checkout } = useCreditsMutations()
 
   if (isLoading) {
-    return <div className="h-40 animate-pulse rounded-2xl border border-border bg-surface-muted/40" />
+    return <Skeleton className="h-40 rounded-2xl border border-border bg-surface-muted/40" />
   }
 
   const wallet = data?.wallet || {}
@@ -165,21 +165,19 @@ function CreditsSection() {
       <Card className="mb-5 overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-4 p-6 text-white" style={{ background: 'linear-gradient(135deg, #F59E0B, #EC4899)' }}>
           <div className="flex items-center gap-4">
-            <div className="flex size-14 items-center justify-center rounded-2xl bg-white/20 backdrop-blur">
-              <Wallet size={28} strokeWidth={2.2} />
-            </div>
+            <IconTile icon={Wallet} color="#FFFFFF" tint="33" className="size-14 backdrop-blur" iconSize={28} />
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/80">Saldo disponível</p>
+              <SectionLabel className="text-white/80">Saldo disponível</SectionLabel>
               <p className="font-display text-3xl font-extrabold">
-                {unlimited ? <InfinityIcon size={30} className="inline align-[-4px]" /> : balance.toLocaleString('pt-BR')}
+                {unlimited ? <InfinityIcon size={30} className="inline align-[-4px]" /> : num(balance)}
                 {!unlimited && <span className="ml-1.5 text-base font-semibold text-white/80">créditos</span>}
               </p>
             </div>
           </div>
           {!unlimited && (
             <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-white/90">
-              <span>Do plano: <strong className="font-extrabold">{Number(wallet.granted ?? 0).toLocaleString('pt-BR')}</strong></span>
-              <span>Comprados: <strong className="font-extrabold">{Number(wallet.purchased ?? 0).toLocaleString('pt-BR')}</strong></span>
+              <span>Do plano: <strong className="font-extrabold">{num(wallet.granted)}</strong></span>
+              <span>Comprados: <strong className="font-extrabold">{num(wallet.purchased)}</strong></span>
               {wallet.granted_expires_at && (
                 <span className="text-white/75">Créditos do plano expiram em {date(wallet.granted_expires_at)}</span>
               )}
@@ -191,9 +189,7 @@ function CreditsSection() {
         <CardContent className="grid grid-cols-1 gap-2.5 p-4 sm:grid-cols-2 sm:gap-3 sm:p-5 lg:grid-cols-4">
           {COST_META.map((c) => (
             <div key={c.key + c.suffix} className="flex items-center gap-3 rounded-xl border border-border bg-canvas px-3 py-2.5">
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg" style={{ background: `${c.color}16`, color: c.color }}>
-                <c.icon size={17} strokeWidth={2.2} />
-              </span>
+              <IconTile icon={c.icon} color={c.color} size="xs" className="size-9" iconSize={17} />
               <div className="min-w-0">
                 <p className="truncate text-xs font-bold text-ink">{c.label} <span className="font-medium text-ink-muted">· {c.suffix}</span></p>
                 <p className="font-display text-sm font-extrabold text-ink">{creditLabel(Number(costs[c.key] ?? 0))}</p>
@@ -210,7 +206,7 @@ function CreditsSection() {
             <Card key={pack.key} className="flex flex-col p-4 lift">
               <p className="font-display text-sm font-bold text-ink">{pack.name}</p>
               <p className="mt-1 flex items-baseline gap-1">
-                <span className="font-display text-2xl font-extrabold text-ink">{Number(pack.credits).toLocaleString('pt-BR')}</span>
+                <span className="font-display text-2xl font-extrabold text-ink">{num(pack.credits)}</span>
                 <span className="text-xs font-semibold text-ink-muted">créditos</span>
               </p>
               <p className="mt-0.5 text-sm text-ink-muted">{brl(pack.price_cents)}</p>
@@ -278,11 +274,9 @@ function linePath(values, max) {
 function UsageStat({ icon: Icon, label, value, sub, color }) {
   return (
     <div className="flex items-center gap-3 rounded-2xl border border-border bg-canvas px-4 py-3.5">
-      <span className="flex size-11 shrink-0 items-center justify-center rounded-xl" style={{ background: `${color}16`, color }}>
-        <Icon size={20} strokeWidth={2.2} />
-      </span>
+      <IconTile icon={Icon} color={color} size="sm" className="size-11" iconSize={20} />
       <div className="min-w-0">
-        <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted">{label}</p>
+        <SectionLabel className="tracking-wider">{label}</SectionLabel>
         <p className="font-display text-xl font-extrabold leading-tight text-ink">{value}</p>
         {sub && <p className="truncate text-xs text-ink-muted">{sub}</p>}
       </div>
@@ -394,7 +388,7 @@ function UsageSection() {
       </div>
 
       {isLoading ? (
-        <div className="h-64 animate-pulse rounded-2xl border border-border bg-surface-muted/40" />
+        <Skeleton className="h-64 rounded-2xl border border-border bg-surface-muted/40" />
       ) : (
         <>
           {/* Model explainer — the source of truth, spelled out for the user */}
@@ -413,22 +407,22 @@ function UsageSection() {
               icon={Coins}
               color="#F59E0B"
               label="Créditos gastos"
-              value={spent.toLocaleString('pt-BR')}
+              value={num(spent)}
               sub="no período"
             />
             <UsageStat
               icon={Activity}
               color="#7C3AED"
               label="Gerações"
-              value={Number(totals.generations ?? 0).toLocaleString('pt-BR')}
+              value={num(totals.generations)}
               sub="vídeos, imagens e carrosséis"
             />
             <UsageStat
               icon={TrendingUp}
               color="#10B981"
               label="Créditos adicionados"
-              value={(Number(totals.granted_added ?? 0) + Number(totals.purchased_added ?? 0)).toLocaleString('pt-BR')}
-              sub={`${Number(totals.granted_added ?? 0).toLocaleString('pt-BR')} do plano · ${Number(totals.purchased_added ?? 0).toLocaleString('pt-BR')} comprados`}
+              value={num(Number(totals.granted_added ?? 0) + Number(totals.purchased_added ?? 0))}
+              sub={`${num(totals.granted_added)} do plano · ${num(totals.purchased_added)} comprados`}
             />
           </div>
 
@@ -467,7 +461,7 @@ function UsageSection() {
                               <span className="text-xs font-medium text-ink-muted">· {Number(k.count || 0)} {Number(k.count) === 1 ? 'geração' : 'gerações'}</span>
                             </span>
                             <span className="shrink-0 font-display text-sm font-extrabold" style={{ color: free ? undefined : meta.color }}>
-                              {free ? <span className="text-emerald">Incluso</span> : `${credits.toLocaleString('pt-BR')} cr.`}
+                              {free ? <span className="text-emerald">Incluso</span> : `${num(credits)} cr.`}
                             </span>
                           </div>
                           <div className="h-2 overflow-hidden rounded-full bg-surface-muted">
@@ -570,7 +564,7 @@ function UsageSection() {
                 <div className="flex flex-wrap items-center gap-2 border-b border-border px-5 py-3">
                   <p className="mr-auto flex items-center gap-2 font-display text-sm font-bold text-ink">
                     <Clock size={15} className="text-ink-muted" /> Gerações recentes
-                    {total > 0 && <span className="text-xs font-medium text-ink-muted">· {total.toLocaleString('pt-BR')}</span>}
+                    {total > 0 && <span className="text-xs font-medium text-ink-muted">· {num(total)}</span>}
                   </p>
                   <Select value={kind} onValueChange={changeKind}>
                     <SelectTrigger className="h-9 w-auto min-w-32.5"><SelectValue /></SelectTrigger>
@@ -599,9 +593,7 @@ function UsageSection() {
                       return (
                         <li key={g.id} className="flex items-center justify-between gap-3 px-5 py-2.5">
                           <div className="flex min-w-0 items-center gap-2.5">
-                            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg" style={{ background: `${km.color}16`, color: km.color }}>
-                              <km.icon size={16} strokeWidth={2.2} />
-                            </span>
+                            <IconTile icon={km.icon} color={km.color} size="xs" />
                             <div className="min-w-0">
                               <p className="flex items-center gap-2 text-sm font-semibold text-ink">
                                 {km.label}
@@ -611,7 +603,7 @@ function UsageSection() {
                             </div>
                           </div>
                           <span className={cn('shrink-0 font-display text-sm font-extrabold', credits > 0 ? 'text-ink' : 'text-emerald')}>
-                            {credits > 0 ? `${credits.toLocaleString('pt-BR')} cr.` : 'Incluso'}
+                            {credits > 0 ? `${num(credits)} cr.` : 'Incluso'}
                           </span>
                         </li>
                       )
@@ -621,7 +613,7 @@ function UsageSection() {
 
                 {total > per && (
                   <div className="flex items-center justify-between gap-3 border-t border-border px-5 py-3">
-                    <p className="text-xs text-ink-muted">{from}–{to} de {total.toLocaleString('pt-BR')}</p>
+                    <p className="text-xs text-ink-muted">{from}–{to} de {num(total)}</p>
                     <div className="flex items-center gap-1.5">
                       <Button variant="outline" size="sm" disabled={page <= 1 || isFetching} onClick={() => setPage((p) => Math.max(1, p - 1))}>
                         <ChevronLeft size={15} /> Anterior
@@ -742,11 +734,9 @@ export default function BillingIndex() {
       <Card className="mb-8 overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-4 p-6 text-white" style={{ background: gradient }}>
           <div className="flex items-center gap-4">
-            <div className="flex size-14 items-center justify-center rounded-2xl bg-white/20 backdrop-blur">
-              <Icon size={28} strokeWidth={2.2} />
-            </div>
+            <IconTile icon={Icon} color="#FFFFFF" tint="33" className="size-14 backdrop-blur" iconSize={28} />
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/80">Plano atual</p>
+              <SectionLabel className="text-white/80">Plano atual</SectionLabel>
               <h2 className="font-display text-2xl font-extrabold">
                 {meta.label}
                 {subscribed && <span className="text-base font-semibold text-white/70"> · {(sub.interval || 'month') === 'year' ? 'Anual' : 'Mensal'}</span>}
@@ -761,7 +751,7 @@ export default function BillingIndex() {
           <div className="flex items-center gap-3">
             <span className="flex size-10 items-center justify-center rounded-xl bg-indigo/12 text-indigo"><Users2 size={18} /></span>
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-ink-muted">Assentos</p>
+              <SectionLabel className="text-xs tracking-wider">Assentos</SectionLabel>
               <p className="font-display text-lg font-extrabold text-ink">
                 {sub.seats ?? '—'}{sub.seat_limit ? ` / ${sub.seat_limit}` : ''}
               </p>
@@ -770,14 +760,14 @@ export default function BillingIndex() {
           <div className="flex items-center gap-3">
             <span className="flex size-10 items-center justify-center rounded-xl bg-emerald/12 text-emerald"><CalendarClock size={18} /></span>
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-ink-muted">Próxima renovação</p>
+              <SectionLabel className="text-xs tracking-wider">Próxima renovação</SectionLabel>
               <p className="font-display text-lg font-extrabold text-ink">{sub.current_period_end ? date(sub.current_period_end) : '—'}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <span className="flex size-10 items-center justify-center rounded-xl bg-brand-soft text-brand"><Check size={18} /></span>
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-ink-muted">Acesso</p>
+              <SectionLabel className="text-xs tracking-wider">Acesso</SectionLabel>
               <p className="font-display text-lg font-extrabold text-ink">{sub.access_granted ? 'Liberado' : 'Restrito'}</p>
             </div>
           </div>

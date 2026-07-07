@@ -13,8 +13,10 @@ import {
 import { useCurrentUser } from '@/hooks/useAuth'
 import { PageLoader, EmptyState } from '@/components/ui/feedback'
 import { Button } from '@/components/ui/button'
+import { useCopyToClipboard } from '@/components/ui/copy-button'
 import { useConfirm } from '@/components/ui/confirm-dialog'
-import { Badge } from '@/components/ui/badge'
+import { Badge, ColorBadge } from '@/components/ui/badge'
+import { IconTile } from '@/components/ui/icon-tile'
 import { Avatar } from '@/components/ui/avatar'
 import { Card } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
@@ -102,7 +104,7 @@ function BrandIdentitySection({ client, onEdit }) {
             {client.default_creator_avatar_url && (
               <div>
                 <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-ink-faint">Avatar UGC</p>
-                <img src={client.default_creator_avatar_url} alt="Avatar" className="size-16 rounded-full object-cover ring-1 ring-border" />
+                <Avatar name="Avatar" src={client.default_creator_avatar_url} size={64} className="ring-1 ring-border" />
               </div>
             )}
             {client.default_handle && (
@@ -166,7 +168,7 @@ function PositioningSection({ client, onEdit }) {
                   {f.type === 'pillars' ? (
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
                       {v.map((p, i) => (
-                        <span key={i} className="rounded-full px-2.5 py-1 text-xs font-semibold" style={{ background: '#6366F114', color: '#6366F1' }}>{p}</span>
+                        <ColorBadge key={i} color="#6366F1" tint="14" className="py-1 font-semibold">{p}</ColorBadge>
                       ))}
                     </div>
                   ) : (
@@ -194,9 +196,7 @@ function SocialCard({ provider, account, mutations }) {
   return (
     <Card className="flex flex-col p-5">
       <div className="flex items-start justify-between gap-2">
-        <div className="flex size-11 items-center justify-center rounded-xl" style={{ background: `${meta.color}16`, color: meta.color }}>
-          <Icon size={22} strokeWidth={2.2} />
-        </div>
+        <IconTile icon={Icon} color={meta.color} iconSize={22} className="size-11 rounded-xl" />
         {connected ? (
           <Badge variant="success"><Check size={12} /> Conectado</Badge>
         ) : needsReauth ? (
@@ -227,6 +227,7 @@ function SocialCard({ provider, account, mutations }) {
 function SocialSection({ clientId, accounts }) {
   const mutations = useSocialAccountMutations(clientId)
   const [linking, setLinking] = useState(false)
+  const [, copyToClipboard] = useCopyToClipboard()
   // One card per network. A client may have several accounts on the same network
   // (one active, others revoked from earlier), so prefer the connected one.
   const byProvider = {}
@@ -239,7 +240,7 @@ function SocialSection({ clientId, accounts }) {
     setLinking(true)
     try {
       const { url } = await socialApi.connectLink(clientId)
-      await navigator.clipboard.writeText(url)
+      if (!(await copyToClipboard(url))) throw new Error('clipboard unavailable')
       toast.success('Link copiado! Envie ao cliente para ele conectar as próprias redes.')
     } catch {
       toast.error('Não foi possível gerar o link.')
@@ -313,9 +314,9 @@ function ProjectsSection({ projects }) {
                     <h3 className="font-display text-base font-bold text-ink">{p.name}</h3>
                     <Badge variant={st.variant}>{st.label}</Badge>
                   </div>
-                  <span className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: `${color}14`, color }}>
+                  <ColorBadge color={color} tint="14" className="mt-3 w-fit py-1">
                     <ListChecks size={13} /> {p.tickets_count ?? 0} tickets
-                  </span>
+                  </ColorBadge>
                 </div>
               </Link>
             )

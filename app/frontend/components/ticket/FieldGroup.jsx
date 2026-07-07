@@ -13,7 +13,8 @@ import { DatePicker, DateTimePicker } from '@/components/ui/date-picker'
 import { ChannelIcons } from '@/components/ui/iconography'
 import DoneSummary from './DoneSummary'
 import AiFillButton from './AiFillButton'
-import { dt } from '@/lib/formatters'
+import { IconTile } from '@/components/ui/icon-tile'
+import { dt, num } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 import {
   Lightbulb, Ruler, Wand2, CalendarClock, Radio, LineChart, CheckCircle2,
@@ -164,7 +165,7 @@ function MetricTiles({ metrics }) {
           <div key={t.key} className="flex flex-col items-center justify-center gap-1 rounded-xl border border-border bg-surface-muted/60 p-3 text-center">
             <Icon size={15} strokeWidth={2.3} style={{ color: t.color }} />
             <p className="font-display text-lg font-extrabold leading-none text-ink">
-              {value != null ? Number(value).toLocaleString('pt-BR') : '—'}
+              {value != null ? num(value) : '—'}
             </p>
             <p className="text-[10px] font-semibold uppercase leading-tight tracking-wide text-ink-muted">{t.label}</p>
           </div>
@@ -180,9 +181,7 @@ function PublishedView({ status, posts, color, onUnpublish, unpublishingId }) {
   return (
     <Card className="overflow-hidden animate-rise">
       <div className="flex items-center gap-2.5 border-b border-border p-5" style={{ background: `${color}08` }}>
-        <div className="flex size-9 items-center justify-center rounded-xl" style={{ background: `${color}18`, color }}>
-          <Icon size={18} strokeWidth={2.3} />
-        </div>
+        <IconTile icon={Icon} color={color} size="sm" tint="18" strokeWidth={2.3} />
         <div>
           <h3 className="font-display text-base font-bold text-ink">
             {status === 'done' ? 'Métricas finais' : 'No ar — monitorando'}
@@ -628,9 +627,7 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
     <Card className="overflow-hidden animate-rise">
       <div className="flex items-center justify-between gap-3 border-b border-border p-5" style={{ background: `${m.color}08` }}>
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl" style={{ background: `${m.color}18`, color: m.color }}>
-            <Heading size={18} strokeWidth={2.3} />
-          </div>
+          <IconTile icon={Heading} color={m.color} size="sm" tint="18" strokeWidth={2.3} />
           <div className="min-w-0">
             <h3 className="truncate font-display text-base font-bold text-ink">{schema.title}</h3>
             <p className="truncate text-xs text-ink-muted">{schema.helper}</p>

@@ -4,6 +4,7 @@ import { Megaphone } from 'lucide-react'
 import { Page } from '@/components/ui/page'
 import { PageHeader } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/feedback'
 import { usePosts, usePostsOverview } from '@/hooks/useData'
 import PostsAnalyticsHeader from '@/components/posts/PostsAnalyticsHeader'
 import PostsFilterBar from '@/components/posts/PostsFilterBar'
@@ -30,7 +31,7 @@ export default function PostsIndex() {
       />
       <PostsAnalyticsHeader overview={overview} loading={overviewLoading} />
       <PostsFilterBar filters={filters} setFilters={setFilters} />
-      {isLoading ? <div className="h-64 animate-pulse rounded-2xl bg-surface-muted" /> : <PostList posts={posts} />}
+      {isLoading ? <Skeleton className="h-64 rounded-2xl" /> : <PostList posts={posts} />}
       {hasNextPage && (
         <div className="mt-6 flex justify-center">
           <Button variant="outline" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>

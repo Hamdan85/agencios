@@ -1,13 +1,14 @@
 # frozen_string_literal: true
 
-# Safety net for runs parked in `awaiting_generation`: if both the HeyGen webhook
-# AND PollHeygenVideoJob somehow fail to re-enter the engine (e.g. an exception in
-# OnGenerationSettled, or a lost race), this re-derives the run from its Generation
-# rows and either advances it or halts it. Scheduled once when a run parks.
+# Safety net for runs parked in `awaiting_generation`: if the render pipeline
+# (PollVideoSceneJob → Compose/FailGeneration) somehow fails to re-enter the engine
+# (e.g. an exception in OnGenerationSettled, or a lost race), this re-derives the
+# run from its Generation rows and either advances it or halts it. Scheduled once
+# when a run parks.
 class AutopilotWatchdogJob < ApplicationJob
   queue_as :low
 
-  # Comfortably past the HeyGen poll ceiling (MAX_ATTEMPTS × backoff ≈ a few
+  # Comfortably past the scene-poll ceiling (MAX_ATTEMPTS × backoff ≈ a few
   # minutes) so we only step in after the normal paths have had their chance.
   TIMEOUT = 12.minutes
 

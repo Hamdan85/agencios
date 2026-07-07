@@ -49,8 +49,10 @@ Rails.application.routes.draw do
   namespace :webhooks do
     post 'stripe',      to: 'stripe#create'
     post 'mercadopago', to: 'mercado_pago#create'
-    post 'heygen',      to: 'heygen#create'
-    match 'meta', to: 'meta#handle', via: %i[get post]
+    # The Facebook app's event webhook keeps its original /webhooks/meta URL (the
+    # path is registered in the Meta developer console) but is served by the
+    # shared Meta-family handler.
+    match 'meta', to: 'social#handle', via: %i[get post], defaults: { provider: 'facebook' }
     # Instagram-Login + Threads have their own app secrets, so a dedicated
     # endpoint per provider (verifies with the right secret).
     match 'instagram', to: 'social#handle', via: %i[get post], defaults: { provider: 'instagram' }

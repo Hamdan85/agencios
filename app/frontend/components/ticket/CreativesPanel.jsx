@@ -5,9 +5,12 @@ import { creativeMeta, CREATIVE_TYPE_META, GENERATION_KIND_META, uploadAcceptFor
 import { useWorkspaceCreatives } from '@/hooks/useData'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { IconTile } from '@/components/ui/icon-tile'
 import { Label } from '@/components/ui/label'
+import { MediaThumb } from '@/components/ui/media-thumb'
 import { Textarea } from '@/components/ui/input'
-import { Spinner, EmptyState } from '@/components/ui/feedback'
+import { Spinner, InlineSpinner, EmptyState } from '@/components/ui/feedback'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose,
 } from '@/components/ui/dialog'
@@ -18,7 +21,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { cn } from '@/lib/utils'
 import {
   ImagePlus, Sparkles, GalleryHorizontalEnd, Video, Image as ImageIcon, AlertCircle, CheckCircle2,
-  Loader2, Trash2, ChevronDown, UploadCloud, LibraryBig, Film, Search,
+  Trash2, ChevronDown, UploadCloud, LibraryBig, Film, Search,
 } from 'lucide-react'
 import { VideoScenesDialog } from './VideoScenesDialog'
 
@@ -91,23 +94,7 @@ function CreativeCard({ creative, onClick, onDelete, onEditScenes, deleting }) {
       <div className="relative w-full" style={{ paddingBottom: '100%' }}>
         <div className="absolute inset-0 overflow-hidden" style={{ background: `${m.color}10` }}>
           {thumb ? (
-            isVideoUrl(thumb) ? (
-              <video
-                // #t=0.1 nudges the browser to paint the first frame as a poster
-                // instead of a blank/broken box. Muted + no controls = a still thumb.
-                src={`${thumb}#t=0.1`}
-                muted
-                playsInline
-                preload="metadata"
-                className="size-full object-cover transition-transform group-hover:scale-105"
-              />
-            ) : (
-              <img
-                src={thumb}
-                alt={m.label}
-                className="size-full object-cover transition-transform group-hover:scale-105"
-              />
-            )
+            <MediaThumb url={thumb} alt={m.label} className="transition-transform group-hover:scale-105" />
           ) : (
             // No thumbnail yet — one calm, status-aware placeholder. The type name
             // already lives in the footer, so we never repeat it here; the state
@@ -117,7 +104,7 @@ function CreativeCard({ creative, onClick, onDelete, onEditScenes, deleting }) {
                 className="flex size-11 items-center justify-center rounded-2xl"
                 style={failed ? { background: '#EF444414', color: '#EF4444' } : { background: `${m.color}14`, color: m.color }}
               >
-                {generating ? <Loader2 size={20} className="animate-spin" />
+                {generating ? <InlineSpinner size={20} />
                   : failed ? <AlertCircle size={20} strokeWidth={2.1} />
                   : <m.icon size={20} strokeWidth={2.1} />}
               </div>
@@ -156,7 +143,7 @@ function CreativeCard({ creative, onClick, onDelete, onEditScenes, deleting }) {
           )}
           {hasAssets && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/20 group-hover:opacity-100">
-              <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-ink shadow">Ver</span>
+              <Badge className="bg-white/90 px-3 py-1 tracking-normal text-ink shadow">Ver</Badge>
             </div>
           )}
         </div>
@@ -355,11 +342,7 @@ function StudioPickerDialog({ open, onOpenChange, onAttach, attaching, supported
                   <div className="relative w-full" style={{ paddingBottom: '100%' }}>
                     <div className="absolute inset-0 overflow-hidden" style={{ background: `${m.color}10` }}>
                       {thumb ? (
-                        isVideoUrl(thumb) ? (
-                          <video src={`${thumb}#t=0.1`} muted playsInline preload="metadata" className="size-full object-cover transition-transform group-hover:scale-105" />
-                        ) : (
-                          <img src={thumb} alt={m.label} className="size-full object-cover transition-transform group-hover:scale-105" />
-                        )
+                        <MediaThumb url={thumb} alt={m.label} className="transition-transform group-hover:scale-105" />
                       ) : (
                         <div className="flex size-full items-center justify-center" style={{ color: m.color }}>
                           <m.icon size={22} strokeWidth={2.1} />
@@ -455,9 +438,7 @@ export default function CreativesPanel({
     <Card className="overflow-hidden animate-rise">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-5">
         <div className="flex items-center gap-2.5">
-          <div className="flex size-9 items-center justify-center rounded-xl" style={{ background: '#7C3AED18', color: '#7C3AED' }}>
-            <ImagePlus size={18} strokeWidth={2.3} />
-          </div>
+          <IconTile icon={ImagePlus} size="sm" tint="18" strokeWidth={2.3} />
           <div>
             <h3 className="font-display text-base font-bold text-ink">Criativos</h3>
             <p className="text-xs text-ink-muted">
@@ -556,9 +537,7 @@ export default function CreativesPanel({
                       : 'border-border bg-surface hover:border-brand/40 hover:bg-brand-soft/40',
                   )}
                 >
-                  <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl" style={{ background: `${g.color}16`, color: g.color }}>
-                    <Icon size={24} strokeWidth={2.1} />
-                  </div>
+                  <IconTile icon={Icon} color={g.color} strokeWidth={2.1} />
                   <div className="flex-1">
                     <p className="font-display text-sm font-bold text-ink">{g.label}</p>
                     <p className="text-xs text-ink-muted">{g.desc}</p>
@@ -567,9 +546,9 @@ export default function CreativesPanel({
                     <CheckCircle2 size={20} className="shrink-0 text-brand" />
                   ) : (
                     kindMeta?.metered ? (
-                      <span className="rounded-full bg-amber/15 px-2 py-0.5 text-[10px] font-bold text-[#B45309]">Metrado</span>
+                      <Badge variant="warning" className="px-2 text-[10px] tracking-normal">Metrado</Badge>
                     ) : (
-                      <span className="rounded-full bg-emerald/15 px-2 py-0.5 text-[10px] font-bold text-emerald">Grátis</span>
+                      <Badge variant="success" className="bg-emerald/15 px-2 text-[10px] tracking-normal">Grátis</Badge>
                     )
                   )}
                 </button>

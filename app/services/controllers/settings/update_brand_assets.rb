@@ -11,16 +11,10 @@ module Controllers
 
       def call
         require_manager!
-        Operations::Workspaces::UpdateBrandAssets.call(
-          workspace: workspace, logo: @params[:logo], default_creator_avatar: @params[:default_creator_avatar]
+        Operations::BrandAssets::Attach.call(
+          owner: workspace, logo: @params[:logo], default_creator_avatar: @params[:default_creator_avatar]
         )
-        Payload.new(setting).call
-      end
-
-      private
-
-      def setting
-        workspace.setting || Setting.create!(workspace: workspace)
+        Payload.new(Settings.ensure_setting!(workspace)).call
       end
     end
   end

@@ -52,8 +52,8 @@ module Vendors
         job_id.to_s
       end
 
-      # Poll a job. Normalizes OpenRouter's payload into the same shape the finalize
-      # path already consumes (mirrors Vendors::Heygen::Actions::GetVideoStatus):
+      # Poll a job. Normalizes OpenRouter's payload into the shape the finalize
+      # path consumes:
       #   { status:, completed:, failed:, video_url:, thumbnail_url:, duration:,
       #     cost_cents:, failure_message:, raw: }
       def status(job_id:)

@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import {
   ArrowLeft, Wallet, CalendarRange, ListChecks, KanbanSquare, Pencil, Building2,
   FileText, CheckCircle2, Play, Plus, Sparkles, MoreHorizontal, Archive, ArchiveRestore,
-  Trash2, Receipt, Send, Loader2, AlertTriangle, Target, Eye, Heart, FolderKanban, Settings,
+  Trash2, Receipt, Send, AlertTriangle, Target, Eye, Heart, FolderKanban, Settings,
 } from 'lucide-react'
 import {
   useProject, useProjectMutations, useTicketArchiveMutations, useTicketBulkDelete,
@@ -25,9 +25,11 @@ import AutopilotButton from '@/components/ticket/AutopilotButton'
 import { InvoiceFormDialog } from '@/components/billing/InvoiceFormDialog'
 import { ticketsApi } from '@/api'
 import analytics, { EVENTS } from '@/lib/analytics'
-import { PageLoader, EmptyState } from '@/components/ui/feedback'
+import { invalidateTicketSurfaces } from '@/hooks/data/shared'
+import { PageLoader, EmptyState, InlineSpinner } from '@/components/ui/feedback'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Badge, ColorBadge } from '@/components/ui/badge'
+import { IconTile } from '@/components/ui/icon-tile'
 import { Card } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import {
@@ -88,7 +90,7 @@ function AutopilotProgress({ batch }) {
     <div className="mb-6 rounded-2xl border border-brand/25 bg-brand-soft/40 p-4">
       <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
         <span className="inline-flex items-center gap-2 text-sm font-bold text-brand">
-          <Loader2 size={15} className="animate-spin" /> Piloto automático em andamento
+          <InlineSpinner size={15} /> Piloto automático em andamento
         </span>
         <span className="text-xs font-semibold text-ink-secondary">
           {done} de {total} {total === 1 ? 'ticket' : 'tickets'}
@@ -167,8 +169,7 @@ export default function ProjectShow() {
   const create = useMutation({
     mutationFn: (payload) => ticketsApi.create(payload),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['projects'] })
-      qc.invalidateQueries({ queryKey: ['board'] })
+      invalidateTicketSurfaces(qc, { projects: true })
       analytics.track(EVENTS.TICKET_CREATED)
       toast.success('Ticket criado!')
     },
@@ -290,15 +291,13 @@ export default function ProjectShow() {
         <div className="h-2.5 w-full" style={{ background: color }} />
         <div className="flex flex-col gap-4 p-5 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:p-6">
           <div className="flex items-start gap-4">
-            <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl sm:size-14" style={{ background: `${color}1A`, color }}>
-              <KanbanSquare size={26} strokeWidth={2.2} />
-            </div>
+            <IconTile icon={KanbanSquare} color={color} tint="1A" iconSize={26} className="sm:size-14" />
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="font-display text-xl font-extrabold tracking-tight text-ink sm:text-2xl">{project.name || 'Campanha'}</h1>
                 <Badge variant={st.variant}>{st.label}</Badge>
                 {reportGenerating && (
-                  <Badge variant="soft"><Loader2 size={11} className="animate-spin" /> Gerando auditoria…</Badge>
+                  <Badge variant="soft"><InlineSpinner size={11} /> Gerando auditoria…</Badge>
                 )}
                 {reportFailed && (
                   <Badge variant="danger"><AlertTriangle size={11} /> Falha ao gerar auditoria</Badge>
@@ -382,13 +381,13 @@ export default function ProjectShow() {
         </div>
 
         <div className="flex flex-wrap justify-end gap-2 border-t border-border bg-surface-muted/50 px-5 py-3.5 sm:justify-start sm:px-6 sm:py-4">
-          <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-bold" style={{ background: `${color}14`, color }}>
+          <ColorBadge color={color} tint="14" className="px-3 py-1.5 text-sm">
             <ListChecks size={15} /> {project.tickets_count ?? tickets.length} tickets
-          </span>
+          </ColorBadge>
           {project.budget_cents != null && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald/12 px-3 py-1.5 text-sm font-bold text-emerald">
+            <Badge variant="success" className="gap-1.5 px-3 py-1.5 text-sm tracking-normal">
               <Wallet size={15} /> {brl(project.budget_cents)}
-            </span>
+            </Badge>
           )}
           {hasRange && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-sm font-medium text-ink-secondary">

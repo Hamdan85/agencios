@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Sparkles, CalendarClock, CheckCircle2, Loader2, X } from 'lucide-react'
+import { Sparkles, CalendarClock, CheckCircle2, X } from 'lucide-react'
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
+import { InlineSpinner } from '@/components/ui/feedback'
 import { Bubble, TypingDots, ChatComposer } from '@/components/ui/chat'
 import { useStartStrategy, useApplyStrategy, useStrategyChat } from '@/hooks/useStrategy'
 import { useStrategyChannel } from '@/hooks/useRealtime'
@@ -170,7 +171,7 @@ export function StrategyDrawer({ open, onOpenChange, projectId, session, cards =
               onClick={() => apply.mutate(sessionId)}
             >
               {apply.isPending
-                ? <><Loader2 size={16} className="mr-2 animate-spin" /> Criando tickets…</>
+                ? <><InlineSpinner size={16} className="mr-2" /> Criando tickets…</>
                 : isAdditive
                   ? <><CheckCircle2 size={16} className="mr-2" /> Adicionar {proposal.tickets.length} ticket(s)</>
                   : <><CheckCircle2 size={16} className="mr-2" /> Aprovar e criar {proposal.tickets.length} tickets</>}

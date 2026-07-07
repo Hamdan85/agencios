@@ -15,7 +15,7 @@ RSpec.describe Controllers::Credits::Usage, type: :model do
   it 'splits activity counts from credit spend (carousel is free)' do
     Operations::Credits::Grant.call(workspace: workspace, amount: 100, expires_at: 1.month.from_now)
 
-    video = gen(:video, 'heygen')
+    video = gen(:video, 'openrouter')
     Operations::Credits::Debit.call(workspace: workspace, amount: 16, generation: video)
 
     2.times do

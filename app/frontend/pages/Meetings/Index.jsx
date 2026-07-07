@@ -4,6 +4,7 @@ import { Video, Plus, CalendarClock, History, Calendar } from 'lucide-react'
 import { useMeetings, useMeetingMutations } from '@/hooks/useData'
 import { useCurrentUser } from '@/hooks/useAuth'
 import { PageHeader } from '@/components/ui/page-header'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useConfirm } from '@/components/ui/confirm-dialog'
 import { PageLoader, EmptyState } from '@/components/ui/feedback'
@@ -101,7 +102,7 @@ export default function MeetingsIndex() {
             <div className="mb-3 flex items-center gap-2">
               <CalendarClock size={18} className="text-teal" />
               <h2 className="font-display text-lg font-bold text-ink">Próximas</h2>
-              <span className="rounded-full bg-teal/12 px-2 py-0.5 text-xs font-bold text-teal">{upcoming.length}</span>
+              <Badge variant="muted" className="bg-teal/12 px-2 text-teal tracking-normal">{upcoming.length}</Badge>
             </div>
             {upcoming.length === 0 ? (
               <p className="rounded-2xl border border-dashed border-border bg-surface/60 px-5 py-8 text-center text-sm text-ink-muted">
@@ -121,7 +122,7 @@ export default function MeetingsIndex() {
               <div className="mb-3 flex items-center gap-2">
                 <History size={18} className="text-ink-muted" />
                 <h2 className="font-display text-lg font-bold text-ink">Anteriores</h2>
-                <span className="rounded-full bg-surface-muted px-2 py-0.5 text-xs font-bold text-ink-muted">{past.length}</span>
+                <Badge variant="muted" className="px-2 tracking-normal">{past.length}</Badge>
               </div>
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 {past.map((m) => (

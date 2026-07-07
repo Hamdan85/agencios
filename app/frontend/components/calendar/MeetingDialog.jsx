@@ -4,6 +4,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { ColorBadge } from '@/components/ui/badge'
 import { dt, time } from '@/lib/formatters'
 import { eventVisual } from './EventChip'
 
@@ -24,12 +25,9 @@ export function MeetingDialog({ event, open, onOpenChange }) {
             <div className="grid size-11 place-items-center rounded-2xl" style={{ background: `${color}18`, color }}>
               {Icon ? <Icon size={22} strokeWidth={2.2} /> : <CalendarDays size={22} />}
             </div>
-            <span
-              className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide"
-              style={{ background: `${color}1A`, color }}
-            >
+            <ColorBadge color={color} className="py-1 text-[11px] uppercase tracking-wide">
               {isMeeting ? 'Reunião' : 'Post agendado'}
-            </span>
+            </ColorBadge>
           </div>
           <DialogTitle>{event.title || (isMeeting ? 'Reunião' : 'Publicação')}</DialogTitle>
           <DialogDescription>{dt(event.start)}</DialogDescription>

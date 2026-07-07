@@ -8,7 +8,8 @@ import { PageHeader } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
 import { Input, Textarea } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
+import { Badge, ColorBadge } from '@/components/ui/badge'
+import { IconTile } from '@/components/ui/icon-tile'
 import { PageLoader, EmptyState } from '@/components/ui/feedback'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose,
@@ -66,9 +67,7 @@ function ProjectFormDialog({ open, onOpenChange, mutation, onCreated }) {
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) setForm(EMPTY_FORM) }}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="mb-1 flex size-11 items-center justify-center rounded-2xl" style={{ background: '#10B98116', color: '#10B981' }}>
-            <Sparkles size={22} strokeWidth={2.2} />
-          </div>
+          <IconTile icon={Sparkles} color="#10B981" iconSize={22} className="mb-1 size-11" />
           <DialogTitle>Nova campanha</DialogTitle>
           <DialogDescription>Agrupe tickets sob uma campanha de um cliente.</DialogDescription>
         </DialogHeader>
@@ -175,13 +174,13 @@ function ProjectCard({ project }) {
         )}
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: `${color}14`, color }}>
+          <ColorBadge color={color} tint="14" className="py-1">
             <ListChecks size={13} /> {project.tickets_count ?? 0} tickets
-          </span>
+          </ColorBadge>
           {project.budget_cents != null && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald/12 px-2.5 py-1 text-xs font-bold text-emerald">
+            <Badge variant="success" className="gap-1.5 py-1 tracking-normal">
               <Wallet size={13} /> {brl(project.budget_cents)}
-            </span>
+            </Badge>
           )}
         </div>
 

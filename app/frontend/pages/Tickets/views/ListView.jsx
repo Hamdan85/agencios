@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Rows3, Archive, Ghost, Plus, Trash2 } from 'lucide-react'
 import {
@@ -9,6 +9,7 @@ import { ticketsApi } from '@/api'
 import { useTicketsList, useTicketArchiveMutations, useTicketBulkDelete } from '@/hooks/useData'
 import { useCurrentUser } from '@/hooks/useAuth'
 import { useSelection } from '@/hooks/useSelection'
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll'
 import { canManage } from '@/lib/roles'
 import { Spinner, EmptyState } from '@/components/ui/feedback'
 import { FilterBar } from '@/components/ui/filter-bar'
@@ -65,18 +66,7 @@ export default function ListView({ filters, setFilters, filtersSlot, onOpenTicke
     }
   }
 
-  // Infinite scroll.
-  const sentinelRef = useRef(null)
-  useEffect(() => {
-    const el = sentinelRef.current
-    if (!el) return
-    const io = new IntersectionObserver(
-      (entries) => { if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) fetchNextPage() },
-      { rootMargin: '300px' },
-    )
-    io.observe(el)
-    return () => io.disconnect()
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage, rows.length])
+  const sentinelRef = useInfiniteScroll({ hasNextPage, isFetchingNextPage, fetchNextPage, deps: [rows.length] })
 
   const statusOptions = WORKFLOW.map((k) => ({ value: k, label: STATUS_META[k].label, color: STATUS_META[k].color, icon: STATUS_META[k].icon }))
   const channelOptions = Object.entries(CHANNEL_META).map(([k, m]) => ({ value: k, label: m.label, icon: m.icon, color: m.color }))

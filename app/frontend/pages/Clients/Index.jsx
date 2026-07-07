@@ -8,7 +8,7 @@ import { useClients, useClientMutations } from '@/hooks/useData'
 import { PageHeader } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
 import { useConfirm } from '@/components/ui/confirm-dialog'
-import { Badge } from '@/components/ui/badge'
+import { Badge, ColorBadge } from '@/components/ui/badge'
 import { Avatar } from '@/components/ui/avatar'
 import { PageLoader, EmptyState } from '@/components/ui/feedback'
 import { FilterBar } from '@/components/ui/filter-bar'
@@ -93,9 +93,9 @@ function ClientCard({ client, onEdit, onArchive, onUnarchive }) {
         </span>
         <div className="flex items-center gap-2">
           {client.has_positioning && (
-            <span className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-bold" style={{ background: '#6366F116', color: '#6366F1' }} title="Posicionamento definido">
+            <ColorBadge color="#6366F1" tint="16" className="gap-1 px-2 py-1" title="Posicionamento definido">
               <Sparkles size={12} /> Posicionado
-            </span>
+            </ColorBadge>
           )}
           <Badge variant={archived ? 'muted' : 'success'}>{archived ? 'Arquivado' : 'Ativo'}</Badge>
         </div>

@@ -1,11 +1,10 @@
 # frozen_string_literal: true
 
 module Webhooks
-  # Instagram-Login and Threads webhooks (their apps have separate app secrets
-  # from the Facebook app, so they can't share the /webhooks/meta endpoint which
-  # verifies with the Facebook secret). Same Meta-family scheme: GET hub.challenge
-  # handshake + POST signed with X-Hub-Signature-256. `:provider` comes from the
-  # route (instagram | threads).
+  # Meta-family webhooks — one handler for every product, each verifying with its
+  # own app secret. Same scheme across products: GET hub.challenge handshake +
+  # POST signed with X-Hub-Signature-256. `:provider` comes from the route
+  # (facebook via the legacy /webhooks/meta path | instagram | threads).
   class SocialController < BaseController
     def handle
       return verify_subscription if request.get?

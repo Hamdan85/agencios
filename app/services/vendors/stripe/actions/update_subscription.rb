@@ -22,7 +22,7 @@ module Vendors
           stripe_sub = @client.retrieve_subscription(
             @subscription.stripe_subscription_id, expand: ['items.data.price']
           )
-          item = licensed_item(stripe_sub)
+          item = LicensedItem.find(stripe_sub)
           raise Client::Error, 'Item de assinatura licenciado não encontrado.' unless item
 
           params = { price: resolve_price_id }
@@ -45,35 +45,6 @@ module Vendors
           end
 
           @client.plan_price_id(@plan)
-        end
-
-        private
-
-        # The licensed (plan/seat) item. Detect the item whose price maps to a
-        # plan in the DB catalog (by product → price id → lookup_key, covering both
-        # billing intervals); fall back to the sole recurring item (our
-        # subscriptions carry exactly one licensed item — metered items were
-        # removed in favour of credits).
-        def licensed_item(stripe_sub)
-          items = stripe_sub.items&.data || []
-          items.find { |it| plan_price?(it.price) } || items.first
-        end
-
-        def plan_price?(price)
-          return false unless price
-
-          product = price.respond_to?(:product) ? price.product : nil
-          product = product.id if product.respond_to?(:id)
-          return true if product.present? && PricingPlan.exists?(stripe_product_id: product)
-
-          if price.id.present? &&
-             PricingPlan.where('stripe_price_id = :i OR stripe_annual_price_id = :i', i: price.id).exists?
-            return true
-          end
-
-          lookup = price.respond_to?(:lookup_key) ? price.lookup_key : nil
-          lookup.present? &&
-            PricingPlan.where('stripe_lookup_key = :l OR stripe_annual_lookup_key = :l', l: lookup).exists?
         end
       end
     end

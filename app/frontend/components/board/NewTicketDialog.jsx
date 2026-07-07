@@ -5,6 +5,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { IconTile } from '@/components/ui/icon-tile'
 import { Input, Textarea } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ProjectSelect } from '@/components/ui/entity-select'
@@ -66,9 +67,7 @@ export function NewTicketDialog({ open, onOpenChange, create, defaultProjectId }
       <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <span className="flex size-9 items-center justify-center rounded-xl bg-brand-soft text-brand">
-              <Sparkles size={18} strokeWidth={2.3} />
-            </span>
+            <IconTile icon={Sparkles} size="sm" strokeWidth={2.3} />
             Novo ticket
           </DialogTitle>
           <DialogDescription>

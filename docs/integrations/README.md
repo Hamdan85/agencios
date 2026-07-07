@@ -31,17 +31,19 @@ agencios backend plan (vendor classes, `SocialAccount`/model columns, operations
 | Guide | Platform | Sections |
 |---|---|---|
 | [google.md](./google.md) | **All Google surfaces** | §3 Sign-In with Google · §4 Calendar + Meet · §5 YouTube (Data API v3 + Analytics) · §6 **Google Banana** (Imagen 3 image generation) |
-| [heygen.md](./heygen.md) | HeyGen | UGC / avatar talking-head video; metered (`video_generation`) |
 
-> HyperFrames (the second video engine) is documented inline in
-> [`../SPECIFICATION.md`](../SPECIFICATION.md) §5; add a dedicated guide when that vendor is
-> finalized.
+> **Video generation** has no per-vendor portal guide: it runs through the OpenRouter API
+> (`Vendors::OpenRouter` — text models + video render jobs, engines configured per mode in
+> `VideoConfig` from `/admin`), with **Cartesia** for voice, **Jamendo/Epidemic Sound** for music
+> (`Vendors::Music`) and FFmpeg for compose. Keys live in credentials (`openrouter.api_key`,
+> `cartesia.api_key`, …) — see [`../CREDENTIALS.md`](../CREDENTIALS.md). The legacy HeyGen
+> integration was removed (2026-07); [heygen.md](./heygen.md) is historical.
 
 ### Billing
 
 | Guide | Platform | Notes |
 |---|---|---|
-| [stripe-billing.md](./stripe-billing.md) | Stripe | SaaS billing: plan tiers + usage meters (carousel/video) |
+| [stripe-billing.md](./stripe-billing.md) | Stripe | SaaS billing: plan tiers + credit-pack checkout (usage = prepaid credits, see [`../pricing-model.md`](../pricing-model.md)) |
 | [mercado-pago.md](./mercado-pago.md) | Mercado Pago | Client billing: Pix-first, boleto, card, webhooks |
 
 ---

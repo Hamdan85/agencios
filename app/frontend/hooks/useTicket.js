@@ -3,6 +3,7 @@ import { ticketsApi, attachmentsApi } from '@/api'
 import { keys } from '@/api/queryKeys'
 import { toast } from 'sonner'
 import analytics, { EVENTS } from '@/lib/analytics'
+import { invalidateTicketSurfaces } from './data/shared'
 
 export function useTicket(id) {
   return useQuery({
@@ -14,10 +15,7 @@ export function useTicket(id) {
 
 export function useTicketMutations(id) {
   const qc = useQueryClient()
-  const invalidate = () => {
-    qc.invalidateQueries({ queryKey: keys.ticket(id) })
-    qc.invalidateQueries({ queryKey: ['board'] })
-  }
+  const invalidate = () => invalidateTicketSurfaces(qc, { ticketId: id })
 
   const mk = (fn, okMsg, onDone) =>
     useMutation({

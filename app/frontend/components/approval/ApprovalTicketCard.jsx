@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Check, MessageSquarePlus, CalendarClock } from 'lucide-react'
 import CreativeExperience from '@/components/creative/CreativeExperience'
 import { Button } from '@/components/ui/button'
+import { SectionLabel } from '@/components/ui/section-label'
 import { dt } from '@/lib/formatters'
 import { pieceName, slotLabel } from '@/lib/creativeName'
 
@@ -79,7 +80,7 @@ export default function ApprovalTicketCard({ ticket, accent, fg, busy, onApprove
       <div className="flex min-h-0 flex-col lg:border-r lg:border-border">
         {/* Scrollable content (scope + full brief + slot picker) */}
         <div className="min-h-0 flex-1 overflow-y-auto p-5">
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-ink-faint">{ticket.campaign}</p>
+          <SectionLabel className="text-ink-faint">{ticket.campaign}</SectionLabel>
           <h2 className="mt-0.5 font-display text-xl font-extrabold tracking-tight text-ink">{ticket.title}</h2>
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs">
             {(ticket.channels || []).map((ch) => (
@@ -90,13 +91,13 @@ export default function ApprovalTicketCard({ ticket, accent, fg, busy, onApprove
 
           {ticket.objective && (
             <div className="mt-4">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-ink-faint">Objetivo</p>
+              <SectionLabel className="tracking-wide text-ink-faint">Objetivo</SectionLabel>
               <p className="mt-0.5 text-sm text-ink-secondary">{ticket.objective}</p>
             </div>
           )}
           {ticket.brief && (
             <div className="mt-4">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-ink-faint">Briefing</p>
+              <SectionLabel className="tracking-wide text-ink-faint">Briefing</SectionLabel>
               <p className="mt-0.5 whitespace-pre-wrap text-sm leading-relaxed text-ink-secondary">{ticket.brief}</p>
             </div>
           )}
@@ -105,7 +106,7 @@ export default function ApprovalTicketCard({ ticket, accent, fg, busy, onApprove
               drives the viewer + the actions below. Only shown when >1 slot. */}
           {slots.length > 1 && (
             <div className="mt-5">
-              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-ink-faint">Peças ({slots.length})</p>
+              <SectionLabel className="mb-1.5 tracking-wide text-ink-faint">Peças ({slots.length})</SectionLabel>
               <div className="flex flex-col gap-1.5">
                 {slots.map((s, i) => {
                   const [icon, cls] = SLOT_STATE[s.state] || SLOT_STATE.pending

@@ -93,6 +93,18 @@ export function compact(n) {
   return Number(n || 0).toLocaleString(LOCALE, { notation: 'compact', maximumFractionDigits: 1 })
 }
 
+// Plain integer with pt-BR thousands separators ("12.345").
+export function num(n) {
+  return Number(n || 0).toLocaleString(LOCALE)
+}
+
+// Signed percentage ("+12,5%", "-3%"). Null in → null out (render nothing).
+export function pct(n) {
+  if (n == null) return null
+  const v = Number(n)
+  return `${v > 0 ? '+' : ''}${v.toLocaleString(LOCALE, { maximumFractionDigits: 1 })}%`
+}
+
 // Human file size: 0 B, 12 KB, 3,4 MB, 1,1 GB.
 export function fileSize(bytes) {
   const b = Number(bytes) || 0

@@ -27,6 +27,11 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, 'app/frontend'),
     },
+    // Force a single React instance. recharts (pre-bundled via optimizeDeps)
+    // can otherwise resolve its own copy of react/react-dom, giving the browser
+    // two Reacts — the second has a null hook dispatcher, so any hook it runs
+    // (e.g. ResponsiveContainer's useContext) throws "Invalid hook call".
+    dedupe: ['react', 'react-dom'],
   },
   server: {
     host: true,

@@ -16,7 +16,8 @@ import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
 
-import { Download as DownloadIcon, Loader2, AlertCircle } from 'lucide-react'
+import { Download as DownloadIcon } from 'lucide-react'
+import { InlineSpinner } from '@/components/ui/feedback'
 import { attachmentKindMeta } from '@/lib/constants'
 import { fileSize } from '@/lib/formatters'
 
@@ -98,7 +99,7 @@ function AudioView({ url, name }) {
 function ViewerSpinner({ label }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-16 text-white/80">
-      <Loader2 className="animate-spin" size={28} />
+      <InlineSpinner size={28} />
       <span className="text-sm">{label}</span>
     </div>
   )

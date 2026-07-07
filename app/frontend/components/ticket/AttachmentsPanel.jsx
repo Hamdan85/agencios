@@ -2,6 +2,7 @@ import { lazy, Suspense, useRef, useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { IconTile } from '@/components/ui/icon-tile'
 import { Input, Textarea } from '@/components/ui/input'
 import { Spinner, EmptyState } from '@/components/ui/feedback'
 import {
@@ -50,9 +51,7 @@ function FileTile({ att, onOpen, onRename, onRemove }) {
             />
           ) : (
             <div className="flex size-full flex-col items-center justify-center gap-2 px-2 text-center">
-              <div className="flex size-12 items-center justify-center rounded-2xl" style={{ background: `${meta.color}1F`, color: meta.color }}>
-                <Icon size={24} strokeWidth={2.1} />
-              </div>
+              <IconTile icon={Icon} color={meta.color} tint="1F" strokeWidth={2.1} />
               <span className="line-clamp-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: meta.color }}>
                 {meta.label}
               </span>
@@ -164,9 +163,7 @@ export default function AttachmentsPanel({
     <Card className="overflow-hidden animate-rise">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-5">
         <div className="flex items-center gap-2.5">
-          <div className="flex size-9 items-center justify-center rounded-xl" style={{ background: '#0EA5E918', color: '#0EA5E9' }}>
-            <Paperclip size={18} strokeWidth={2.3} />
-          </div>
+          <IconTile icon={Paperclip} color="#0EA5E9" size="sm" tint="18" strokeWidth={2.3} />
           <div>
             <h3 className="font-display text-base font-bold text-ink">Arquivos</h3>
             <p className="text-xs text-ink-muted">

@@ -13,6 +13,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { StatCard } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { IconTile } from '@/components/ui/icon-tile'
 import { PageLoader, EmptyState } from '@/components/ui/feedback'
 import { Page } from '@/components/ui/page'
 
@@ -133,9 +134,7 @@ export default function Dashboard() {
                     style={{ background: `${m.color}0D`, borderColor: `${m.color}33` }}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="flex size-8 items-center justify-center rounded-xl" style={{ background: `${m.color}1F`, color: m.color }}>
-                        <Icon size={16} strokeWidth={2.4} />
-                      </span>
+                      <IconTile icon={Icon} color={m.color} size="xs" tint="1F" strokeWidth={2.4} className="rounded-xl" />
                       <span className="font-display text-2xl font-extrabold leading-none" style={{ color: m.color }}>{count}</span>
                     </div>
                     <div>
@@ -231,9 +230,7 @@ export default function Dashboard() {
                       {gen.preview_url ? (
                         <img src={gen.preview_url} alt="" className="size-10 shrink-0 rounded-xl object-cover" />
                       ) : (
-                        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl" style={{ background: `${m.color}16`, color: m.color }}>
-                          <Icon size={17} strokeWidth={2.3} />
-                        </span>
+                        <IconTile icon={Icon} color={m.color} size="sm" className="size-10" iconSize={17} strokeWidth={2.3} />
                       )}
                       <div className="min-w-0">
                         <p className="truncate font-semibold text-ink">{gen.creative_name || m.label}</p>

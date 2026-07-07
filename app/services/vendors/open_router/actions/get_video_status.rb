@@ -4,7 +4,7 @@ module Vendors
   module OpenRouter
     module Actions
       # Poll an OpenRouter video job — returns the normalized status hash the
-      # finalize path consumes. Mirrors Vendors::Heygen::Actions::GetVideoStatus.
+      # finalize path consumes.
       class GetVideoStatus
         def self.call(...) = new(...).call
 

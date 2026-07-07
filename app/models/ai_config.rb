@@ -10,7 +10,7 @@ class AiConfig < ApplicationRecord
   # live in VideoConfig — these are the video pipeline's TEXT agents (storyboard
   # planning, the conversational editor, the prompt-improver wand).
   OPERATIONS = %w[
-    summarize_ticket fill_fields build_scope synthesize_idea synthesize_positioning
+    summarize_ticket fill_fields build_scope synthesize_positioning
     extract_client_from_url carousel_copy project_audit draft_retrospective
     strategy_planner strategy_plan
     video_storyboard video_editor improve_video_prompt
@@ -23,7 +23,6 @@ class AiConfig < ApplicationRecord
     'summarize_ticket' => 'Resumo do ticket',
     'fill_fields' => 'Preencher campos (Gerar com IA)',
     'build_scope' => 'Montar escopo (subtarefas)',
-    'synthesize_idea' => 'Sintetizar ideia',
     'synthesize_positioning' => 'Sintetizar posicionamento',
     'extract_client_from_url' => 'Extrair cliente de URL',
     'carousel_copy' => 'Copy de carrossel',

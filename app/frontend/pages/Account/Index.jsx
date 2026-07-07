@@ -19,6 +19,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Avatar } from '@/components/ui/avatar'
+import { useCopyToClipboard } from '@/components/ui/copy-button'
 import { PageLoader } from '@/components/ui/feedback'
 import { Page } from '@/components/ui/page'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
@@ -256,20 +257,13 @@ function ConnectionsTab() {
   const rotate = useRotateMcpConnector()
   const confirm = useConfirm()
   const navigate = useNavigate()
-  const [copied, setCopied] = useState(false)
+  const [copied, copy] = useCopyToClipboard(1500)
   const [revealed, setRevealed] = useState(false)
   // The connector unlocks once the user has ANY Agência+ workspace with an
   // active subscription; otherwise we show an upgrade hook.
   const locked = connector && connector.enabled === false
   const url = connector?.url || ''
   const masked = url.replace(/\/mcp\/c\/.+$/, '/mcp/c/••••••••••••')
-
-  const copy = () => {
-    if (!url) return
-    navigator.clipboard?.writeText(url)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
-  }
 
   const onRotate = async () => {
     const ok = await confirm({
@@ -324,7 +318,7 @@ function ConnectionsTab() {
                 <Button type="button" variant="outline" onClick={() => setRevealed((v) => !v)}>
                   {revealed ? 'Ocultar' : 'Revelar'}
                 </Button>
-                <Button type="button" variant="outline" onClick={copy} disabled={!url}>
+                <Button type="button" variant="outline" onClick={() => copy(url)} disabled={!url}>
                   {copied ? <Check size={16} /> : <Copy size={16} />} {copied ? 'Copiado' : 'Copiar'}
                 </Button>
               </div>

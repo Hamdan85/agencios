@@ -9,17 +9,13 @@ module Controllers
 
       def call
         require_manager!
-        record = setting
+        record = Settings.ensure_setting!(workspace)
         record.update!(setting_params)
         workspace.update!(workspace_params) if workspace_params.present?
         Payload.new(record).call
       end
 
       private
-
-      def setting
-        workspace.setting || Setting.create!(workspace: workspace)
-      end
 
       def setting_params
         @params.fetch(:setting, {}).permit(:brand_tone, :auto_publish_default, preferences: {})

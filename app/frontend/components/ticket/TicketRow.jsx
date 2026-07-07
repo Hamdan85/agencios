@@ -4,6 +4,8 @@ import {
 import { statusMeta } from '@/lib/constants'
 import { relativeDay } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/feedback'
 import { SelectCheckbox } from '@/components/ui/select-checkbox'
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
@@ -14,12 +16,7 @@ import {
 import { Avatar } from '@/components/ui/avatar'
 import { WorkingBadge } from '@/components/ticket/WorkingBadge'
 import { AlertBadge } from '@/components/ticket/AlertBadge'
-
-const TONE = {
-  danger: 'bg-danger/12 text-danger',
-  warning: 'bg-amber/15 text-[#B45309]',
-  muted: 'bg-surface-muted text-ink-muted',
-}
+import { DUE_TONE, AUTOPILOT_RING, ALERT_RING, projectAccent } from '@/components/ticket/ticketVisuals'
 
 // Client-approval state → a small row chip.
 const APPROVAL_CHIP = {
@@ -42,7 +39,7 @@ export function TicketRow({
   const canAssign = manager && !proposed && onAssign && Array.isArray(members)
   const project = ticket.project
   const title = ticket.display_title || ticket.title
-  const accent = project?.color || statusMeta(ticket.status).color
+  const accent = projectAccent(project, statusMeta(ticket.status).color)
   const due = relativeDay(ticket.due_date || ticket.scheduled_at)
   // Ghost rows carry a live state: `drafting` (still filling → skeleton) and
   // `revising` (a single card being re-generated → glow); `ready` is the default.
@@ -60,17 +57,17 @@ export function TicketRow({
   // (proposed) row — factor it so both branches share the exact same markup.
   const body = drafting ? (
     <span className="min-w-0 flex-1">
-      <span className="block h-4 w-40 max-w-[60%] animate-pulse rounded bg-ink/10" />
-      <span className="mt-1.5 block h-3 w-24 animate-pulse rounded bg-ink/[0.07]" />
+      <Skeleton className="h-4 w-40 max-w-[60%] rounded bg-ink/10" />
+      <Skeleton className="mt-1.5 h-3 w-24 rounded bg-ink/[0.07]" />
     </span>
   ) : (
     <span className="min-w-0 flex-1">
       <span className="flex items-center gap-2">
         <span className={cn('truncate font-display text-[15px] font-semibold text-ink', removing && 'text-ink-muted line-through')}>{title}</span>
         {ticket.archived && (
-          <span className="shrink-0 rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ink-muted">
+          <Badge variant="muted" className="shrink-0 px-2 text-[10px] uppercase">
             Arquivado
-          </span>
+          </Badge>
         )}
       </span>
       <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] font-medium text-ink-muted">
@@ -101,9 +98,9 @@ export function TicketRow({
       // one thing updating; the rest of the proposed list stays dimmed.
       revising && 'border-brand/60 opacity-100 shadow-[0_0_0_3px_rgba(124,58,237,0.16)]',
       // Executing on autopilot → steady brand ring so the "working" row stands out.
-      !proposed && ticket.autopilot_running && 'border-brand/50 ring-1 ring-brand/40',
+      !proposed && ticket.autopilot_running && AUTOPILOT_RING,
       // In alert (posting failed) → danger ring (takes precedence).
-      !proposed && ticket.in_alert && 'border-danger/50 ring-1 ring-danger/40',
+      !proposed && ticket.in_alert && ALERT_RING,
       !proposed && ticket.archived && 'opacity-75',
     )}>
       {manager && !proposed && (
@@ -125,32 +122,32 @@ export function TicketRow({
       </div>
 
       {!proposed && approvalChip && (
-        <span className={cn('hidden shrink-0 items-center rounded-full px-2 py-0.5 text-[10.5px] font-bold sm:inline-flex', approvalChip[1])}>
+        <Badge className={cn('hidden shrink-0 px-2 text-[10.5px] tracking-normal sm:inline-flex', approvalChip[1])}>
           {approvalChip[0]}
-        </span>
+        </Badge>
       )}
       {!proposed && ticket.in_alert && <AlertBadge reason={ticket.alert_reason} />}
       {!proposed && ticket.autopilot_running && <WorkingBadge />}
 
       {due && (
-        <span className={cn('hidden items-center gap-1 rounded-md px-1.5 py-0.5 text-[10.5px] font-bold lg:inline-flex', TONE[due.tone] || TONE.muted)}>
+        <Badge className={cn('hidden rounded-md px-1.5 text-[10.5px] tracking-normal lg:inline-flex', DUE_TONE[due.tone] || DUE_TONE.muted)}>
           <CalendarClock size={11} strokeWidth={2.4} /> {due.text}
-        </span>
+        </Badge>
       )}
 
       <span className="hidden xl:block"><StatusPill status={ticket.status} size="sm" /></span>
       <PriorityDot priority={ticket.priority} />
 
       {proposed ? (
-        <span className={cn('shrink-0 rounded-full border border-dashed px-2 py-0.5 text-[11px] font-bold', ghostCls)}>
+        <Badge variant="outline" className={cn('shrink-0 border-dashed px-2 text-[11px] tracking-normal', ghostCls)}>
           {ghostLabel}
-        </span>
+        </Badge>
       ) : (
         <>
           {pendingChange && (
-            <span className={cn('shrink-0 rounded-full border border-dashed px-2 py-0.5 text-[11px] font-bold', PENDING_BADGE[pendingChange]?.[1])}>
+            <Badge variant="outline" className={cn('shrink-0 border-dashed px-2 text-[11px] tracking-normal', PENDING_BADGE[pendingChange]?.[1])}>
               {PENDING_BADGE[pendingChange]?.[0]}
-            </span>
+            </Badge>
           )}
           {canAssign ? (
             <DropdownMenu>
