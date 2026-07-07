@@ -4,6 +4,7 @@ import { subtasksApi } from '@/api'
 import { keys } from '@/api/queryKeys'
 import { useWorkspaceMembers } from '@/hooks/useData'
 import { Card } from '@/components/ui/card'
+import { IconTile } from '@/components/ui/icon-tile'
 import { Input } from '@/components/ui/input'
 import { DatePicker } from '@/components/ui/date-picker'
 import { Avatar } from '@/components/ui/avatar'
@@ -90,9 +91,7 @@ export default function SubtasksPanel({ ticketId, subtasks = [], onAdd, adding =
       <div className="border-b border-border p-4">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-xl" style={{ background: '#10B98118', color: '#10B981' }}>
-              <ListChecks size={16} strokeWidth={2.3} />
-            </div>
+            <IconTile icon={ListChecks} color="#10B981" size="xs" tint="18" strokeWidth={2.3} className="rounded-xl" />
             <h3 className="font-display text-sm font-bold text-ink">Subtarefas</h3>
           </div>
           <div className="flex items-center gap-2">

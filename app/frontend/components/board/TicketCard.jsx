@@ -3,9 +3,11 @@ import { CheckSquare, ImageIcon, CalendarClock, AlertTriangle } from 'lucide-rea
 import { cn } from '@/lib/utils'
 import { relativeDay } from '@/lib/formatters'
 import { CreativeTypeChip, ChannelIcons, PriorityDot } from '@/components/ui/iconography'
+import { ColorBadge } from '@/components/ui/badge'
 import { Avatar } from '@/components/ui/avatar'
 import { WorkingBadge } from '@/components/ticket/WorkingBadge'
 import { AlertBadge } from '@/components/ticket/AlertBadge'
+import { DUE_TONE, AUTOPILOT_RING, ALERT_RING, projectAccent } from '@/components/ticket/ticketVisuals'
 
 // A single, graphic ticket card on the Kanban board.
 // Lifts on hover; clicking (when not dragging) opens the ticket — in the side
@@ -16,7 +18,7 @@ export function TicketCard({ ticket, dragging = false, overlay = false, onOpen }
   if (!ticket) return null
 
   const project = ticket.project || null
-  const accent = project?.color || '#7C3AED'
+  const accent = projectAccent(project)
   const due = relativeDay(ticket.due_date)
   const subtasksCount = Number(ticket.subtasks_count) || 0
   const subtasksDone = Number(ticket.subtasks_done) || 0
@@ -29,12 +31,6 @@ export function TicketCard({ ticket, dragging = false, overlay = false, onOpen }
     if (dragging) return
     if (onOpen) { onOpen(ticket); return }
     navigate(`/tickets/${ticket.id}`, { state: { from: location.pathname + location.search } })
-  }
-
-  const toneClass = {
-    danger: 'bg-danger/12 text-danger',
-    warning: 'bg-amber/15 text-[#B45309]',
-    muted: 'bg-surface-muted text-ink-muted',
   }
 
   return (
@@ -50,9 +46,9 @@ export function TicketCard({ ticket, dragging = false, overlay = false, onOpen }
         dragging && !overlay && 'opacity-40',
         overlay && 'rotate-2 scale-[1.02] shadow-[0_24px_50px_-18px_rgba(24,18,43,0.45)] ring-1 ring-brand/20',
         // Executing on autopilot → a steady brand ring so it stands out as "working".
-        ticket.autopilot_running && 'border-brand/50 ring-1 ring-brand/40',
+        ticket.autopilot_running && AUTOPILOT_RING,
         // Something broke at posting time → a danger ring (takes precedence).
-        ticket.in_alert && 'border-danger/50 ring-1 ring-danger/40',
+        ticket.in_alert && ALERT_RING,
       )}
     >
       {/* left accent bar in the project color */}
@@ -61,13 +57,10 @@ export function TicketCard({ ticket, dragging = false, overlay = false, onOpen }
       {/* project chip + priority */}
       <div className="mb-2 flex items-center justify-between gap-2 pl-1.5">
         {project ? (
-          <span
-            className="inline-flex max-w-[70%] items-center gap-1.5 truncate rounded-full px-2 py-0.5 text-[11px] font-bold"
-            style={{ background: `${accent}16`, color: accent }}
-          >
+          <ColorBadge color={accent} tint="16" className="max-w-[70%] truncate px-2 text-[11px]">
             <span className="size-1.5 shrink-0 rounded-full" style={{ background: accent }} />
             <span className="truncate">{project.name}</span>
-          </span>
+          </ColorBadge>
         ) : (
           <span className="text-[11px] font-bold text-ink-faint">Sem campanha</span>
         )}
@@ -116,7 +109,7 @@ export function TicketCard({ ticket, dragging = false, overlay = false, onOpen }
             </span>
           )}
           {due && !ticket.overdue && (
-            <span className={cn('inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10.5px] font-bold', toneClass[due.tone] || toneClass.muted)}>
+            <span className={cn('inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10.5px] font-bold', DUE_TONE[due.tone] || DUE_TONE.muted)}>
               <CalendarClock size={11} strokeWidth={2.4} />
               {due.text}
             </span>

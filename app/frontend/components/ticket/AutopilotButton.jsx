@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Rocket, Sparkles, Loader2, AlertTriangle, Wallet } from 'lucide-react'
+import { Rocket, Sparkles, AlertTriangle, Wallet } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { IconTile } from '@/components/ui/icon-tile'
+import { InlineSpinner } from '@/components/ui/feedback'
 
 // Human labels for a run's state (the chip while it walks itself).
 const RUN_STATE_LABEL = {
@@ -38,7 +40,7 @@ export default function AutopilotButton({ run, estimating, starting, onEstimate,
   if (run?.active) {
     return (
       <span className="inline-flex items-center gap-2 rounded-xl border border-brand/30 bg-brand-soft px-3 py-1.5 text-xs font-bold text-brand">
-        <Loader2 size={13} className="animate-spin" />
+        <InlineSpinner size={13} />
         {RUN_STATE_LABEL[run.state] || 'No piloto automático…'}
       </span>
     )
@@ -72,19 +74,14 @@ export default function AutopilotButton({ run, estimating, starting, onEstimate,
         className="text-white"
         style={{ background: 'linear-gradient(135deg, #7C3AED, #EC4899)' }}
       >
-        {estimating ? <Loader2 size={14} className="animate-spin" /> : <Rocket size={14} />}
+        {estimating ? <InlineSpinner size={14} /> : <Rocket size={14} />}
         {label}
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <span
-              className="mb-1 flex size-11 items-center justify-center rounded-2xl"
-              style={{ background: '#7C3AED1A', color: '#7C3AED' }}
-            >
-              <Rocket size={22} strokeWidth={2.2} />
-            </span>
+            <IconTile icon={Rocket} tint="1A" className="mb-1 size-11" iconSize={22} />
             <DialogTitle>Iniciar no piloto automático?</DialogTitle>
             <DialogDescription>
               O agente vai preencher o briefing, gerar todos os criativos e agendar os posts em
@@ -157,7 +154,7 @@ export default function AutopilotButton({ run, estimating, starting, onEstimate,
                 className="text-white"
                 style={{ background: 'linear-gradient(135deg, #7C3AED, #EC4899)' }}
               >
-                {starting ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
+                {starting ? <InlineSpinner size={15} /> : <Sparkles size={15} />}
                 Iniciar agora
               </Button>
             )}

@@ -2,9 +2,11 @@ import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { Card } from '@/components/ui/card'
 import { Markdown } from '@/components/ui/markdown'
+import { Badge, ColorBadge } from '@/components/ui/badge'
+import { IconTile } from '@/components/ui/icon-tile'
+import { SectionLabel } from '@/components/ui/section-label'
 import { ChannelIcons, CreativeTypeChip } from '@/components/ui/iconography'
-import { dt } from '@/lib/formatters'
-import { cn } from '@/lib/utils'
+import { dt, num } from '@/lib/formatters'
 import {
   CheckCircle2, Clock, ListChecks, Send, Target, Users, Hash, Repeat, ThumbsUp,
   AlertTriangle, Sparkles, ExternalLink, GitBranch, Eye, Heart, MessageCircle,
@@ -36,7 +38,7 @@ const REPEAT_META = {
   retire: { label: 'Aposentar', color: '#8B86A3', hint: 'Não vale repetir' },
 }
 
-const fmt = (n) => (n != null ? Number(n).toLocaleString('pt-BR') : '—')
+const fmt = (n) => (n != null ? num(n) : '—')
 
 function daysBetween(a, b) {
   if (!a) return null
@@ -52,7 +54,7 @@ function StatChip({ icon: Icon, label, value }) {
       <Icon size={15} style={{ color: DONE }} />
       <div className="leading-tight">
         <p className="font-display text-sm font-extrabold text-ink">{value}</p>
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-muted">{label}</p>
+        <SectionLabel className="text-[10px] font-semibold tracking-wide">{label}</SectionLabel>
       </div>
     </div>
   )
@@ -62,9 +64,7 @@ function SectionCard({ icon: Icon, color = DONE, title, children, action }) {
   return (
     <Card className="overflow-hidden animate-rise">
       <div className="flex items-center gap-2.5 border-b border-border p-4" style={{ background: `${color}08` }}>
-        <div className="flex size-8 items-center justify-center rounded-lg" style={{ background: `${color}18`, color }}>
-          <Icon size={16} strokeWidth={2.3} />
-        </div>
+        <IconTile icon={Icon} color={color} size="xs" tint="18" strokeWidth={2.3} />
         <h3 className="font-display text-sm font-bold text-ink">{title}</h3>
         {action && <div className="ml-auto">{action}</div>}
       </div>
@@ -168,7 +168,7 @@ export default function DoneSummary({ ticket, posts = [], subtasks = [] }) {
                   <div key={t.key} className="rounded-xl border border-border bg-surface-muted/60 p-2.5 text-center">
                     <Icon size={15} strokeWidth={2.3} className="mx-auto" style={{ color: t.color }} />
                     <p className="mt-1 font-display text-base font-extrabold text-ink">{fmt(agg[t.key])}</p>
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-muted">{t.label}</p>
+                    <SectionLabel className="text-[10px] font-semibold tracking-wide">{t.label}</SectionLabel>
                   </div>
                 )
               })}
@@ -177,7 +177,7 @@ export default function DoneSummary({ ticket, posts = [], subtasks = [] }) {
             {engagementTotal > 0 && (
               <div>
                 <div className="mb-2 flex items-center justify-between">
-                  <p className="text-xs font-bold uppercase tracking-wide text-ink-muted">Composição do engajamento</p>
+                  <SectionLabel className="text-xs tracking-wide">Composição do engajamento</SectionLabel>
                   <p className="font-mono text-xs font-bold text-ink-secondary">{fmt(engagementTotal)} interações</p>
                 </div>
                 <div className="flex h-3 overflow-hidden rounded-full ring-1 ring-border">
@@ -223,7 +223,7 @@ export default function DoneSummary({ ticket, posts = [], subtasks = [] }) {
                   {METRIC_TILES.map((t) => (
                     <div key={t.key} className="rounded-lg bg-surface-muted/60 p-2 text-center">
                       <p className="font-display text-sm font-extrabold text-ink">{fmt(post.metrics?.[t.key])}</p>
-                      <p className="text-[9px] font-semibold uppercase tracking-wide text-ink-muted">{t.label}</p>
+                      <SectionLabel className="text-[9px] font-semibold tracking-wide">{t.label}</SectionLabel>
                     </div>
                   ))}
                 </div>
@@ -241,7 +241,7 @@ export default function DoneSummary({ ticket, posts = [], subtasks = [] }) {
               <div className="flex items-start gap-2">
                 <Target size={15} className="mt-0.5 shrink-0 text-sky" />
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-ink-faint">Objetivo</p>
+                  <SectionLabel className="tracking-wide text-ink-faint">Objetivo</SectionLabel>
                   <p className="text-sm text-ink-secondary">{ideation.objective}</p>
                 </div>
               </div>
@@ -250,23 +250,23 @@ export default function DoneSummary({ ticket, posts = [], subtasks = [] }) {
               <div className="flex items-start gap-2">
                 <Users size={15} className="mt-0.5 shrink-0 text-sky" />
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-ink-faint">Persona-alvo</p>
+                  <SectionLabel className="tracking-wide text-ink-faint">Persona-alvo</SectionLabel>
                   <p className="text-sm text-ink-secondary">{ideation.target_persona}</p>
                 </div>
               </div>
             )}
             {production.caption && (
               <div>
-                <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-ink-faint">Legenda publicada</p>
+                <SectionLabel className="mb-1 tracking-wide text-ink-faint">Legenda publicada</SectionLabel>
                 <p className="whitespace-pre-wrap rounded-xl bg-surface-muted/60 p-3 text-sm text-ink-secondary">{production.caption}</p>
               </div>
             )}
             {hashtags.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {hashtags.map((h, i) => (
-                  <span key={i} className="inline-flex items-center gap-0.5 rounded-full bg-brand/10 px-2 py-0.5 text-xs font-semibold text-brand">
+                  <Badge key={i} className="gap-0.5 bg-brand/10 px-2 font-semibold tracking-normal text-brand">
                     <Hash size={11} />{String(h).replace(/^#/, '')}
-                  </span>
+                  </Badge>
                 ))}
               </div>
             )}
@@ -281,32 +281,28 @@ export default function DoneSummary({ ticket, posts = [], subtasks = [] }) {
           color="#6366F1"
           title="Retrospectiva"
           action={rec && (
-            <span
-              className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold text-white"
-              style={{ background: rec.color }}
-              title={rec.hint}
-            >
+            <ColorBadge color={rec.color} solid className="py-1" title={rec.hint}>
               <Repeat size={12} /> {rec.label}
-            </span>
+            </ColorBadge>
           )}
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {retro.wins?.length > 0 && (
               <div>
-                <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-faint">Vitórias</p>
+                <SectionLabel className="mb-2 tracking-wide text-ink-faint">Vitórias</SectionLabel>
                 <Bullets items={retro.wins} icon={ThumbsUp} color="#10B981" />
               </div>
             )}
             {retro.improvements?.length > 0 && (
               <div>
-                <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-faint">Melhorias</p>
+                <SectionLabel className="mb-2 tracking-wide text-ink-faint">Melhorias</SectionLabel>
                 <Bullets items={retro.improvements} icon={AlertTriangle} color="#F59E0B" />
               </div>
             )}
           </div>
           {retro.lessons_learned && (
             <div className="mt-4 border-t border-border pt-4">
-              <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-faint">Lições aprendidas</p>
+              <SectionLabel className="mb-2 tracking-wide text-ink-faint">Lições aprendidas</SectionLabel>
               <div
                 className="prose prose-sm max-w-none text-ink-secondary prose-strong:text-ink"
                 dangerouslySetInnerHTML={{ __html: retro.lessons_learned }}

@@ -11,9 +11,11 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog'
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { SectionLabel } from '@/components/ui/section-label'
 import { Textarea } from '@/components/ui/input'
-import { Spinner, EmptyState } from '@/components/ui/feedback'
+import { Spinner, InlineSpinner, Skeleton, EmptyState } from '@/components/ui/feedback'
 import { Bubble, TypingDots, ChatComposer } from '@/components/ui/chat'
 import { Markdown } from '@/components/ui/markdown'
 import {
@@ -257,7 +259,7 @@ function PreviewPlaceholder({ busy, failed, planning }) {
         </div>
       ) : busy ? (
         <div className="flex flex-col items-center gap-2 text-center">
-          <Loader2 size={26} className="animate-spin" />
+          <InlineSpinner size={26} />
           <p className="text-xs">{planning ? 'Planejando as cenas…' : 'Renderizando o vídeo…'}</p>
         </div>
       ) : <Film size={28} />}
@@ -350,7 +352,7 @@ function SceneTile({ scene: s, isPlayhead, within, note, onSeek, onSaveNote }) {
             )}
             {m.working && (
               <div className="absolute inset-0 grid animate-pulse place-items-center bg-brand-ink/45 text-white">
-                <Loader2 size={16} className="animate-spin" />
+                <InlineSpinner size={16} />
               </div>
             )}
             <span className="absolute left-0.5 top-0.5 grid size-4 place-items-center rounded bg-black/60 text-[9px] font-bold text-white">
@@ -373,9 +375,9 @@ function SceneTile({ scene: s, isPlayhead, within, note, onSeek, onSaveNote }) {
         </button>
       </PopoverTrigger>
       <PopoverContent align="center" side="top" className="w-64">
-        <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-ink-secondary">
+        <SectionLabel className="mb-1.5 tracking-wider text-ink-secondary">
           Anotar a cena {s.position + 1}
-        </p>
+        </SectionLabel>
         <Textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -413,7 +415,7 @@ function SceneTile({ scene: s, isPlayhead, within, note, onSeek, onSaveNote }) {
               title="Anexar referência a esta cena"
               className="grid size-10 place-items-center rounded-lg border border-dashed border-border-strong text-ink-muted transition hover:border-brand hover:text-brand disabled:opacity-50"
             >
-              {uploading ? <Loader2 size={14} className="animate-spin" /> : <ImagePlus size={14} />}
+              {uploading ? <InlineSpinner size={14} /> : <ImagePlus size={14} />}
             </button>
           )}
         </div>
@@ -488,9 +490,9 @@ function Lightbox({ url, onClose }) {
 function CreditTag({ credits }) {
   return (
     <div className="flex animate-rise justify-start pl-1">
-      <span className="inline-flex items-center gap-1 rounded-full bg-amber/15 px-2 py-0.5 text-[11px] font-bold text-[#B45309]">
+      <Badge variant="warning" className="px-2 text-[11px] tracking-normal">
         <Coins size={11} /> −{credits} {credits === 1 ? 'crédito' : 'créditos'}
-      </span>
+      </Badge>
     </div>
   )
 }
@@ -574,7 +576,7 @@ function Chat({ messages, notes, onRemoveNote, onSend, sending, working = [], cr
         ) : working.length > 0 && (
           <div className="flex justify-start">
             <div className="inline-flex items-center gap-2 rounded-2xl bg-brand-soft/50 px-3.5 py-2 text-xs font-semibold text-brand">
-              <Loader2 size={13} className="shrink-0 animate-spin" />
+              <InlineSpinner size={13} className="shrink-0" />
               Trabalhando {working.length === 1 ? 'na' : 'nas'} {sceneList(working)}… leva 1–2 min {working.length === 1 ? '' : 'cada'}.
             </div>
           </div>
@@ -587,7 +589,7 @@ function Chat({ messages, notes, onRemoveNote, onSend, sending, working = [], cr
         {hasNotes && (
           <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
             {notes.map((n) => (
-              <span key={n.scene} className="inline-flex max-w-full items-center gap-1 rounded-full bg-brand-soft/60 px-2 py-0.5 text-[11px] font-semibold text-brand">
+              <Badge key={n.scene} className="max-w-full bg-brand-soft/60 px-2 text-[11px] font-semibold tracking-normal text-brand">
                 {n.refs?.length ? <ImagePlus size={10} className="shrink-0" /> : <Pencil size={10} className="shrink-0" />}
                 <span className="truncate">
                   Cena {n.scene}: {n.text || 'referência anexada'}
@@ -596,7 +598,7 @@ function Chat({ messages, notes, onRemoveNote, onSend, sending, working = [], cr
                 <button type="button" onClick={() => onRemoveNote(n.scene)} aria-label="Remover nota" className="shrink-0 opacity-70 hover:opacity-100">
                   <X size={11} />
                 </button>
-              </span>
+              </Badge>
             ))}
           </div>
         )}
@@ -629,7 +631,7 @@ function Chat({ messages, notes, onRemoveNote, onSend, sending, working = [], cr
             title="Anexar referência (imagem ou vídeo)"
             className="grid h-[52px] w-11 shrink-0 place-items-center rounded-xl border border-border text-ink-muted transition hover:border-brand hover:text-brand disabled:opacity-40"
           >
-            {uploading ? <Loader2 size={16} className="animate-spin" /> : <ImagePlus size={16} />}
+            {uploading ? <InlineSpinner size={16} /> : <ImagePlus size={16} />}
           </button>
           <div className="min-w-0 flex-1">
             <ChatComposer
@@ -680,7 +682,7 @@ function WorkBanner({ sending, workingNums, finalizing }) {
   return (
     <div className="shrink-0 overflow-hidden rounded-xl border border-brand/30 bg-brand-soft/40">
       <div className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-ink">
-        <Loader2 size={14} className="shrink-0 animate-spin text-brand" />
+        <InlineSpinner size={14} className="shrink-0 text-brand" />
         {text}
       </div>
       {/* Indeterminate sweep — motion the eye catches even from the chat side. */}
@@ -697,7 +699,7 @@ function InterviewPane({ sending }) {
   return (
     <div className="max-w-xs text-center text-ink-muted">
       <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-brand-soft/50 text-brand">
-        {sending ? <Loader2 size={26} className="animate-spin" /> : <MessageSquare size={26} />}
+        {sending ? <InlineSpinner size={26} /> : <MessageSquare size={26} />}
       </div>
       <p className="mt-3 text-sm font-semibold text-ink">Entendendo seu vídeo</p>
       <p className="mt-1 text-xs">
@@ -779,9 +781,9 @@ function AssetCard({ item, regenType, regen, onRemove, onOpen }) {
           <div className={thumbClass}>{placeholder}</div>
         )}
         <div className="flex min-w-0 flex-1 flex-col">
-          <span className="mb-1 inline-flex w-fit items-center rounded-full bg-brand-soft/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand">
+          <Badge className="mb-1 w-fit bg-brand-soft/60 px-2 text-[10px] uppercase text-brand">
             {item.role_label}
-          </span>
+          </Badge>
           <p className="line-clamp-2 text-xs leading-relaxed text-ink-secondary">
             {item.description || (canRegen ? 'Sem descrição — descreva ao regenerar.' : 'Referência do vídeo.')}
           </p>
@@ -810,7 +812,7 @@ function AssetCard({ item, regenType, regen, onRemove, onOpen }) {
           <div className="mt-2 flex items-center justify-between gap-2">
             <span className="text-[11px] font-medium text-ink-muted">−1 crédito · não refaz as cenas atuais</span>
             <Button size="sm" className="h-8" onClick={submit} disabled={busy || !prompt.trim()}>
-              {busy ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />} Gerar
+              {busy ? <InlineSpinner size={14} /> : <Sparkles size={14} />} Gerar
             </Button>
           </div>
         </div>
@@ -824,9 +826,9 @@ function AssetSection({ title, icon: Icon, items, regenType, regen, onRemove, on
   if (!items?.length) return null
   return (
     <div>
-      <p className="mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-ink-secondary">
+      <SectionLabel className="mb-2 flex items-center gap-1.5 tracking-wider text-ink-secondary">
         <Icon size={13} className="text-brand" /> {title}
-      </p>
+      </SectionLabel>
       <div className="grid gap-2 sm:grid-cols-2">
         {items.map((item) => (
           <AssetCard key={item.key} item={item} regenType={regenType} regen={regen} onRemove={onRemove} onOpen={onOpen} />
@@ -850,9 +852,9 @@ function MusicCard({ music, regen }) {
 
   return (
     <div>
-      <p className="mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-ink-secondary">
+      <SectionLabel className="mb-2 flex items-center gap-1.5 tracking-wider text-ink-secondary">
         <Music size={13} className="text-brand" /> Trilha sonora
-      </p>
+      </SectionLabel>
       <div className="rounded-2xl border border-border bg-surface-muted/30 p-3">
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
@@ -877,7 +879,7 @@ function MusicCard({ music, regen }) {
             <div className="mt-2 flex items-center justify-between gap-2">
               <span className="text-[11px] font-medium text-ink-muted">Grátis · re-mixa o vídeo</span>
               <Button size="sm" className="h-8" onClick={submit} disabled={busy || !prompt.trim()}>
-                {busy ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />} Trocar trilha
+                {busy ? <InlineSpinner size={14} /> : <Sparkles size={14} />} Trocar trilha
               </Button>
             </div>
           </div>
@@ -949,7 +951,7 @@ function AddElement({ creativeId }) {
 
         {mode === 'upload' ? (
           <div>
-            <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-ink-secondary">Tipo do elemento</p>
+            <SectionLabel className="mb-1 tracking-wider text-ink-secondary">Tipo do elemento</SectionLabel>
             <div className="mb-2.5 flex flex-wrap gap-1">
               {ADD_ROLES.map((r) => (
                 <button
@@ -969,7 +971,7 @@ function AddElement({ creativeId }) {
               size="sm" className="w-full" disabled={uploading || add.isPending}
               onClick={() => fileRef.current?.click()}
             >
-              {uploading || add.isPending ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+              {uploading || add.isPending ? <InlineSpinner size={14} /> : <Upload size={14} />}
               Enviar arquivo
             </Button>
             <p className="mt-1.5 text-[11px] text-ink-muted">Imagem ou vídeo curto de referência. Não refaz as cenas.</p>
@@ -1233,7 +1235,7 @@ export function VideoScenesDialog({ creative, open, onOpenChange }) {
                     <span className="text-brand">Prévia rápida.</span> Gostou? Gere a versão final — aqui ou pedindo no chat.
                   </p>
                   <Button size="sm" className="h-8 shrink-0" disabled={finalize.isPending} onClick={() => finalize.mutate()}>
-                    {finalize.isPending ? <Loader2 size={14} className="animate-spin" /> : <ArrowUpCircle size={14} />}
+                    {finalize.isPending ? <InlineSpinner size={14} /> : <ArrowUpCircle size={14} />}
                     Alta qualidade
                   </Button>
                 </div>
@@ -1255,15 +1257,15 @@ export function VideoScenesDialog({ creative, open, onOpenChange }) {
               </div>
 
               <div className="shrink-0">
-                <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-ink-secondary">
+                <SectionLabel className="mb-1.5 tracking-wider text-ink-secondary">
                   Cenas · clique para anotar
-                </p>
+                </SectionLabel>
                 {/* The locked identity + soundtrack are managed in the Assets tab
                     (or via the chat) — the scene strip stays focused on the shots. */}
                 {planning ? (
                   <div className="flex gap-1.5">
                     {[0, 1, 2].map((i) => (
-                      <div key={i} className="h-20 w-12 shrink-0 animate-pulse rounded-lg bg-surface-muted" />
+                      <Skeleton key={i} className="h-20 w-12 shrink-0 rounded-lg" />
                     ))}
                   </div>
                 ) : (
