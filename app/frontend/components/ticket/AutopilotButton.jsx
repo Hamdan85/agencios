@@ -131,6 +131,16 @@ export default function AutopilotButton({ run, estimating, starting, onEstimate,
                   <span>Faltam {shortfall} créditos para este planejamento. Compre mais para continuar.</span>
                 </div>
               )}
+
+              {estimate?.has_pending_video && (
+                <div className="flex items-start gap-2 rounded-xl bg-sky-500/10 p-3 text-xs font-medium text-sky-700">
+                  <AlertTriangle size={15} className="mt-0.5 shrink-0" />
+                  <span>
+                    Os vídeos <strong>não são gerados automaticamente</strong> no modo GO — eles
+                    ficam aguardando na fase de Produção para você gerar manualmente.
+                  </span>
+                </div>
+              )}
             </div>
           )}
 

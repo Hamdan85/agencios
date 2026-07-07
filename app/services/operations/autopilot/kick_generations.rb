@@ -59,6 +59,9 @@ module Operations
         @ticket.creative_types_list.filter_map do |type|
           spec = ::Creatives.spec_for(type)
           next unless spec && spec[:generatable]
+          # Video is NEVER auto-generated — not even in GO. It waits in production
+          # for the team to generate manually. (See Autopilot::Estimate warning.)
+          next if spec[:kind] == 'video'
 
           generate(spec[:kind], type)
         end

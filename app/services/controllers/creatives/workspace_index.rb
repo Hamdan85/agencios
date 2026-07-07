@@ -12,6 +12,9 @@ module Controllers
         deny_guests!
         scope = workspace.creatives.order(created_at: :desc)
         scope = scope.where(creative_type: @params[:type]) if @params[:type].present?
+        # `types` (array) — the studio picker restricts to a ticket's SUPPORTED
+        # types so unsupported pieces never show up as choices.
+        scope = scope.where(creative_type: Array(@params[:types])) if @params[:types].present?
         scope = scope.where(status: @params[:status]) if @params[:status].present?
         # The ticket-side "use from Studio" picker only offers creatives not yet
         # attached to any ticket — a creative belongs to at most one ticket.

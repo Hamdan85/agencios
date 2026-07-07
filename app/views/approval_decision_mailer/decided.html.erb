@@ -1,0 +1,26 @@
+<% content_for :preheader do %><%= @approved ? "Aprovado" : "Ajustes solicitados" %> — <%= @ticket.display_title %>.<% end %>
+<% content_for :eyebrow do %><%= @approved ? "Aprovado pelo cliente" : "Ajustes solicitados" %><% end %>
+
+<h1 style="margin:0 0 16px;font-family:'Sora','Inter',Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#18122B;">
+  <%= @approved ? "O cliente aprovou o conteúdo" : "O cliente pediu ajustes" %>
+</h1>
+
+<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#564F6F;">
+  <strong><%= @client&.name.presence || "O cliente" %></strong>
+  <%= @approved ? "aprovou" : "pediu ajustes em" %>
+  <strong><%= @ticket.display_title %></strong>
+  (<%= @project.name %>)<%= @creative ? " — peça: #{@creative.creative_type}" : "" %>.
+</p>
+
+<% if !@approved && @feedback.present? %>
+  <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#8B86A3;">Feedback do cliente</p>
+  <blockquote style="margin:0 0 16px;padding:12px 16px;border-left:3px solid #F59E0B;background:#FFF8ED;border-radius:8px;font-size:15px;line-height:1.6;color:#564F6F;">
+    <%= @feedback %>
+  </blockquote>
+<% end %>
+
+<%= email_button(@approved ? 'Ver conteúdo' : 'Tratar os ajustes', @url) %>
+
+<p style="margin:16px 0 0;font-size:13px;line-height:1.5;color:#8B86A3;">
+  <%= @approved ? "O conteúdo seguiu para a fase de publicação." : "O conteúdo continua na fase de produção aguardando os ajustes." %>
+</p>

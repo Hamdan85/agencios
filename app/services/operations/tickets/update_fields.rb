@@ -13,6 +13,9 @@ module Operations
 
       def call
         clean = ::Tickets::Fields.sanitize(@status, @values.stringify_keys)
+        # A duplicate creative type must never persist (it would generate duplicate
+        # creatives in GO). De-dup before it lands in the field bag or the column.
+        clean['creative_types'] = Array(clean['creative_types']).map(&:to_s).compact_blank.uniq if clean.key?('creative_types')
         merged = @ticket.fields.merge(@status => @ticket.fields_for(@status).merge(clean))
 
         attrs = { fields: merged }
@@ -35,7 +38,7 @@ module Operations
       def mirrored_columns(clean)
         cols = {}
         if clean.key?('creative_types')
-          types = Array(clean['creative_types']).map(&:to_s).compact_blank
+          types = Array(clean['creative_types']).map(&:to_s).compact_blank.uniq
           cols[:creative_types] = types
           cols[:creative_type] = types.first
         elsif clean.key?('creative_type')

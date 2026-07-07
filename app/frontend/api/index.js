@@ -183,11 +183,20 @@ export const projectsApi = {
 }
 
 // Public client content approval (login-less; the path token is the credential).
+// Per-client approval portal: one link → the client's queue of pending tickets.
 export const approvalsApi = {
-  get: (token) => api.get(`/public/approvals/${token}`),
-  approve: (token, creativeId) => api.post(`/public/approvals/${token}/creatives/${creativeId}/approve`),
-  requestChanges: (token, creativeId, feedback) =>
-    api.post(`/public/approvals/${token}/creatives/${creativeId}/request_changes`, { feedback }),
+  get: (token) => api.get(`/public/client_approvals/${token}`),
+  // Approve one media-type slot, choosing the winning option.
+  approveSlot: (token, ticketId, { creativeType, creativeId }) =>
+    api.post(`/public/client_approvals/${token}/tickets/${ticketId}/approve`, {
+      creative_type: creativeType, creative_id: creativeId,
+    }),
+  requestChanges: (token, ticketId, { creativeId, feedback }) =>
+    api.post(`/public/client_approvals/${token}/tickets/${ticketId}/request_changes`, {
+      creative_id: creativeId, feedback,
+    }),
+  undo: (token, ticketId) =>
+    api.post(`/public/client_approvals/${token}/tickets/${ticketId}/undo`),
 }
 
 // The posts hub: workspace-wide filterable list, a single post detail, and the

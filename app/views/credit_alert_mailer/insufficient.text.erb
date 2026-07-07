@@ -1,0 +1,7 @@
+Créditos insuficientes
+
+Uma ação que depende de créditos não pôde ser executada<%= @context ? " (#{@context})" : "" %>.
+<% if @required&.positive? %>São necessários <%= @required %> créditos.<% end %>
+Compre créditos para que o conteúdo seja gerado: <%= @url %>
+
+A solicitação fica aguardando — assim que houver saldo, é só gerar novamente.

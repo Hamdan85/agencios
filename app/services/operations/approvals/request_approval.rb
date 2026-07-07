@@ -11,7 +11,8 @@ module Operations
       end
 
       def call
-        @ticket.approval_token! # ensure a token exists (idempotent)
+        # The public link is per-client (minted in ApprovalMailer); the ticket only
+        # needs to be flagged as awaiting approval so it appears in the client queue.
         @ticket.update!(approval_requested_at: Time.current)
 
         recipients = self.class.recipients_for(@ticket)

@@ -3,6 +3,7 @@
 class Client < ApplicationRecord
   belongs_to :workspace
   has_many :projects, dependent: :destroy
+  has_many :tickets, through: :projects
   has_many :invoices, dependent: :destroy
   has_many :meetings, dependent: :nullify
   has_many :social_accounts, dependent: :destroy
@@ -44,6 +45,29 @@ class Client < ApplicationRecord
         end
       acc[key] = cleaned if cleaned.present?
     end
+  end
+
+  # The client's stable, revocable approval-portal secret. Lazily minted; one link
+  # per client (not per ticket) — powers /aprovar/:token, which lists this client's
+  # tickets awaiting approval.
+  def approval_token!
+    return approval_token if approval_token.present?
+
+    update!(approval_token: "apv_#{SecureRandom.urlsafe_base64(32)}")
+    approval_token
+  end
+
+  def revoke_approval_token! = update!(approval_token: nil)
+
+  # The queue shown in the portal: tickets across this client's projects that are
+  # awaiting the client's approval, precise (excludes superseded creatives), most
+  # recently requested first.
+  def pending_approval_tickets
+    tickets.awaiting_client_approval
+           .includes(:project, :creatives)
+           .select(&:pending_client_approval?)
+           .sort_by { |t| t.approval_requested_at || Time.at(0) }
+           .reverse
   end
 
   # True when any positioning field has been filled in.

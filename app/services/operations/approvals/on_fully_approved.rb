@@ -14,7 +14,9 @@ module Operations
       end
 
       def call
-        return unless @ticket.production?
+        # Guard both conditions: it runs deferred (behind the undo window), so a
+        # reverted approval must no-op, and it must never advance past production.
+        return unless @ticket.production? && @ticket.fully_approved?
 
         actor = @ticket.approval_actor
         actor_name = actor.respond_to?(:name) ? actor.name : 'Cliente'

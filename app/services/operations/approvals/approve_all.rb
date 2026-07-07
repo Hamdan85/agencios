@@ -2,8 +2,9 @@
 
 module Operations
   module Approvals
-    # The internal "Aprovar" action — a team member approves the whole approvable
-    # set on the client's behalf, then the full-approval hook runs once.
+    # The internal "Aprovar" action — a team member approves on the client's behalf.
+    # Approves ONE winner per media-type slot (the newest option), marking the rest
+    # not_selected, then the full-approval hook runs once.
     class ApproveAll < Operations::Base
       def initialize(ticket:, actor:)
         @ticket = ticket
@@ -11,11 +12,15 @@ module Operations
       end
 
       def call
-        set = @ticket.approvable_creatives
-        raise Operations::Errors::Invalid, 'Não há criativos prontos para aprovar.' if set.empty?
+        slots = @ticket.approval_slots
+        raise Operations::Errors::Invalid, 'Não há criativos prontos para aprovar.' if slots.empty?
 
-        set.each do |creative|
-          creative.update!(approval_state: 'approved', reviewed_by: @actor, decided_at: Time.current, client_feedback: nil)
+        slots.each_value do |options|
+          winner = options.max_by { |c| c.created_at || Time.at(0) } # newest option wins
+          winner.update!(approval_state: 'approved', reviewed_by: @actor, decided_at: Time.current, client_feedback: nil)
+          (options - [winner]).each do |loser|
+            loser.update!(approval_state: 'not_selected', reviewed_by: @actor, decided_at: Time.current)
+          end
         end
         OnFullyApproved.call(ticket: @ticket.reload)
         @ticket

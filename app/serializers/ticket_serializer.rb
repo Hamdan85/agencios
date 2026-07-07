@@ -67,13 +67,26 @@ class TicketSerializer < ActiveModel::Serializer
     run && AutopilotRunSerializer.new(run).as_json
   end
 
-  # Approval summary for the production/publication view (drives ApprovalPanel).
+  # Approval summary for the production/publication view (drives ApprovalPanel) and
+  # the ticket-row chip. `state`: nil (not in the flow) / pending (awaiting client)
+  # / approved / changes_requested.
   def approval
     {
       requested_at: object.approval_requested_at&.iso8601,
       fully_approved: object.fully_approved?,
+      state: approval_state,
       actor_name: object.approval_actor&.then { |a| a.respond_to?(:name) ? a.name : nil }
     }
+  end
+
+  def approval_state
+    return nil if object.approval_requested_at.blank?
+    return 'approved' if object.fully_approved?
+
+    creatives = object.approvable_creatives
+    return 'changes_requested' if creatives.any?(&:approval_changes_requested?) && creatives.none?(&:approval_pending?)
+
+    'pending'
   end
 
   private

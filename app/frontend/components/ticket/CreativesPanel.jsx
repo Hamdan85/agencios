@@ -18,7 +18,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { cn } from '@/lib/utils'
 import {
   ImagePlus, Sparkles, GalleryHorizontalEnd, Video, Image as ImageIcon, AlertCircle, CheckCircle2,
-  Loader2, Trash2, ChevronDown, UploadCloud, LibraryBig, Film,
+  Loader2, Trash2, ChevronDown, UploadCloud, LibraryBig, Film, Search,
 } from 'lucide-react'
 import { VideoScenesDialog } from './VideoScenesDialog'
 
@@ -289,10 +289,17 @@ function UploadDialog({ open, onOpenChange, onUpload, uploading, types = [] }) {
   )
 }
 
-// Studio picker — attaches a creative already generated in the Studio (and
-// not yet used on any ticket) to this ticket.
-function StudioPickerDialog({ open, onOpenChange, onAttach, attaching }) {
-  const { data, isLoading } = useWorkspaceCreatives({ unassigned: true }, { enabled: open })
+// Studio picker — attaches a creative already generated in the Studio (unassigned)
+// to this ticket. Searchable by name/caption and restricted to the ticket's
+// SUPPORTED types, so unsupported pieces never appear as choices.
+function StudioPickerDialog({ open, onOpenChange, onAttach, attaching, supportedTypes = [] }) {
+  const [q, setQ] = useState('')
+  const filters = {
+    unassigned: true,
+    q: q.trim() || undefined,
+    types: supportedTypes.length ? supportedTypes : undefined,
+  }
+  const { data, isLoading } = useWorkspaceCreatives(filters, { enabled: open })
   const items = data?.creatives || []
 
   const select = (creative) => {
@@ -303,24 +310,37 @@ function StudioPickerDialog({ open, onOpenChange, onAttach, attaching }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <LibraryBig size={18} className="text-brand" /> Usar criativo do estúdio
           </DialogTitle>
-          <DialogDescription>Anexe a este ticket uma peça já gerada no estúdio.</DialogDescription>
+          <DialogDescription>Anexe a este ticket uma peça já gerada no estúdio (apenas dos tipos que este ticket aceita).</DialogDescription>
         </DialogHeader>
+
+        <div className="relative">
+          <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Buscar por nome ou legenda…"
+            className="w-full rounded-xl border border-border bg-surface py-2 pl-9 pr-3 text-sm text-ink outline-none focus:ring-2 focus:ring-brand/40"
+          />
+        </div>
+
         {isLoading ? (
           <div className="flex justify-center py-10"><Spinner size={20} /></div>
         ) : items.length === 0 ? (
           <EmptyState
             icon={LibraryBig}
-            title="Nada disponível"
-            description="Todo criativo do estúdio já está em uso em algum ticket, ou você ainda não gerou nenhum."
+            title={q ? 'Nada encontrado' : 'Nada disponível'}
+            description={q
+              ? 'Nenhuma peça do estúdio (dos tipos aceitos) corresponde à busca.'
+              : 'Nenhum criativo livre dos tipos que este ticket aceita — gere um no estúdio ou ajuste o escopo.'}
             color="#7C3AED"
           />
         ) : (
-          <div className="grid max-h-96 grid-cols-3 gap-2.5 overflow-y-auto py-1 sm:grid-cols-4">
+          <div className="grid max-h-104 grid-cols-3 gap-2.5 overflow-y-auto py-1 sm:grid-cols-4">
             {items.map((c) => {
               const m = creativeMeta(c.creative_type)
               const thumb = c.asset_urls?.[0]
@@ -572,7 +592,7 @@ export default function CreativesPanel({
       <UploadDialog open={uploadOpen} onOpenChange={setUploadOpen} onUpload={onUpload} uploading={uploading} types={uploadTypes} />
 
       {/* Studio picker dialog */}
-      <StudioPickerDialog open={pickerOpen} onOpenChange={setPickerOpen} onAttach={onAttach} attaching={attaching} />
+      <StudioPickerDialog open={pickerOpen} onOpenChange={setPickerOpen} onAttach={onAttach} attaching={attaching} supportedTypes={uploadTypes} />
 
       {/* Video scenes editor */}
       <VideoScenesDialog creative={scenesFor} open={!!scenesFor} onOpenChange={(v) => { if (!v) setScenesFor(null) }} />

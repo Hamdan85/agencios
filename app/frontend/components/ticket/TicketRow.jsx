@@ -21,6 +21,13 @@ const TONE = {
   muted: 'bg-surface-muted text-ink-muted',
 }
 
+// Client-approval state → a small row chip.
+const APPROVAL_CHIP = {
+  pending: ['Aguardando cliente', 'bg-amber/15 text-[#B45309]'],
+  approved: ['Aprovado', 'bg-emerald-500/15 text-emerald-700'],
+  changes_requested: ['Ajustes pedidos', 'bg-danger/12 text-danger'],
+}
+
 // A single ticket row, shared by the global ticket list and the project page.
 // Clicking the body opens the ticket (drawer); the trailing menu archives /
 // restores (managers only). Pass `proposed` to render a dimmed, non-interactive
@@ -29,8 +36,10 @@ const TONE = {
 export function TicketRow({
   ticket, onOpen, manager, onArchive, onUnarchive, busy,
   selected, onToggleSelect, proposed = false, state = 'ready', op = 'create',
-  pendingChange = null,
+  pendingChange = null, members = null, onAssign = null,
 }) {
+  const approvalChip = APPROVAL_CHIP[ticket.approval?.state]
+  const canAssign = manager && !proposed && onAssign && Array.isArray(members)
   const project = ticket.project
   const title = ticket.display_title || ticket.title
   const accent = project?.color || statusMeta(ticket.status).color
@@ -115,6 +124,11 @@ export function TicketRow({
         {ticket.channels?.length > 0 && <ChannelIcons channels={ticket.channels} size={12} max={4} />}
       </div>
 
+      {!proposed && approvalChip && (
+        <span className={cn('hidden shrink-0 items-center rounded-full px-2 py-0.5 text-[10.5px] font-bold sm:inline-flex', approvalChip[1])}>
+          {approvalChip[0]}
+        </span>
+      )}
       {!proposed && ticket.in_alert && <AlertBadge reason={ticket.alert_reason} />}
       {!proposed && ticket.autopilot_running && <WorkingBadge />}
 
@@ -138,7 +152,30 @@ export function TicketRow({
               {PENDING_BADGE[pendingChange]?.[0]}
             </span>
           )}
-          {ticket.assignee
+          {canAssign ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button type="button" aria-label="Atribuir responsável"
+                  className="shrink-0 rounded-full outline-none transition hover:opacity-80 focus:ring-2 focus:ring-brand/40">
+                  {ticket.assignee
+                    ? <Avatar name={ticket.assignee.name} src={ticket.assignee.avatar_url} size={26} />
+                    : <span className="flex size-[26px] items-center justify-center rounded-full border border-dashed border-border text-ink-faint">+</span>}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-48">
+                <DropdownMenuItem onClick={() => onAssign(ticket.id, null)} disabled={busy}>
+                  <span className="flex size-6 items-center justify-center rounded-full border border-dashed border-border text-ink-faint">–</span>
+                  Sem responsável
+                </DropdownMenuItem>
+                {members.map((m) => (
+                  <DropdownMenuItem key={m.user?.id || m.id} onClick={() => onAssign(ticket.id, m.user?.id || m.id)} disabled={busy}>
+                    <Avatar name={m.user?.name || m.name} src={m.user?.avatar_url} size={22} />
+                    {m.user?.name || m.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : ticket.assignee
             ? <Avatar name={ticket.assignee.name} src={ticket.assignee.avatar_url} size={26} />
             : <span className="size-[26px] shrink-0 rounded-full border border-dashed border-border" />}
 

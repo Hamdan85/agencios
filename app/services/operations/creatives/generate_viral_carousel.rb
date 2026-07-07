@@ -114,7 +114,9 @@ module Operations
         {
           topic: source_topic,
           objective: @params[:objective].presence,
-          source_text: (@source_url ? nil : @params[:text].presence)
+          source_text: (@source_url ? nil : @params[:text].presence),
+          # Client-requested changes for a regeneration — folded into copy_brief.
+          revision_notes: @params[:revision_notes].presence
         }.compact
       end
 

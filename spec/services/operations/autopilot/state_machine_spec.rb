@@ -81,13 +81,18 @@ RSpec.describe 'Operations::Autopilot state machine' do
     expect(ticket.posts.count).to eq(0)              # no posts until client approval
   end
 
-  it 'parks on an async video then resumes when the render settles' do
+  # Video is never auto-generated in GO, but the state machine still parks on ANY
+  # async generation — drive that path with an async-stubbed image.
+  it 'parks on an async generation then resumes when it settles' do
     connect('instagram')
-    ticket = eligible_ticket(%w[ugc_video], %w[instagram])
+    ticket = eligible_ticket(%w[feed_image], %w[instagram])
+    allow(Operations::Creatives::GenerateImage).to receive(:call) do |ticket:, creative_type: nil, **|
+      make_gen(ticket, :image, creative_type || 'feed_image', :processing)
+    end
     run = Operations::Autopilot::Start.call(ticket: ticket, user: user)
 
     advance(run) # → generating
-    advance(run) # → awaiting_generation (video still processing)
+    advance(run) # → awaiting_generation (still processing)
     expect(run.reload.state).to eq('awaiting_generation')
 
     # Simulate the render finishing.
@@ -101,7 +106,10 @@ RSpec.describe 'Operations::Autopilot state machine' do
 
   it 'halts the run when a generation fails' do
     connect('instagram')
-    ticket = eligible_ticket(%w[ugc_video], %w[instagram])
+    ticket = eligible_ticket(%w[feed_image], %w[instagram])
+    allow(Operations::Creatives::GenerateImage).to receive(:call) do |ticket:, creative_type: nil, **|
+      make_gen(ticket, :image, creative_type || 'feed_image', :processing)
+    end
     run = Operations::Autopilot::Start.call(ticket: ticket, user: user)
     advance(run)
     advance(run) # awaiting_generation
