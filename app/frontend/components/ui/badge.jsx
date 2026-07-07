@@ -24,11 +24,12 @@ function Badge({ className, variant, ...props }) {
   return <span className={cn(badgeVariants({ variant }), className)} {...props} />
 }
 
-// A vivid color-tinted badge from an arbitrary hex (for status/channel/project chips).
-function ColorBadge({ color, children, className, solid = false, ...props }) {
+// A vivid color-tinted badge from an arbitrary hex (for status/channel/project
+// chips). `tint` is the hex-alpha suffix for the wash background.
+function ColorBadge({ color, children, className, solid = false, tint = '1A', ...props }) {
   const style = solid
     ? { background: color, color: '#fff' }
-    : { background: `${color}1A`, color }
+    : { background: `${color}${tint}`, color }
   return (
     <span
       className={cn('inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold', className)}

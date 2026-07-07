@@ -1,6 +1,13 @@
-import { Wand2 } from 'lucide-react'
+import { Loader2, Wand2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { IconTile } from '@/components/ui/icon-tile'
+
+// The small segmented spinner used inline (buttons, chips, busy rows). Wraps
+// the Loader2 icon so call sites share one idiom; visually identical to the
+// hand-rolled `<Loader2 className="animate-spin" />`.
+export function InlineSpinner({ size = 16, className, ...props }) {
+  return <Loader2 size={size} className={cn('animate-spin', className)} {...props} />
+}
 
 export function Spinner({ size = 22, className }) {
   return (
