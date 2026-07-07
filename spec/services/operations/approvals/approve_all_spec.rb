@@ -19,4 +19,13 @@ RSpec.describe Operations::Approvals::ApproveAll do
     expect(ticket.reload.fully_approved?).to be(true)
     expect(ticket.approval_actor).to eq(user)
   end
+
+  it 'picks the newest option per multi-option slot, marking the rest not_selected' do
+    older = c1
+    newer = Creative.create!(workspace: ws, ticket: ticket, creative_type: 'carousel', status: :ready)
+    described_class.call(ticket: ticket, actor: user)
+    expect(newer.reload.approval_state).to eq('approved')
+    expect(older.reload.approval_state).to eq('not_selected')
+    expect(ticket.reload.fully_approved?).to be(true)
+  end
 end
