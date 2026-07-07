@@ -38,8 +38,29 @@ module Controllers
             channels: ticket.channels,
             creative_types: ticket.creative_types_list,
             scheduled_at: ticket.scheduled_at&.iso8601,
-            creatives: serialize_collection(ticket.approvable_creatives, CreativeSerializer)
+            slots: ticket.approval_slots.map { |type, options| slot_payload(type, options) }
           }
+        end
+
+        # A media-type slot: its label, derived decision state, the chosen winner (if
+        # any), and the candidate options (each carrying its position for the UI).
+        def slot_payload(creative_type, options)
+          {
+            creative_type: creative_type,
+            label: ::Creatives.spec_for(creative_type)&.dig(:label) || creative_type,
+            state: slot_state(options),
+            chosen_creative_id: options.find(&:approval_approved?)&.id,
+            options: options.each_with_index.map do |creative, index|
+              serialize(creative, CreativeSerializer).merge(option_index: index, option_count: options.size)
+            end
+          }
+        end
+
+        def slot_state(options)
+          return 'changes_requested' if options.any?(&:approval_changes_requested?)
+          return 'approved' if options.any?(&:approval_approved?)
+
+          'pending'
         end
 
         def logo_url(ws)

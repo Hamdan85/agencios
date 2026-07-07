@@ -18,7 +18,7 @@ RSpec.describe 'Public client approval portal', type: :request do
     t
   end
 
-  it 'lists only the tickets awaiting this client’s approval' do
+  it 'lists pending tickets as scope + media-type slots with named options' do
     pending = pending_ticket
     approved = Ticket.create!(workspace: ws, project: project, status: :production, approval_requested_at: Time.current)
     Creative.create!(workspace: ws, ticket: approved, creative_type: 'carousel', status: :ready, approval_state: 'approved')
@@ -30,11 +30,18 @@ RSpec.describe 'Public client approval portal', type: :request do
     expect(body['agency']['name']).to eq('Studio')
     ids = body['tickets'].map { |t| t['id'] }
     expect(ids).to eq([pending.id])
+    slot = body['tickets'].first['slots'].first
+    expect(slot['creative_type']).to eq('carousel')
+    expect(slot['label']).to eq('Carrossel')
+    expect(slot['state']).to eq('pending')
+    expect(slot['options'].first['option_count']).to eq(1)
   end
 
-  it 'approves a ticket and drops it from the returned queue' do
+  it 'approves a slot (choosing the winner) and drops the ticket from the queue' do
     ticket = pending_ticket
-    post "/api/v1/public/client_approvals/#{client.approval_token!}/tickets/#{ticket.id}/approve"
+    creative = ticket.creatives.first
+    post "/api/v1/public/client_approvals/#{client.approval_token!}/tickets/#{ticket.id}/approve",
+         params: { creative_type: 'carousel', creative_id: creative.id }, as: :json
     body = JSON.parse(response.body)
 
     expect(response).to have_http_status(:ok)
