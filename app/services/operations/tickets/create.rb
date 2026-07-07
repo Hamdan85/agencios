@@ -18,7 +18,7 @@ module Operations
         ensure_client_active!(project.client)
 
         channels = Array(@params[:channels]).compact_blank
-        types = Array(@params[:creative_types].presence || @params[:creative_type]).map(&:to_s).compact_blank
+        types = Array(@params[:creative_types].presence || @params[:creative_type]).map(&:to_s).compact_blank.uniq
 
         ticket = Ticket.new(
           workspace: @workspace,

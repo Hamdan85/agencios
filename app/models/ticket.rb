@@ -139,7 +139,10 @@ class Ticket < ApplicationRecord
   def creative_types_list
     list = Array(fields_for('scoping')['creative_types']).map(&:to_s).compact_blank
     list = Array(creative_types).map(&:to_s).compact_blank if list.blank?
-    list.presence || Array(creative_type).map(&:to_s).compact_blank
+    list = Array(creative_type).map(&:to_s).compact_blank if list.blank?
+    # De-dup at the read choke point so a duplicate type (the GO "two identical
+    # creatives" bug) never produces duplicate generations — fixes legacy data too.
+    list.uniq
   end
 
   # A ticket's random, revocable approval-link secret. Lazily minted; stable
