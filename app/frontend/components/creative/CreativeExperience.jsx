@@ -22,22 +22,25 @@ function toAttachments(creative) {
 // Renders a creative in its native form: a swipeable carousel, an inline video
 // player, or an image. Reused by the post-detail page and the client approval
 // page. Click opens the MediaViewer lightbox for zoom.
-export default function CreativeExperience({ creative }) {
+// fit="square" (default) forces a 1:1 stage; fit="height" fills the available
+// height (contain) so a tall reel letterboxes instead of overflowing the deck.
+export default function CreativeExperience({ creative, fit = 'square' }) {
   const [idx, setIdx] = useState(0)
   const [open, setOpen] = useState(false)
   const urls = creative?.asset_urls || []
   const cover = urls[0] || creative?.preview_url
 
+  const stageShape = fit === 'height' ? 'h-full w-full' : 'aspect-square w-full'
   if (!urls.length && !cover) {
-    return <div className="flex aspect-square w-full items-center justify-center rounded-2xl bg-surface-muted text-sm text-ink-muted">Sem prévia</div>
+    return <div className={`flex ${stageShape} items-center justify-center rounded-2xl bg-surface-muted text-sm text-ink-muted`}>Sem prévia</div>
   }
 
   const current = urls[idx] || cover
   const many = urls.length > 1
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl border border-border bg-black/[0.03]">
-      <div className="relative flex aspect-square w-full items-center justify-center">
+    <div className={`relative overflow-hidden rounded-2xl border border-border bg-black/[0.03] ${fit === 'height' ? 'h-full w-full' : 'w-full'}`}>
+      <div className={`relative flex ${stageShape} items-center justify-center`}>
         {isVideoUrl(current) ? (
           <video src={current} controls playsInline className="size-full object-contain" />
         ) : (

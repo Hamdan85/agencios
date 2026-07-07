@@ -186,8 +186,11 @@ export const projectsApi = {
 // Per-client approval portal: one link → the client's queue of pending tickets.
 export const approvalsApi = {
   get: (token) => api.get(`/public/client_approvals/${token}`),
-  approveTicket: (token, ticketId) =>
-    api.post(`/public/client_approvals/${token}/tickets/${ticketId}/approve`),
+  // Approve one media-type slot, choosing the winning option.
+  approveSlot: (token, ticketId, { creativeType, creativeId }) =>
+    api.post(`/public/client_approvals/${token}/tickets/${ticketId}/approve`, {
+      creative_type: creativeType, creative_id: creativeId,
+    }),
   requestChanges: (token, ticketId, { creativeId, feedback }) =>
     api.post(`/public/client_approvals/${token}/tickets/${ticketId}/request_changes`, {
       creative_id: creativeId, feedback,
