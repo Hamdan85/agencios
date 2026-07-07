@@ -14,7 +14,10 @@ module Operations
       def call
         raise Operations::Errors::Invalid, 'A aprovação já foi concluída.' unless @ticket.production?
 
-        @ticket.approvable_creatives.select(&:approval_approved?).each do |creative|
+        # Revert BOTH the approved winners and the not_selected losers so every slot
+        # re-opens exactly as it was before the decision. (approvable_creatives hides
+        # not_selected, so query the raw creatives here.)
+        @ticket.creatives.select { |c| c.approval_approved? || c.approval_not_selected? }.each do |creative|
           creative.update!(approval_state: 'pending', decided_at: nil, reviewed_by: nil)
         end
         Broadcaster.ticket(@ticket, 'approval_updated', decision: 'undone')

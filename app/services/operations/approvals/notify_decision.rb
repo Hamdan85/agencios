@@ -6,16 +6,19 @@ module Operations
     # responsible team member (email + push). Called once per client action
     # (approve a ticket / request changes on a creative), NOT per creative.
     class NotifyDecision < Operations::Base
-      def initialize(ticket:, decision:, actor:, creative: nil, feedback: nil)
+      def initialize(ticket:, decision:, actor:, creative: nil, feedback: nil, history: true)
         @ticket = ticket
         @decision = decision.to_s
         @actor = actor
         @creative = creative
         @feedback = feedback
+        @history = history
       end
 
       def call
-        Operations::Notes::Create.call(ticket: @ticket, user: nil, kind: :system, body: note_body)
+        # `history: false` when the caller already wrote a granular note (e.g. a
+        # per-slot approval) and only needs the responsible-user notification.
+        Operations::Notes::Create.call(ticket: @ticket, user: nil, kind: :system, body: note_body) if @history
         notify_responsible
         @ticket
       end
