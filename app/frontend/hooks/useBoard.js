@@ -3,6 +3,7 @@ import { boardApi, ticketsApi } from '@/api'
 import { keys } from '@/api/queryKeys'
 import { toast } from 'sonner'
 import analytics, { EVENTS } from '@/lib/analytics'
+import { invalidateTicketSurfaces } from './data/shared'
 
 export function useBoard(filters = {}) {
   return useQuery({
@@ -17,7 +18,7 @@ export function useBoard(filters = {}) {
 
 export function useBoardMutations(filters = {}) {
   const qc = useQueryClient()
-  const invalidate = () => qc.invalidateQueries({ queryKey: ['board'] })
+  const invalidate = () => invalidateTicketSurfaces(qc)
 
   const advance = useMutation({
     mutationFn: ({ id, toStatus, position }) => ticketsApi.advance(id, toStatus, position),
@@ -35,9 +36,8 @@ export function useBoardMutations(filters = {}) {
   const create = useMutation({
     mutationFn: (data) => ticketsApi.create(data),
     onSuccess: () => {
-      invalidate()
-      // The hub's list view reads the global tickets list, not the board.
-      qc.invalidateQueries({ queryKey: ['tickets'] })
+      // The hub's list view reads the global tickets list, not just the board.
+      invalidateTicketSurfaces(qc, { ticketsList: true })
       analytics.track(EVENTS.TICKET_CREATED)
       toast.success('Ticket criado!')
     },
