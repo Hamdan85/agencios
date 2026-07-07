@@ -21,7 +21,11 @@ module Api
         private
 
         def resolve_client!
-          @client = Client.find_by(approval_token: params[:token].to_s)
+          token = params[:token].to_s
+          # Per-client token (current). Fall back to a legacy per-TICKET token so
+          # links sent before the per-client migration still open the client portal.
+          @client = Client.find_by(approval_token: token) ||
+                    Ticket.find_by(approval_token: token)&.project&.client
           raise ActiveRecord::RecordNotFound, 'Link inválido ou expirado.' unless @client
 
           Current.workspace = @client.workspace

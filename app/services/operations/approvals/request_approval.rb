@@ -11,9 +11,14 @@ module Operations
       end
 
       def call
-        # The public link is per-client (minted in ApprovalMailer); the ticket only
-        # needs to be flagged as awaiting approval so it appears in the client queue.
+        # Guarantee the per-client portal token exists so the emailed link always
+        # resolves (independent of the async mailer / whether the client has e-mail).
+        @ticket.project.client&.approval_token!
         @ticket.update!(approval_requested_at: Time.current)
+        # Re-requesting approval reopens the pieces the client had rejected: flip
+        # their changes_requested back to pending so they reappear in the portal
+        # queue awaiting a fresh decision. Approved winners stay approved.
+        reopen_rejected_creatives
 
         recipients = self.class.recipients_for(@ticket)
         if recipients.any?
@@ -30,6 +35,14 @@ module Operations
       # The client's registered email (recipients are not a project setting).
       def self.recipients_for(ticket)
         Array(ticket.project.client&.email).map(&:to_s).compact_blank.uniq
+      end
+
+      private
+
+      def reopen_rejected_creatives
+        @ticket.approvable_creatives.select(&:approval_changes_requested?).each do |creative|
+          creative.update!(approval_state: 'pending', decided_at: nil, reviewed_by: nil, client_feedback: nil)
+        end
       end
     end
   end
