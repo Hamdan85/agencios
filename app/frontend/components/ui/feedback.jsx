@@ -1,5 +1,6 @@
 import { Wand2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { IconTile } from '@/components/ui/icon-tile'
 
 export function Spinner({ size = 22, className }) {
   return (
@@ -55,11 +56,7 @@ export function AiRewritingOverlay({ active = false, label = 'Reescrevendo com I
 export function EmptyState({ icon: Icon, title, description, action, color = '#7C3AED' }) {
   return (
     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-surface/60 px-6 py-16 text-center">
-      {Icon && (
-        <div className="mb-4 flex size-16 items-center justify-center rounded-2xl" style={{ background: `${color}14`, color }}>
-          <Icon size={30} strokeWidth={2} />
-        </div>
-      )}
+      {Icon && <IconTile icon={Icon} color={color} size="lg" tint="14" className="mb-4" />}
       <h3 className="font-display text-lg font-bold text-ink">{title}</h3>
       {description && <p className="mt-1 max-w-sm text-sm text-ink-muted">{description}</p>}
       {action && <div className="mt-5">{action}</div>}
