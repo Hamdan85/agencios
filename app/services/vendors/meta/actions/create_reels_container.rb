@@ -5,7 +5,7 @@ module Vendors
     module Actions
       # IG Reels container — POST /{ig_user_id}/media with media_type=REELS
       # (instagram.md §6c). Mode A: hosted video_url. Mode B: upload_type=resumable
-      # (returns an `uri` to PUT raw bytes via UploadResumableVideo).
+      # (returns an `uri` to PUT raw bytes via UploadReelBinary).
       # Returns { "id" => creation_id } (+ "uri" in resumable mode).
       class CreateReelsContainer
         def self.call(...) = new(...).call
