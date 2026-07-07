@@ -115,7 +115,7 @@ export default function ApprovalShow() {
             </aside>
           )}
           <div className="flex min-h-0 flex-1 items-stretch justify-center p-3">
-            <div className="flex h-full w-full max-w-2xl flex-col">{card}</div>
+            <div className="flex h-full w-full max-w-5xl flex-col">{card}</div>
           </div>
         </div>
       ) : (
