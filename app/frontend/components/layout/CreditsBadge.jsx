@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import { Coins, Infinity as InfinityIcon } from 'lucide-react'
 import { useCurrentUser } from '@/hooks/useAuth'
+import { SectionLabel } from '@/components/ui/section-label'
+import { num } from '@/lib/formatters'
 
 // Compact wallet indicator in the sidebar. Reads the balance off `/me`
 // (workspace.credits_available) so it's always fresh with the session, and
@@ -29,9 +31,9 @@ export default function CreditsBadge({ onNavigate }) {
         <Coins size={15} strokeWidth={2.3} />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[10px] font-bold uppercase tracking-[0.14em] text-white/40">Créditos</span>
+        <SectionLabel as="span" className="block text-[10px] text-white/40">Créditos</SectionLabel>
         <span className={low ? 'block text-sm font-extrabold text-[#FDA4AF]' : 'block text-sm font-extrabold text-white'}>
-          {unlimited ? <InfinityIcon size={16} className="inline align-[-2px]" /> : value.toLocaleString('pt-BR')}
+          {unlimited ? <InfinityIcon size={16} className="inline align-[-2px]" /> : num(value)}
         </span>
       </span>
     </Link>

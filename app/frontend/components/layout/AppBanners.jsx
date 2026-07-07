@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Download, Bell, Share, X } from 'lucide-react'
+import { Download, Bell, Share } from 'lucide-react'
 import { useCurrentUser } from '@/hooks/useAuth'
 import { pushApi } from '@/api'
 import { Button } from '@/components/ui/button'
+import { IconTile } from '@/components/ui/icon-tile'
 
 // Web Push applicationServerKey must be a Uint8Array; the VAPID public key is
 // delivered as a base64url string.
@@ -34,9 +35,7 @@ function BannerCard({ icon: Icon, color, title, children, actions }) {
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
       <div className="animate-rise pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-[0_18px_50px_-12px_rgba(17,10,36,0.35)]">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl" style={{ background: `${color}16`, color }}>
-          <Icon size={20} strokeWidth={2.2} />
-        </span>
+        <IconTile icon={Icon} color={color} size="sm" className="size-10" iconSize={20} />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-bold text-ink">{title}</p>
           <div className="mt-0.5 text-[13px] leading-snug text-ink-muted">{children}</div>
