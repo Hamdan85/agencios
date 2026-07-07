@@ -48,8 +48,9 @@ shell and a few public pages.
 └──────────────┘          │ external APIs
                           ▼
    Meta (IG/FB) · Threads · TikTok · YouTube · LinkedIn · X
-   HeyGen / HyperFrames (video) · image model (carousels/images)
-   Google Calendar/Meet · Mercado Pago (client billing) · Stripe (SaaS billing) · Anthropic
+   OpenRouter (text AI + video render) · Anthropic (text fallback) · Google Banana (image)
+   Cartesia (voice) · Jamendo/Epidemic Sound (music) · Pexels (stock) · FFmpeg (compose)
+   Google Calendar/Meet · Mercado Pago (client billing) · Stripe (SaaS billing)
 ```
 
 **Request lifecycle.** A browser request hits a thin Rails controller, which calls exactly one
@@ -58,7 +59,9 @@ shell and a few public pages.
 `Operations::*` service. Operations own all side effects and are the only things Sidekiq jobs and
 webhook handlers call. Anything touching a third party goes through a `Vendors::*` wrapper;
 anything publishing to a social network goes through the `Publishers::SocialPublisher` seam;
-anything generating AI text goes through `Prompts::*` + `Vendors::Anthropic`.
+anything generating AI text goes through `Prompts::*` + `AiAdapter`, which resolves the provider
+via `Vendors::Ai` (OpenRouter by default, Anthropic as the selectable fallback — admin-editable
+per operation in `AiConfig`) and logs every call's cost to the `AiUsageLog` ledger.
 
 **Tenancy.** `Workspace` is the tenant root. A `User` belongs to many workspaces via `Membership`.
 The active workspace is resolved per request from the session into `Current` (`Current.workspace`,
@@ -78,12 +81,13 @@ stay live without polling.
 
 ```
 app/
-├── adapters/            # AiAdapter (Anthropic facade) + thin cross-cutting facades
-├── channels/            # ApplicationCable + TicketChannel, BoardChannel, GenerationsChannel
+├── adapters/            # AiAdapter (provider-agnostic text-AI facade over Vendors::Ai)
+├── channels/            # ApplicationCable + Ticket/Board/Generations/Strategy channels
 ├── controllers/
 │   ├── api/v1/          # thin REST controllers (English resource names)
-│   ├── auth/            # OAuth callbacks (Google, social networks, Mercado Pago, Stripe)
-│   ├── webhooks/        # Stripe, Mercado Pago, Meta, TikTok, HeyGen, …
+│   ├── auth/            # OAuth callbacks (Google, social networks)
+│   ├── mcp/             # Claude MCP connector endpoints (tokenized, per-user)
+│   ├── webhooks/        # Stripe, Mercado Pago, Meta-family (social)
 │   └── concerns/        # authentication (session + tenancy resolution)
 ├── frontend/            # React 19 SPA (pages, components, hooks, api, lib) — Portuguese routes
 ├── jobs/                # Sidekiq jobs → Operations::*
@@ -96,7 +100,9 @@ app/
     ├── vendors/         # third-party API wrappers (Client + Actions::*)
     ├── publishers/      # SocialPublisher (per-network direct vendor routing)
     ├── creatives/       # creative-type specs/registry (mirrors a template registry)
-    └── prompts/         # AI prompt builders (status-aware ticket summary, captions, …)
+    ├── prompts/         # AI prompt builders (status-aware ticket summary, storyboard, …)
+    ├── mcp/             # Claude MCP server (registry, dispatcher, tools, audit)
+    └── tickets/         # ticket field/filters/creative-context helpers
 config/                  # routes.rb, sidekiq.yml, schedule.yml (cron), cable.yml, credentials/
 docs/                    # ARCHITECTURE.md, SPECIFICATION.md, integrations/*
 ```
@@ -123,9 +129,9 @@ docs/                    # ARCHITECTURE.md, SPECIFICATION.md, integrations/*
 | Serialization | **active_model_serializers** | ISO 8601 dates, money in cents |
 | HTTP clients | **Faraday** (+retry) / **HTTParty**; **oj** | vendor wrappers |
 | Pagination | **pagy** | |
-| AI — text | **Anthropic Claude** | summaries, scope, captions, retrospectives |
-| AI — video | **HeyGen** + **HyperFrames** | UGC / avatar talking-head; metered |
-| AI — image/carousel | image model (e.g. Ideogram/Replicate/OpenAI images) | viral carousel generator + images; carousels metered |
+| AI — text | **OpenRouter** (default) / **Anthropic** (fallback) via the `Vendors::Ai` seam | provider + per-operation models admin-editable in `AiConfig`; costs in `AiUsageLog` |
+| AI — video | **OpenRouter** scene pipeline (storyboard → per-scene render → FFmpeg compose) | + **Cartesia** voice, **Jamendo/Epidemic Sound** music; engines per mode in `VideoConfig`; prepaid credits |
+| AI — image/carousel | **Google Banana** (Imagen 3) | viral carousel generator (in-plan) + images (1 credit); **Pexels** stock support |
 | Social | Meta Graph (IG/FB), Threads, TikTok, YouTube, LinkedIn, X | direct integration per network |
 | Calendar | **Google Calendar/Meet** | `google-apis-calendar_v3`, `google-apis-meet_v2` |
 | Client billing | **Mercado Pago** | Pix-first; boleto/card; webhooks |
@@ -184,21 +190,27 @@ drag-to-reschedule. **Subtasks** of tickets are aggregated per user into the **M
 
 **Creatives.** A ticket's creative has a `creative_type` that *is* the spec (registry under
 `app/services/creatives/`). Whenever a type is generatable, the system can produce it in-app:
-- **UGC video** — HeyGen (avatar + script) or HyperFrames; async render → webhook/poll.
+- **UGC video** — scene-based pipeline (`Operations::Video::*`): AI storyboard
+  (`Prompts::VideoStoryboard`) → per-scene render via OpenRouter (engine per mode in
+  `VideoConfig`) with frame continuity → Cartesia voice + licensed music → FFmpeg compose.
+  Editable scene-by-scene in the video editor (conversational chat + assets tab).
 - **Carousel** — viral-pattern generator using brand identity, @handle, the user/creator avatar,
   and optional stock imagery + AI-written copy.
-- **Image** — image model.
-Every generation creates a `Generation` row; **carousel and video generations are the usage-based
-billing meters**.
+- **Image** — Google Banana (Imagen 3).
+Every generation creates a `Generation` row and is charged in **prepaid credits** at request time
+(video cost-based with true-up at compose; image flat; carousel included in the plan).
 
 **Money flows are separate.** SaaS billing (Stripe) charges the workspace; client billing (Mercado
 Pago) is the agency charging its clients. Never mix.
 
 **Pricing.**
 - *Subscription tiers (per workspace):* **Solo** (1 seat), **Agência** (5–20 seats), **Enterprise**
-  (20+ seats). Seat count = `memberships.count`.
-- *Usage-based (Stripe Billing Meters):* `carousel_generation` and `video_generation`, metered on
-  completion, idempotent on the generation id.
+  (20+ seats). Seat count = `memberships.count`; no free tier — card-required 7-day trial.
+- *Usage (prepaid credits):* video and image generations debit a per-workspace credit wallet
+  (`CreditWallet`/`CreditTransaction` via `Operations::Credits::*`); credits are cost-plus over the
+  real vendor cost (see [`pricing-model.md`](./pricing-model.md)). Carousels are included in the
+  plan (0 credits). Credit packs are sold through Stripe checkout; `workspaces.godfathered`
+  bypasses billing.
 
 **Non-negotiable code rules** (same spirit as adv-os): controllers are thin; all logic in services;
 `.call` everywhere; no AR callbacks for side effects; never `create!` another entity inside a
@@ -218,17 +230,25 @@ business logic. Namespaced to mirror controllers: `Tickets::Create`, `Board::Ind
 `Webhooks::*`. Base: `Controllers::Base` (exposes `serialize` / `serialize_collection`).
 
 **`Operations::*`** — domain operations; own every side effect; called by jobs, webhooks, other
-operations. Sub-namespaces by entity: `Tickets`, `Subtasks`, `Projects`, `Clients`, `Creatives`,
-`Posts`, `Social`, `Meetings`, `Invoices`, `Billing`, `Ai`. Base: `Operations::Base`. Canonical
-ones: `Tickets::ChangeStatus`, `Tickets::Create`, `Tickets::SummarizeTicket`,
-`Creatives::GenerateUgcVideo` / `GenerateCarousel` / `GenerateImage`, `Posts::Publish` /
-`SyncMetrics`, `Social::ConnectAccount` / `RefreshToken`, `Meetings::SyncToCalendar`,
-`Invoices::Create`, `Billing::RecordUsage` / `SyncSubscription`.
+operations. Sub-namespaces by domain: `Tickets`, `Subtasks`, `Projects`, `Clients`, `Creatives`,
+`Posts`, `Social`, `Meetings`, `Invoices`, `Billing`, `Ai`, `Video` (scene pipeline), `Autopilot`
+(GO mode — tickets walk themselves), `Strategy` (the Estrategista planning chat), `Credits`
+(prepaid wallet), `Approvals` (client approval portal), plus `Analytics`, `Attachments`,
+`BrandAssets`, `Digests`, `Generations`, `Notes`, `Push`, `Reports`, `Scheduling`, `Users`,
+`Workspaces`. Base: `Operations::Base`. Canonical ones: `Tickets::ChangeStatus`,
+`Tickets::Create`, `Ai::SummarizeTicket`, `Creatives::GenerateUgcVideo` /
+`GenerateViralCarousel` / `GenerateImage`, `Video::PlanScenes` / `RenderScene` / `Compose`,
+`Posts::Publish` / `SyncMetrics`, `Social::ConnectAccount` / `RefreshToken`,
+`Meetings::SyncToCalendar`, `Invoices::Create`, `Credits::Debit` / `Refund` / `Grant`,
+`Billing::SyncSubscription` / `ReconcileSeats`.
 
 **`Vendors::*`** — third-party wrappers, one `Client` + `Actions::*` per vendor, all external
-knowledge isolated here and documented in `docs/integrations/`. Vendors: `Meta`, `Threads`, `TikTok`,
-`Youtube`, `Linkedin`, `X`, `Heygen`, `Hyperframes`, the image vendor, `MercadoPago`,
-`Stripe`, `Google`, `Anthropic`.
+knowledge isolated here and documented in `docs/integrations/`. Social: `Meta`, `InstagramLogin`,
+`Threads`, `TikTok`, `Youtube`, `Linkedin`, `X`. AI/media: `Ai` (the provider seam),
+`OpenRouter` (text + video), `Anthropic`, `Google::Banana` (image), `Cartesia` (voice),
+`Jamendo` + `EpidemicSound` behind `Vendors::Music`, `Pexels` (stock), `Ffmpeg` (frames/concat).
+Money: `MercadoPago`, `Stripe`. Platform: `Google` (OAuth/Calendar), `WebPush`, `Posthog`,
+`Web` (URL reader), `Render` (HTML render).
 
 **`Publishers::*`** — `SocialPublisher`, the single publish interface; routes each network to its
 direct vendor. Every network integrates directly.
@@ -236,16 +256,25 @@ direct vendor. Every network integrates directly.
 **`Creatives::*`** — creative-type spec classes (`.type_key`, `.spec`) + registry
 (`app/services/creatives.rb`). Mirrors adv-os's `Petitions::*` registry.
 
-**`Prompts::*`** — stateless AI prompt builders, each with `#system`: `TicketSummary` (status-aware),
-`IdeaSynthesis`, `ScopeBuilder`, `CaptionWriter`, `CarouselCopy`, `Retrospective`, `BestTimeToPost`.
+**`Prompts::*`** — stateless AI prompt builders, each with `#system`: `TicketSummary`
+(status-aware), `ScopeBuilder`, `FieldFill`, `CarouselCopy`, `Retrospective`, `StrategyPlanner`,
+`VideoStoryboard`, `VideoEditor`, `VideoPromptImprover`, `ClientPositioning`,
+`ClientFromLandingPage`, `ProjectAudit`.
+
+**`Mcp::*`** — the Claude MCP connector server (`registry`, `dispatcher`, `catalog`, `tools/*`,
+`call_audit`): per-user tokenized endpoint exposing workspace operations as MCP tools (see
+`docs/integrations/claude-mcp.md`).
 
 **Models** hold associations, enums, scopes, validations, and pure derivations only — never side
 effects. **Jobs** are thin and delegate to `Operations::*`. **Serializers** emit ISO dates + cents.
 **Channels** authorize via the session/workspace and `stream_from` the per-entity channel.
 
-**Frontend** mirrors this on the client: `pages/` per domain, `components/{board,ticket,creative,
-layout,ui}`, `hooks/` wrapping TanStack Query (+ `useTicketChannel`/`useBoardChannel` for live
-updates), `api/resources/` thin axios wrappers, `lib/` (formatters, cable bridge, analytics facade).
+**Frontend** mirrors this on the client: `pages/` per domain (the board lives inside the tickets
+hub — `pages/Tickets/views/BoardView.jsx`; `/quadro` redirects), `components/` per domain +
+`components/ui/` primitives (buttons, dialogs, badges, icon tiles, filter bars, feedback states…),
+`hooks/` wrapping TanStack Query — domain hooks under `hooks/data/*` re-exported by `useData.js`,
+real-time channel hooks in `useRealtime.js` — and `api/index.js` thin axios wrappers, `lib/`
+(formatters, cable bridge, analytics facade).
 
 **Calling convention** (who calls what): controller → `Controllers::*`; job → `Operations::*`;
 webhook → `Controllers::Webhooks::*` → `Operations::*`; operation → `Vendors::*::Actions::*` /
@@ -310,8 +339,8 @@ their day-to-day (that is the SPA).
 - **Subscriptions** — view Stripe linkage; override plan/seats, grant comped access, end trials;
   read-only invoice history.
 - **Generations (usage audit)** — every `carousel`/`video`/`image` generation with cost, provider,
-  and whether it was metered to Stripe; **grant manual usage credits** and re-drive a failed
-  meter event.
+  and the credits it debited; **grant manual credits** (`Operations::Credits::Grant`) and audit
+  spend via `AiUsageLog` / `CreditTransaction`.
 - **SocialAccounts (integration health)** — per-workspace connected networks, token expiry, last
   successful publish/sync; flag accounts needing re-auth.
 - **Posts & Invoices** — cross-workspace operational visibility for support; re-trigger a metric

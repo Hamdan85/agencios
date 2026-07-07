@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 > (each project belongs to a client), **tickets** (the unit of agency work, moving through a content
 > production funnel), **meetings** (Google Calendar), and **billing** (the agency invoicing its
 > clients via Mercado Pago). The platform itself is billed to the workspace via Stripe
-> (subscription tiers + usage-based metering on creative generation).
+> (subscription tiers + prepaid credits for video/image generation).
 >
 > Read `docs/ARCHITECTURE.md` for the high-level map and `docs/SPECIFICATION.md` for the full,
 > buildable specification. Per-network integration playbooks live in `docs/integrations/`.
@@ -79,8 +79,11 @@ EDITOR=nano bin/rails credentials:edit
 - React Hook Form + Zod for forms. Radix UI primitives. `lucide-react` icons.
 - `@dnd-kit` (or equivalent) for the drag-and-drop Kanban board.
 - Tiptap for rich-text fields (briefs, scripts, captions, retrospectives).
-- AI: Anthropic Claude (summaries, captions, scope, retrospectives). Creative generation vendors:
-  HeyGen + HyperFrames (video), **Google Banana** (Imagen 3 via Google AI API — carousels + images).
+- AI text: **OpenRouter** by default, **Anthropic** as selectable fallback — both behind the
+  `Vendors::Ai` seam + `AiAdapter` facade (provider/models admin-editable in `AiConfig`; every
+  call's cost logged to `AiUsageLog`). Creative generation: **OpenRouter video** (scene-based
+  pipeline with Cartesia voice, Jamendo/Epidemic Sound music, FFmpeg compose), **Google Banana**
+  (Imagen 3 via Google AI API — carousels + images), **Pexels** stock imagery.
 
 ## Secrets
 
@@ -92,7 +95,7 @@ Never put API keys, tokens, or passwords in `.env`.
 
 Per-workspace integration tokens (social OAuth, Mercado Pago) are stored **encrypted on database
 models** (`SocialAccount`, `Setting`) via `encrypts`, NOT in credentials. App-level API keys
-(Meta app secret, Stripe secret, HeyGen key, Anthropic key) go in credentials. See
+(Meta app secret, Stripe secret, OpenRouter/Anthropic keys) go in credentials. See
 `docs/integrations/*` for the exact key per vendor.
 
 ## Database
@@ -159,10 +162,15 @@ or raise. Mirror the controller namespace: `Tickets::Create`, `Tickets::Show`, `
 Called by Sidekiq jobs, webhooks, or other operations. No HTTP concerns. Own the side effects:
 DB writes, emails, external API calls, broadcasts.
 
-Sub-namespaces follow the domain entity:
+Sub-namespaces follow the domain:
 `Operations::Tickets::*`, `Operations::Projects::*`, `Operations::Clients::*`,
 `Operations::Creatives::*`, `Operations::Posts::*`, `Operations::Social::*`,
-`Operations::Meetings::*`, `Operations::Billing::*`, `Operations::Invoices::*`, `Operations::Ai::*`.
+`Operations::Meetings::*`, `Operations::Billing::*`, `Operations::Invoices::*`,
+`Operations::Ai::*`, `Operations::Video::*` (scene pipeline), `Operations::Autopilot::*`
+(GO mode), `Operations::Strategy::*` (Estrategista chat), `Operations::Credits::*` (prepaid
+wallet), `Operations::Approvals::*` (client approval portal), plus `Analytics`, `Attachments`,
+`BrandAssets`, `Digests`, `Generations`, `Notes`, `Push`, `Reports`, `Scheduling`, `Subtasks`,
+`Users`, `Workspaces`.
 
 - Base class: `Operations::Base`
 
@@ -172,9 +180,12 @@ Isolate all external API knowledge here. Each vendor has a `Client` class that w
 calls, and discrete `Actions::*` classes that delegate to the client. Each integration's exact
 endpoints, scopes, and OAuth flow are documented in `docs/integrations/<vendor>.md`.
 
-Current vendors: `Meta` (Instagram + Facebook), `Threads`, `TikTok`, `Youtube`, `Linkedin`, `X`,
-`Heygen` + `Hyperframes` (video), an image generator,
-`MercadoPago` (client billing), `Stripe` (SaaS billing), `Google` (Calendar/Meet), `Anthropic`.
+Current vendors — social: `Meta` (Instagram + Facebook), `InstagramLogin`, `Threads`, `TikTok`,
+`Youtube`, `Linkedin`, `X`. AI/media: `Ai` (the provider seam), `OpenRouter` (text + video),
+`Anthropic`, `Google::Banana` (image), `Cartesia` (voice), `Jamendo`/`EpidemicSound` behind
+`Vendors::Music`, `Pexels` (stock), `Ffmpeg`. Money: `MercadoPago` (client billing), `Stripe`
+(SaaS billing). Platform: `Google` (OAuth/Calendar), `WebPush`, `Posthog`, `Web` (URL reader),
+`Render` (HTML render).
 
 ```ruby
 Vendors::Meta::Client.new(social_account).publish_media(...)   # low-level
@@ -203,8 +214,9 @@ Stateless value objects. Each exposes `#system` returning the system prompt stri
 from `Current.workspace` settings (agency name, brand voice).
 
 Classes: `TicketSummary` (status-aware — produces the contextual summary per state),
-`IdeaSynthesis`, `ScopeBuilder`, `CaptionWriter`, `CarouselCopy`, `Retrospective`,
-`BestTimeToPost`. Base class: `Prompts::Base`.
+`ScopeBuilder`, `FieldFill`, `CarouselCopy`, `Retrospective`, `StrategyPlanner`,
+`VideoStoryboard`, `VideoEditor`, `VideoPromptImprover`, `ClientPositioning`,
+`ClientFromLandingPage`, `ProjectAudit`. Base class: `Prompts::Base`.
 
 ### Calling convention summary
 
@@ -215,8 +227,8 @@ Classes: `TicketSummary` (status-aware — produces the contextual summary per s
 | Webhook handler | `Controllers::Webhooks::*` → `Operations::*` |
 | Operation needing external API | `Vendors::*::Actions::*` |
 | Operation publishing a post | `Publishers::SocialPublisher` |
-| Operation generating AI text | `Prompts::*` + `Vendors::Anthropic::*` |
-| Operation generating a creative | `Operations::Creatives::*` + `Vendors::Heygen` (video) / `Vendors::Google::Banana` (image) |
+| Operation generating AI text | `Prompts::*` + `AiAdapter` (→ `Vendors::Ai` → OpenRouter \| Anthropic) |
+| Operation generating a creative | `Operations::Creatives::*` (+ `Operations::Video::*` for video) / `Vendors::Google::Banana` (image) |
 
 Controllers must not contain business logic: no status transitions, no metric writes, no
 side-effect orchestration. If it belongs in a service, create one.
@@ -263,15 +275,15 @@ screen (`/tarefas`) across all tickets/workspaces.
 
 **Creative** — `belongs_to :ticket`. A creative has a `creative_type` (registry key, acts as the
 spec) and a `source`: `uploaded` or `generated`. Generatable types route to a generation pipeline:
-`ugc_video` (HeyGen / HyperFrames), `carousel` (viral-pattern generator: brand identity, @handle,
-user avatar, optional stock imagery), `image` (Google Banana / Imagen 3). Holds ActiveStorage attachments +
-`metadata` jsonb.
+`ugc_video` (scene-based OpenRouter pipeline — see `Operations::Video::*` + `VideoScene`),
+`carousel` (viral-pattern generator: brand identity, @handle, user avatar, optional stock
+imagery), `image` (Google Banana / Imagen 3). Holds ActiveStorage attachments + `metadata` jsonb.
 
 **Generation** — `belongs_to :workspace, :user`; optional `belongs_to :creative`. `kind`:
-`carousel` / `video` / `image`. `status`, `provider`, `cost_cents`, `metered_at`. **`carousel` and
-`video` generations are the usage-based billing meters** — on completion `Operations::Billing::
-RecordUsage` emits a Stripe meter event (idempotent on the generation id). Image generation is
-tracked but (currently) not metered.
+`carousel` / `video` / `image`. `status`, `provider`, `cost_cents`. **Customer billing is prepaid
+credits**: `video` (cost-based estimate at request, trued-up at compose) and `image` (flat) debit
+the wallet via `Operations::Credits::Debit`; `carousel` is included in the plan (0 credits).
+`cost_cents` records the real vendor cost; the internal cost trail lives in `AiUsageLog`.
 
 **SocialAccount** — `belongs_to :workspace`. `provider` enum (`instagram`, `facebook`, `threads`,
 `tiktok`, `youtube`, `linkedin`, `x`). Encrypted OAuth tokens + external account ids. The
@@ -300,7 +312,8 @@ calendar view alongside scheduled posts.
 
 **Subscription** — `belongs_to :workspace`. The agency's own SaaS plan. `plan`
 (`solo` / `agencia` / `enterprise`), `stripe_customer_id`, `stripe_subscription_id`, seat quantity,
-trial/cancellation state. Drives feature/seat gating + usage metering.
+trial/cancellation state. Drives feature/seat gating; generation usage is charged from the
+workspace's prepaid `CreditWallet` (see `Pricing` + `docs/pricing-model.md`).
 
 **Setting** — one per workspace (`belongs_to :workspace`). Brand identity (agency name, brand
 voice/tone, default @handle, brand colors, logo, default creator avatar for UGC/carousels) +
@@ -313,33 +326,49 @@ Mercado Pago (`mercadopago_access_token`, `mercadopago_user_id`). Social tokens 
 **`SocialPublisher`** (`app/services/publishers/social_publisher.rb`) — the one way to publish a
 `Post`. Routes per network to its direct vendor; reads tokens from `SocialAccount`.
 
-**`AiAdapter`** (`app/adapters/ai_adapter.rb`) — wraps Anthropic for ticket summaries, idea
-synthesis, scope building, caption writing, and retrospectives. Used by `SummarizeTicketJob`,
-`GenerateCaptionsJob`, and the contextual ticket view.
+**`AiAdapter`** (`app/adapters/ai_adapter.rb`) — the provider-agnostic facade over the text-AI
+layer: resolves the client + model per operation via `Vendors::Ai` (OpenRouter default, Anthropic
+fallback; admin-editable in `AiConfig`), supports plain completion, forced-tool JSON output
+(`complete_tool`) and web fetch, and logs every call to `AiUsageLog` via `Operations::Ai::LogUsage`.
+Used by `Operations::Ai::*`, strategy/video chat, and the contextual ticket view.
 
 ## Frontend architecture
 
-**Pages** in `app/frontend/pages/` (one dir per domain: `Board/`, `Calendar/`, `Tickets/`,
-`Projects/`, `Clients/`, `Tasks/`, `Meetings/`, `Invoices/`, `Studio/`, `Settings/`, `Billing/`).
-**Components** in `app/frontend/components/` (`board/`, `ticket/`, `creative/`, `layout/`, `ui/`).
-**Hooks** in `app/frontend/hooks/` wrap TanStack Query: `useBoard`, `useTicket`, `useTickets`,
-`useCalendar`, `useProjects`, `useClients`, `useSubtasks`, `useTicketChannel`, `useSettings`, etc.
-**API** in `app/frontend/api/resources/` — thin axios wrappers. All paths are API paths
-(`/tickets/:id`), never the React Router paths.
+**Pages** in `app/frontend/pages/` (one dir per domain: `Tickets/` — the board/list hub with
+`views/BoardView.jsx` + `views/ListView.jsx`, `Calendar/`, `Projects/`, `Clients/`, `Tasks/`,
+`Meetings/`, `Posts/`, `Reports/`, `Studio/`, `Settings/`, `Billing/`, `Account/`, `Dashboard/`,
+`Approval/` (public client portal), `Auth/`, `Errors/`). There is no `Board/` dir — `/quadro`
+redirects into the tickets hub.
+**Components** in `app/frontend/components/` (`board/`, `ticket/`, `creative/`, `layout/`, `ui/`,
+plus `approval/`, `billing/`, `calendar/`, `client/`, `meeting/`, `posts/`, `project/`, `studio/`).
+**`components/ui/` is the primitives library** — buttons, dialogs, sheets, badges (`Badge`/
+`ColorBadge`), `IconTile`, `SectionLabel`, `MediaThumb`, `CopyButton`, feedback states (`Spinner`,
+`InlineSpinner`, `Skeleton`, `EmptyState`, `PageLoader`), `PageHeader`/`StatCard`, filter bars,
+entity selects, charts. **Always reuse a primitive before hand-rolling markup**; extend the
+primitive (props/className) when a variant is needed.
+**Hooks** in `app/frontend/hooks/`: domain data hooks live under `hooks/data/*` and are re-exported
+by `useData.js` (import from `@/hooks/useData`); `useBoard`/`useTicket` own the board/ticket-drawer
+mutations; channel hooks (`useTicketChannel`, `useBoardChannel`, `useGenerationsChannel`,
+`useStrategyChannel`) live in `useRealtime.js`; plus `useAuth`, `useSelection`, `useUrlState`,
+`useInfiniteScroll`, `useOnlineStatus`, `useStrategy`.
+**API** in `app/frontend/api/index.js` — thin axios `*Api` wrappers over `api/client.js`, query
+keys in `api/queryKeys.js`. All paths are API paths (`/tickets/:id`), never React Router paths.
 
 Real-time: hooks subscribe via `useTicketChannel` / `useBoardChannel`; events (`status_changed`,
 `creative_ready`, `post_published`, `metric_updated`, `summary_ready`, `card_moved`) trigger
 `queryClient.invalidateQueries`.
 
-**The board** (`/quadro`): columns are the 7 statuses; cards are tickets; the project renders as a
-colored chip on each card; cards drag between columns (a drop calls `POST /tickets/:id/advance` →
-`Operations::Tickets::ChangeStatus`). Filters: project, client, assignee, channel, creative type.
+**The board** (`/tickets`, default view; `/quadro` redirects): columns are the 7 statuses; cards
+are tickets; the project renders as a colored chip on each card; cards drag between columns (a
+drop calls `POST /tickets/:id/advance` → `Operations::Tickets::ChangeStatus`). Filters: project,
+client, assignee, channel, creative type.
 
 **The calendar** (`/calendario`): shows scheduled posts (by `scheduled_at`) and meetings; supports
 month/week views and drag-to-reschedule (updates the post / `ChangeStatus` as appropriate).
 
-**Formatters** (`app/frontend/lib/formatters.js`): `dt()`, `shortDt()`, `date()`, `brl()`. Use
-these — never pre-format dates/money on the backend.
+**Formatters** (`app/frontend/lib/formatters.js`): `dt()`, `shortDt()`, `date()`, `brl()`,
+`num()`, `pct()`, `compact()`, `timeAgo()`, `relativeDay()` + the BR input masks. Use these —
+never pre-format dates/money on the backend, never inline `toLocaleString`.
 
 ## Serializers / frontend data
 
@@ -353,24 +382,27 @@ these — never pre-format dates/money on the backend.
    `Operations::Tickets::ChangeStatus` enqueues `SummarizeTicketJob` →
    `Operations::Ai::SummarizeTicket` → `Prompts::TicketSummary` (status-aware system prompt) →
    Claude → writes `ticket.ai_summaries[status]` and broadcasts `summary_ready` on `ticket_<id>`.
-2. **Idea & scope** — in `ideation`/`scoping`, the lawyer-equivalent (the strategist) can ask
-   Claude to synthesize the brief into ideas (`Prompts::IdeaSynthesis`) and turn an idea into a
-   concrete scope + subtask checklist (`Prompts::ScopeBuilder` → creates subtasks via
-   `Operations::Subtasks::Create`).
-3. **Creative generation** — in `production`:
-   - UGC video → `Operations::Creatives::GenerateUgcVideo` → `Vendors::Heygen` (or HyperFrames) →
-     async render → webhook/poll → `Creative` finalized → `Generation` (`kind: video`) →
-     `Operations::Billing::RecordUsage` meters it.
-   - Carousel → `Operations::Creatives::GenerateCarousel` (brand identity + @handle + avatar +
-     stock images + `Prompts::CarouselCopy`) → `Generation` (`kind: carousel`) → metered.
-   - Image → `Operations::Creatives::GenerateImage` → `Generation` (`kind: image`, not metered).
-4. **Captions** — `GenerateCaptionsJob` → `Prompts::CaptionWriter` produces per-network caption
-   variants (length/hashtag rules per network).
-5. **Publish & monitor** — in `scheduled`→`published`, `Posts::PublishJob` →
+2. **Fields & scope** — in `ideation`/`scoping`, "Gerar com IA" fills the status's fields
+   (`Tickets::AiFillJob` → `Operations::Ai::FillFields` → `Prompts::FieldFill`) and builds the
+   scope + subtask checklist (`Operations::Ai::BuildScope` → `Prompts::ScopeBuilder` → subtasks
+   via `Operations::Subtasks::Create`). Project-level planning runs through the Estrategista chat
+   (`Operations::Strategy::*` → `Prompts::StrategyPlanner`).
+3. **Creative generation** — in `production` (each debits prepaid credits via
+   `Operations::Credits::Debit`):
+   - UGC video → `Operations::Creatives::GenerateUgcVideo` → scene pipeline
+     (`Operations::Video::PlanScenes` → per-scene `RenderScene` via OpenRouter + Cartesia voice →
+     `PollVideoSceneJob` → `Compose` with FFmpeg + music) → `Creative` finalized → credits
+     trued-up to the real cost. Editable in the scene editor (chat + assets).
+   - Carousel → `Operations::Creatives::GenerateViralCarousel` (brand identity + @handle + avatar
+     + stock images + `Prompts::CarouselCopy`) → `Generation` (`kind: carousel`, 0 credits).
+   - Image → `Operations::Creatives::GenerateImage` → `Vendors::Google::Banana` →
+     `Generation` (`kind: image`, 1 credit).
+4. **Publish & monitor** — in `scheduled`→`published`, `Posts::PublishJob` →
    `Operations::Posts::Publish` → `Publishers::SocialPublisher` → the network vendor. Then
    `Posts::SyncMetricsJob` (scheduled) → `Operations::Posts::SyncMetrics` writes `PostMetric`s.
-6. **Retrospective** — entering `retrospective`, `Prompts::Retrospective` drafts a performance
-   review from `PostMetric`s + the ticket history; the team edits and finalizes.
+5. **Retrospective** — entering `retrospective`, `DraftRetrospectiveJob` →
+   `Operations::Ai::DraftRetrospective` (`Prompts::Retrospective`) drafts a performance review
+   from `PostMetric`s + the ticket history; the team edits and finalizes.
 
 ## Publishing pipeline
 
@@ -389,11 +421,13 @@ Each guide maps every API call to a concrete `Vendors::<Network>::Actions::*` cl
 Two **separate** money flows — never conflate them:
 
 1. **SaaS billing (Stripe)** — agencios charges the **workspace**. A `Subscription` per workspace
-   with one licensed item (plan/seats: `solo` 1 seat, `agencia` 5–20 seats, `enterprise` 20+) plus
-   two **metered** items via Stripe Billing Meters: `carousel_generation` and `video_generation`.
-   Usage is reported with `Vendors::Stripe::Actions::ReportMeterEvent` (idempotent identifier =
-   `"#{generation.kind}:#{generation.id}"`). Legacy usage records are removed — use Meters. Details:
-   `docs/integrations/stripe-billing.md`.
+   with one licensed item (plan/seats: `solo` 1 seat, `agencia` 5–20 seats, `enterprise` 20+); no
+   free tier — card-required 7-day trial; seats reconciled by `Operations::Billing::ReconcileSeats`.
+   **Generation usage is prepaid credits**, not Stripe meters: video/image debit the workspace's
+   `CreditWallet` (`Operations::Credits::*`, cost-plus pricing in `Pricing` — see
+   `docs/pricing-model.md`); carousels are included in the plan. Credit packs are bought via Stripe
+   checkout and granted by the webhook. `workspaces.godfathered` bypasses billing (admin-only,
+   audited). Details: `docs/integrations/stripe-billing.md`.
 2. **Client billing (Mercado Pago)** — the **agency** charges **its clients**. An `Invoice` →
    `Charge` (Pix-first; boleto/card too), reconciled via webhook + a scheduled sweep. Details:
    `docs/integrations/mercado-pago.md`.
@@ -416,3 +450,5 @@ destructive/override actions are audit-logged. See `docs/ARCHITECTURE.md` §6.
 - Publishing only via `Publishers::SocialPublisher`.
 - Secrets: app keys in credentials; per-workspace tokens encrypted on models.
 - Dates ISO 8601, money in cents — format on the frontend.
+- Frontend: reuse `components/ui/` primitives and `lib/formatters.js` — never hand-roll
+  pills/spinners/icon tiles/skeletons or inline `toLocaleString`.

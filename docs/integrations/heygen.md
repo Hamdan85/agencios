@@ -1,5 +1,9 @@
 # HeyGen API — UGC / Avatar Talking-Head Video Generation (agencios)
 
+> **⚠️ REMOVED (2026-07):** the HeyGen integration was deleted from the codebase — video
+> generation now runs through the OpenRouter scene pipeline (`Operations::Video::*` +
+> `Vendors::OpenRouter`). This guide is kept for historical reference only.
+
 > Research current as of 2025–2026. The HeyGen docs have migrated: `docs.heygen.com/*`
 > now shows a v1/v2→v3 migration banner. The authoritative live docs are at
 > **`developers.heygen.com`** (Mintlify; append `.md` to any page for clean markdown).
