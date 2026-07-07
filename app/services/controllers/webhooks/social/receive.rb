@@ -3,11 +3,11 @@
 module Controllers
   module Webhooks
     module Social
-      # POST event notification for the Instagram-Login and Threads webhook
-      # endpoints. Each is signed with X-Hub-Signature-256 = HMAC-SHA256 over the
-      # raw body, keyed by that product's OWN app secret (Instagram/Threads apps
-      # have separate secrets from the Facebook app). Returns the HTTP status to
-      # head (:unauthorized on a bad signature).
+      # POST event notification for the Meta-family webhook endpoints (facebook,
+      # instagram, threads). Each delivery is signed with X-Hub-Signature-256 =
+      # HMAC-SHA256 over the raw body, keyed by that product's OWN app secret
+      # (Instagram/Threads apps have separate secrets from the Facebook app).
+      # Returns the HTTP status to head (:unauthorized on a bad signature).
       #
       # Event routing (deauthorize, comments, mentions, replies) is a follow-up —
       # this verifies + acknowledges, matching the existing Meta webhook maturity.
@@ -32,6 +32,7 @@ module Controllers
         def resolve_secret
           key, env =
             case @provider
+            when 'facebook'  then [:app_secret, 'META_APP_SECRET']
             when 'instagram' then [:instagram_app_secret, 'INSTAGRAM_APP_SECRET']
             when 'threads'   then [:threads_app_secret, 'THREADS_APP_SECRET']
             end
