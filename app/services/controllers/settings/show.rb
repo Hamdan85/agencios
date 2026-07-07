@@ -4,13 +4,7 @@ module Controllers
   module Settings
     class Show < Base
       def call
-        Payload.new(setting).call
-      end
-
-      private
-
-      def setting
-        workspace.setting || Setting.create!(workspace: workspace)
+        Payload.new(Settings.ensure_setting!(workspace)).call
       end
     end
   end
