@@ -110,6 +110,11 @@ export function useTicketArchiveMutations() {
   return {
     archive: useMutation({ mutationFn: ticketsApi.archive, onSuccess: () => { inv(); toast.success('Ticket arquivado.') }, onError: onErr('Erro ao arquivar.') }),
     unarchive: useMutation({ mutationFn: ticketsApi.unarchive, onSuccess: () => { inv(); toast.success('Ticket restaurado.') }, onError: onErr('Erro ao restaurar.') }),
+    assign: useMutation({
+      mutationFn: ({ id, assigneeId }) => ticketsApi.update(id, { assignee_id: assigneeId }),
+      onSuccess: inv,
+      onError: onErr('Erro ao atribuir responsável.'),
+    }),
   }
 }
 

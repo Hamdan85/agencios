@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import {
   useProject, useProjectMutations, useTicketArchiveMutations, useTicketBulkDelete,
-  useReport,
+  useReport, useWorkspaceMembers,
 } from '@/hooks/useData'
 import { useStrategySession, useStrategyPlan, useApplyStrategy, useDiscardStrategy } from '@/hooks/useStrategy'
 import { useUrlFilters, useUrlParam } from '@/hooks/useUrlState'
@@ -137,7 +137,8 @@ export default function ProjectShow() {
   const applyStrategy = useApplyStrategy(id)
   const discardStrategy = useDiscardStrategy(id)
   const { start, finalize, update, destroy, sendScope, autopilotEstimate, autopilot } = useProjectMutations()
-  const { archive, unarchive } = useTicketArchiveMutations()
+  const { archive, unarchive, assign } = useTicketArchiveMutations()
+  const { data: members } = useWorkspaceMembers()
   const { data: me } = useCurrentUser()
   const manager = canManage(me?.membership?.role)
   const bulkDelete = useTicketBulkDelete()
@@ -528,6 +529,8 @@ export default function ProjectShow() {
               onArchive={(tid) => archive.mutate(tid)}
               onUnarchive={(tid) => unarchive.mutate(tid)}
               pendingChange={pendingByTicket[t.id] || null}
+              members={members}
+              onAssign={(tid, assigneeId) => assign.mutate({ id: tid, assigneeId })}
             />
           ))}
           {/* Additive proposal: NEW pieces (create) and EDITS (update, shown as the
