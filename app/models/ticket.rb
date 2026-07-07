@@ -168,18 +168,30 @@ class Ticket < ApplicationRecord
     approval_requested_at.present? && approvable_creatives.any?(&:approval_pending?)
   end
 
-  # The creatives the client approves: ready, and not superseded by a newer
-  # version (a creative referenced as another creative's parent is superseded).
+  # The creatives the client approves: ready, not superseded by a newer version
+  # (a creative referenced as another creative's parent), and not a discarded
+  # option (`not_selected`, i.e. a loser among several in a slot).
   def approvable_creatives
     ready = creatives.select(&:status_ready?)
     superseded_ids = creatives.filter_map(&:parent_id).to_set
-    ready.reject { |c| superseded_ids.include?(c.id) }
+    ready.reject { |c| superseded_ids.include?(c.id) || c.approval_not_selected? }
   end
 
-  # Approved iff there is at least one approvable creative and all are approved.
+  # Approvable creatives grouped into media-type SLOTS (one slot per creative_type),
+  # ordered by the ticket's creative_types_list. The client decides per slot.
+  def approval_slots
+    by_type = approvable_creatives.group_by(&:creative_type)
+    ordered = (creative_types_list & by_type.keys) + (by_type.keys - creative_types_list)
+    ordered.index_with { |type| by_type[type] }
+  end
+
+  # The chosen winner of each slot (≤1 per slot after selection).
+  def approved_winners = approvable_creatives.select(&:approval_approved?)
+
+  # Fully approved iff every slot has an approved winner.
   def fully_approved?
-    set = approvable_creatives
-    set.any? && set.all?(&:approval_approved?)
+    slots = approval_slots
+    slots.any? && slots.values.all? { |options| options.any?(&:approval_approved?) }
   end
 
   # The team member accountable for this ticket — notified of client decisions.

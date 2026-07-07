@@ -16,8 +16,12 @@ class Creative < ApplicationRecord
 
   enum :source, { uploaded: 0, generated: 1 }, prefix: true
   enum :status, { draft: 0, generating: 1, ready: 2, failed: 3 }, prefix: :status
+  # `not_selected` = an option the client did NOT pick as the winner of its media
+  # slot (a loser among several). Excluded from Ticket#approvable_creatives so it
+  # leaves the portal and never publishes.
   enum :approval_state,
-       { pending: 'pending', approved: 'approved', changes_requested: 'changes_requested' },
+       { pending: 'pending', approved: 'approved', changes_requested: 'changes_requested',
+         not_selected: 'not_selected' },
        prefix: :approval, default: 'pending', scopes: false
 
   validates :creative_type, presence: true
