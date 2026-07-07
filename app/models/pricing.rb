@@ -40,7 +40,7 @@ module Pricing
       price_cents: 9_900, usd_cents: 1_900, seats: 2, clients: 3, included_credits: 40,
       features: [
         '2 assentos', 'Até 3 clientes', 'Quadro de produção completo',
-        'Carrosséis e legendas com IA inclusos',
+        'Carrosséis com IA inclusos',
         '40 créditos/mês para vídeos e imagens', 'Integrações sociais diretas'
       ]
     },
