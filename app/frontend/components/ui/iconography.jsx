@@ -1,4 +1,4 @@
-import { statusMeta, channelMeta, creativeMeta, PRIORITY_META } from '@/lib/constants'
+import { statusMeta, channelMeta, creativeMeta, postStatusMeta, PRIORITY_META } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
 // A vivid status pill with icon + label — the core funnel signifier.
@@ -21,6 +21,42 @@ export function StatusPill({ status, size = 'md', withIcon = true, className }) 
 export function StatusDot({ status, size = 8 }) {
   const m = statusMeta(status)
   return <span className="inline-block rounded-full" style={{ width: size, height: size, background: m.color }} />
+}
+
+// A vivid post-lifecycle pill (Agendado / Publicando / No ar / Falhou) — the
+// posts-hub analogue of StatusPill, driven by POST_STATUS_META.
+export function PostStatusPill({ status, size = 'md', withIcon = true, className }) {
+  const m = postStatusMeta(status)
+  const Icon = m.icon
+  const sm = size === 'sm'
+  return (
+    <span
+      className={cn('inline-flex items-center gap-1.5 rounded-full font-bold', sm ? 'px-2 py-0.5 text-[11px]' : 'px-2.5 py-1 text-xs', className)}
+      style={{ background: `${m.color}1A`, color: m.color }}
+      title={m.hint}
+    >
+      {withIcon && <Icon size={sm ? 11 : 13} strokeWidth={2.5} />}
+      {m.label}
+    </span>
+  )
+}
+
+// A single network's identity chip: its icon in its brand color, optionally with
+// the label (and/or an @username). Complements ChannelIcons (which renders many
+// bare icons) for the common one-network case (a post targets one network).
+export function NetworkBadge({ provider, username, withLabel = true, size = 14, className }) {
+  const m = channelMeta(provider)
+  const Icon = m.icon
+  return (
+    <span
+      className={cn('inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-bold', className)}
+      style={{ background: `${m.color}14`, color: m.color }}
+      title={m.label}
+    >
+      <Icon size={size} strokeWidth={2.3} />
+      {withLabel && <span>{username ? `@${username}` : m.label}</span>}
+    </span>
+  )
 }
 
 // The network icons for a ticket's target channels.

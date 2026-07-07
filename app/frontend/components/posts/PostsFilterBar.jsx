@@ -1,37 +1,72 @@
-import { useClients, useProjects } from '@/hooks/useData'
+import { FilterBar } from '@/components/ui/filter-bar'
+import { CHANNEL_META, POST_STATUS_META } from '@/lib/constants'
 
-const PROVIDERS = ['instagram', 'facebook', 'tiktok', 'youtube', 'linkedin', 'x', 'threads']
-const STATUSES = [['scheduled', 'Agendado'], ['published', 'Publicado'], ['failed', 'Falhou']]
-const SELECT = 'rounded-xl border border-border bg-surface px-3 py-2 text-sm text-ink'
+// Filter options derive straight from the shared metadata maps so the pills
+// carry each network's / status' brand color + icon.
+const NETWORK_OPTIONS = Object.entries(CHANNEL_META).map(([value, m]) => ({ value, label: m.label, color: m.color, icon: m.icon }))
+const STATUS_OPTIONS = Object.entries(POST_STATUS_META).map(([value, m]) => ({ value, label: m.label, color: m.color, icon: m.icon }))
+const PERIOD_OPTIONS = [
+  { value: '7', label: 'Últimos 7 dias' },
+  { value: '30', label: 'Últimos 30 dias' },
+  { value: '90', label: 'Últimos 90 dias' },
+]
 
-// The filter row above the post list. Each control patches the shared `filters`
-// object; the page's hooks refetch on change. Single-select for now (the API
-// takes arrays, so we wrap the chosen value).
-export default function PostsFilterBar({ filters, setFilters }) {
-  const { data: clients } = useClients()
-  const { data: projects } = useProjects()
-  const set = (patch) => setFilters((f) => ({ ...f, ...patch }))
+// The shared `filters` object is the flat API shape (`client_id`, `project_id`,
+// `providers`, `status`, `from`, `to`). The period pill is derived: filters carry
+// a concrete `from`, so we reflect which window it corresponds to. Unset → the
+// pill reads its placeholder ("Últimos 30 dias", the backend's own default).
+function periodFor(from) {
+  if (!from) return undefined
+  const days = Math.round((Date.now() - new Date(from).getTime()) / 864e5)
+  if (days <= 7) return '7'
+  if (days <= 30) return '30'
+  return '90'
+}
+
+const FILTERS = [
+  { key: 'client', type: 'client', label: 'Cliente' },
+  { key: 'campaign', type: 'project', label: 'Campanha' },
+  { key: 'network', type: 'options', label: 'Rede', options: NETWORK_OPTIONS },
+  { key: 'status', type: 'options', label: 'Status', options: STATUS_OPTIONS },
+  { key: 'period', type: 'options', label: 'Período', options: PERIOD_OPTIONS, placeholder: 'Últimos 30 dias' },
+]
+
+// The one filter row above both tabs (shared — it drives the performance overview
+// and the post list alike). Built on the declarative `FilterBar` primitive; each
+// control patches the flat API-shaped `filters` object. `leading` carries the tabs.
+export default function PostsFilterBar({ filters, setFilters, leading }) {
+  const values = {
+    client: filters.client_id,
+    campaign: filters.project_id,
+    network: filters.providers?.[0],
+    status: filters.status?.[0],
+    period: periodFor(filters.from),
+  }
+
+  const onChange = (key, value) => {
+    setFilters((f) => {
+      switch (key) {
+        case 'client':   return { ...f, client_id: value || undefined }
+        case 'campaign': return { ...f, project_id: value || undefined }
+        case 'network':  return { ...f, providers: value ? [value] : undefined }
+        case 'status':   return { ...f, status: value ? [value] : undefined }
+        case 'period': {
+          const days = Number(value)
+          const from = value ? new Date(Date.now() - days * 864e5).toISOString().slice(0, 10) : undefined
+          return { ...f, from, to: undefined }
+        }
+        default: return f
+      }
+    })
+  }
 
   return (
-    <div className="mb-4 flex flex-wrap gap-2">
-      <select value={filters.client_id || ''} onChange={(e) => set({ client_id: e.target.value || undefined })} className={SELECT}>
-        <option value="">Todos os clientes</option>
-        {(clients || []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-      </select>
-      <select value={filters.project_id || ''} onChange={(e) => set({ project_id: e.target.value || undefined })} className={SELECT}>
-        <option value="">Todas as campanhas</option>
-        {(projects || []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-      </select>
-      <select value={filters.providers?.[0] || ''} onChange={(e) => set({ providers: e.target.value ? [e.target.value] : undefined })} className={SELECT}>
-        <option value="">Todas as redes</option>
-        {PROVIDERS.map((p) => <option key={p} value={p}>{p}</option>)}
-      </select>
-      <select value={filters.status?.[0] || ''} onChange={(e) => set({ status: e.target.value ? [e.target.value] : undefined })} className={SELECT}>
-        <option value="">Todos os status</option>
-        {STATUSES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-      </select>
-      <input type="date" value={filters.from || ''} onChange={(e) => set({ from: e.target.value || undefined })} className={SELECT} />
-      <input type="date" value={filters.to || ''} onChange={(e) => set({ to: e.target.value || undefined })} className={SELECT} />
-    </div>
+    <FilterBar
+      leading={leading}
+      filters={FILTERS}
+      values={values}
+      onChange={onChange}
+      onClear={() => setFilters({})}
+    />
   )
 }

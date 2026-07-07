@@ -5,18 +5,21 @@ import { Page } from '@/components/ui/page'
 import { PageHeader } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/feedback'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { usePosts, usePostsOverview } from '@/hooks/useData'
-import PostsAnalyticsHeader from '@/components/posts/PostsAnalyticsHeader'
+import PostsPerformance from '@/components/posts/PostsPerformance'
 import PostsFilterBar from '@/components/posts/PostsFilterBar'
 import PostList from '@/components/posts/PostList'
 
-// The posts hub: an analytics header over the current filter window, a filter
-// row, and the paginated grid of every post the workspace has scheduled or
-// published. Deep-linkable with `?client=<id>` (the client detail page links here).
+// The posts hub, split into two tabs over a shared filter row: "Desempenho" (the
+// analytics dashboard for the current window) and "Publicações" (the paginated
+// grid of every scheduled/published post). Deep-linkable with `?client=<id>`
+// (the client detail page links here).
 export default function PostsIndex() {
   const [searchParams] = useSearchParams()
   const initialClient = searchParams.get('client') || undefined
   const [filters, setFilters] = useState({ client_id: initialClient })
+  const [tab, setTab] = useState('performance')
   const { data: overview, isLoading: overviewLoading } = usePostsOverview(filters)
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = usePosts(filters)
   const posts = (data?.pages || []).flatMap((pg) => pg.posts || [])
@@ -29,16 +32,36 @@ export default function PostsIndex() {
         color="#0EA5E9"
         description="Tudo que foi agendado e publicado, com o desempenho de cada rede."
       />
-      <PostsAnalyticsHeader overview={overview} loading={overviewLoading} />
-      <PostsFilterBar filters={filters} setFilters={setFilters} />
-      {isLoading ? <Skeleton className="h-64 rounded-2xl" /> : <PostList posts={posts} />}
-      {hasNextPage && (
-        <div className="mt-6 flex justify-center">
-          <Button variant="outline" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
-            {isFetchingNextPage ? 'Carregando…' : 'Carregar mais'}
-          </Button>
-        </div>
-      )}
+
+      <Tabs value={tab} onValueChange={setTab}>
+        <PostsFilterBar
+          filters={filters}
+          setFilters={setFilters}
+          leading={
+            <div className="min-w-0 flex-1">
+              <TabsList>
+                <TabsTrigger value="performance">Desempenho</TabsTrigger>
+                <TabsTrigger value="posts">Publicações</TabsTrigger>
+              </TabsList>
+            </div>
+          }
+        />
+
+        <TabsContent value="performance">
+          <PostsPerformance overview={overview} loading={overviewLoading} />
+        </TabsContent>
+
+        <TabsContent value="posts">
+          {isLoading ? <Skeleton className="h-64 rounded-2xl" /> : <PostList posts={posts} />}
+          {hasNextPage && (
+            <div className="mt-6 flex justify-center">
+              <Button variant="outline" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+                {isFetchingNextPage ? 'Carregando…' : 'Carregar mais'}
+              </Button>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </Page>
   )
 }

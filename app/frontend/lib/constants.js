@@ -9,6 +9,7 @@ import {
   Film, Image as ImageIcon, GalleryHorizontalEnd, Clapperboard, Megaphone,
   Sparkles, Video, LayoutTemplate,
   FileText, FileSpreadsheet, Presentation, FileArchive, File as FileIcon, Paperclip,
+  UploadCloud, AlertTriangle,
 } from 'lucide-react'
 import { InstagramIcon } from './brand-icons.jsx'
 
@@ -32,6 +33,17 @@ export const STATUS_META = {
   retrospective: { label: 'Retrospectiva',  short: 'Retro',      color: '#6366F1', icon: LineChart,    hint: 'Lições aprendidas' },
   done:          { label: 'Concluído',      short: 'Concluído',  color: '#14B8A6', icon: CheckCircle2, hint: 'Arquivado com métricas' },
 }
+
+// Post lifecycle status (Post#status enum: scheduled / publishing / published /
+// failed) — user-facing PT-BR label + color + icon. Distinct from the ticket
+// funnel STATUS_META: a post is one network's scheduled/live item, not a ticket.
+export const POST_STATUS_META = {
+  scheduled:  { label: 'Agendado',   color: '#F59E0B', icon: CalendarClock, hint: 'Na fila para publicar' },
+  publishing: { label: 'Publicando', color: '#0EA5E9', icon: UploadCloud,   hint: 'Subindo para a rede' },
+  published:  { label: 'No ar',      color: '#10B981', icon: Radio,         hint: 'Publicado e monitorando' },
+  failed:     { label: 'Falhou',     color: '#F43F5E', icon: AlertTriangle, hint: 'A publicação não foi concluída' },
+}
+export const postStatusMeta = (key) => POST_STATUS_META[key] || POST_STATUS_META.scheduled
 
 export const CHANNEL_META = {
   instagram: { label: 'Instagram', color: '#E1306C', icon: Instagram },
