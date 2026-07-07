@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { Sparkles, Loader2, CheckCircle2, Wand2, AtSign, Plus, X, MessageSquare } from 'lucide-react'
+import { Sparkles, CheckCircle2, Wand2, AtSign, Plus, X, MessageSquare } from 'lucide-react'
 import { studioApi, uploadsApi } from '@/api'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { ColorBadge } from '@/components/ui/badge'
+import { InlineSpinner, Skeleton } from '@/components/ui/feedback'
 import { Input, Textarea } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -281,12 +283,9 @@ export function GenerateDialog({ kind, open, onOpenChange, generate, startVideo,
             >
               <KindIcon size={22} strokeWidth={2.2} />
             </div>
-            <span
-              className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide"
-              style={{ background: `${kindMeta.color}1A`, color: kindMeta.color }}
-            >
+            <ColorBadge color={kindMeta.color} className="py-1 text-[11px] uppercase tracking-wide">
               {kindMeta.label}
-            </span>
+            </ColorBadge>
           </div>
           <DialogTitle>{meta.title}</DialogTitle>
           <DialogDescription>{meta.description}</DialogDescription>
@@ -510,7 +509,7 @@ function RefUploader({ urls, fileRef, uploading, onPick, onRemove, onFiles, labe
             type="button" onClick={onPick} disabled={uploading}
             className="grid size-16 place-items-center gap-0.5 rounded-xl border border-dashed border-border-strong text-ink-muted transition hover:border-brand hover:text-brand disabled:opacity-50"
           >
-            {uploading ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
+            {uploading ? <InlineSpinner size={18} /> : <Plus size={18} />}
             <span className="text-[10px] font-bold">Imagem</span>
           </button>
         )}
@@ -552,7 +551,7 @@ function ImproveWand({ onClick, improving, disabled }) {
       title="Melhorar esse prompt"
       className="inline-flex items-center gap-1 text-[11px] font-bold text-brand transition hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
     >
-      {improving ? <Loader2 size={12} className="animate-spin" /> : <Wand2 size={12} />}
+      {improving ? <InlineSpinner size={12} /> : <Wand2 size={12} />}
       {improving === 'thinking' ? 'Melhorando…' : improving === 'typing' ? 'Escrevendo…' : 'Melhorar'}
     </button>
   )
@@ -562,9 +561,9 @@ function ImproveWand({ onClick, improving, disabled }) {
 function PromptShimmer() {
   return (
     <div className="pointer-events-none absolute inset-x-3.5 top-3.5 space-y-2.5">
-      <div className="h-3 w-11/12 animate-pulse rounded-md bg-brand/15" />
-      <div className="h-3 w-2/3 animate-pulse rounded-md bg-brand/10" />
-      <div className="h-3 w-4/5 animate-pulse rounded-md bg-brand/15" />
+      <Skeleton className="h-3 w-11/12 rounded-md bg-brand/15" />
+      <Skeleton className="h-3 w-2/3 rounded-md bg-brand/10" />
+      <Skeleton className="h-3 w-4/5 rounded-md bg-brand/15" />
     </div>
   )
 }
@@ -573,7 +572,7 @@ function GeneratingState({ color, label, video = false }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
       <div className="relative grid size-16 place-items-center rounded-2xl" style={{ background: `${color}14`, color }}>
-        <Loader2 size={30} className="animate-spin" strokeWidth={2.4} />
+        <InlineSpinner size={30} strokeWidth={2.4} />
         <Sparkles size={14} className="absolute right-2 top-2 animate-pulse" />
       </div>
       {/* Video opens an interview (no generation yet) — don't say "gerando". */}

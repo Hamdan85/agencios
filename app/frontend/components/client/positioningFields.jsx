@@ -1,7 +1,8 @@
-import { Sparkles, Loader2, Wand2, Image as ImageIcon, UserCircle2, Globe } from 'lucide-react'
+import { Sparkles, Wand2, Image as ImageIcon, UserCircle2, Globe } from 'lucide-react'
 import { Input, Textarea } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { InlineSpinner } from '@/components/ui/feedback'
 
 // content_pillars is stored as an array; the textarea edits one pillar per line.
 export const pillarsToText = (arr) => (Array.isArray(arr) ? arr.join('\n') : arr || '')
@@ -146,7 +147,7 @@ export function SiteImportPanel({ url, onUrl, onImport, importing }) {
             placeholder="https://marca.com.br"
           />
           <Button type="button" onClick={onImport} disabled={importing || !ready} className="shrink-0">
-            {importing ? <Loader2 className="animate-spin" /> : <Globe />}
+            {importing ? <InlineSpinner /> : <Globe />}
             {importing ? 'Lendo…' : 'Importar'}
           </Button>
         </div>
@@ -181,7 +182,7 @@ export function BriefPanel({ brief, onBrief, onGenerate, generating }) {
         />
       </div>
       <Button type="button" className="w-full" onClick={onGenerate} disabled={generating || !String(brief || '').trim()}>
-        {generating ? <Loader2 className="animate-spin" /> : <Wand2 />}
+        {generating ? <InlineSpinner /> : <Wand2 />}
         {generating ? 'Gerando posicionamento…' : 'Preencher posicionamento com IA'}
       </Button>
     </div>
@@ -204,7 +205,7 @@ export function StatementPanel({ statement, onStatement, onRegenerate, generatin
       </div>
       {canRegenerate && (
         <Button type="button" variant="outline" size="sm" onClick={onRegenerate} disabled={generating}>
-          {generating ? <Loader2 className="animate-spin" /> : <Sparkles />}
+          {generating ? <InlineSpinner /> : <Sparkles />}
           {generating ? 'Gerando…' : 'Regerar com IA'}
         </Button>
       )}

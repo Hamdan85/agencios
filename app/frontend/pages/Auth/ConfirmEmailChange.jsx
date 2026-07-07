@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
+import { CheckCircle2, XCircle } from 'lucide-react'
 import AuthShell from './AuthShell'
+import { InlineSpinner } from '@/components/ui/feedback'
 import { accountApi } from '@/api'
 
 // Landing page for the link mailed to a user's NEW address. It confirms the
@@ -34,7 +35,7 @@ export default function ConfirmEmailChange() {
       footer={<Link to="/conta" className="font-bold text-brand hover:underline">Ir para minha conta</Link>}
     >
       <div className="flex flex-col items-center gap-4 py-4 text-center">
-        {state === 'loading' && <Loader2 size={40} className="animate-spin text-brand" />}
+        {state === 'loading' && <InlineSpinner size={40} className="text-brand" />}
         {state === 'ok' && <CheckCircle2 size={40} className="text-emerald" />}
         {state === 'error' && <XCircle size={40} className="text-danger" />}
         {message && <p className="text-sm text-ink-muted">{message}</p>}

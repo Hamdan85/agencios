@@ -2,9 +2,11 @@ import {
   Video, CalendarClock, Users2, ExternalLink, MoreHorizontal,
   Pencil, Trash2, StickyNote, Building2,
 } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Avatar } from '@/components/ui/avatar'
+import { MEETING_COLOR } from '@/components/calendar/EventChip'
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
 } from '@/components/ui/dropdown-menu'
@@ -23,11 +25,11 @@ export function MeetingCard({ meeting, past, canEdit = true, showOwner = false, 
   const count = attendeeCount(meeting.attendees)
   return (
     <Card className="group flex flex-col overflow-hidden lift animate-rise">
-      <div className="h-1.5 w-full" style={{ background: past ? '#94A3B8' : '#14B8A6' }} />
+      <div className="h-1.5 w-full" style={{ background: past ? '#94A3B8' : MEETING_COLOR }} />
       <div className="flex flex-1 flex-col p-5">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-start gap-3">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl" style={{ background: past ? '#94A3B814' : '#14B8A614', color: past ? '#64748B' : '#14B8A6' }}>
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl" style={{ background: past ? '#94A3B814' : `${MEETING_COLOR}14`, color: past ? '#64748B' : MEETING_COLOR }}>
               <Video size={20} strokeWidth={2.2} />
             </div>
             <div>
@@ -63,19 +65,19 @@ export function MeetingCard({ meeting, past, canEdit = true, showOwner = false, 
             </span>
           )}
           {meeting.client_name && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo/12 px-2.5 py-1 text-xs font-bold text-indigo">
+            <Badge variant="muted" className="gap-1.5 bg-indigo/12 py-1 text-indigo tracking-normal">
               <Building2 size={12} /> {meeting.client_name}
-            </span>
+            </Badge>
           )}
           {meeting.project_name && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-2.5 py-1 text-xs font-bold text-brand">
+            <Badge variant="soft" className="gap-1.5 py-1 tracking-normal">
               {meeting.project_name}
-            </span>
+            </Badge>
           )}
           {count > 0 && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-muted px-2.5 py-1 text-xs font-bold text-ink-muted">
+            <Badge variant="muted" className="gap-1.5 py-1 tracking-normal">
               <Users2 size={12} /> {count} {count === 1 ? 'participante' : 'participantes'}
-            </span>
+            </Badge>
           )}
         </div>
 
@@ -99,7 +101,7 @@ export function MeetingCard({ meeting, past, canEdit = true, showOwner = false, 
                 asChild
                 size="sm"
                 className="text-white shadow-[0_8px_20px_-8px_rgba(20,184,166,0.6)] hover:brightness-105"
-                style={{ background: 'linear-gradient(135deg, #14B8A6, #0EA5E9)' }}
+                style={{ background: `linear-gradient(135deg, ${MEETING_COLOR}, #0EA5E9)` }}
               >
                 <a href={meeting.meet_url} target="_blank" rel="noopener noreferrer">
                   <Video size={16} /> Entrar no Meet <ExternalLink size={14} />

@@ -1,4 +1,5 @@
 import { Card } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/feedback'
 import LineTrend from '@/components/ui/charts/LineTrend'
 import BarBreakdown from '@/components/ui/charts/BarBreakdown'
 import { compact } from '@/lib/formatters'
@@ -15,7 +16,7 @@ function Kpi({ label, value }) {
 // The analytics band that heads /publicacoes: four KPI tiles, a trend line, and
 // a views-by-format bar chart, all over the current filter window.
 export default function PostsAnalyticsHeader({ overview, loading }) {
-  if (loading || !overview) return <div className="mb-6 h-40 animate-pulse rounded-2xl bg-surface-muted" />
+  if (loading || !overview) return <Skeleton className="mb-6 h-40 rounded-2xl" />
   const k = overview.kpis || {}
   const byType = (overview.by_type || []).map((t) => ({ label: t.creative_type, value: t.views }))
   return (

@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Loader2, CheckCircle2, PartyPopper } from 'lucide-react'
+import { CheckCircle2, PartyPopper } from 'lucide-react'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { usePublicApproval } from '@/hooks/useData'
@@ -8,6 +8,8 @@ import { approvalsApi } from '@/api'
 import { keys } from '@/api/queryKeys'
 import { readableOn, tint } from '@/lib/color'
 import { burstConfetti } from '@/lib/confetti'
+import { InlineSpinner } from '@/components/ui/feedback'
+import { SectionLabel } from '@/components/ui/section-label'
 import ApprovalTicketCard from '@/components/approval/ApprovalTicketCard'
 import RequestChangesDialog from '@/components/approval/RequestChangesDialog'
 
@@ -34,7 +36,7 @@ export default function ApprovalShow() {
 
   if (isLoading) {
     return <Shell accent={accent} fg={fg} agency={agency}>
-      <div className="flex flex-1 items-center justify-center"><Loader2 className="animate-spin" style={{ color: accent }} /></div>
+      <div className="flex flex-1 items-center justify-center"><InlineSpinner size={24} style={{ color: accent }} /></div>
     </Shell>
   }
   if (isError || !data) {
@@ -110,7 +112,7 @@ export default function ApprovalShow() {
           {/* Desktop: queue index */}
           {tickets.length > 1 && (
             <aside className="hidden w-72 shrink-0 overflow-y-auto border-r border-border/60 p-3 lg:block">
-              <p className="mb-2 px-1 text-xs font-bold uppercase tracking-wide text-ink-faint">Fila ({tickets.length})</p>
+              <SectionLabel className="mb-2 px-1 text-xs tracking-wide text-ink-faint">Fila ({tickets.length})</SectionLabel>
               <QueueList tickets={tickets} currentId={current.id} accent={accent} onPick={setFocusId} />
             </aside>
           )}

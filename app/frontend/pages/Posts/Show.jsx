@@ -1,7 +1,8 @@
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, ExternalLink, Loader2 } from 'lucide-react'
+import { ArrowLeft, ExternalLink } from 'lucide-react'
 import { Page } from '@/components/ui/page'
 import { Card } from '@/components/ui/card'
+import { InlineSpinner } from '@/components/ui/feedback'
 import { compact } from '@/lib/formatters'
 import { usePost } from '@/hooks/useData'
 import CreativeExperience from '@/components/creative/CreativeExperience'
@@ -22,7 +23,7 @@ function Stat({ label, value }) {
 export default function PostShow() {
   const { id } = useParams()
   const { data: post, isLoading } = usePost(id)
-  if (isLoading) return <Page><div className="flex justify-center py-20"><Loader2 className="animate-spin text-brand" /></div></Page>
+  if (isLoading) return <Page><div className="flex justify-center py-20"><InlineSpinner size={24} className="text-brand" /></div></Page>
   if (!post) return <Page><p className="py-20 text-center text-ink-muted">Publicação não encontrada.</p></Page>
 
   const m = post.metrics || {}

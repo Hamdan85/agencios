@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react'
 import {
-  Receipt, Plus, MoreHorizontal, Ban, Copy, Check, Wallet, Link2, CheckCircle2,
+  Receipt, Plus, MoreHorizontal, Ban, Wallet, Link2, CheckCircle2,
   CircleDollarSign, AlertTriangle, FileText, ExternalLink, Hash, Send,
 } from 'lucide-react'
 import { useInvoices, useInvoiceMutations, useSettings } from '@/hooks/useData'
 import { PageHeader, StatCard } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
+import { CopyButton } from '@/components/ui/copy-button'
 import { useConfirm } from '@/components/ui/confirm-dialog'
+import { IconTile } from '@/components/ui/icon-tile'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
@@ -45,26 +47,14 @@ const FILTERS = [
 
 // ── Payment link dialog ────────────────────────────────────────
 function PaymentLinkDialog({ invoice, open, onOpenChange, onSendPaymentLink, sending }) {
-  const [copied, setCopied] = useState(false)
   const charge = invoice?.charge
   const link = charge?.payment_link
-
-  const copy = async () => {
-    if (!link) return
-    try {
-      await navigator.clipboard.writeText(link)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1800)
-    } catch { /* clipboard unavailable */ }
-  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <div className="mb-1 flex size-11 items-center justify-center rounded-2xl" style={{ background: '#0EA5E916', color: '#0EA5E9' }}>
-            <Link2 size={22} strokeWidth={2.2} />
-          </div>
+          <IconTile icon={Link2} color="#0EA5E9" iconSize={22} className="mb-1 size-11" />
           <DialogTitle>Link de pagamento</DialogTitle>
           <DialogDescription>{invoice?.client_name ? `Cobrança de ${invoice.client_name}` : 'Cobrança'}</DialogDescription>
         </DialogHeader>
@@ -84,9 +74,7 @@ function PaymentLinkDialog({ invoice, open, onOpenChange, onSendPaymentLink, sen
               </div>
 
               <div className="flex w-full gap-2">
-                <Button onClick={copy} variant={copied ? 'solid' : 'outline'} className="flex-1">
-                  {copied ? <><Check size={16} /> Copiado!</> : <><Copy size={16} /> Copiar link</>}
-                </Button>
+                <CopyButton value={link} label="Copiar link" className="flex-1" />
                 {onSendPaymentLink && (
                   <Button onClick={() => onSendPaymentLink(invoice)} disabled={sending} className="flex-1">
                     <Send size={16} /> {sending ? 'Enviando…' : 'Enviar ao cliente'}
@@ -121,9 +109,7 @@ function InvoiceRow({ invoice, onMarkPaid, onCancel, onGenerateLink, onShowLink,
   return (
     <div className="flex flex-wrap items-center justify-between gap-4 p-4 transition-colors hover:bg-surface-muted/40">
       <div className="flex min-w-0 items-center gap-3">
-        <div className="flex size-11 shrink-0 items-center justify-center rounded-xl" style={{ background: `${m.dot}18`, color: m.dot }}>
-          <Receipt size={20} strokeWidth={2.2} />
-        </div>
+        <IconTile icon={Receipt} color={m.dot} tint="18" iconSize={20} className="size-11 rounded-xl" />
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <p className="truncate font-medium text-ink">

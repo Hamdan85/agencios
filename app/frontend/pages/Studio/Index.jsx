@@ -2,13 +2,15 @@ import { lazy, Suspense, useState, useMemo, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
   Sparkles, GalleryHorizontalEnd, Video, Image as ImageIcon,
-  Loader2, Images, Trash2,
+  Images, Trash2,
 } from 'lucide-react'
 import { useStudio, useGenerate, useStartVideo, useWorkspaceCreatives, useCreativeMutations } from '@/hooks/useData'
 import { useCurrentUser } from '@/hooks/useAuth'
 import { useGenerationsChannel } from '@/hooks/useRealtime'
 import { PageHeader } from '@/components/ui/page-header'
-import { PageLoader, EmptyState, Spinner } from '@/components/ui/feedback'
+import { PageLoader, EmptyState, Spinner, InlineSpinner } from '@/components/ui/feedback'
+import { IconTile } from '@/components/ui/icon-tile'
+import { MediaThumb } from '@/components/ui/media-thumb'
 import { Badge } from '@/components/ui/badge'
 import { Page } from '@/components/ui/page'
 import { FilterBar } from '@/components/ui/filter-bar'
@@ -262,16 +264,16 @@ function GalleryCard({ creative, onClick, onDelete }) {
       >
         <div className="absolute inset-0 overflow-hidden" style={{ background: `${m.color}12` }}>
           {thumb ? (
-            isVideoUrl(thumb) ? (
-              <video src={`${thumb}#t=0.1`} muted playsInline preload="metadata" className="size-full object-cover transition-transform group-hover:scale-105" />
-            ) : (
-              <img src={thumb} alt={m.label} className="size-full object-cover transition-transform group-hover:scale-105" />
-            )
+            <MediaThumb url={thumb} alt={m.label} className="transition-transform group-hover:scale-105" />
           ) : (
             <div className="flex size-full flex-col items-center justify-center gap-2">
-              <div className="flex size-12 items-center justify-center rounded-2xl" style={{ background: `${m.color}1F`, color: m.color }}>
-                {generating ? <Loader2 size={22} className="animate-spin" /> : <m.icon size={22} strokeWidth={2.1} />}
-              </div>
+              <IconTile
+                icon={generating ? InlineSpinner : m.icon}
+                color={m.color}
+                tint="1F"
+                iconSize={22}
+                strokeWidth={generating ? 2 : 2.1}
+              />
             </div>
           )}
           {/* Only show a status badge when it carries information. */}
