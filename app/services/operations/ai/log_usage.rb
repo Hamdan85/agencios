@@ -8,9 +8,9 @@ module Operations
     # provider/operation/model/subject. A logging failure must NEVER break the AI
     # call that already succeeded — every error is swallowed and logged.
     #
-    # Token shape (Anthropic): pass `usage:` (the Messages API `usage` hash) and
-    # `model:`. Unit shape (Banana/HeyGen): pass `units:` + `unit_kind:`, or an
-    # explicit `cost_cents:` when the rate is engine-specific (HeyGen).
+    # Token shape (Anthropic/OpenRouter): pass `usage:` (the Messages API `usage`
+    # hash) and `model:`. Unit shape (Banana/Cartesia): pass `units:` +
+    # `unit_kind:`, or an explicit `cost_cents:` when the real cost is known.
     #
     # Runs both inside requests (resolves tenant from Current) and out of them
     # (jobs/webhooks pass `workspace:`/`user:`/`subject:` explicitly).

@@ -49,7 +49,6 @@ Rails.application.routes.draw do
   namespace :webhooks do
     post 'stripe',      to: 'stripe#create'
     post 'mercadopago', to: 'mercado_pago#create'
-    post 'heygen',      to: 'heygen#create'
     match 'meta', to: 'meta#handle', via: %i[get post]
     # Instagram-Login + Threads have their own app secrets, so a dedicated
     # endpoint per provider (verifies with the right secret).

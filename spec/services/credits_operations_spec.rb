@@ -65,7 +65,7 @@ RSpec.describe 'Operations::Credits', type: :model do
     it 'returns the exact per-bucket amounts a generation debit took' do
       Operations::Credits::Grant.call(workspace: workspace, amount: 10, expires_at: 1.month.from_now)
       Operations::Credits::Purchase.call(workspace: workspace, amount: 5, reference: 'r1')
-      gen = workspace.generations.create!(kind: :video, status: :processing, provider: 'heygen')
+      gen = workspace.generations.create!(kind: :video, status: :processing, provider: 'openrouter')
       Operations::Credits::Debit.call(workspace: workspace, amount: 12, generation: gen)
       expect(balance).to eq(3)
 
@@ -107,7 +107,7 @@ RSpec.describe 'Operations::Credits', type: :model do
     end
 
     it 'records a notional debit (for the usage chart + cost analysis) with no bucket movement' do
-      gen = workspace.generations.create!(kind: :video, status: :processing, provider: 'heygen')
+      gen = workspace.generations.create!(kind: :video, status: :processing, provider: 'openrouter')
       expect do
         Operations::Credits::Debit.call(workspace: workspace, amount: 16, generation: gen)
       end.to change { workspace.credit_transactions.debits.count }.by(1)
