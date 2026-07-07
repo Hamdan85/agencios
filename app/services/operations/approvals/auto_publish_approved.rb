@@ -16,9 +16,12 @@ module Operations
       def call
         return unless @ticket.scheduled?
 
+        # Publish only the CHOSEN winners (one per slot) — losers are not_selected
+        # and must never post. (approved_winners == approvable after selection, but
+        # being explicit guards against a half-decided ticket ever publishing.)
         Operations::Tickets::Publish.call(
           ticket: @ticket, user: @user,
-          creative_ids: @ticket.approvable_creatives.map { |c| c.id.to_s },
+          creative_ids: @ticket.approved_winners.map { |c| c.id.to_s },
           mode: 'scheduled', scheduled_at: @ticket.scheduled_at
         )
         @ticket
