@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label'
 import { ClientSelect } from '@/components/ui/entity-select'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { DatePicker } from '@/components/ui/date-picker'
+import { SectionLabel } from '@/components/ui/section-label'
+import { ProjectSettingsFields, normalizeProjectSettings } from '@/components/project/ProjectSettingsFields'
 import { useProjectMutations } from '@/hooks/useData'
 import { maskCurrency, centsFromMasked, brl } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
@@ -21,7 +23,10 @@ const STATUS_OPTIONS = [
   { value: 'archived', label: 'Arquivada' },
   { value: 'completed', label: 'Finalizada' },
 ]
-const EMPTY = { client_id: '', name: '', description: '', color: PALETTE[0], status: 'draft', starts_on: '', ends_on: '', budget: '' }
+const blankForm = () => ({
+  client_id: '', name: '', description: '', color: PALETTE[0], status: 'draft',
+  starts_on: '', ends_on: '', budget: '', settings: normalizeProjectSettings(null),
+})
 
 const fromProject = (p) => ({
   client_id: p.client_id || '',
@@ -32,6 +37,7 @@ const fromProject = (p) => ({
   starts_on: p.starts_on || '',
   ends_on: p.ends_on || '',
   budget: p.budget_cents != null ? brl(p.budget_cents).replace(/[^\d,]/g, '') : '',
+  settings: normalizeProjectSettings(p.settings),
 })
 
 // Create OR edit a project. Pass `project` to edit (prefilled), omit to create.
@@ -41,12 +47,12 @@ export function ProjectFormDialog({ open, onOpenChange, project = null, onSaved 
   const editing = !!project
   const { create, update } = useProjectMutations()
   const mutation = editing ? update : create
-  const [form, setForm] = useState(EMPTY)
+  const [form, setForm] = useState(blankForm)
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }))
 
   // Reset/prefill whenever the dialog opens.
   useEffect(() => {
-    if (open) setForm(editing ? fromProject(project) : EMPTY)
+    if (open) setForm(editing ? fromProject(project) : blankForm())
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
@@ -62,6 +68,9 @@ export function ProjectFormDialog({ open, onOpenChange, project = null, onSaved 
       starts_on: form.starts_on || null,
       ends_on: form.ends_on || null,
       budget_cents: form.budget ? centsFromMasked(form.budget) : null,
+      // Config lives in a dedicated tab once the campaign exists; only the
+      // creation form seeds it inline.
+      ...(editing ? {} : { settings: form.settings }),
     }
     const opts = { onSuccess: (d) => { onOpenChange(false); onSaved?.(d?.project) } }
     if (editing) update.mutate({ id: project.id, data: payload }, opts)
@@ -133,6 +142,12 @@ export function ProjectFormDialog({ open, onOpenChange, project = null, onSaved 
               <DatePicker id="pj-end" value={form.ends_on} onChange={set('ends_on')} placeholder="Data de fim" />
             </div>
           </div>
+          {!editing && (
+            <div className="space-y-2 border-t border-border pt-3.5">
+              <SectionLabel>Configurações</SectionLabel>
+              <ProjectSettingsFields value={form.settings} onChange={set('settings')} resetKey={open} />
+            </div>
+          )}
           <DialogFooter>
             <DialogClose asChild><Button type="button" variant="ghost">Cancelar</Button></DialogClose>
             <Button type="submit" disabled={mutation.isPending || !form.client_id}>

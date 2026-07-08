@@ -27,11 +27,18 @@ module Operations
         # message (never concatenated into it by the client).
         # kickoff: the FIRST turn of an interview creative — no user message; the
         # agent opens the conversation (asks) instead of reacting to a message.
-        def initialize(creative:, message:, reference_image_urls: [], annotations: [], kickoff: false)
+        # reference_descriptions: parallel to reference_image_urls — the user's
+        # own words for each attached file ("what is this document?"). Merged with
+        # the per-annotation descriptions into ONE { url => description } map, so
+        # every downstream op (EditScene/AddScene) and the render manifest know how
+        # to use each file the way the user meant.
+        def initialize(creative:, message:, reference_image_urls: [], reference_descriptions: [],
+                       annotations: [], kickoff: false)
           @creative    = creative
           @message     = message.to_s.strip
           @refs        = Array(reference_image_urls).map { |u| u.to_s.strip }.reject(&:blank?)
           @annotations = normalize_annotations(annotations)
+          @ref_desc_map = build_description_map(reference_image_urls, reference_descriptions)
           @kickoff     = kickoff
         end
 
@@ -106,11 +113,14 @@ module Operations
             @edited_scene_ids << scene.id
             try_op(position) do
               Operations::Video::EditScene.call(scene: scene, caption: spec['caption'],
-                                                prompt: spec['prompt'], dialogue: spec['dialogue'],
+                                                prompt: spec['prompt'], camera: spec['camera'],
+                                                dialogue: spec['dialogue'],
+                                                sound_effects: spec['sound_effects'],
                                                 on_screen_text: spec['on_screen_text'], restyle: spec['restyle'],
                                                 # Global chat attachments + THIS scene's balloon references.
                                                 add_reference_urls: @refs + annotation_refs_for(position),
-                                                reference_role: decision['reference_role'])
+                                                reference_role: decision['reference_role'],
+                                                reference_descriptions: @ref_desc_map)
             end
           end
           removal_targets = resolve(removals) # records stay valid across reindexing
@@ -121,9 +131,12 @@ module Operations
             try_op(position) do
               Operations::Video::AddScene.call(creative: @creative, position: position,
                                                prompt: spec['prompt'], caption: spec['caption'],
-                                               dialogue: spec['dialogue'], on_screen_text: spec['on_screen_text'],
+                                               camera: spec['camera'], dialogue: spec['dialogue'],
+                                               sound_effects: spec['sound_effects'],
+                                               on_screen_text: spec['on_screen_text'],
                                                extra_reference_urls: @refs,
-                                               reference_role: decision['reference_role'])
+                                               reference_role: decision['reference_role'],
+                                               reference_descriptions: @ref_desc_map)
             end
           end
           touched += resolve(moves).filter_map do |scene, spec, position|
@@ -151,7 +164,8 @@ module Operations
 
             try_op(position) do
               Operations::Video::EditScene.call(scene: scene, add_reference_urls: urls,
-                                                reference_role: reference_role)
+                                                reference_role: reference_role,
+                                                reference_descriptions: @ref_desc_map)
             end
           end
         end
@@ -222,7 +236,8 @@ module Operations
             # gave (names, must-shows, exact lines) to an over-eager summary.
             prompt: build_generate_brief(decision['brief'], intake['brief']),
             voice: intake['voice'], aspect_ratio: intake['aspect_ratio'], duration: intake['duration'],
-            with_audio: intake['with_audio'], reference_image_urls: Array(intake['reference_image_urls'])
+            with_audio: intake['with_audio'], reference_image_urls: Array(intake['reference_image_urls']),
+            reference_descriptions: (intake['reference_descriptions'] || {})
           )
           decision['message'].to_s.strip.presence ||
             'Fechado! Já tenho o que preciso — montando seu vídeo agora. ✨'
@@ -370,10 +385,17 @@ module Operations
 
           kinds = @refs.map { |u| Operations::Video::References.kind_for(u) }
           what  = kinds.include?('vid') ? 'media reference(s) (image/video)' : 'reference image(s)'
+          # The user was asked "what is this file?" at upload — surface their exact
+          # words so the agent uses each file as intended and picks the right role.
+          described = @refs.each_with_index.filter_map do |u, i|
+            desc = @ref_desc_map[u].to_s.strip
+            "  - attachment #{i + 1}: #{desc.present? ? "the user says it is \"#{desc}\"" : '(no description given)'}"
+          end
           "The user attached #{@refs.size} #{what} this turn. They will be applied to the " \
-            'scene(s) you edit or add — so edit/add the relevant scene(s) and describe how to use them. ' \
-            "Set reference_role to what the user SAID the attachment is (#{Operations::Video::References::ASSIGNABLE_ROLES.join(' / ')}): " \
-            '"esse é o personagem" → character; "quero esse estilo" → style; a camera-movement video → camera; ' \
+            "scene(s) you edit or add — so edit/add the relevant scene(s) and use each file as the user described:\n" \
+            "#{described.join("\n")}\n" \
+            "Set reference_role from what the user said each file IS (#{Operations::Video::References::ASSIGNABLE_ROLES.join(' / ')}): " \
+            'a person/character → character; a look/aesthetic → style; a camera-movement video → camera; ' \
             'an action/choreography video → motion; a location → scene; a product photo → product. ' \
             'Unclear → omit it. A pure reply will NOT attach them.'
         end
@@ -387,7 +409,13 @@ module Operations
           return nil if @annotations.empty?
 
           lines = @annotations.map do |a|
-            ref = a[:reference_urls].present? ? " [#{a[:reference_urls].size} reference(s) attached to this scene]" : ''
+            descs = a[:reference_urls].each_index.filter_map { |i| a[:reference_descriptions][i].to_s.strip.presence }
+            ref = if a[:reference_urls].present?
+                    inner = descs.present? ? ": #{descs.map { |d| "\"#{d}\"" }.join(', ')}" : ''
+                    " [#{a[:reference_urls].size} reference(s) attached to this scene#{inner}]"
+                  else
+                    ''
+                  end
             "- Scene #{a[:scene]}: #{a[:note].presence || '(reference attached)'}#{ref}"
           end
           "Per-scene annotations the user pinned in the UI (apply EACH to its own scene — " \
@@ -396,7 +424,8 @@ module Operations
 
         # Keeps well-formed annotations (1-based scene number) that carry EITHER
         # a note OR a pinned reference. reference_urls ride with the scene they
-        # were pinned to (item: "a referência vai direto para o processo da cena").
+        # were pinned to (item: "a referência vai direto para o processo da cena");
+        # reference_descriptions is the parallel array of the user's words per file.
         def normalize_annotations(annotations)
           Array(annotations).filter_map do |a|
             h = a.respond_to?(:to_unsafe_h) ? a.to_unsafe_h : (a.respond_to?(:to_h) ? a.to_h : {})
@@ -404,10 +433,29 @@ module Operations
             scene = h['scene'].to_i
             note  = h['note'].to_s.strip
             refs  = Array(h['reference_urls']).map { |u| u.to_s.strip }.reject(&:blank?)
+            descs = Array(h['reference_descriptions']).map { |d| d.to_s.strip }
             next if scene < 1 || (note.blank? && refs.empty?)
 
-            { scene: scene, note: note, reference_urls: refs }
+            { scene: scene, note: note, reference_urls: refs, reference_descriptions: descs }
           end.sort_by { |a| a[:scene] }
+        end
+
+        # ONE { url => description } map from the turn's chat attachments AND every
+        # annotation's pinned references (blob urls are unique, so a flat map is
+        # safe). Downstream ops look up each url's description here.
+        def build_description_map(chat_urls, chat_descs)
+          map = {}
+          Array(chat_urls).each_with_index do |url, i|
+            u = url.to_s.strip
+            map[u] = Array(chat_descs)[i].to_s.strip if u.present? && Array(chat_descs)[i].to_s.strip.present?
+          end
+          @annotations.each do |a|
+            a[:reference_urls].each_with_index do |url, i|
+              desc = a[:reference_descriptions][i].to_s.strip
+              map[url] = desc if desc.present?
+            end
+          end
+          map
         end
 
         # What lands in the chat HISTORY as the user's message: the typed text
@@ -460,8 +508,10 @@ module Operations
             refs = Operations::Video::References.summary(s.labeled_references)
             "Scene #{s.position + 1} — #{state}#{failure}; caption (label only): #{s.caption.presence || '—'}\n" \
               "  dialogue (spoken verbatim): #{s.metadata['dialogue'].presence&.inspect || 'none'}; " \
+              "sound effects (model-generated): #{s.metadata['sound_effects'].presence&.inspect || 'none'}; " \
               "on-screen text: #{s.metadata['on_screen_text'].presence&.inspect || 'none'}\n" \
               "  references (cite by identifier in prompts): #{refs.presence || 'none'}\n" \
+              "  camera (cinematography): #{s.metadata['camera'].presence || 'none'}\n" \
               "  full current visual prompt: #{s.prompt}"
           end
           "#{video_status_line}\n#{quality_line}\n#{audio_line}\n#{identity_line}\n#{voice_line}\n#{credits_line}\n#{lines.join("\n")}"

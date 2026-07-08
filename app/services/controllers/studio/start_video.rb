@@ -20,7 +20,8 @@ module Controllers
           workspace: workspace, client_id: p[:client_id], mode: p[:mode],
           prompt: p[:prompt], voice: p[:voice], aspect_ratio: p[:aspect_ratio],
           duration: p[:duration], with_audio: p.fetch(:with_audio, true),
-          reference_image_urls: p.fetch(:reference_image_urls, [])
+          reference_image_urls: p.fetch(:reference_image_urls, []),
+          reference_descriptions: p.fetch(:reference_descriptions, {})
         )
         { creative: serialize(creative, CreativeSerializer), messages: creative.chat_messages }
       end

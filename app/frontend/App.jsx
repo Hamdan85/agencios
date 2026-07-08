@@ -107,6 +107,9 @@ const router = createBrowserRouter(
           <Route path="/tickets/:id" element={<TicketShow />} />
           <Route path="/tickets/:id/:tab" element={<TicketShow />} />
           <Route path="/publicacoes" element={<PostsIndex />} />
+          {/* Performance tab is its own path segment; the static route outranks
+              the :id post-detail route below (React Router ranks static > dynamic). */}
+          <Route path="/publicacoes/desempenho" element={<PostsIndex />} />
           <Route path="/publicacoes/:id" element={<PostShow />} />
           <Route path="/estudio" element={<Studio />} />
           <Route path="/cobrancas" element={<Invoices />} />

@@ -27,7 +27,7 @@ module Operations
       # spec, and the VOICE pick (one fixed voice for the whole video). Acts as a
       # plain Array (callers `.map`/`.size`/`.first` it) with extra readers.
       class Plan < Array
-        attr_accessor :identity, :music, :voice, :generated_references
+        attr_accessor :identity, :music, :voice, :generated_references, :constraints
       end
 
       MAX_SCENES = 6
@@ -46,9 +46,11 @@ module Operations
       ].freeze
 
       def initialize(ctx:, mode:, script: nil, brief: nil, total_duration:, aspect_ratio:,
-                     reference_image_urls: [], with_audio: nil)
+                     reference_image_urls: [], reference_descriptions: {}, with_audio: nil)
         @ctx    = ctx
         @mode   = mode.to_s
+        # { url => "user's words for the file" } — carried into the typed manifest.
+        @ref_descriptions = (reference_descriptions || {}).to_h
         # The caller's typed params win; but ticket/autopilot flows pass none —
         # fall back to the ticket's scope so the storyboard is built from the
         # planned content (script/brief/topic), never from brand context alone.
@@ -71,20 +73,26 @@ module Operations
         # drop assets the scene prompts already reference by identifier.
         mode  = effective_mode
         refs  = media_references
-        # The even split, snapped to a length the effective engine supports.
-        even  = snap_seconds(scene_duration(beats.size), mode)
+        # The even split — a flexible TARGET length (clamped, NOT snapped to a
+        # discrete clip length): the render picks the smallest supported clip that
+        # fits and compose TRIMS the shown video back to this target, so the final
+        # length isn't forced to multiples of the model's fixed clip sizes.
+        even  = clamp_target(scene_duration(beats.size), mode)
 
         specs = beats.each_with_index.map do |beat, i|
           {
             position: i,
             mode: mode,
             prompt: beat[:prompt],
+            camera: beat[:camera],
             caption: beat[:caption].to_s[0, 90],
             dialogue: beat[:dialogue],
+            sound_effects: beat[:sound_effects],
             on_screen_text: beat[:on_screen_text],
-            # The storyboard paces each shot by PICKING one of the engine's
-            # supported clip lengths (snapped defensively); else the even split.
-            duration_seconds: snap_seconds(beat[:duration_seconds], mode) || even,
+            # The storyboard PACES each shot by its intended length (sized to the
+            # spoken line when there is speech); the render clip snaps up and the
+            # compose trims to this exact target.
+            duration_seconds: clamp_target(beat[:duration_seconds], mode) || even,
             # Scene 1 always establishes; later scenes CONTINUE the previous shot
             # (seamless, seeded by its last frame) UNLESS the storyboard marked a
             # CUT — a new shot with the same characters/world but a fresh framing,
@@ -93,7 +101,8 @@ module Operations
             aspect_ratio: @aspect,
             seed: SecureRandom.hex(6),
             reference_image_urls: refs.map { |r| r[:url] },
-            reference_roles: refs.map { |r| r[:role] }
+            reference_roles: refs.map { |r| r[:role] },
+            reference_descriptions: refs.map { |r| r[:description] }
           }
         end
         specs = cap_to_total(specs)
@@ -109,6 +118,7 @@ module Operations
           plan.music = @music
           plan.voice = @voice
           plan.generated_references = @generated_references
+          plan.constraints = @constraints
         end
       end
 
@@ -162,6 +172,19 @@ module Operations
         VideoConfig.instance.snap_seconds(value, mode)
       end
 
+      # Clamp a per-scene TARGET length to [MIN_SCENE_SECONDS, longest supported
+      # clip] WITHOUT snapping to the discrete clip set — the render renders a
+      # supported clip >= this and compose trims back to it, so the shown length
+      # can be any value in range (audio-driven), not a fixed clip multiple. nil
+      # when absent (caller uses the even split).
+      def clamp_target(value, mode)
+        secs = value.to_i
+        return nil unless secs.positive?
+
+        max_clip = VideoConfig.instance.clip_seconds_for(mode).max
+        secs.clamp(MIN_SCENE_SECONDS, max_clip)
+      end
+
       # --- AI-planned storyboard (preferred) ------------------------------------
       def ai_beats
         storyboard = Prompts::VideoStoryboard.new(
@@ -205,6 +228,9 @@ module Operations
         # (a catalog label or voice_id). Kept only when non-blank.
         v = tool['voice']
         @voice = { 'voice' => v.to_s } if v.is_a?(String) && v.strip.present?
+        # HARD prohibitions the director gathered — enforced as negative constraints
+        # on every scene at render (merged with the client-positioning guardrails).
+        @constraints = Array(tool['constraints']).map { |c| c.to_s.strip }.reject(&:blank?).uniq.presence
         # The orchestrator's request to GENERATE reference images (character sheet
         # / scenario) for consistency — each { role, prompt }, kept only when the
         # prompt is present. Charged as image generations at render time.
@@ -216,8 +242,10 @@ module Operations
 
           {
             prompt: prompt,
+            camera: s['camera'].to_s.strip.presence,
             caption: s['caption'].to_s.strip.presence || prompt[0, 90],
             dialogue: s['dialogue'].to_s.strip.presence,
+            sound_effects: s['sound_effects'].to_s.strip.presence,
             on_screen_text: s['on_screen_text'].to_s.strip.presence,
             duration_seconds: s['duration_seconds'],
             # Default to a seamless continuation; only an explicit false is a cut.
@@ -362,13 +390,13 @@ module Operations
         raw =
           case mode
           when 'product'
-            @refs.map { |url| { url: url, role: 'product' } } +
+            @refs.map { |url| { url: url, role: 'product', description: @ref_descriptions[url] } } +
               [{ url: @ctx.brand_logo_url, role: 'logo' }]
           when 'avatar'
             [{ url: @ctx.brand_avatar_url, role: 'avatar' }] +
-              @refs.map { |url| { url: url, role: 'reference' } }
+              @refs.map { |url| { url: url, role: 'reference', description: @ref_descriptions[url] } }
           else # character / scene / motion — user references only
-            @refs.map { |url| { url: url, role: 'reference' } }
+            @refs.map { |url| { url: url, role: 'reference', description: @ref_descriptions[url] } }
           end
         References.build(raw)
       end

@@ -30,6 +30,7 @@ module Operations
           ctx: ctx, mode: params['mode'], script: params['script'], brief: params['brief'],
           total_duration: params['duration'].to_i, aspect_ratio: params['aspect_ratio'],
           reference_image_urls: Array(params['reference_image_urls']),
+          reference_descriptions: (params['reference_descriptions'] || {}),
           with_audio: params.key?('with_audio') ? ActiveModel::Type::Boolean.new.cast(params['with_audio']) : nil
         )
 
@@ -53,10 +54,13 @@ module Operations
         # per scene at render time), so the voice never drifts between clips.
         # Silent videos get none; empty catalog degrades to model native audio.
         voice = silent?(params) ? {} : ResolveVoice.call(spec: scene_specs.voice)
+        # Hard prohibitions the orchestrator gathered ("what CANNOT happen") —
+        # persisted so every scene render enforces them as negative constraints.
+        guardrails = scene_specs.constraints.present? ? { 'render_guardrails' => scene_specs.constraints } : {}
         @generation.update!(params: params.merge(
           'scene_count' => scenes.size,
           'estimated_seconds' => scenes.sum { |s| s.duration_seconds.to_i }
-        ).merge(identity).merge(music).merge(voice))
+        ).merge(identity).merge(music).merge(voice).merge(guardrails))
 
         # Sequential render for continuity: only the first scene starts here; each
         # completion (PollVideoSceneJob) chains the next seeded by its last frame.
@@ -90,7 +94,9 @@ module Operations
 
         spec.merge(
           reference_image_urls: generated.map { |r| r[:url] } + Array(spec[:reference_image_urls]),
-          reference_roles: generated.map { |r| r[:role] } + Array(spec[:reference_roles])
+          reference_roles: generated.map { |r| r[:role] } + Array(spec[:reference_roles]),
+          # A generated anchor's own prompt is its description (what it depicts).
+          reference_descriptions: generated.map { |r| r[:prompt] } + Array(spec[:reference_descriptions])
         )
       end
 

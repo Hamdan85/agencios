@@ -54,12 +54,54 @@ module Operations
           voices = with_audio? ? voice_paths(scenes, dir) : []
           Vendors::Ffmpeg::Concat.call(input_paths: inputs, width: w, height: h, output_path: out,
                                        mute: !with_audio?, music_path: music_path(dir),
-                                       music_mix: music_mix, voice_paths: voices)
+                                       music_mix: music_mix, voice_paths: voices,
+                                       trim_seconds: trim_seconds(scenes),
+                                       keep_audio: keep_audio(scenes))
 
           @creative.assets.purge if @creative.assets.attached?
           @creative.assets.attach(io: File.open(out), filename: "video-#{@creative.id}.mp4", content_type: 'video/mp4')
         end
       end
+
+      # The audio-driven TRIM length per scene (parallel to the input clips) — the
+      # engine renders a fixed-length clip (4/6/8s) but the shown scene is cut to
+      # its intended duration, so the final video isn't forced to clip-size
+      # multiples. A scene is trimmed to its target when it's SAFE to cut the clip:
+      #   * silent video — no speech to lose
+      #   * a scene with a synthesized voice — the voice is dubbed separately, so
+      #     the target is >= the spoken line (nothing is lost)
+      # A with_audio scene relying on the model's NATIVE audio (no synthesized
+      # voice) is NOT trimmed (nil) — its speech length is unknown, so cutting the
+      # clip could truncate a word.
+      def trim_seconds(scenes)
+        scenes.map do |s|
+          target = s.duration_seconds.to_i
+          next nil unless target.positive?
+          next target if !with_audio? || s.voice_clip.attached?
+
+          nil
+        end
+      end
+
+      # Which scenes should KEEP their model-generated audio (parallel to the
+      # clips). The orchestrator decides per scene: a scene KEEPS its audio when it
+      # asked the model for diegetic SOUND EFFECTS, or when it speaks and there is
+      # NO fixed voice to dub (the model's own voice is the only one). Everything
+      # else is muted — a dubbed talking-head or a clean clip — so nothing competes
+      # with the voice/music laid in post. Empty on a silent video (all muted).
+      def keep_audio(scenes)
+        return [] unless with_audio?
+
+        no_fixed_voice = fixed_voice_id.blank?
+        scenes.map do |s|
+          meta = s.metadata || {}
+          sfx = meta['sound_effects'].to_s.strip.present?
+          native_voice = no_fixed_voice && meta['dialogue'].to_s.strip.present?
+          sfx || native_voice
+        end
+      end
+
+      def fixed_voice_id = @creative.generation&.params&.dig('voice_id').to_s.strip.presence
 
       # The synthesized fixed-voice clip per scene (nil where none), parallel to
       # the input clips — the dub inputs for Concat. Empty when no scene has one.

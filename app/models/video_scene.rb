@@ -40,9 +40,11 @@ class VideoScene < ApplicationRecord
   # a mode-based role guess for scenes created before roles were persisted.
   def labeled_references
     roles = Array(metadata['reference_roles'])
+    descriptions = Array(metadata['reference_descriptions'])
     entries = reference_urls.each_with_index.map do |url, i|
       role = roles[i].presence || default_reference_role(i)
-      { url: url, role: role, kind: Operations::Video::References.kind_for(url) }
+      { url: url, role: role, kind: Operations::Video::References.kind_for(url),
+        description: descriptions[i].to_s.strip.presence }
     end
     Operations::Video::References.number(entries)
   end

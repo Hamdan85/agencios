@@ -30,19 +30,25 @@ module Vendors
       #   duration:         seconds (nil ⇒ model default)
       #   frame_images:     [{ url:, frame_type: 'first' | 'last' }]
       #   input_references: [{ url: }]  (product/subject reference photos)
-      # audio_references: reference-to-video AUDIO inputs ([{ url: }]) — a fixed
-      # voice track the model should lip-sync to. Sent as `audio_url` input
-      # references alongside the visual ones (same discriminated-union list).
+      #   generate_audio:   output toggle — whether the MODEL authors its own
+      #                     audio (dialogue/SFX/music). We set false whenever we
+      #                     dub a fixed Cartesia voice in post (so the model never
+      #                     adds a competing voice/soundtrack under our track), and
+      #                     true only when we rely on the model's native audio.
+      # NOTE: OpenRouter's video API takes NO driving-audio INPUT — references are
+      # hard-typed to image_url and only `generate_audio` (an OUTPUT boolean) is
+      # honored. `audio_references` are therefore NOT sent (the engine would ignore
+      # them); a fixed voice is delivered by dubbing in compose, not by the model.
       def submit(model:, prompt:, aspect_ratio: nil, duration: nil, frame_images: [],
-                 input_references: [], audio_references: [])
+                 input_references: [], audio_references: [], generate_audio: nil)
         require_credential!(@api_key, 'openrouter.api_key')
 
         payload = { model: model, prompt: prompt.to_s }
         payload[:aspect_ratio] = aspect_ratio if aspect_ratio.present?
         payload[:duration_seconds] = duration.to_i if duration.present?
+        payload[:generate_audio] = generate_audio unless generate_audio.nil?
         payload[:frame_images] = Array(frame_images).map { |f| frame_part(f) } if frame_images.present?
-        refs = Array(input_references).map { |ref| reference_part(ref) } +
-               Array(audio_references).map { |a| reference_part((a.respond_to?(:to_h) ? a.to_h : { url: a }).merge(type: 'audio_url')) }
+        refs = Array(input_references).map { |ref| reference_part(ref) }
         payload[:input_references] = refs if refs.present?
 
         body = handle(connection.post('/api/v1/videos') { |req| req.body = payload })

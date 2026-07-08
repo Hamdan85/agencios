@@ -192,6 +192,9 @@ export function GenerateDialog({ kind, open, onOpenChange, generate, startVideo,
   }
 
   const removeRef = (url) => setForm((f) => ({ ...f, reference_urls: f.reference_urls.filter((r) => r.url !== url) }))
+  const describeRef = (url, description) => setForm((f) => ({
+    ...f, reference_urls: f.reference_urls.map((r) => (r.url === url ? { ...r, description } : r)),
+  }))
 
   const selectedClient = clients.find((c) => String(c.id) === String(clientId)) || null
   const clientOption = selectedClient
@@ -227,10 +230,16 @@ export function GenerateDialog({ kind, open, onOpenChange, generate, startVideo,
     if (kind === 'video') {
       // No `mode` — the backend infers it (references present ⇒ product-leaning)
       // and the storyboard director makes the final call. `voice` keeps the
-      // warm default for whenever the director lands on a talking-head.
+      // warm default for whenever the director lands on a talking-head. Each
+      // reference carries the user's description ({ url => "what is this?" }) so
+      // the director knows how to use it.
+      const referenceDescriptions = Object.fromEntries(
+        form.reference_urls.filter((r) => r.url && (r.description || '').trim()).map((r) => [r.url, r.description.trim()]),
+      )
       return {
         ...base, aspect_ratio: form.aspect_ratio, duration: form.duration,
         with_audio: form.with_audio, reference_image_urls: refUrls,
+        reference_descriptions: referenceDescriptions,
         prompt: form.video_brief.trim(), voice: form.voice,
       }
     }
@@ -409,8 +418,9 @@ export function GenerateDialog({ kind, open, onOpenChange, generate, startVideo,
                 <RefUploader
                   urls={form.reference_urls} fileRef={fileRef} uploading={uploading}
                   onPick={() => fileRef.current?.click()} onRemove={removeRef} onFiles={pickRefs}
+                  describe onDescribe={describeRef}
                   label="Referências (opcional)"
-                  hint={`Até ${MAX_REFS} — fotos do produto, um estilo ou alguém que deve aparecer.`}
+                  hint={`Até ${MAX_REFS} — diga o que é cada arquivo para o vídeo usar do jeito certo.`}
                 />
 
                 <div className="grid gap-4 sm:grid-cols-3">
@@ -487,34 +497,69 @@ function PillGroup({ options, value, onChange }) {
 
 // Reference-image attach affordance for a prompt field — thumbnails + an add
 // tile. Shared by product/avatar video and image generation; the uploaded URLs
-// ride along as reference images the generator can draw on.
-function RefUploader({ urls, fileRef, uploading, onPick, onRemove, onFiles, label, hint }) {
+// ride along as reference images the generator can draw on. When `describe` is
+// set (video), each reference asks "what is this file?" so the storyboard
+// director knows how to use it (its name + the user's words).
+function RefUploader({ urls, fileRef, uploading, onPick, onRemove, onFiles, onDescribe, describe = false, label, hint }) {
   return (
     <Field label={label}>
       <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" multiple hidden onChange={onFiles} />
-      <div className="flex flex-wrap items-center gap-2.5">
-        {urls.map((r) => (
-          <div key={r.url} className="relative size-16 overflow-hidden rounded-xl border border-border">
-            <img src={r.url} alt="Referência" className="size-full object-cover" />
+      {describe ? (
+        <div className="space-y-2">
+          {urls.map((r) => (
+            <div key={r.url} className="flex items-center gap-2.5">
+              <div className="relative size-14 shrink-0 overflow-hidden rounded-xl border border-border">
+                <img src={r.url} alt="Referência" className="size-full object-cover" />
+              </div>
+              <input
+                value={r.description || ''}
+                onChange={(e) => onDescribe?.(r.url, e.target.value)}
+                placeholder="O que é este arquivo? (ex.: foto do produto, personagem, estilo…)"
+                className="h-10 min-w-0 flex-1 rounded-xl border border-border bg-surface px-3 text-sm text-ink placeholder:text-ink-faint focus:border-brand focus:outline-none"
+              />
+              <button
+                type="button" onClick={() => onRemove(r.url)} aria-label="Remover"
+                className="grid size-7 shrink-0 place-items-center rounded-lg text-ink-muted transition hover:text-danger"
+              >
+                <X size={15} />
+              </button>
+            </div>
+          ))}
+          {urls.length < 3 && (
             <button
-              type="button" onClick={() => onRemove(r.url)} aria-label="Remover"
-              className="absolute right-1 top-1 grid size-5 place-items-center rounded-md bg-black/55 text-white backdrop-blur"
+              type="button" onClick={onPick} disabled={uploading}
+              className="flex h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-border-strong text-sm font-semibold text-ink-muted transition hover:border-brand hover:text-brand disabled:opacity-50"
             >
-              <X size={12} />
+              {uploading ? <InlineSpinner size={18} /> : <><Plus size={16} /> Adicionar referência</>}
             </button>
-          </div>
-        ))}
-        {urls.length < 3 && (
-          <button
-            type="button" onClick={onPick} disabled={uploading}
-            className="grid size-16 place-items-center gap-0.5 rounded-xl border border-dashed border-border-strong text-ink-muted transition hover:border-brand hover:text-brand disabled:opacity-50"
-          >
-            {uploading ? <InlineSpinner size={18} /> : <Plus size={18} />}
-            <span className="text-[10px] font-bold">Imagem</span>
-          </button>
-        )}
-        <p className="ml-1 text-xs text-ink-muted">{hint}</p>
-      </div>
+          )}
+          <p className="text-xs text-ink-muted">{hint}</p>
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center gap-2.5">
+          {urls.map((r) => (
+            <div key={r.url} className="relative size-16 overflow-hidden rounded-xl border border-border">
+              <img src={r.url} alt="Referência" className="size-full object-cover" />
+              <button
+                type="button" onClick={() => onRemove(r.url)} aria-label="Remover"
+                className="absolute right-1 top-1 grid size-5 place-items-center rounded-md bg-black/55 text-white backdrop-blur"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          ))}
+          {urls.length < 3 && (
+            <button
+              type="button" onClick={onPick} disabled={uploading}
+              className="grid size-16 place-items-center gap-0.5 rounded-xl border border-dashed border-border-strong text-ink-muted transition hover:border-brand hover:text-brand disabled:opacity-50"
+            >
+              {uploading ? <InlineSpinner size={18} /> : <Plus size={18} />}
+              <span className="text-[10px] font-bold">Imagem</span>
+            </button>
+          )}
+          <p className="ml-1 text-xs text-ink-muted">{hint}</p>
+        </div>
+      )}
     </Field>
   )
 }

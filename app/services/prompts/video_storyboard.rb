@@ -85,11 +85,13 @@ module Prompts
         - The brand block and positioning above are BACKGROUND CONTEXT: they
           guide tone, styling, casting and message. Never paste them into a
           scene as spoken lines, captions or on-screen text.
-        - Each scene prompt is a rich, specific ENGLISH visual description for
-          the video model (camera, action, setting, lighting, pacing) — PURELY
-          VISUAL: no spoken lines, no lettering instructions inside it. Faithful
-          to the brand and the brief; never distort the product or invent
-          foreign elements.
+        - Each scene splits the visuals into TWO fields: `camera` (ONE dominant
+          camera movement + shot type + framing — always set, "static locked-off"
+          if still) and `prompt` (the rich ENGLISH visual narrative, ordered
+          SUBJECT → ACTION → SETTING → STYLE). Keep camera motion OUT of `prompt`
+          and subject motion OUT of `camera` — they must never tangle. Both are
+          PURELY VISUAL: no spoken lines, no lettering. Faithful to the brand and
+          the brief; never distort the product or invent foreign elements.
         - #{audio_rule}
         - on_screen_text: the EXACT final text for the scene (Brazilian
           Portuguese, correctly spelled) — or leave it empty for a text-free
@@ -107,17 +109,29 @@ module Prompts
     # otherwise the video model invents dialogue.
     def audio_rule
       if context[:with_audio] == false
-        'This video is SILENT: leave every dialogue field EMPTY — no scene may ' \
-          'contain speech or a voice-over.'
+        'This video is SILENT: leave every dialogue AND sound_effects field EMPTY — ' \
+          'no scene may contain speech, sound effects or a voice-over.'
       else
-        ['Sound is ON: put each scene\'s EXACT spoken line(s) in its dialogue ' \
-         'field (Brazilian Portuguese, final wording — it is spoken verbatim). ' \
-         'A scene with an empty dialogue field renders with ambient sound only. ' \
-         'Never write spoken words inside the visual prompt. Scenes carry NO ' \
-         'background music — a single royalty-free track is searched from an open ' \
-         'base and burned in post. In `music`, write the search `query` (English ' \
-         'mood + genre) and the mix (`volume`, `fade_in`, `fade_out`, `duck`) that ' \
-         'fit the video; omit `music` entirely for no music.', voice_rule].compact.join(' ')
+        ['Sound is ON. You DIRECT the audio of EACH scene independently — decide, per ' \
+         'scene, what the model should generate:',
+         '(a) DIALOGUE — put the EXACT spoken line(s) in `dialogue` (Brazilian ' \
+         'Portuguese, final wording, spoken verbatim). The voice is a single fixed ' \
+         'voice DUBBED in post, so the model shows the talking performance without ' \
+         'speaking — never write spoken words inside the visual prompt.',
+         '(b) SOUND EFFECTS — when a scene needs DIEGETIC sound that belongs to the ' \
+         'action (explosions, laser fire, spaceship engines, footsteps, wind, crowd, ' \
+         'a door, an impact), describe it in `sound_effects` (English) — the model ' \
+         'GENERATES that sound. Use it whenever the scene has meaningful action sound; ' \
+         'leave it EMPTY for a quiet talking-head or a scene whose sound you do not ' \
+         'want the model to invent. A scene may have BOTH dialogue and sound_effects ' \
+         '(a character speaks during a battle) — the SFX is kept and the voice is dubbed over it.',
+         '(c) A scene with EMPTY dialogue and EMPTY sound_effects renders with NO ' \
+         'model audio (a clean clip) — use this when the scene should be carried by ' \
+         'the voice/music alone.',
+         'NEVER ask the model for MUSIC or a soundtrack — a single royalty-free track ' \
+         'is searched from an open base and burned in post. In `music`, write the ' \
+         'search `query` (English mood + genre) and the mix (`volume`, `fade_in`, ' \
+         '`fade_out`, `duck`); omit `music` for no music.', voice_rule].compact.join(' ')
       end
     end
 
@@ -148,11 +162,17 @@ module Prompts
     end
 
     def duration_rule
-      opts = clip_seconds
-      "duration_seconds: the engine renders FIXED-length clips, so EACH scene's duration MUST be " \
-        "exactly one of these supported lengths: #{opts.join(', ')}s. YOU estimate each scene's " \
-        'length — scenes can (and should) have DIFFERENT lengths, chosen to fit their beat (shorter ' \
-        'for a quick cut, longer for a held moment). The sum of all durations must be about the total.'
+      base = 'duration_seconds: each scene\'s INTENDED length in seconds — this is the length the ' \
+             'viewer actually sees. The system renders a slightly longer supported clip and TRIMS it ' \
+             'back to your number, so you are NOT limited to fixed clip sizes: pick the exact length ' \
+             'the beat needs (e.g. 5, 7, 9…). Scenes can and should have DIFFERENT lengths. The sum of ' \
+             "all durations must be about the total (~#{context[:total_duration].to_i}s) and never exceed it."
+      return base if context[:with_audio] == false
+
+      "#{base} CRUCIAL — SIZE EACH SCENE BY ITS SPOKEN LINE: a scene's duration must be long enough to " \
+        'say its dialogue at a natural pace (about 2.5 words per second, plus a short breath). A longer ' \
+        'line needs a longer scene; a scene with no dialogue is paced purely by its action. The audio ' \
+        'and the video are trimmed together, so getting this right keeps speech perfectly in sync.'
     end
 
     # The duration → scene-count contract, stated as an unmissable rule.
@@ -259,6 +279,15 @@ module Prompts
               'description' => 'The ONE fixed voice for the whole video — pick a label from the ' \
                                'voice options in the rules (same speaker in every scene). Omit for the default.'
             },
+            'constraints' => {
+              'type' => 'array',
+              'description' => 'HARD prohibitions — things that must NOT appear or happen in ANY scene ' \
+                               '(brand / legal / compliance / safety), gathered from the brief and the ' \
+                               'client positioning. Short English phrases (e.g. "alcohol", "before/after ' \
+                               'results claims", "minors on camera"). Enforced as negative constraints on ' \
+                               'every scene at render. Omit if there are none.',
+              'items' => { 'type' => 'string' }
+            },
             'generated_references' => {
               'type' => 'array',
               'description' => 'OPTIONAL: reference images to GENERATE (via an image model) to lock ' \
@@ -294,11 +323,13 @@ module Prompts
               'items' => {
                 'type' => 'object', 'required' => %w[prompt caption],
                 'properties' => {
-                  'prompt' => { 'type' => 'string', 'description' => 'PURELY VISUAL description of the scene, in English (camera, action, setting, lighting). No spoken lines, no lettering instructions.' },
-                  'dialogue' => { 'type' => 'string', 'description' => 'EXACT spoken line(s) of the scene, Brazilian Portuguese, final wording — spoken verbatim. Empty/omitted = no speech in the scene.' },
+                  'camera' => { 'type' => 'string', 'description' => 'CINEMATOGRAPHY only, in English: ONE dominant camera movement + shot type + framing (e.g. "slow push-in, medium close-up" or "static locked-off wide shot"). Keep it SEPARATE from what the subject does — never mix camera motion and subject motion. Always give a camera; use "static locked-off" for a still shot.' },
+                  'prompt' => { 'type' => 'string', 'description' => 'The VISUAL narrative in English, written in this order: SUBJECT → ACTION → SETTING → STYLE (lighting/mood/grade). Do NOT put camera moves here (use "camera"), no spoken lines, no lettering.' },
+                  'dialogue' => { 'type' => 'string', 'description' => 'EXACT spoken line(s) of the scene, Brazilian Portuguese, final wording — spoken verbatim (dubbed in a fixed voice). Empty/omitted = no speech in the scene.' },
+                  'sound_effects' => { 'type' => 'string', 'description' => 'DIEGETIC sound the model should GENERATE for this scene, in English (e.g. "laser blasts, explosions and spaceship engines" or "footsteps on gravel, wind"). Empty/omitted = the model generates NO sound. NEVER put music here.' },
                   'on_screen_text' => { 'type' => 'string', 'description' => 'EXACT on-screen text, Brazilian Portuguese, correctly spelled. Empty/omitted = a text-free scene (the default).' },
                   'caption' => { 'type' => 'string', 'description' => 'Short scene summary in Brazilian Portuguese (for the editor).' },
-                  'duration_seconds' => { 'type' => 'integer', 'description' => 'Optional pacing for this shot — MUST be one of the engine\'s supported clip lengths listed in the rules (fixed-length clips). Omit for an even split.' },
+                  'duration_seconds' => { 'type' => 'integer', 'description' => 'The shot\'s intended length in seconds (any value, sized to its beat / spoken line — the system renders a clip and trims to this). Omit for an even split.' },
                   'continues_previous' => { 'type' => 'boolean', 'description' => 'true (default) = continues the previous shot seamlessly from its final frame; false = a CUT (new shot/scenario, same characters and world, does NOT start from the previous frame). Ignored for the first scene.' }
                 }
               }

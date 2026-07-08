@@ -53,6 +53,27 @@ RSpec.describe VideoConfig do
       expect(cfg.snap_seconds(100, 'avatar')).to eq(8) # clamp to max option
       expect(cfg.snap_seconds(0)).to eq(4)             # blank/zero → shortest, mode optional
     end
+
+    it 'snaps UP to the smallest clip that fits the target (so we can trim down)' do
+      cfg = described_class.new(default_model: 'google/veo-3.1', draft_model: 'google/veo-3.1-fast') # [4, 6, 8]
+      expect(cfg.clip_length_for(5)).to eq(6)  # 5 → render 6, trim to 5
+      expect(cfg.clip_length_for(6)).to eq(6)  # exact
+      expect(cfg.clip_length_for(7)).to eq(8)  # 7 → render 8, trim to 7
+      expect(cfg.clip_length_for(99)).to eq(8) # beyond all → longest
+    end
+
+    it 'forces the reference-locked length (Veo → 8s) when the scene carries reference media' do
+      cfg = described_class.new(default_model: 'google/veo-3.1', draft_model: 'google/veo-3.1-fast')
+      # A 5s target that would normally render a 6s clip must render 8s once a
+      # reference/seed frame is attached (Veo's 8s lock) — compose still trims to 5.
+      expect(cfg.render_clip_length(5, quality: 'final', has_reference_media: true)).to eq(8)
+      expect(cfg.render_clip_length(5, quality: 'final', has_reference_media: false)).to eq(6)
+    end
+
+    it 'does not force a fixed length for engines without a reference lock (Seedance)' do
+      cfg = described_class.new(default_model: 'bytedance/seedance-2.0', draft_model: 'bytedance/seedance-2.0')
+      expect(cfg.render_clip_length(9, has_reference_media: true)).to eq(10) # 4,5,6,8,10,12,15 → 10
+    end
   end
 
   describe 'voice catalog (Cartesia)' do

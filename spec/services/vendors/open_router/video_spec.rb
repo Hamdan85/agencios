@@ -59,6 +59,35 @@ RSpec.describe Vendors::OpenRouter::Video do
 
       expect(last_body).not_to have_key('input_references')
     end
+
+    it 'never sends audio_references (OpenRouter ignores audio inputs)' do
+      stub_post(body: { 'id' => 'job_a' })
+
+      video.submit(model: 'bytedance/seedance-2.0', prompt: 'x',
+                   audio_references: [{ url: 'https://cdn.example.com/voice.mp3' }])
+
+      refs = last_body['input_references'] || []
+      expect(refs.map { |r| r['type'] }).not_to include('audio_url')
+      expect(last_body).not_to have_key('input_references') # no visual refs either → omitted
+    end
+  end
+
+  describe '#submit generate_audio (output toggle)' do
+    it 'sends generate_audio when set (false = we dub our own voice)' do
+      stub_post(body: { 'id' => 'job_g' })
+
+      video.submit(model: 'bytedance/seedance-2.0', prompt: 'x', generate_audio: false)
+
+      expect(last_body['generate_audio']).to be(false)
+    end
+
+    it 'omits generate_audio when nil (model default)' do
+      stub_post(body: { 'id' => 'job_h' })
+
+      video.submit(model: 'bytedance/seedance-2.0', prompt: 'x')
+
+      expect(last_body).not_to have_key('generate_audio')
+    end
   end
 
   describe '#submit frame_images' do

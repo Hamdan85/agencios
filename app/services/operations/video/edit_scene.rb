@@ -21,27 +21,39 @@ module Operations
       # model draws on them. reference_role declares their JOB (character /
       # product / scene / style / camera / motion — Operations::Video::
       # References); falls back to the generic 'reference' when undeclared.
-      def initialize(scene:, caption: nil, prompt: nil, dialogue: nil, on_screen_text: nil,
-                     restyle: nil, add_reference_urls: [], reference_role: nil)
+      # reference_descriptions: a { url => description } map — the user's own words
+      # for each attached file ("what is this?"), persisted parallel to the urls so
+      # the render manifest tells the model how to use them.
+      def initialize(scene:, caption: nil, prompt: nil, camera: nil, dialogue: nil, sound_effects: nil,
+                     on_screen_text: nil, restyle: nil, add_reference_urls: [], reference_role: nil,
+                     reference_descriptions: {})
         @scene          = scene
         @caption        = caption
         @prompt         = prompt.to_s.strip.presence
+        @camera_given   = !camera.nil?
+        @camera         = camera.to_s.strip.presence
         @dialogue_given = !dialogue.nil?
         @dialogue       = dialogue.to_s.strip.presence
+        @sfx_given      = !sound_effects.nil?
+        @sfx            = sound_effects.to_s.strip.presence
         @text_given     = !on_screen_text.nil?
         @text           = on_screen_text.to_s.strip.presence
         @restyle        = restyle
         @new_refs       = Array(add_reference_urls).map { |u| u.to_s.strip }.reject(&:blank?)
         @ref_role       = References.assignable_role(reference_role)
+        @ref_descriptions = (reference_descriptions || {}).to_h
       end
 
       def call
         @scene.update!(caption: @caption) unless @caption.nil?
 
-        # A dialogue change on a SILENT video is a no-op the model can't honor —
-        # drop it (don't charge, don't re-render) so the user isn't billed for a
-        # render that can never contain the requested speech.
-        @dialogue_given = false if @dialogue_given && silent?
+        # A dialogue OR sound-effects change on a SILENT video is a no-op the model
+        # can't honor — drop it (don't charge, don't re-render) so the user isn't
+        # billed for a render that can never contain the requested audio.
+        if silent?
+          @dialogue_given = false
+          @sfx_given = false
+        end
 
         # Newly attached reference images are appended before the re-render so
         # the submitted scene carries them.
@@ -61,7 +73,8 @@ module Operations
       private
 
       def render_requested?
-        @prompt.present? || @dialogue_given || @text_given || restyle_requested? || refs_added?
+        @prompt.present? || @camera_given || @dialogue_given || @sfx_given || @text_given ||
+          restyle_requested? || refs_added?
       end
 
       def refs_added? = @new_refs.any?
@@ -74,9 +87,15 @@ module Operations
 
         roles = Array(@scene.metadata['reference_roles'])
         roles += [@ref_role] * @new_refs.size
+        # Pad the descriptions array to the current url count (older scenes may
+        # have none), then append the new files' user descriptions — index-aligned.
+        existing = Array(@scene.metadata['reference_descriptions'])
+        current_count = @scene.reference_urls.size
+        descriptions = Array.new(current_count) { |i| existing[i] }
+        descriptions += @new_refs.map { |u| @ref_descriptions[u].to_s.strip.presence }
         @scene.update!(
           reference_image_urls: @scene.reference_urls + @new_refs,
-          metadata: @scene.metadata.merge('reference_roles' => roles)
+          metadata: @scene.metadata.merge('reference_roles' => roles, 'reference_descriptions' => descriptions)
         )
       end
 
@@ -90,7 +109,9 @@ module Operations
 
       def changed?
         (@prompt.present? && @prompt != @scene.prompt.to_s.strip) ||
+          (@camera_given && @camera != @scene.metadata['camera'].to_s.strip.presence) ||
           (@dialogue_given && @dialogue != @scene.metadata['dialogue'].to_s.strip.presence) ||
+          (@sfx_given && @sfx != @scene.metadata['sound_effects'].to_s.strip.presence) ||
           (@text_given && @text != @scene.metadata['on_screen_text'].to_s.strip.presence)
       end
 
@@ -116,7 +137,9 @@ module Operations
         @scene.creative.update!(status: :generating) if @scene.creative.status_ready? || @scene.creative.status_failed?
 
         meta = @scene.metadata.merge('restyle' => @restyle == true)
+        meta['camera'] = @camera if @camera_given
         meta['dialogue'] = @dialogue if @dialogue_given
+        meta['sound_effects'] = @sfx if @sfx_given
         meta['on_screen_text'] = @text if @text_given
         @scene.update!(prompt: @prompt || @scene.prompt, render_state: :stale, metadata: meta.compact)
 

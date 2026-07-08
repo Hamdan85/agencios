@@ -1,5 +1,6 @@
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts'
 import { compact } from '@/lib/formatters'
+import ChartTooltip from './ChartTooltip'
 
 // A donut split with a big total in the hole. `data` = [{ label, value, color }].
 // Used for the network / format share of a metric (views by default). Legend is
@@ -18,7 +19,7 @@ export default function DonutBreakdown({ data = [], height = 200, total, unit = 
             <Pie data={rows} dataKey="value" nameKey="label" innerRadius="66%" outerRadius="100%" paddingAngle={2} strokeWidth={0}>
               {rows.map((d) => <Cell key={d.label} fill={d.color} />)}
             </Pie>
-            <Tooltip formatter={(v) => compact(v)} />
+            <Tooltip content={<ChartTooltip />} />
           </PieChart>
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">

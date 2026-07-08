@@ -10,7 +10,7 @@ module Operations
     #
     # Best-effort: a Banana failure refunds the debit and returns nil (the video
     # ships without the generated anchor — never fails the whole render).
-    # Returns { url:, role: } or nil.
+    # Returns { url:, role:, prompt: } or nil.
     class GenerateReference < Operations::Base
       ROLES = %w[character scene].freeze
 
@@ -43,7 +43,7 @@ module Operations
           io: StringIO.new(result[:bytes]), filename: "vidref-#{@generation.id}-#{@role}.jpg",
           content_type: result[:content_type] || 'image/jpeg'
         )
-        { url: public_url(blob), role: @role }
+        { url: public_url(blob), role: @role, prompt: @prompt }
       end
 
       private

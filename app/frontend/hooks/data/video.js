@@ -86,8 +86,10 @@ export function useVideoChat(creativeId) {
   const qc = useQueryClient()
   return useMutation({
     mutationKey: ['video-chat', creativeId],
-    mutationFn: ({ message, referenceUrls = [], annotations = [] }) =>
-      videoScenesApi.chat(creativeId, { message, reference_image_urls: referenceUrls, annotations }),
+    mutationFn: ({ message, referenceUrls = [], referenceDescriptions = [], annotations = [] }) =>
+      videoScenesApi.chat(creativeId, {
+        message, reference_image_urls: referenceUrls, reference_descriptions: referenceDescriptions, annotations,
+      }),
     // Optimistic: the user's message lands in the transcript IMMEDIATELY (the
     // typing dots then show while the agent thinks); the server response later
     // replaces the whole history, so no reconciliation is needed on success.

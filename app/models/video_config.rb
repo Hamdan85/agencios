@@ -38,25 +38,49 @@ class VideoConfig < ApplicationRecord
   QUALITIES = %w[draft final].freeze
 
   # The two engines the platform runs (editable in ActiveAdmin; these are only the
-  # seed / fallback). FINAL is best quality with native audio; DRAFT is the fast,
-  # cheap preview — a generation renders draft-first, then upgrades to final on
-  # approval.
-  DEFAULT_MODEL = 'google/veo-3.1'
-  DEFAULT_DRAFT_MODEL = 'google/veo-3.1-fast'
+  # seed / fallback). Both are Google Veo 3.1 — FINAL = veo-3.1-fast (the cheaper
+  # mid tier), DRAFT = veo-3.1-lite (the cheapest image-capable model on OpenRouter,
+  # ~$0.03/s). A generation renders draft-first, then upgrades to final on approval.
+  #
+  # WHY Veo, not Seedance: Seedance 2.0 categorically REJECTS person input images
+  # (references AND continuity frames) with a privacy block, so it cannot run the
+  # avatar/UGC/multi-scene-person pipeline. Veo accepts real people (empirically
+  # verified end-to-end) with no special flag, and Veo-lite is even cheaper than
+  # Seedance-fast. Trade-off: Veo renders FIXED 4/6/8s clips and LOCKS to 8s once a
+  # reference/frame image is attached (REFERENCE_LOCKED_SECONDS) — the trim
+  # pipeline handles that (render 8s, trim to the audio-driven target).
+  DEFAULT_MODEL = 'google/veo-3.1-fast'
+  DEFAULT_DRAFT_MODEL = 'google/veo-3.1-lite'
 
-  # The DISCRETE clip lengths (seconds) an engine actually renders. Video models
-  # produce fixed-length clips — a scene's duration MUST be one of these, never an
-  # arbitrary value. A scene picks AMONG its engine's options (the storyboard is
-  # told them; PlanScenes/AddScene snap to the nearest). Keyed by model slug;
-  # anything unlisted uses DEFAULT_CLIP_SECONDS.
+  # The DISCRETE clip lengths (seconds) an engine actually renders. A scene's
+  # RENDER duration must be one of these; the shown scene is then trimmed to its
+  # audio-driven target in compose (so the final length isn't forced to a clip
+  # multiple). Keyed by model slug; anything unlisted uses DEFAULT_CLIP_SECONDS.
   #
   # These are best-effort defaults — confirm each engine's real supported lengths
-  # against its API and add overrides here. Kept sorted ascending.
+  # against its API (GET /api/v1/videos/models) and add overrides here. Sorted asc.
   DEFAULT_CLIP_SECONDS = [4, 6, 8].freeze
   MODEL_CLIP_SECONDS = {
-    'google/veo-3.1'         => [4, 6, 8],
-    'google/veo-3.1-fast'    => [4, 6, 8],
-    'bytedance/seedance-2.0' => [4, 8]
+    'google/veo-3.1'              => [4, 6, 8],
+    'google/veo-3.1-fast'         => [4, 6, 8],
+    'google/veo-3.1-lite'         => [4, 6, 8],
+    # Seedance 2.0 renders 4–15s (verified against ByteDance/Replicate/Segmind);
+    # the safe discrete set. OpenRouter's exact enforced enum isn't published —
+    # query GET /api/v1/videos/models if renders reject a length. Both tiers
+    # (full + -fast) share the same range.
+    'bytedance/seedance-2.0'      => [4, 5, 6, 8, 10, 12, 15],
+    'bytedance/seedance-2.0-fast' => [4, 5, 6, 8, 10, 12, 15]
+  }.freeze
+
+  # Models whose duration is FORCED to a single length once a reference/frame
+  # image is attached (Veo 3.1 locks to 8s with reference or first-frame images —
+  # and our scenes almost always carry a continuity seed and/or references). When
+  # this applies we render that fixed length and TRIM to the target in compose —
+  # exactly the "render 8s and trim" path these engines require. Keyed by slug.
+  REFERENCE_LOCKED_SECONDS = {
+    'google/veo-3.1'      => 8,
+    'google/veo-3.1-fast' => 8,
+    'google/veo-3.1-lite' => 8
   }.freeze
 
   # Background-music moods the storyboard can pick from. The video model never
@@ -133,6 +157,32 @@ class VideoConfig < ApplicationRecord
     return opts.min if secs <= 0
 
     opts.min_by { |o| [(o - secs).abs, o] }
+  end
+
+  # The clip length to actually RENDER for a target duration: the SMALLEST
+  # supported length that is >= the target, so the rendered clip is always long
+  # enough to be TRIMMED back down to the (audio-driven) target. Falls back to
+  # the longest supported clip when the target exceeds every option (compose then
+  # fits the audio into that longest clip). Blank/zero → the shortest.
+  def clip_length_for(target_seconds, mode = nil)
+    opts = clip_seconds_for(mode)
+    secs = target_seconds.to_f
+    return opts.min if secs <= 0
+
+    opts.find { |o| o >= secs - 0.01 } || opts.max
+  end
+
+  # The clip length to RENDER for a target, accounting for engines that FORCE a
+  # fixed duration when a reference/frame image is attached (Veo → 8s). When such
+  # a lock applies (the current tier's model is reference-locked AND the scene
+  # carries reference/seed media), render that fixed length; otherwise snap up
+  # normally. Compose trims the shown scene back to the target either way, so the
+  # final length is still audio-driven — this only keeps the SUBMIT valid.
+  def render_clip_length(target_seconds, quality: 'final', has_reference_media: false)
+    locked = has_reference_media ? REFERENCE_LOCKED_SECONDS[model_for(quality: quality)] : nil
+    return locked if locked
+
+    clip_length_for(target_seconds)
   end
 
   # 'openrouter' | '' (auto) — normalized.

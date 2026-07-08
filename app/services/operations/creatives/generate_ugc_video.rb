@@ -31,7 +31,8 @@ module Operations
       # (immediate generation: autopilot / ticket flows).
       def initialize(ticket: nil, mode: nil, script: nil, prompt: nil, avatar: nil, voice: nil,
                      aspect_ratio: nil, duration: nil, reference_image_urls: [],
-                     creative_type: nil, client_id: nil, with_audio: nil, creative: nil)
+                     reference_descriptions: {}, creative_type: nil, client_id: nil,
+                     with_audio: nil, creative: nil)
         @ticket        = ticket
         @creative_arg  = creative
         @script        = script
@@ -40,6 +41,9 @@ module Operations
         @aspect_ratio  = aspect_ratio
         @duration      = duration
         @ref_urls      = Array(reference_image_urls).map { |u| u.to_s.strip }.reject(&:blank?)
+        # { url => "what the user says this file is" } — persisted on the generation
+        # so the storyboard/render manifest uses each reference the way it was meant.
+        @ref_descriptions = (reference_descriptions || {}).to_h.select { |u, _| @ref_urls.include?(u.to_s) }
         # The type is no longer a mandatory upfront pick — the creation form sends
         # no mode; the storyboard DIRECTOR chooses the real one (avatar/product/
         # character/scene/motion). This is only the SEED: honor an explicit mode,
@@ -83,7 +87,8 @@ module Operations
           user: Current.user, creative: creative, kind: :video, status: :processing, provider: PROVIDER,
           params: { mode: @mode, aspect_ratio: aspect, duration: duration,
                     script: @script, brief: @prompt, client_id: client&.id,
-                    voice: @voice, reference_image_urls: @ref_urls, with_audio: @with_audio,
+                    voice: @voice, reference_image_urls: @ref_urls,
+                    reference_descriptions: @ref_descriptions, with_audio: @with_audio,
                     quality: 'draft', estimated_seconds: duration }
         )
 

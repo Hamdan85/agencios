@@ -20,9 +20,12 @@ RSpec.describe Operations::Video::DecoratePrompt do
 
   it 'opens with the visual prompt and gives brand look as natural guidance — no hex, no labels' do
     out = described_class.call(prompt: 'A cheetah sprints across a rooftop', mode: 'product',
+                               model: 'bytedance/seedance-2.0', # narrative-first dialect
                                ctx: ctx_double(brand_primary: '#035e09', brand_secondary: '#F59E0B'))
 
-    expect(out).to start_with("A cheetah sprints across a rooftop\n")
+    # Seedance dialect (default engine): the visual narrative leads, then the
+    # camera as its own clause, then the brand look.
+    expect(out).to start_with('A cheetah sprints across a rooftop. Camera:')
     expect(out).to include('Look & feel', 'NEVER show any color name, hex code, label')
     expect(out).to include('keep the mood tom jovem e direto', 'grade toward the brand colors (deep green and orange)')
     # The literal metadata that leaked onto the frame must NOT be in the prompt.
@@ -72,36 +75,49 @@ RSpec.describe Operations::Video::DecoratePrompt do
     out = described_class.call(prompt: 'p', mode: 'avatar', ctx: ctx_double,
                                with_audio: true, dialogue: 'Oi')
 
-    expect(out).to include('NO music of any kind', '(no music, no background music',
-                           'added separately in post-production')
+    expect(out).to include('NEVER generate any music', 'a single track is added separately in post')
   end
 
-  it 'tells the model to lip-sync to the fixed-voice audio reference when voiced' do
+  it 'asks for a SILENT talking performance (dubbed in post) when voiced, no SFX' do
     out = described_class.call(prompt: 'p', mode: 'avatar', ctx: ctx_double,
                                with_audio: true, dialogue: 'Com a gente, nenhum prazo escapa.', voiced: true)
 
-    expect(out).to include('"Com a gente, nenhum prazo escapa."', 'AUDIO REFERENCE (a fixed voice)',
-                           'lip-sync to that exact audio', 'do NOT generate a different voice')
-    # The free "delivery tone" phrasing is replaced by the fixed-voice contract.
-    expect(out).not_to include('Delivered in a')
+    expect(out).to include('"Com a gente, nenhum prazo escapa."', 'render this clip SILENT',
+                           'dubbed in afterward')
+    # We NEVER tell the model to lip-sync to a provided audio (it receives none) —
+    # that produced odd mouth behavior. And no free "delivery tone" phrasing here.
+    expect(out).not_to include('lip-sync to that exact audio', 'Delivered in a')
   end
 
-  it 'locks speech to the verbatim dialogue field' do
+  it 'keeps the model SFX under a dubbed voice when sound_effects are set' do
+    out = described_class.call(prompt: 'p', mode: 'scene', ctx: ctx_double, with_audio: true,
+                               dialogue: 'Ativar escudos!', voiced: true,
+                               sound_effects: 'laser blasts and explosions')
+
+    # The model generates the SFX but not the voice (dubbed) and never music.
+    expect(out).to include("GENERATE the scene's diegetic sound: laser blasts and explosions",
+                           'do NOT generate any spoken voice or dialogue audio',
+                           'NEVER generate any music')
+    expect(out).not_to include('render this clip SILENT') # it must NOT be silent — it has SFX
+  end
+
+  it 'locks speech to the verbatim dialogue field (native voice, no fixed voice)' do
     out = described_class.call(prompt: 'p', mode: 'avatar', ctx: ctx_double,
                                with_audio: true, dialogue: 'Com a ACME, nenhum prazo escapa.')
 
-    expect(out).to include('spoken EXACTLY as written', 'NOTHING else may be spoken',
-                           '"Com a ACME, nenhum prazo escapa."')
+    expect(out).to include('EXACTLY as written', 'nothing else is spoken',
+                           '"Com a ACME, nenhum prazo escapa."', 'NEVER generate any music')
   end
 
-  it 'states ambient-only when sound is on without dialogue, and full silence when sound is off' do
-    ambient = described_class.call(prompt: 'p', mode: 'avatar', ctx: ctx_double, with_audio: true)
+  it 'renders a clean silent clip when sound is on but there is no dialogue or SFX' do
+    quiet   = described_class.call(prompt: 'p', mode: 'avatar', ctx: ctx_double, with_audio: true)
     silent  = described_class.call(prompt: 'p', mode: 'avatar', ctx: ctx_double,
                                    with_audio: false, dialogue: 'ignored')
     legacy  = described_class.call(prompt: 'p', mode: 'avatar', ctx: ctx_double)
 
-    expect(ambient).to include('no dialogue in this scene — ambient/natural sound only')
-    expect(silent).to include('SILENT video — no speech')
+    # No dialogue + no SFX ⇒ the model generates NO audio (voice/music added in post).
+    expect(quiet).to include('render this clip SILENT')
+    expect(silent).to include('SILENT clip — generate NO audio')
     expect(silent).not_to include('ignored') # a silent video never carries dialogue
     expect(legacy).not_to include('Audio:', 'Dialogue')
   end
@@ -119,6 +135,7 @@ RSpec.describe Operations::Video::DecoratePrompt do
   it 'strips a legacy decorated prompt to its clean visual part and recompiles (no boilerplate stacking, no dropped fields)' do
     legacy = 'A creator waves. On-screen text rule: legible or nothing. Never invent watermarks'
     out = described_class.call(prompt: legacy, mode: 'avatar', ctx: ctx_double,
+                               model: 'bytedance/seedance-2.0', # narrative-first dialect
                                with_audio: true, dialogue: 'Olá!')
 
     expect(out).to start_with('A creator waves.')
@@ -126,10 +143,25 @@ RSpec.describe Operations::Video::DecoratePrompt do
     expect(out).to include('"Olá!"') # the new first-class dialogue survives (old bug: it was dropped)
   end
 
-  it 'adds hard brand guardrails as a do-not constraint' do
+  it 'adds hard brand guardrails as a do-not constraint (Seedance avoid-clause)' do
     out = described_class.call(prompt: 'p', mode: 'avatar', ctx: ctx_double,
+                               model: 'bytedance/seedance-2.0',
                                guardrails: 'bebidas alcoólicas; antes e depois')
-    expect(out).to include('Hard brand constraints — the scene must NOT contain any of: bebidas alcoólicas; antes e depois')
+    expect(out).to include('Avoid (must NOT appear or happen): bebidas alcoólicas; antes e depois')
+  end
+
+  it 'merges the chat-captured "cannot happen" constraints with the positioning guardrails' do
+    out = described_class.call(prompt: 'p', mode: 'avatar', ctx: ctx_double,
+                               guardrails: 'bebidas alcoólicas',
+                               render_guardrails: ['menores de idade', 'promessa de resultado garantido'])
+    expect(out).to include('bebidas alcoólicas', 'menores de idade', 'promessa de resultado garantido')
+  end
+
+  it 'phrases guardrails POSITIVELY for the Veo dialect (it ignores negation)' do
+    out = described_class.call(prompt: 'p', mode: 'avatar', ctx: ctx_double,
+                               model: 'google/veo-3.1', guardrails: 'bebidas alcoólicas')
+    expect(out).to include('Keep the scene entirely free of bebidas alcoólicas')
+    expect(out).not_to include('must NOT contain', 'Avoid (must NOT')
   end
 
   it 'applies the chosen voice delivery tone to the spoken line' do

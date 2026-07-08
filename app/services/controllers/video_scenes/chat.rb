@@ -18,7 +18,7 @@ module Controllers
 
         result = Operations::Video::Chat::ResolveTurn.call(
           creative: creative, message: message, reference_image_urls: reference_image_urls,
-          annotations: annotations
+          reference_descriptions: reference_descriptions, annotations: annotations
         )
         creative.reload
 
@@ -48,6 +48,12 @@ module Controllers
       # URLs from the uploads endpoint).
       def reference_image_urls
         Array(@params[:reference_image_urls]).map { |u| u.to_s.strip }.reject(&:blank?)
+      end
+
+      # Parallel to reference_image_urls — the user's own words for each file
+      # ("what is this document?"), so the orchestrator uses it as intended.
+      def reference_descriptions
+        Array(@params[:reference_descriptions]).map { |d| d.to_s }
       end
 
       # Structured per-scene notes from the UI balloons:

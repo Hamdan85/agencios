@@ -95,7 +95,7 @@ export default function PostsPerformance({ overview, loading }) {
           <LineTrend data={overview.timeseries || []} keys={['views', 'engagement', 'reach']} />
         </Panel>
         <Panel title="Por rede" color={BRAND}>
-          <DonutBreakdown data={byNetwork} legend unit="views" />
+          <DonutBreakdown data={byNetwork} legend unit="Visualizações" />
         </Panel>
       </div>
 
@@ -130,7 +130,7 @@ export default function PostsPerformance({ overview, loading }) {
                 </div>
                 <div className="shrink-0 text-right">
                   <p className="font-display text-sm font-bold tabular-nums text-ink">{compact(p.views)}</p>
-                  <p className="text-[11px] font-medium text-ink-muted">{compact(p.engagement)} eng.</p>
+                  <p className="text-[11px] font-medium text-ink-muted">{compact(p.engagement)} engaj.</p>
                 </div>
                 {p.permalink && (
                   <a href={p.permalink} target="_blank" rel="noreferrer" className="shrink-0 text-ink-muted transition-colors hover:text-ink" title="Abrir na rede">

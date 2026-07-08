@@ -7,14 +7,11 @@ import { Card } from '@/components/ui/card'
 import { IconTile } from '@/components/ui/icon-tile'
 import { Input } from '@/components/ui/input'
 import { DatePicker } from '@/components/ui/date-picker'
-import { Avatar } from '@/components/ui/avatar'
 import { Spinner } from '@/components/ui/feedback'
-import {
-  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu'
+import { AssigneeMenu } from '@/components/ui/assignee-menu'
 import { cn } from '@/lib/utils'
 import { date } from '@/lib/formatters'
-import { ListChecks, Plus, Check, Wand2, Pencil, UserPlus, X } from 'lucide-react'
+import { ListChecks, Plus, Check, Wand2, Pencil, X } from 'lucide-react'
 
 // The right-rail checklist: progress bar, toggleable items, inline add, plus
 // per-item edit (title + due date) and assignment.
@@ -199,7 +196,13 @@ export default function SubtasksPanel({ ticketId, subtasks = [], onAdd, adding =
 
                 {/* Assignee + edit — assignee avatar always shows when set. */}
                 <div className="flex shrink-0 items-center gap-1">
-                  <AssigneeControl sub={sub} people={people} onAssign={assign} />
+                  <AssigneeMenu
+                    members={people}
+                    value={sub.assignee_id ?? null}
+                    name={sub.assignee_name}
+                    onSelect={(userId) => assign(sub, userId)}
+                    size={28}
+                  />
                   <button
                     type="button"
                     onClick={() => startEdit(sub)}
@@ -232,49 +235,5 @@ export default function SubtasksPanel({ ticketId, subtasks = [], onAdd, adding =
         </button>
       </form>
     </Card>
-  )
-}
-
-// Small assignee picker: shows the assignee's avatar, or — when unassigned — a
-// permanently visible dashed-circle affordance (the row must read as
-// assignable at a glance). Opens a member dropdown that patches assignee_id.
-function AssigneeControl({ sub, people, onAssign }) {
-  const currentId = sub.assignee_id
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          className={cn(
-            'flex size-7 items-center justify-center rounded-full transition',
-            sub.assignee_name
-              ? 'opacity-100'
-              : 'border border-dashed border-ink-faint/60 text-ink-faint hover:border-brand hover:bg-brand/5 hover:text-brand',
-          )}
-          aria-label={sub.assignee_name ? `Responsável: ${sub.assignee_name}` : 'Atribuir subtarefa'}
-          title={sub.assignee_name || 'Atribuir responsável'}
-        >
-          {sub.assignee_name ? <Avatar name={sub.assignee_name} size={22} /> : <UserPlus size={13} />}
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="max-h-72 overflow-y-auto">
-        <DropdownMenuLabel>Atribuir a</DropdownMenuLabel>
-        <DropdownMenuItem onClick={() => onAssign(sub, null)}>
-          <span className="text-ink-muted">Sem responsável</span>
-          {!currentId && <Check size={14} className="ml-auto !text-brand" />}
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        {people.map((p) => {
-          const userId = p.user_id ?? p.id
-          return (
-            <DropdownMenuItem key={p.id} onClick={() => onAssign(sub, userId)}>
-              <Avatar name={p.name} src={p.avatar_url} size={20} />
-              <span className="truncate">{p.name}</span>
-              {currentId === userId && <Check size={14} className="ml-auto !text-brand" />}
-            </DropdownMenuItem>
-          )
-        })}
-      </DropdownMenuContent>
-    </DropdownMenu>
   )
 }

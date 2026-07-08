@@ -33,7 +33,27 @@ module Controllers
         end
         rel = filter_dates(rel)
         rel = rel.where('posts.caption ILIKE ?', "%#{escape_like(@params[:q])}%") if @params[:q].present?
-        rel.order(Arel.sql('COALESCE(posts.published_at, posts.scheduled_at) DESC NULLS LAST'))
+        order_for(rel)
+      end
+
+      # Sort the global list. Metric sorts (views/engagement) order by each post's
+      # latest metric snapshot via a correlated subquery so pagination stays intact.
+      def order_for(rel)
+        case @params[:sort]
+        when 'oldest'
+          rel.order(Arel.sql('COALESCE(posts.published_at, posts.scheduled_at) ASC NULLS LAST'))
+        when 'views'
+          rel.order(Arel.sql("#{latest_metric_sql('pm.views')} DESC NULLS LAST"))
+        when 'engagement'
+          rel.order(Arel.sql("#{latest_metric_sql('(pm.likes + pm.comments + pm.shares + pm.saves)')} DESC NULLS LAST"))
+        else # 'recent' (default)
+          rel.order(Arel.sql('COALESCE(posts.published_at, posts.scheduled_at) DESC NULLS LAST'))
+        end
+      end
+
+      def latest_metric_sql(expr)
+        "(SELECT #{expr} FROM post_metrics pm WHERE pm.post_id = posts.id " \
+          'ORDER BY pm.captured_at DESC NULLS LAST LIMIT 1)'
       end
 
       def tickets_for_client

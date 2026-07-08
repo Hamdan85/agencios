@@ -26,9 +26,13 @@ module Operations
           next if scene.reference_urls.include?(@url) # already present on this scene
 
           roles = Array(scene.metadata['reference_roles'])
+          # Keep the descriptions array index-aligned before prepending this one,
+          # so the render manifest tells the model what the file is.
+          descriptions = Array.new(scene.reference_urls.size) { |i| Array(scene.metadata['reference_descriptions'])[i] }
           scene.update!(
             reference_image_urls: [@url] + scene.reference_urls,
-            metadata: scene.metadata.merge('reference_roles' => [@role] + roles)
+            metadata: scene.metadata.merge('reference_roles' => [@role] + roles,
+                                           'reference_descriptions' => [@description] + descriptions)
           )
         end
 

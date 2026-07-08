@@ -13,7 +13,7 @@ import {
 // Reach + views are the "how many saw it" pair; the four below compose engagement.
 const METRIC_TILES = [
   { key: 'reach', label: 'Alcance', icon: Eye, color: '#0EA5E9' },
-  { key: 'views', label: 'Views', icon: BarChart3, color: '#7C3AED' },
+  { key: 'views', label: 'Visualizações', icon: BarChart3, color: '#7C3AED' },
   { key: 'likes', label: 'Curtidas', icon: Heart, color: '#EC4899' },
   { key: 'comments', label: 'Comentários', icon: MessageCircle, color: '#F59E0B' },
   { key: 'shares', label: 'Compart.', icon: Share2, color: '#10B981' },
@@ -124,23 +124,11 @@ export default function PostDetailPerformance({ metrics, history = [] }) {
       )}
 
       {trend.length > 1 && (
-        <SectionCard icon={LineChart} color="#0EA5E9" title="Evolução" hint="Views, engajamento e alcance no tempo">
+        <SectionCard icon={LineChart} color="#0EA5E9" title="Evolução" hint="Visualizações, engajamento e alcance no tempo">
           <div className="overflow-x-auto">
             <div className="min-w-[280px]">
               <LineTrend data={trend} keys={['views', 'engagement', 'reach']} />
             </div>
-          </div>
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
-            {[
-              { label: 'Views', color: '#7C3AED' },
-              { label: 'Engajamento', color: '#EC4899' },
-              { label: 'Alcance', color: '#0EA5E9' },
-            ].map((l) => (
-              <span key={l.label} className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-ink-muted">
-                <span className="size-2 rounded-full" style={{ background: l.color }} />
-                {l.label}
-              </span>
-            ))}
           </div>
         </SectionCard>
       )}

@@ -108,7 +108,7 @@ RSpec.describe 'video scene pipeline' do
       expect(scenes.last[:continues_previous]).to be(false) # a cut
     end
 
-    it 'snaps a storyboard duration that is NOT a supported clip length to the nearest option' do
+    it 'keeps a storyboard duration that is NOT a discrete clip length as a flexible target' do
       ai = instance_double('ai_client', provider_key: 'openrouter')
       allow(ai).to receive(:generate).and_return(
         Vendors::Ai::Result.new(text: '', usage: {}, model: 'x', tool_input: {
@@ -120,9 +120,11 @@ RSpec.describe 'video scene pipeline' do
 
       scenes = described_class.call(ctx: ctx, mode: 'avatar', script: 'oi', total_duration: 8, aspect_ratio: '9:16')
 
-      # avatar → veo-3.1 family supports [4, 6, 8]; 7 snaps to 6 (tie rounds down).
-      expect(VideoConfig::DEFAULT_CLIP_SECONDS).to include(scenes.first[:duration_seconds])
-      expect(scenes.first[:duration_seconds]).to eq(6)
+      # 7 is kept as the target (the render snaps up to a supported clip and
+      # compose TRIMS the shown video back to 7s — not forced to a clip multiple).
+      expect(scenes.first[:duration_seconds]).to eq(7)
+      # The clip actually submitted is the smallest supported length >= 7 (8s).
+      expect(VideoConfig.instance.clip_length_for(7)).to eq(8)
     end
 
     it 'caps scenes so their durations never overshoot the total (over-pacing → fewer scenes)' do
@@ -253,11 +255,12 @@ RSpec.describe 'video scene pipeline' do
 
     before { allow(Vendors::OpenRouter::Actions::GenerateVideo).to receive(:call).and_return('job_render') }
 
-    it 'passes the synthesized voice clip as an audio reference and demands lip-sync' do
+    it 'renders a SILENT talking clip (dubbed in post) and disables model audio when voiced' do
       generation.update!(params: generation.params.merge('with_audio' => true, 'voice_id' => 'voice_abc'))
       scene.update!(metadata: scene.metadata.merge('dialogue' => 'Fala fixa', 'voice_fingerprint' => 'x'))
       # Pre-attach a voice clip whose fingerprint matches → ensure_voice_clip! reuses it
-      # (no Cartesia call) and the render carries it as the lip-sync audio reference.
+      # (no Cartesia call). The fixed voice is DUBBED in compose, so the render must
+      # produce no audio (generate_audio: false) and never claim in-model lip-sync.
       allow_any_instance_of(Operations::Video::RenderScene).to receive(:ensure_voice_clip!)
       scene.voice_clip.attach(io: StringIO.new('AUDIO'), filename: 'v.mp3', content_type: 'audio/mpeg')
 
@@ -265,8 +268,8 @@ RSpec.describe 'video scene pipeline' do
 
       expect(Vendors::OpenRouter::Actions::GenerateVideo).to have_received(:call).with(
         hash_including(
-          audio_references: [hash_including(url: a_string_including('/rails/'))],
-          prompt: a_string_including('AUDIO REFERENCE (a fixed voice)')
+          generate_audio: false,
+          prompt: a_string_including('render this clip SILENT')
         )
       )
     end
@@ -278,12 +281,28 @@ RSpec.describe 'video scene pipeline' do
       )
     end
 
+    it 'lets the model generate diegetic audio when the scene has sound_effects' do
+      generation.update!(params: generation.params.merge('with_audio' => true, 'voice_id' => 'voice_abc'))
+      scene.update!(metadata: scene.metadata.merge('sound_effects' => 'laser blasts and explosions'))
+
+      described_class.call(scene: scene)
+
+      expect(Vendors::OpenRouter::Actions::GenerateVideo).to have_received(:call).with(
+        hash_including(
+          generate_audio: true, # SFX scene → the model DOES produce audio
+          prompt: a_string_including("GENERATE the scene's diegetic sound: laser blasts and explosions")
+        )
+      )
+    end
+
     it 'submits the COMPILED prompt but keeps the stored prompt clean' do
       described_class.call(scene: scene)
 
       expect(Vendors::OpenRouter::Actions::GenerateVideo).to have_received(:call).with(
         hash_including(prompt: satisfy do |p|
-          p.start_with?('A creator waves hello') && p.include?('On-screen text: NONE') &&
+          # Veo dialect (default engine) leads with the camera clause, so the
+          # narrative is present but not necessarily first.
+          p.include?('A creator waves hello') && p.include?('On-screen text: NONE') &&
             !p.include?('NEXT BEAT')
         end)
       )
@@ -342,7 +361,7 @@ RSpec.describe 'video scene pipeline' do
 
       expect(Vendors::OpenRouter::Actions::GenerateVideo).to have_received(:call).with(
         hash_including(prompt: satisfy do |p|
-          p.start_with?('old prompt.') && p.scan('On-screen text rule:').size.zero?
+          p.include?('old prompt.') && p.scan('On-screen text rule:').size.zero?
         end)
       )
     end
@@ -427,7 +446,7 @@ RSpec.describe 'video scene pipeline' do
       described_class.call(scene: scene)
 
       expect(Vendors::OpenRouter::Actions::GenerateVideo).to have_received(:call).with(
-        hash_including(prompt: a_string_including('spoken EXACTLY as written', '"Nunca mais perca um prazo."'))
+        hash_including(prompt: a_string_including('EXACTLY as written', '"Nunca mais perca um prazo."'))
       )
     end
   end

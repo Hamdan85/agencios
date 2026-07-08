@@ -251,8 +251,8 @@ export const videoScenesApi = {
   // Conversational editor: send a message + optional attached media reference
   // URLs + the structured per-scene annotations ([{ scene, note }]); the agent
   // decides what to re-render.
-  chat: (creativeId, { message, reference_image_urls = [], annotations = [] }) =>
-    api.post(`/creatives/${creativeId}/video_chat`, { message, reference_image_urls, annotations }),
+  chat: (creativeId, { message, reference_image_urls = [], reference_descriptions = [], annotations = [] }) =>
+    api.post(`/creatives/${creativeId}/video_chat`, { message, reference_image_urls, reference_descriptions, annotations }),
   // Approve the draft → re-render everything with the final (best) model.
   finalize: (creativeId) => api.post(`/creatives/${creativeId}/video_finalize`),
   // Elementos tab: the video's characters/scenarios/references/music.

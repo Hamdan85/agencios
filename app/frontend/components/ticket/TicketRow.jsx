@@ -14,6 +14,7 @@ import {
   StatusPill, StatusDot, CreativeTypeChip, ChannelIcons, PriorityDot,
 } from '@/components/ui/iconography'
 import { Avatar } from '@/components/ui/avatar'
+import { AssigneeMenu } from '@/components/ui/assignee-menu'
 import { WorkingBadge } from '@/components/ticket/WorkingBadge'
 import { AlertBadge } from '@/components/ticket/AlertBadge'
 import { DUE_TONE, AUTOPILOT_RING, ALERT_RING, projectAccent } from '@/components/ticket/ticketVisuals'
@@ -150,28 +151,14 @@ export function TicketRow({
             </Badge>
           )}
           {canAssign ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button type="button" aria-label="Atribuir responsável"
-                  className="shrink-0 rounded-full outline-none transition hover:opacity-80 focus:ring-2 focus:ring-brand/40">
-                  {ticket.assignee
-                    ? <Avatar name={ticket.assignee.name} src={ticket.assignee.avatar_url} size={26} />
-                    : <span className="flex size-[26px] items-center justify-center rounded-full border border-dashed border-border text-ink-faint">+</span>}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-48">
-                <DropdownMenuItem onClick={() => onAssign(ticket.id, null)} disabled={busy}>
-                  <span className="flex size-6 items-center justify-center rounded-full border border-dashed border-border text-ink-faint">–</span>
-                  Sem responsável
-                </DropdownMenuItem>
-                {members.map((m) => (
-                  <DropdownMenuItem key={m.user?.id || m.id} onClick={() => onAssign(ticket.id, m.user?.id || m.id)} disabled={busy}>
-                    <Avatar name={m.user?.name || m.name} src={m.user?.avatar_url} size={22} />
-                    {m.user?.name || m.name}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <AssigneeMenu
+              members={members}
+              value={ticket.assignee?.id ?? null}
+              name={ticket.assignee?.name}
+              avatarUrl={ticket.assignee?.avatar_url}
+              onSelect={(userId) => onAssign(ticket.id, userId)}
+              disabled={busy}
+            />
           ) : ticket.assignee
             ? <Avatar name={ticket.assignee.name} src={ticket.assignee.avatar_url} size={26} />
             : <span className="size-[26px] shrink-0 rounded-full border border-dashed border-border" />}

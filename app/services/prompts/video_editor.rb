@@ -34,9 +34,15 @@ module Prompts
         - The COMPLETE context you are aiming for: (1) objective of the video;
           (2) target audience; (3) the subject — a person talking, a product, a
           character/mascot, a place/scene? (4) tone / energy; (5) what MUST appear
-          and what to AVOID; (6) the key message + any CTA; (7) references (ask the
-          user to attach an image/video if useful). Skip any the setup already
-          answers.
+          and — IMPORTANTLY — what must NOT appear or happen (hard brand / legal /
+          compliance / safety limits: things that CANNOT be shown or said); (6) the
+          key message + any CTA; (7) references (ask the user to attach an
+          image/video if useful). Skip any the setup already answers.
+        - ALWAYS check for hard prohibitions before generating: if the brief hints
+          at a regulated space (health, finance, alcohol, children, legal, medical)
+          or the client positioning lists things to avoid, ASK plainly "há algo que
+          NÃO pode aparecer ou ser dito?" and fold every prohibition into the brief
+          — they become enforced negative constraints on every scene.
         - Do NOT interrogate: a couple of good questions is enough. As soon as you
           have enough to make a great video — OR the user tells you to go ("pode
           gerar", "gera", "manda ver") — use action "generate": pass a consolidated
@@ -98,12 +104,13 @@ module Prompts
           cause. Rewrite the FIELD that caused it: a speech/audio-safety
           rejection → change the "dialogue"; a visual/copyright rejection →
           change the "prompt". Then re-render it via "edit".
-        - If the user ATTACHED media reference(s) this turn (stated at the top),
-          they auto-attach to the scene(s) you edit or add — so "edit"/"add" the
-          relevant scene and describe how to use them in its prompt. Also set
-          "reference_role" to what the user said the attachment IS (character /
-          product / scene / style / camera / motion); omit it when unclear. A
-          pure "reply" leaves attachments unused.
+        - If the user ATTACHED media reference(s) this turn (stated at the top,
+          each with the user's OWN description of what the file is), they
+          auto-attach to the scene(s) you edit or add — so "edit"/"add" the
+          relevant scene and use each file the way the user described it in the
+          scene's prompt. Also set "reference_role" from that description
+          (character / product / scene / style / camera / motion); omit it when
+          unclear. A pure "reply" leaves attachments unused.
         - Each scene's context line lists its references by IDENTIFIER
           (img_character_v1, img_style_v1, vid_camera_ref_v1, …). When a prompt
           should draw on one, CITE that identifier in the prompt text (e.g.
@@ -150,14 +157,22 @@ module Prompts
         does nothing to the video.
 
         The scene fields (internal — never mention them in your reply):
-        - "prompt": the PURELY VISUAL description, in English (camera, action,
-          setting, lighting). No spoken lines, no lettering instructions inside
-          it. You receive each scene's FULL current prompt — to change one thing
-          and keep the rest, rewrite it whole: copy what you received and change
-          only what the user asked.
+        - "camera": the CINEMATOGRAPHY — ONE dominant camera move + shot type +
+          framing, English ("slow push-in, medium close-up"; "static locked-off
+          wide"). Kept SEPARATE from subject motion. Omit to keep the current move.
+        - "prompt": the VISUAL narrative, English, ordered SUBJECT → ACTION →
+          SETTING → STYLE. No camera moves here (use "camera"), no spoken lines,
+          no lettering. You receive each scene's FULL current prompt — to change
+          one thing and keep the rest, rewrite it whole.
         - "dialogue": the EXACT spoken line(s), Brazilian Portuguese, final
-          wording — spoken verbatim, nothing else may be spoken. Empty string =
-          remove the speech (ambient only). Omit = keep the current dialogue.
+          wording — spoken verbatim (dubbed in a fixed voice). Empty string =
+          remove the speech. Omit = keep the current dialogue.
+        - "sound_effects": the DIEGETIC sound the model should GENERATE for the
+          scene (English — "explosions, laser fire", "footsteps, wind"). Use it
+          when the user asks for action sound ("põe som de explosão", "quero o
+          barulho dos passos") or the scene clearly needs it. Empty string = no
+          model-generated sound; omit = keep. NEVER put music here (music is a
+          separate post track — use action "music").
         - "on_screen_text": the EXACT lettering, Brazilian Portuguese, correctly
           spelled. Empty string = a text-free scene. Omit = keep the current
           text. Only use text that genuinely serves the message.
@@ -264,8 +279,10 @@ module Prompts
                 'type' => 'object', 'required' => %w[scene],
                 'properties' => {
                   'scene' => { 'type' => 'integer', 'description' => 'Scene number as the user sees it, starting at 1.' },
-                  'prompt' => { 'type' => 'string', 'description' => 'The scene\'s FULL new PURELY VISUAL prompt, in English (re-renders it). No spoken lines or lettering inside — use dialogue/on_screen_text.' },
+                  'camera' => { 'type' => 'string', 'description' => 'CINEMATOGRAPHY only, English: ONE dominant camera move + shot type + framing ("slow push-in, medium close-up"; "static locked-off wide"). Separate from subject motion. Omit to keep; re-renders.' },
+                  'prompt' => { 'type' => 'string', 'description' => 'The scene\'s FULL new VISUAL narrative, English, ordered SUBJECT → ACTION → SETTING → STYLE (re-renders it). No camera moves (use "camera"), no spoken lines or lettering.' },
                   'dialogue' => { 'type' => 'string', 'description' => 'EXACT spoken line(s), Brazilian Portuguese, spoken verbatim (re-renders). Empty string removes the speech; omit to keep.' },
+                  'sound_effects' => { 'type' => 'string', 'description' => 'DIEGETIC sound the model should GENERATE for this scene, in English (e.g. "explosions and laser fire", "footsteps, wind"). Empty string = a scene with no model-generated sound; omit to keep. NEVER music. (re-renders)' },
                   'on_screen_text' => { 'type' => 'string', 'description' => 'EXACT on-screen text, Brazilian Portuguese (re-renders). Empty string makes the scene text-free; omit to keep.' },
                   'caption' => { 'type' => 'string', 'description' => 'Short label shown in the editor UI only (Brazilian Portuguese). NEVER appears in the video and does not render anything.' },
                   'restyle' => { 'type' => 'boolean', 'description' => 'true ONLY when the user wants a genuinely NEW look for this scene; otherwise the re-render keeps the current footage as visual reference.' },

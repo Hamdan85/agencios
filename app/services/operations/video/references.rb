@@ -88,19 +88,22 @@ module Operations
         'img'
       end
 
-      # Normalizes raw { url:, role:, kind: } entries into the canonical typed
-      # set: valid roles only, priority-SORTED (stable), kind inferred from the
-      # URL when absent, and a version + identifier assigned per (kind, role) in
-      # final order. This runs when a scene's references are ASSEMBLED — the
-      # stored url/role arrays keep this order, so the submitted inputs, the
-      # manifest and the identifiers always line up.
+      # Normalizes raw { url:, role:, kind:, description: } entries into the
+      # canonical typed set: valid roles only, priority-SORTED (stable), kind
+      # inferred from the URL when absent, and a version + identifier assigned per
+      # (kind, role) in final order. This runs when a scene's references are
+      # ASSEMBLED — the stored url/role arrays keep this order, so the submitted
+      # inputs, the manifest and the identifiers always line up. `description` is
+      # the USER's own words for what the file IS ("what is this document?") —
+      # carried verbatim into the manifest so the model/agent knows how to use it.
       def build(entries)
         typed = Array(entries).filter_map do |e|
           url = e[:url].to_s.strip
           next if url.blank?
 
           role = ROLES.include?(e[:role].to_s) ? e[:role].to_s : 'reference'
-          { url: url, role: role, kind: KINDS.include?(e[:kind].to_s) ? e[:kind].to_s : kind_for(url) }
+          { url: url, role: role, kind: KINDS.include?(e[:kind].to_s) ? e[:kind].to_s : kind_for(url),
+            description: e[:description].to_s.strip.presence }
         end
         number(typed.sort_by.with_index { |e, i| [ROLE_PRIORITY.fetch(e[:role], 6), i] })
       end
@@ -117,18 +120,24 @@ module Operations
       end
 
       # The manifest lines for the render prompt: position → identifier → the
-      # role's contract. Position anchors the identifier to the attached input
-      # (the API carries no names); the identifier is what scene prompts cite.
+      # role's contract → the USER's description of the file. Position anchors the
+      # identifier to the attached input (the API carries no names); the identifier
+      # is what scene prompts cite. The user's own description ("what is this?") is
+      # appended so the model uses the file the way the user meant it, not just by
+      # a generic role guess.
       def manifest_lines(entries)
         entries.map.with_index do |e, i|
-          "input #{i + 1} = #{e[:id]}: #{ROLE_CONTRACTS.fetch(e[:role], ROLE_CONTRACTS['reference'])}"
+          base = "input #{i + 1} = #{e[:id]}: #{ROLE_CONTRACTS.fetch(e[:role], ROLE_CONTRACTS['reference'])}"
+          e[:description].present? ? "#{base} The user describes this file as: \"#{e[:description]}\"." : base
         end
       end
 
-      # One compact "id (role)" listing — the agent-facing view of a scene's
-      # references (chat context, storyboard context).
+      # One compact "id (role — description)" listing — the agent-facing view of a
+      # scene's references (chat context, storyboard context).
       def summary(entries)
-        entries.map { |e| "#{e[:id]} (#{e[:role]})" }.join(', ')
+        entries.map do |e|
+          e[:description].present? ? "#{e[:id]} (#{e[:role]} — #{e[:description]})" : "#{e[:id]} (#{e[:role]})"
+        end.join(', ')
       end
 
       # A user/agent-declared role for an attachment, constrained to the

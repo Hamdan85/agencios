@@ -54,6 +54,16 @@ RSpec.describe 'Seat compliance on plan downgrade' do
       workspace.sync_seat_compliance!
       expect(workspace.over_seat_limit?).to be(false)
     end
+
+    it 'ignores a STALE over_seat_limit flag once godfathered (no re-sync needed)' do
+      _owner, workspace = register_with_members(plan: :solo, member_count: 3)
+      # Flag set true while on a limited plan, THEN godfathered without a re-sync —
+      # the exact state that surfaced the bug (banner + write-block on a founding ws).
+      workspace.update!(over_seat_limit: true)
+      workspace.update!(godfathered: true)
+      expect(workspace.over_seat_limit?).to be(false)
+      expect(workspace.seat_limit).to eq(Float::INFINITY)
+    end
   end
 
   describe 'Controllers::Billing::ChangePlan' do

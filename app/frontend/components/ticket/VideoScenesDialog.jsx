@@ -395,17 +395,25 @@ function SceneTile({ scene: s, isPlayhead, within, note, onSeek, onSaveNote }) {
           ref={fileRef} type="file" multiple hidden onChange={pickRef}
           accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
         />
-        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        <div className="mt-2 space-y-1.5">
           {draftRefs.map((r, i) => (
-            <div key={r.url} className="relative size-10 overflow-hidden rounded-lg border border-border">
-              {r.kind === 'vid'
-                ? <video src={r.url} muted preload="metadata" className="size-full object-cover" />
-                : <img src={r.url} alt="Referência" className="size-full object-cover" />}
+            <div key={r.url} className="flex items-center gap-1.5">
+              <div className="relative size-9 shrink-0 overflow-hidden rounded-lg border border-border">
+                {r.kind === 'vid'
+                  ? <video src={r.url} muted preload="metadata" className="size-full object-cover" />
+                  : <img src={r.url} alt="Referência" className="size-full object-cover" />}
+              </div>
+              <input
+                value={r.description || ''}
+                onChange={(e) => setDraftRefs((prev) => prev.map((x, j) => (j === i ? { ...x, description: e.target.value } : x)))}
+                placeholder="O que é este arquivo?"
+                className="h-8 min-w-0 flex-1 rounded-lg border border-border bg-surface px-2 text-xs text-ink placeholder:text-ink-faint focus:border-brand focus:outline-none"
+              />
               <button
                 type="button" onClick={() => setDraftRefs((prev) => prev.filter((_, j) => j !== i))}
-                aria-label="Remover" className="absolute right-0 top-0 grid size-3.5 place-items-center rounded bg-black/60 text-white"
+                aria-label="Remover" className="grid size-5 shrink-0 place-items-center rounded text-ink-muted transition hover:text-danger"
               >
-                <X size={9} />
+                <X size={11} />
               </button>
             </div>
           ))}
@@ -413,9 +421,9 @@ function SceneTile({ scene: s, isPlayhead, within, note, onSeek, onSaveNote }) {
             <button
               type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
               title="Anexar referência a esta cena"
-              className="grid size-10 place-items-center rounded-lg border border-dashed border-border-strong text-ink-muted transition hover:border-brand hover:text-brand disabled:opacity-50"
+              className="flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border-strong text-xs font-semibold text-ink-muted transition hover:border-brand hover:text-brand disabled:opacity-50"
             >
-              {uploading ? <InlineSpinner size={14} /> : <ImagePlus size={14} />}
+              {uploading ? <InlineSpinner size={14} /> : <><ImagePlus size={14} /> Anexar referência</>}
             </button>
           )}
         </div>
@@ -537,11 +545,14 @@ function Chat({ messages, notes, onRemoveNote, onSend, sending, working = [], cr
     if ((!msg && refs.length === 0 && !hasNotes) || sending) return
     // Scene annotations (set via the tile balloons) + attachments ride along
     // with the message. With only notes and no typed text, still send so the
-    // annotations get applied.
-    onSend(msg || (hasNotes ? 'Aplique as anotações das cenas.' : 'Use esta referência.'), refs.map((r) => r.url))
+    // annotations get applied. Each ref carries the user's description.
+    onSend(msg || (hasNotes ? 'Aplique as anotações das cenas.' : 'Use esta referência.'), refs)
     setText('')
     setRefs([])
   }
+
+  const setRefDescription = (i, description) =>
+    setRefs((prev) => prev.map((r, j) => (j === i ? { ...r, description } : r)))
 
   return (
     <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-border bg-surface-muted/30">
@@ -602,19 +613,28 @@ function Chat({ messages, notes, onRemoveNote, onSend, sending, working = [], cr
             ))}
           </div>
         )}
-        {/* Attached media references (image or video) — ride with the next message */}
+        {/* Attached media references (image or video) — each asks "what is this?"
+            so the editor knows how to use the file; rides with the next message. */}
         {refs.length > 0 && (
-          <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+          <div className="mb-1.5 space-y-1.5">
             {refs.map((r, i) => (
-              <div key={r.url} className="relative size-11 overflow-hidden rounded-lg border border-border">
-                {r.kind === 'vid'
-                  ? <video src={r.url} muted preload="metadata" className="size-full object-cover" />
-                  : <img src={r.url} alt="Referência" className="size-full object-cover" />}
+              <div key={r.url} className="flex items-center gap-2">
+                <div className="relative size-10 shrink-0 overflow-hidden rounded-lg border border-border">
+                  {r.kind === 'vid'
+                    ? <video src={r.url} muted preload="metadata" className="size-full object-cover" />
+                    : <img src={r.url} alt="Referência" className="size-full object-cover" />}
+                </div>
+                <input
+                  value={r.description || ''}
+                  onChange={(e) => setRefDescription(i, e.target.value)}
+                  placeholder="O que é este arquivo? (ex.: logo, personagem…)"
+                  className="h-9 min-w-0 flex-1 rounded-lg border border-border bg-surface px-2.5 text-xs text-ink placeholder:text-ink-faint focus:border-brand focus:outline-none"
+                />
                 <button
                   type="button" onClick={() => setRefs((prev) => prev.filter((_, j) => j !== i))}
-                  aria-label="Remover" className="absolute right-0.5 top-0.5 grid size-4 place-items-center rounded bg-black/60 text-white"
+                  aria-label="Remover" className="grid size-6 shrink-0 place-items-center rounded-md text-ink-muted transition hover:text-danger"
                 >
-                  <X size={10} />
+                  <X size={13} />
                 </button>
               </div>
             ))}
@@ -1159,12 +1179,23 @@ export function VideoScenesDialog({ creative, open, onOpenChange }) {
   // ([{ scene, note, reference_urls }]) alongside the message — never
   // concatenated into the text. The server maps each note + reference to its
   // scene; a pinned reference reaches that scene's render directly.
-  const send = (message, referenceUrls = []) => {
+  // Chat attachments arrive as [{ url, kind, description }]; each note's pinned
+  // refs the same. We split url + description into parallel arrays (what the
+  // server expects) so the user's "what is this?" answer rides to the orchestrator.
+  const send = (message, chatRefs = []) => {
     const annotations = notes.map((n) => ({
-      scene: n.scene, note: n.text || '', reference_urls: (n.refs || []).map((r) => r.url),
+      scene: n.scene,
+      note: n.text || '',
+      reference_urls: (n.refs || []).map((r) => r.url),
+      reference_descriptions: (n.refs || []).map((r) => r.description || ''),
     }))
     setNotes([])
-    chat.mutate({ message, referenceUrls, annotations })
+    chat.mutate({
+      message,
+      referenceUrls: chatRefs.map((r) => r.url),
+      referenceDescriptions: chatRefs.map((r) => r.description || ''),
+      annotations,
+    })
   }
 
   // The player box matches the video's real proportions; wide videos bind to

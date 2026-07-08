@@ -17,10 +17,13 @@ module Controllers
       private
 
       def project_params
-        @params.require(:project).permit(
+        permitted = @params.require(:project).permit(
           :client_id, :name, :description, :color, :status,
           :starts_on, :ends_on, :budget_cents
         )
+        raw_settings = @params.dig(:project, :settings)
+        permitted[:settings] = ::Tickets::ProjectSettings.sanitize(raw_settings.to_unsafe_h) if raw_settings.present?
+        permitted
       end
     end
   end

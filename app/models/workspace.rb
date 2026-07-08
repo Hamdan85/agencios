@@ -48,10 +48,18 @@ class Workspace < ApplicationRecord
 
   def within_seat_limit? = seat_count < seat_limit
 
+  # Godfathered workspaces have UNLIMITED seats, so they are never "over the
+  # limit" — guard the persisted flag against a stale `true` left from before the
+  # workspace was godfathered (the flag is only recomputed on a subscription sync,
+  # which a godfathering doesn't trigger). Overrides the Active Record boolean
+  # reader so every caller (the write-gate, the serializer, the banner) is correct.
+  def over_seat_limit? = !godfathered? && read_attribute(:over_seat_limit) == true
+
   # Recomputes the `over_seat_limit` flag from the current membership count vs.
   # the plan's seat limit. Called after a subscription sync (e.g. a downgrade
   # applied outside the app, via the Stripe dashboard). Never removes members —
   # it only flags the workspace so writes are gated until the owner reconciles.
+  # Godfathered workspaces have an infinite limit, so this always clears the flag.
   def sync_seat_compliance!
     update!(over_seat_limit: seat_count > seat_limit)
   end

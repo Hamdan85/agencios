@@ -2,6 +2,10 @@ import * as React from 'react'
 import * as TabsPrimitive from '@radix-ui/react-tabs'
 import { cn } from '@/lib/utils'
 
+// Tab state is carried in the URL PATH (a Portuguese route segment), never a
+// query string — see the `/configuracoes/:tab`, `/conta/:tab`, `/publicacoes/...`
+// pattern. Pages derive the active tab from `useParams`/`useLocation` and drive
+// this controlled root with `value`/`onValueChange` that `navigate(...)` the path.
 const Tabs = TabsPrimitive.Root
 
 const TabsList = React.forwardRef(({ className, ...props }, ref) => (

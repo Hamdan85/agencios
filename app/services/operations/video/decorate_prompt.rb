@@ -54,16 +54,31 @@ module Operations
       # boilerplate on every re-render.
       DECORATED_MARKER = 'On-screen text rule:'
 
+      # camera: the isolated CINEMATOGRAPHY slot (one dominant move + shot/framing);
+      #   blank ⇒ the serializer defaults it to a static locked-off shot.
+      # model: the resolved engine slug — picks the prompt DIALECT (Seedance / Veo /
+      #   Kling); blank ⇒ the configured default engine's dialect.
+      # render_guardrails: hard prohibitions captured by the chat orchestrator
+      #   ("what CANNOT happen") — merged with the client-positioning guardrails
+      #   and enforced as negative constraints in the dialect's own phrasing.
       def initialize(prompt:, mode:, ctx:, continuation: false, with_audio: nil,
-                     dialogue: nil, on_screen_text: nil, voice_tone: nil, voiced: false,
-                     guardrails: nil, references: [], identity: nil, aspect_ratio: nil)
+                     dialogue: nil, sound_effects: nil, on_screen_text: nil, voice_tone: nil,
+                     voiced: false, guardrails: nil, references: [], identity: nil,
+                     aspect_ratio: nil, target_seconds: nil, clip_seconds: nil,
+                     camera: nil, model: nil, render_guardrails: nil)
         @prompt         = clean(prompt)
         @mode           = mode.to_s
         @ctx            = ctx
+        @camera         = camera.to_s.strip.presence
+        @model          = model.to_s.strip.presence
+        @render_guardrails = render_guardrails
         @aspect         = aspect_ratio.to_s.presence || ctx.try(:aspect_ratio).to_s
         @continuation   = continuation
         @with_audio     = with_audio
         @dialogue       = dialogue.to_s.strip.presence
+        # Diegetic sound the MODEL should generate for this scene (explosions,
+        # footsteps…). Music is NEVER here — it's a separate post track.
+        @sound_effects  = sound_effects.to_s.strip.presence
         @on_screen_text = on_screen_text.to_s.strip.presence
         @voice_tone     = voice_tone.to_s.strip.presence
         # True when a FIXED-voice audio track is attached as a reference — the
@@ -74,21 +89,67 @@ module Operations
         # kind: }) in the SAME order the inputs are attached to the submission.
         @references     = Array(references)
         @identity       = identity.is_a?(Hash) ? identity : {}
+        @target_seconds = target_seconds.to_f
+        @clip_seconds   = clip_seconds.to_f
       end
 
+      # Build the universal cinematic SPINE (PromptSpec) from this scene's data —
+      # every existing input mapped to a slot, nothing dropped — then render it in
+      # the engine's own DIALECT. The content of each slot is unchanged; only the
+      # arrangement/phrasing is now engine-aware.
       def call
-        lines = [@prompt, '']
-        lines << identity_line
-        lines << "Continuity: #{CONTINUATION_DIRECTIVES.fetch(@continuation, CONTINUITY_DIRECTIVE)}" if @continuation
-        lines.concat(audio_lines)
-        lines << text_line
-        lines << references_line
-        lines << avoid_line
-        lines << style_line
-        lines.compact.join("\n").strip
+        PromptDialects.serialize(build_spec)
       end
 
       private
+
+      def build_spec
+        PromptSpec.new(
+          cinematography: @camera,               # slot 1 (default filled by the serializer)
+          narrative: @prompt,                    # slots 2–5: the storyboard's ordered visual prose
+          style_fence: style_line,               # slot 5 augmentation: brand/production styling
+          audio: audio_lines,                    # slot 6
+          technical: [hold_line].compact,        # slot 7: pacing/trim
+          identity: identity_line,               # cross-cutting contracts …
+          continuity: continuity_line,
+          references: References.manifest_lines(@references),
+          on_screen_text: text_line,
+          guardrails: guardrail_phrases,
+          mode: i2v? ? :i2v : :t2v,
+          dialect: dialect,
+          aspect_ratio: @aspect
+        )
+      end
+
+      # The engine dialect: from the resolved model slug, else the configured
+      # default engine (so a bare call still serializes for the real engine).
+      def dialect
+        slug = @model.presence || VideoConfig.instance.model_for(@mode)
+        PromptDialects.dialect_for_model(slug)
+      end
+
+      # Image-to-video: a seed frame conditions the render (a previous-frame
+      # continuation or a keep-look re-render) → the prompt must describe motion
+      # and change only, never re-describe the frame. A CUT or a fresh scene 1 is
+      # text-to-video (no seed).
+      def i2v? = %i[previous self].include?(@continuation)
+
+      # The continuity contract as a ready line (nil for a seedless first scene).
+      def continuity_line
+        return nil unless @continuation
+
+        "Continuity: #{CONTINUATION_DIRECTIVES.fetch(@continuation, CONTINUITY_DIRECTIVE)}"
+      end
+
+      # The negative constraints as raw phrases: the client-positioning guardrails
+      # PLUS the chat-captured "cannot happen" prohibitions, split and de-duped.
+      # The dialect decides how to phrase them (Seedance avoid-clause, Veo positive).
+      def guardrail_phrases
+        [@guardrails, *Array(@render_guardrails)]
+          .compact
+          .flat_map { |g| g.to_s.split(/[;\n]/) }
+          .map(&:strip).reject(&:blank?).uniq
+      end
 
       # Legacy scenes stored a fully-decorated prompt (directives baked in). We
       # recover just the clean visual description — the part before the first
@@ -105,51 +166,81 @@ module Operations
       # scene follows another, the background music/ambient must CONTINUE as one
       # soundtrack (models otherwise start a fresh track each clip — the "music
       # changes between scenes" problem).
+      # The per-scene AUDIO CONTRACT — the orchestrator decides, per scene, what
+      # the model must generate. Three independent knobs meet here:
+      #   * DIALOGUE — dubbed (a fixed voice is laid in post → the model shows a
+      #     silent talking performance) or native (no fixed voice → the model
+      #     actually speaks the line).
+      #   * SOUND EFFECTS — the diegetic sound the model should generate
+      #     (explosions, footsteps…), or none.
+      #   * MUSIC — NEVER the model's job; a single post track is burned in compose.
+      # The boundary line then states EXACTLY what audio the model must and must
+      # NOT produce, so a dubbed talking-head stays clean, an action scene gets its
+      # SFX, and nothing ever competes with the post voice/music.
       def audio_lines
-        return [] if @with_audio.nil? && @dialogue.nil? # legacy generations: no contract to state
-        return ['Audio: SILENT video — no speech, no voice-over, no on-camera talking.'] if @with_audio == false
+        return [] if @with_audio.nil? && @dialogue.nil? && @sound_effects.nil? # legacy: no contract
+        return ['Audio: SILENT clip — generate NO audio of any kind (no speech, sound effects or music).'] if @with_audio == false
 
-        lines =
+        parts = []
+        speech =
           if @dialogue && @voiced
-            # A fixed-voice audio track is provided as a reference — lip-sync to it.
-            ["Dialogue (Brazilian Portuguese; NOTHING else may be spoken in this scene): " \
-             "\"#{@dialogue}\". #{VOICE_POLICY}"]
+            parts << "The character says this line on camera: \"#{@dialogue}\". #{VOICE_POLICY}"
+            :dubbed
           elsif @dialogue
             tone = @voice_tone ? " Delivered in a #{@voice_tone} tone." : ''
-            ['Dialogue (Brazilian Portuguese — spoken EXACTLY as written; NOTHING else may be ' \
-             "spoken in this scene): \"#{@dialogue}\".#{tone}"]
+            parts << 'Dialogue — the character SPEAKS this line aloud, Brazilian Portuguese, EXACTLY ' \
+                     "as written (nothing else is spoken): \"#{@dialogue}\".#{tone}"
+            :native
           else
-            ['Audio: no dialogue in this scene — ambient/natural sound only, no voice-over.']
+            :none
           end
-        lines << MUSIC_POLICY
-        lines.compact
+        if @sound_effects
+          parts << "Sound design — GENERATE the scene's diegetic sound: #{@sound_effects}. " \
+                   'Match it to the on-screen action and timing.'
+        end
+        parts << audio_boundary(speech)
+        parts.compact
       end
 
-      # A single FIXED voice is used for the WHOLE video: the exact spoken audio is
-      # provided as an audio reference. The character must lip-sync to THAT audio
-      # and reproduce that exact voice — never invent a different voice/timbre —
-      # so the voice is identical across every scene.
+      # A fixed voice is DUBBED over the clip in post (OpenRouter's engines take no
+      # driving-audio input → no in-model lip-sync). The model SHOWS the character
+      # speaking but generates no voice audio. Asking it to "lip-sync to a provided
+      # audio" (which it never gets) produced odd mouth behavior; this frames it as
+      # a silent talking performance the fixed voice is laid over.
       VOICE_POLICY =
-        'The spoken line is provided as an AUDIO REFERENCE (a fixed voice). The on-camera ' \
-        'speaker must lip-sync to that exact audio and keep that exact voice and timbre — ' \
-        'do NOT generate a different voice, accent or delivery.'
+        'Show the character actually SPEAKING this line on camera — natural, well-timed ' \
+        'lip and mouth movement, expression and gestures that fit the words and their pacing — ' \
+        'but do NOT generate any spoken voice audio, voice-over or narration for it (the voice ' \
+        'is a fixed track dubbed in afterward).'
 
-      # The video model NEVER generates music: the platform picks ONE royalty-free
-      # track and burns it under the whole video at compose. So each clip must have
-      # NO music — only the spoken dialogue and natural/ambient/diegetic sound. This
-      # is what keeps the soundtrack continuous (one track, added in post) instead
-      # of a different AI-generated track per clip.
-      # Best-practice for the current engines (Veo/Seedance): POSITIVELY name the
-      # only audio wanted (dialogue + natural diegetic sound) AND state the
-      # exclusion as an explicit negative — these models honor negatives like
-      # "(no music)". The soundtrack is a single track added in post; any music
-      # generated in the clip would double up with it.
-      MUSIC_POLICY =
-        'Audio contains ONLY the spoken dialogue and the natural, diegetic sound that physically ' \
-        'belongs to this scene (room tone, footsteps, ambient noise, the sounds of the objects/place ' \
-        'shown). Absolutely NO music of any kind — no soundtrack, score, song, jingle, hum or ' \
-        'background music. (no music, no background music, no musical score, no soundtrack.) ' \
-        'The music is added separately in post-production; any music here would clash with it.'
+      # States the exact audio the model MUST and MUST NOT produce, from the scene's
+      # speech mode + whether it has SFX. Music is ALWAYS excluded (a post track);
+      # a dubbed voice is excluded (added in post); SFX are the only model audio
+      # kept when there's no native speech.
+      NO_MUSIC = 'NEVER generate any music, soundtrack, score, song, jingle or background music ' \
+                 '(a single track is added separately in post — model music would clash with it).'
+
+      def audio_boundary(speech)
+        case speech
+        when :dubbed
+          if @sound_effects
+            "Audio boundary: the diegetic sound effects above are the ONLY audio to generate — do " \
+              "NOT generate any spoken voice or dialogue audio (the voice is dubbed in post). #{NO_MUSIC}"
+          else
+            'Audio boundary: render this clip SILENT — generate NO audio at all (no voice, no ambient, ' \
+              'no effects); the voice and music are added in post.'
+          end
+        when :native
+          extra = @sound_effects ? 'the spoken line and the diegetic sound effects above' : "the spoken line and the scene's incidental natural sound"
+          "Audio boundary: #{extra} are the ONLY audio — no other voices. #{NO_MUSIC}"
+        else # :none
+          if @sound_effects
+            "Audio boundary: the diegetic sound effects above are the ONLY audio — no voices or dialogue. #{NO_MUSIC}"
+          else
+            'Audio boundary: render this clip SILENT — generate NO audio; voice and music are added in post.'
+          end
+        end
+      end
 
       # The LOCKED project identity — the character/wardrobe/setting/palette/style
       # that must stay IDENTICAL across every scene of the video. This is the
@@ -171,6 +262,24 @@ module Operations
 
         "Project identity — keep IDENTICAL in every scene (never drift between " \
           "scenes): #{bits.join('; ')}."
+      end
+
+      # The engine renders FIXED-length clips (4/6/8s), but the shown scene is
+      # TRIMMED to its audio-driven target length. When the rendered clip is
+      # longer than that target, tell the model to finish the meaningful action by
+      # the target second and HOLD after it (no new action/subject/cut) — so the
+      # trim point is a clean, settled frame and the pacing follows the audio, not
+      # the model's fixed clip size. Only emitted when a real trim will happen.
+      HOLD_MARGIN = 0.75
+      def hold_line
+        return nil unless @target_seconds.positive? && @clip_seconds > @target_seconds + HOLD_MARGIN
+
+        secs = @target_seconds.round
+        "Pacing/trim: this clip is #{@clip_seconds.round}s but the scene is TRIMMED to about " \
+          "#{secs}s — fit ALL the meaningful action (and the full spoken line) within the FIRST " \
+          "#{secs} seconds. After second #{secs}, HOLD the final composition steady: no new action, " \
+          'no new subject entering, no cut, no fade — just a settled frame. Everything after that ' \
+          'point is discarded, so nothing important may happen there.'
       end
 
       # Hard brand "avoid" constraints — the render model invents props, wardrobe

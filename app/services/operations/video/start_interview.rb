@@ -14,7 +14,7 @@ module Operations
     class StartInterview < Operations::Base
       def initialize(workspace:, ticket: nil, client_id: nil, mode: nil, prompt: nil,
                      voice: nil, aspect_ratio: nil, duration: nil, reference_image_urls: [],
-                     with_audio: nil, creative_type: nil)
+                     reference_descriptions: {}, with_audio: nil, creative_type: nil)
         @workspace     = workspace
         @ticket        = ticket
         @client_id     = client_id
@@ -24,6 +24,8 @@ module Operations
         @aspect_ratio  = aspect_ratio
         @duration      = duration
         @ref_urls      = Array(reference_image_urls).map { |u| u.to_s.strip }.reject(&:blank?)
+        # { url => "what the user says this file is" }, kept for the urls in play.
+        @ref_descriptions = (reference_descriptions || {}).to_h.select { |u, _| @ref_urls.include?(u.to_s) }
         @with_audio    = with_audio.nil? ? true : ActiveModel::Type::Boolean.new.cast(with_audio)
         @creative_type = creative_type
       end
@@ -49,7 +51,8 @@ module Operations
             # has gathered enough context.
             intake: { mode: mode, brief: @prompt, voice: @voice, client_id: client&.id,
                       aspect_ratio: aspect, duration: duration, with_audio: @with_audio,
-                      reference_image_urls: @ref_urls }.compact
+                      reference_image_urls: @ref_urls,
+                      reference_descriptions: @ref_descriptions.presence }.compact
           }
         )
 

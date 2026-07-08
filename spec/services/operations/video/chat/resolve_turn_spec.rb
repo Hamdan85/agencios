@@ -112,8 +112,9 @@ RSpec.describe Operations::Video::Chat::ResolveTurn do
     result = described_class.call(creative: creative, message: 'muda a abertura')
 
     expect(Operations::Video::EditScene).to have_received(:call).with(
-      scene: scene0, caption: nil, prompt: 'novo prompt', dialogue: nil, on_screen_text: nil,
-      restyle: nil, add_reference_urls: [], reference_role: nil
+      scene: scene0, caption: nil, prompt: 'novo prompt', camera: nil, dialogue: nil, sound_effects: nil,
+      on_screen_text: nil, restyle: nil, add_reference_urls: [], reference_role: nil,
+      reference_descriptions: {}
     )
     expect(result[:reply]).to eq('Refazendo a cena 1.')
     expect(creative.reload.chat_messages.map { |m| m['role'] }).to eq(%w[user assistant])
@@ -178,7 +179,8 @@ RSpec.describe Operations::Video::Chat::ResolveTurn do
 
     expect(Operations::Video::AddScene).to have_received(:call).with(
       creative: creative, position: 1, prompt: 'Closing logo shot', caption: 'Final',
-      dialogue: nil, on_screen_text: nil, extra_reference_urls: [], reference_role: nil
+      camera: nil, dialogue: nil, sound_effects: nil, on_screen_text: nil, extra_reference_urls: [],
+      reference_role: nil, reference_descriptions: {}
     )
     expect(Operations::Video::EditScene).not_to have_received(:call)
   end
