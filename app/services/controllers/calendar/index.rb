@@ -11,6 +11,7 @@ module Controllers
 
       def call
         events = posts.map { |p| post_event(p) } +
+                 tickets.map { |t| ticket_event(t) } +
                  meetings.map { |m| meeting_event(m) } +
                  subtasks.map { |s| task_event(s) }
         { events: events.sort_by { |e| e[:start] } }
@@ -40,6 +41,19 @@ module Controllers
         Post.where(workspace_id: workspace_ids, scheduled_at: from..to)
             .where(ticket_id: Ticket.in_live_project)
             .includes(:workspace, :social_account, ticket: :project)
+      end
+
+      # Funnel tickets carry a planned publish moment (`scheduled_at`) well before
+      # any `Post` exists — GO mode walks a ticket to `production` and sets its
+      # `scheduled_at` without scheduling a post (that happens later, after
+      # approval). Surface those planned tickets on the calendar so the month isn't
+      # empty. `where.missing(:posts)` keeps it de-duped: once a ticket produces a
+      # post, the post_event (channel-accurate) takes over and the ticket drops off.
+      def tickets
+        Ticket.where(workspace_id: workspace_ids, scheduled_at: from..to)
+              .in_live_project
+              .where.missing(:posts)
+              .includes(:workspace, project: :client)
       end
 
       # The workspace calendar shows the whole team's meetings; the personal
@@ -77,6 +91,23 @@ module Controllers
           color: subtask.ticket&.project&.color,
           workspace_id: subtask.workspace_id,
           workspace_name: subtask.workspace&.name
+        }
+      end
+
+      def ticket_event(ticket)
+        {
+          id: "ticket-#{ticket.id}",
+          type: 'ticket',
+          title: ticket.display_title,
+          start: ticket.scheduled_at&.iso8601,
+          status: ticket.status,
+          channels: ticket.channels,
+          creative_type: ticket.creative_type,
+          color: ticket.project&.color,
+          ticket_id: ticket.id,
+          client_name: ticket.project&.client&.name,
+          workspace_id: ticket.workspace_id,
+          workspace_name: ticket.workspace&.name
         }
       end
 

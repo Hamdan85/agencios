@@ -1,11 +1,11 @@
-import { Building2, CircleCheck, CircleDashed, Clock, Ticket, UserRound, Users } from 'lucide-react'
+import { Building2, CalendarClock, CircleCheck, CircleDashed, Clock, Ticket, UserRound, Users } from 'lucide-react'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { time, date } from '@/lib/formatters'
 import { channelMeta } from '@/lib/constants'
 import { eventVisual } from './EventChip'
 import { parseEventStart } from './calendarUtils'
 
-const TYPE_LABEL = { post: 'Post agendado', meeting: 'Reunião', task: 'Tarefa' }
+const TYPE_LABEL = { post: 'Post agendado', ticket: 'Publicação prevista', meeting: 'Reunião', task: 'Tarefa' }
 
 // Rich hover card for any calendar event — replaces the native `title` tooltip
 // with a designed preview: type, title, time and the context lines that matter
@@ -15,6 +15,7 @@ export function EventHoverCard({ event, showWorkspace = false, children }) {
   const { color, Icon } = eventVisual(event)
   const title = event.title || TYPE_LABEL[event.type] || 'Evento'
   const network = event.type === 'post' ? channelMeta(event.provider)?.label : null
+  const planned = event.type === 'ticket'
 
   const when = event.all_day
     ? `${date(parseEventStart(event).toISOString())} · dia inteiro`
@@ -33,8 +34,11 @@ export function EventHoverCard({ event, showWorkspace = false, children }) {
       >
         {/* type band */}
         <div className="flex items-center gap-2 px-3 pt-2.5" style={{ color }}>
-          <span className="grid size-5 shrink-0 place-items-center rounded-md" style={{ background: color, color: '#fff' }}>
-            {Icon ? <Icon size={11} strokeWidth={2.6} /> : <span className="size-1.5 rounded-full bg-white" />}
+          <span
+            className="grid size-5 shrink-0 place-items-center rounded-md"
+            style={planned ? { color, boxShadow: `inset 0 0 0 1.5px ${color}` } : { background: color, color: '#fff' }}
+          >
+            {Icon ? <Icon size={11} strokeWidth={2.6} /> : <span className="size-1.5 rounded-full" style={{ background: planned ? color : '#fff' }} />}
           </span>
           <span className="text-[10px] font-bold uppercase tracking-[0.12em]">
             {network ? `${TYPE_LABEL.post} · ${network}` : TYPE_LABEL[event.type] || 'Evento'}
@@ -50,6 +54,7 @@ export function EventHoverCard({ event, showWorkspace = false, children }) {
 
         <div className="flex flex-col gap-1 px-3 pb-2.5 pt-2">
           <DetailRow icon={Clock}>{when}</DetailRow>
+          {planned && <DetailRow icon={CalendarClock}>Prevista · agenda ao publicar</DetailRow>}
           {event.type === 'task' && event.ticket_title && <DetailRow icon={Ticket}>{event.ticket_title}</DetailRow>}
           {event.type === 'task' && event.assignee_name && <DetailRow icon={UserRound}>{event.assignee_name}</DetailRow>}
           {event.client_name && <DetailRow icon={Building2}>{event.client_name}</DetailRow>}

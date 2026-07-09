@@ -95,8 +95,8 @@ export default function CalendarIndex({ scope } = {}) {
     setCursor((c) => (view === 'month' ? addMonths(c, dir) : addDays(c, view === 'day' ? dir : dir * 7)))
 
   const handleEventClick = (ev) => {
-    // Posts and tasks both live inside a ticket — open it.
-    if ((ev?.type === 'post' || ev?.type === 'task') && ev?.ticket_id) {
+    // Posts, tasks and planned tickets all resolve to a ticket — open it.
+    if ((ev?.type === 'post' || ev?.type === 'task' || ev?.type === 'ticket') && ev?.ticket_id) {
       // Another team's event (the cross-team "Meu calendário"): switch into that
       // workspace and hand off to the full page — the drawer can't render a ticket
       // from a different tenant. Same workspace → open it in the drawer.
