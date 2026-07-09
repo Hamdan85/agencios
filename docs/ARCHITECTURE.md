@@ -135,7 +135,7 @@ docs/                    # ARCHITECTURE.md, SPECIFICATION.md, integrations/*
 | Social | Meta Graph (IG/FB), Threads, TikTok, YouTube, LinkedIn, X | direct integration per network |
 | Calendar | **Google Calendar/Meet** | `google-apis-calendar_v3`, `google-apis-meet_v2` |
 | Client billing | **Mercado Pago** | Pix-first; boleto/card; webhooks |
-| SaaS billing | **Stripe** | subscription tiers + Billing Meters (usage) |
+| SaaS billing | **Stripe** | subscription tiers + prepaid credits (video/image/carousel generation) |
 | Admin | **ActiveAdmin** | platform staff console + impersonation |
 | Observability | Sentry + PostHog (server & client) | feature flags via PostHog |
 | Deploy | Kamal + Thruster + Puma | |

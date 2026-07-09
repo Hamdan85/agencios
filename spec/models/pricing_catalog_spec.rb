@@ -21,24 +21,20 @@ RSpec.describe Pricing, type: :model do
       expect(Controllers::Billing::Plans.find('solo')[:price_cents]).to eq(12_900)
     end
 
-    it 'reflects an admin edit to the credit-cost config immediately' do
-      cfg = PricingConfig.first_or_create!
-      cfg.update!(image_credits: 3)
-
-      expect(Pricing.credits_for(kind: :image)).to eq(3)
+    it 'charges the fixed code-constant credit cost per generation kind' do
+      expect(Pricing.credits_for(kind: :image)).to eq(Pricing::IMAGE_CREDITS)
+      expect(Pricing.credits_for(kind: :carousel)).to eq(Pricing::CAROUSEL_CREDITS)
     end
 
-    it 'reflects a trial-length change from config' do
-      PricingConfig.first_or_create!.update!(trial_days: 14)
-      expect(Pricing.trial_days).to eq(14)
+    it 'exposes the trial length as a fixed code constant' do
+      expect(Pricing.trial_days).to eq(Pricing::TRIAL_DAYS)
     end
 
-    it 'computes the annual price as 12× monthly minus the configured discount' do
+    it 'computes the annual price as 12× monthly minus the fixed discount' do
       Pricing.seed_defaults!
-      PricingConfig.first_or_create!.update!(annual_discount_percent: 15)
       PricingPlan.find_by(key: 'solo').update!(price_cents: 9_900, annual_price_cents: 0)
 
-      # 9900 * 12 * 0.85 = 100_980
+      # 9900 * 12 * 0.85 = 100_980 (ANNUAL_DISCOUNT_PERCENT = 15)
       expect(Pricing.annual_price_cents_for('solo')).to eq(100_980)
     end
 
@@ -57,12 +53,6 @@ RSpec.describe Pricing, type: :model do
       expect(solo[:annual_monthly_equivalent_cents]).to eq((solo[:annual_price_cents] / 12.0).round)
     end
 
-    it 'resolves the annual lookup_key for a plan+interval' do
-      Pricing.seed_defaults!
-      expect(Pricing.lookup_key_for('solo', 'year')).to eq('solo_yearly')
-      expect(Pricing.lookup_key_for('solo', 'month')).to eq('solo_monthly')
-    end
-
     it 'seed_defaults! is additive and does not clobber edits' do
       Pricing.seed_defaults!
       PricingPlan.find_by(key: 'solo').update!(price_cents: 15_000)
@@ -73,15 +63,10 @@ RSpec.describe Pricing, type: :model do
 
   # The credit charge tracks the REAL vendor cost of each operation (cost-plus),
   # not the video's final duration. The dollar is passed through via a FIXED,
-  # conservative internal rate (usd_brl) + a markup (margin_multiplier), so every
-  # operation clears the target margin. See docs/pricing-model.md.
+  # conservative internal rate (USD_BRL) + a markup (MARKUP), so every operation
+  # clears the target margin. These are fixed code constants (Pricing::USD_BRL =
+  # 6.00, MARKUP = 6.5, VIDEO_USD_PER_SEC = 0.16). See docs/pricing-model.md.
   describe 'cost-based credit pricing' do
-    before do
-      PricingConfig.first_or_create!.update!(
-        usd_brl: 6.00, margin_multiplier: 6.5, image_credits: 1, video_usd_per_sec: 0.16
-      )
-    end
-
     it 'charges credits = ceil(cost_usd_cents × usd_brl × markup ÷ 100) for a real cost' do
       # 8s clip real cost $1.28 = 128 USD cents → ceil(128 × 6.00 × 6.5 ÷ 100) = 50
       expect(Pricing.credits_for_cost(cost_cents: 128)).to eq(50)

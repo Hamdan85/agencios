@@ -5,44 +5,31 @@ ActiveAdmin.register PricingPlan do
 
   permit_params :key, :name, :stripe_product_id, :stripe_lookup_key, :stripe_price_id,
                 :stripe_annual_lookup_key, :stripe_annual_price_id,
-                :price_cents, :annual_price_cents, :usd_cents, :seats, :clients,
+                :price_cents, :annual_price_cents, :seats, :clients,
                 :included_credits, :position, :active, :features_text
 
   config.sort_order = 'position_asc'
 
-  # Refresh the cached display amounts from Stripe (Stripe = source of truth).
-  action_item :sync_prices, only: :index do
-    link_to 'Sincronizar preços do Stripe', sync_prices_admin_pricing_plans_path, method: :post
+  # Force a re-sync (idempotent) — e.g. after editing a price directly in Stripe,
+  # or to re-provision a plan that lost its Product/Price.
+  action_item :sync_to_stripe, only: :show do
+    link_to 'Sincronizar com o Stripe', sync_to_stripe_admin_pricing_plan_path(resource),
+            method: :post, data: { confirm: 'Garante o Product + Prices (mensal + anual) no Stripe com estes valores.' }
   end
 
-  action_item :publish_to_stripe, only: :show do
-    link_to 'Publicar preços no Stripe', publish_to_stripe_admin_pricing_plan_path(resource),
-            method: :post,
-            data: { confirm: 'Criar novos Prices (mensal + anual) no Stripe com estes valores? ' \
-                             'Novos checkouts usarão o novo preço; assinantes atuais mantêm o antigo.' }
-  end
-
-  collection_action :sync_prices, method: :post do
-    updated = Vendors::Stripe::Actions::SyncPlanPrices.call
-    AdminAuditLog.record(staff_user: current_staff_user, action: 'sync_plan_prices',
-                         metadata: { updated: updated }, ip_address: request.remote_ip)
-    redirect_to admin_pricing_plans_path, notice: "#{updated} plano(s) sincronizado(s) com o Stripe."
-  end
-
-  # Push the edited amounts TO Stripe: creates new Prices (monthly + annual) with
-  # the plan's lookup_key and archives the old ones. Affects NEW checkouts;
-  # existing assinantes mantêm o preço atual (grandfathering).
-  member_action :publish_to_stripe, method: :post do
-    Vendors::Stripe::Actions::PublishPlanPrices.call(plan: resource)
-    AdminAuditLog.record(staff_user: current_staff_user, action: 'publish_plan_to_stripe',
+  member_action :sync_to_stripe, method: :post do
+    Operations::Billing::SyncPlanToStripe.call(plan: resource)
+    AdminAuditLog.record(staff_user: current_staff_user, action: 'sync_plan_to_stripe',
                          target: resource,
                          metadata: { price_cents: resource.price_cents, annual_price_cents: resource.annual_price_cents },
                          ip_address: request.remote_ip)
     redirect_to admin_pricing_plan_path(resource),
-                notice: "Preços do plano #{resource.key} publicados no Stripe (mensal + anual). " \
+                notice: "Plano #{resource.key} sincronizado com o Stripe (mensal + anual). " \
                         'Novos checkouts já usam o novo valor; assinantes atuais mantêm o preço antigo.'
   rescue Vendors::Base::NotConfiguredError => e
     redirect_to admin_pricing_plan_path(resource), alert: "Stripe não configurado: #{e.message}"
+  rescue StandardError => e
+    redirect_to admin_pricing_plan_path(resource), alert: "Falha ao sincronizar com o Stripe: #{e.message}"
   end
 
   index do
@@ -55,8 +42,7 @@ ActiveAdmin.register PricingPlan do
     column('Créditos inclusos', &:included_credits)
     column :seats
     column :clients
-    column('Stripe lookup', &:stripe_lookup_key)
-    column('Stripe price', &:stripe_price_id)
+    column('Stripe price') { |p| p.stripe_price_id.presence || '— não sincronizado' }
     column :active
     actions
   end
@@ -65,8 +51,8 @@ ActiveAdmin.register PricingPlan do
     attributes_table do
       row :key
       row :name
-      row('Preço (BRL)') { |p| number_to_currency(p.price_cents / 100.0, unit: 'R$ ') }
-      row('Preço (USD, display)') { |p| number_to_currency(p.usd_cents / 100.0, unit: 'US$ ') }
+      row('Preço mensal (BRL)') { |p| number_to_currency(p.price_cents / 100.0, unit: 'R$ ') }
+      row('Preço anual (BRL)') { |p| number_to_currency(Pricing.annual_price_cents_for(p.key) / 100.0, unit: 'R$ ') }
       row :seats
       row :clients
       row :included_credits
@@ -74,38 +60,37 @@ ActiveAdmin.register PricingPlan do
       row :stripe_product_id
       row :stripe_lookup_key
       row :stripe_price_id
+      row :stripe_annual_price_id
       row :position
       row :active
       row :updated_at
     end
+    para 'Salvar um plano sincroniza o Product + Prices (mensal e anual) no Stripe automaticamente. ' \
+         'Uma mudança de preço cria um Price novo e arquiva o antigo (assinantes atuais mantêm o preço).'
   end
 
   form do |f|
     f.semantic_errors
-    f.inputs 'Plano' do
+    f.inputs 'Plano (fonte da verdade do preço)' do
       para class: 'inline-hints' do
-        strong 'Atenção: '
-        span 'editar o preço aqui NÃO altera o Stripe sozinho — é um rascunho de exibição. ' \
-             'Depois de salvar, clique em “Publicar preços no Stripe” na página do plano para criar o Price novo.'
+        span 'Ao salvar, os preços são publicados no Stripe automaticamente (um Price novo por mudança de valor). ' \
+             'O valor definido aqui é o que o cliente paga.'
       end
       f.input :key, hint: 'Chave estável (solo/agencia/enterprise). Referenciada por Subscription#plan.'
       f.input :name
-      f.input :price_cents, label: 'Preço MENSAL em centavos (BRL) — cacheado do Stripe'
+      f.input :price_cents, label: 'Preço MENSAL em centavos (BRL)'
       f.input :annual_price_cents,
               label: 'Preço ANUAL em centavos (BRL) — 0 = calcula 12× mensal − desconto',
-              hint: 'Cacheado do Stripe quando provisionado; 0 usa o desconto anual da config.'
-      f.input :usd_cents, label: 'Preço em centavos (USD, apenas display)'
+              hint: "0 usa o desconto anual fixo (#{Pricing.annual_discount_percent}%)."
       f.input :seats
       f.input :clients
       f.input :included_credits, label: 'Créditos mensais inclusos'
-      f.input :features_text, as: :text, label: 'Recursos (um por linha)',
-                              input_html: { rows: 8 }
+      f.input :features_text, as: :text, label: 'Recursos (um por linha)', input_html: { rows: 8 }
     end
-    f.inputs 'Stripe (fonte da verdade do valor cobrado)' do
-      f.input :stripe_product_id, hint: 'ID estável do Product (mapeia assinaturas ao plano, resiste a troca de preço).'
-      f.input :stripe_lookup_key,
-              hint: 'lookup_key do Price MENSAL. Troque o preço criando um Price novo com transfer_lookup_key.'
-      f.input :stripe_price_id, label: 'Stripe price id mensal (cacheado — preenchido pela sincronização)'
+    f.inputs 'Stripe (preenchido automaticamente pela sincronização)' do
+      f.input :stripe_product_id, hint: 'ID do Product (criado/atualizado ao salvar).'
+      f.input :stripe_lookup_key, hint: 'lookup_key do Price MENSAL (estável — transferido para o novo Price).'
+      f.input :stripe_price_id, label: 'Stripe price id mensal (cacheado)'
       f.input :stripe_annual_lookup_key, hint: 'lookup_key do Price ANUAL.'
       f.input :stripe_annual_price_id, label: 'Stripe price id anual (cacheado)'
     end
@@ -116,11 +101,24 @@ ActiveAdmin.register PricingPlan do
     f.actions
   end
 
+  # Keep Stripe in step with the catalog: on every create/update, ensure the
+  # Product + Prices exist and match (idempotent — a plain edit mints no new
+  # Price). Controller hook, not an AR callback. A Stripe failure surfaces as a
+  # flash but never loses the saved edit.
   after_save do |plan|
-    if plan.saved_changes? && plan.persisted?
-      AdminAuditLog.record(staff_user: current_staff_user, action: 'edit_pricing_plan',
-                           target: plan, metadata: { changes: plan.saved_changes.keys },
-                           ip_address: request.remote_ip)
+    next unless plan.persisted? && plan.valid?
+
+    begin
+      Operations::Billing::SyncPlanToStripe.call(plan: plan)
+    rescue Vendors::Base::NotConfiguredError => e
+      flash[:warning] = "Plano salvo, mas o Stripe não está configurado (#{e.message}) — não sincronizado."
+    rescue StandardError => e
+      Rails.logger.error("[Admin::PricingPlans] Stripe sync failed for #{plan.key}: #{e.message}")
+      flash[:error] = "Plano salvo, mas a sincronização com o Stripe falhou: #{e.message}"
     end
+
+    AdminAuditLog.record(staff_user: current_staff_user, action: 'edit_pricing_plan',
+                         target: plan, metadata: { changes: plan.saved_changes.keys },
+                         ip_address: request.remote_ip)
   end
 end

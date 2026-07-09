@@ -209,7 +209,18 @@ function SecurityTab() {
 function GoogleCalendarCard() {
   const { data: me } = useCurrentUser()
   const calendar = useGoogleCalendarMutations()
+  const confirm = useConfirm()
   const connected = !!me?.user?.google_calendar_connected
+
+  const onDisconnect = async () => {
+    const ok = await confirm({
+      title: 'Desconectar Google Calendar?',
+      description: 'Novas reuniões deixarão de ser criadas no seu calendário até você reconectar.',
+      confirmLabel: 'Desconectar',
+      destructive: true,
+    })
+    if (ok) calendar.disconnect.mutate()
+  }
 
   return (
     <Card>
@@ -227,7 +238,7 @@ function GoogleCalendarCard() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => calendar.disconnect.mutate()}
+              onClick={onDisconnect}
               disabled={calendar.disconnect.isPending}
             >
               {calendar.disconnect.isPending ? 'Desconectando…' : 'Desconectar'}
@@ -273,6 +284,16 @@ function ConnectionsTab() {
       destructive: true,
     })
     if (ok) rotate.mutate()
+  }
+
+  const onRevoke = async (connection) => {
+    const ok = await confirm({
+      title: `Revogar acesso de ${connection.name}?`,
+      description: 'O app perde o acesso à sua conta imediatamente.',
+      confirmLabel: 'Revogar',
+      destructive: true,
+    })
+    if (ok) revoke.mutate(connection.id)
   }
 
   return (
@@ -356,7 +377,7 @@ function ConnectionsTab() {
                       {c.scopes.map((s) => <Badge key={s} variant="outline">{s}</Badge>)}
                     </div>
                   </div>
-                  <Button type="button" variant="ghost" className="text-danger" onClick={() => revoke.mutate(c.id)} disabled={revoke.isPending}>
+                  <Button type="button" variant="ghost" className="text-danger" onClick={() => onRevoke(c)} disabled={revoke.isPending}>
                     <Trash2 size={16} /> Revogar
                   </Button>
                 </div>

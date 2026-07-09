@@ -58,7 +58,7 @@ anthropic:                     # contextual ticket summaries, captions, retros
   api_key: "sk-ant-..."
   model:   "claude-sonnet-4-6"  # optional — model override
 
-heygen:                        # UGC / avatar video (metered: video_generation)
+heygen:                        # UGC / avatar video
   api_key:        "..."
   webhook_secret: "..."
 
@@ -83,13 +83,15 @@ google:
 stripe:
   secret_key:     "sk_live_..."
   webhook_secret: "whsec_..."
-  api_version:    "2025-03-31.basil"   # optional — Billing Meters need Basil+
-  prices:                              # Stripe Price ids
+  api_version:    "2025-03-31.basil"   # optional — API version pin
+  prices:                              # Stripe Price ids (licensed seat plans only)
     solo:                "price_..."   # licensed (1 seat)
     agencia:             "price_..."   # licensed, per-seat (5–20)
     enterprise:          "price_..."   # licensed, per-seat (20+)
-    carousel_generation: "price_..."   # metered → carousel_generation meter
-    video_generation:    "price_..."   # metered → video_generation meter
+    # Note: plan Prices are synced from the DB (PricingPlan.price_cents) via
+    # Operations::Billing::SyncPlanToStripe; ids here are optional overrides.
+    # Generation usage is NOT Stripe-metered — it is billed from the prepaid
+    # CreditWallet, and credit packs use one-time Checkout with inline price_data.
 
 # ─────────────────────────────────────────────────────────────
 # Client billing — Mercado Pago (the agency charges its clients)

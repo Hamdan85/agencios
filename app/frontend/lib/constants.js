@@ -98,12 +98,11 @@ export const PRIORITY_META = {
   high:   { label: 'Alta',   color: '#F43F5E', dot: '#F43F5E' },
 }
 
-// Generation kinds. `metered` mirrors the credit costs in the backend Pricing
-// catalog (app/models/pricing.rb DEFAULT_CONFIG): image + video consume prepaid
-// credits; carousels are included in the plan (0 credits) — see the credit gate
-// in Controllers::Creatives::Generate.
+// Generation kinds. `metered` mirrors the fixed credit-cost constants in the
+// backend Pricing module (app/models/pricing.rb): image, video, and carousel all
+// consume prepaid credits — see the credit gate in Controllers::Creatives::Generate.
 export const GENERATION_KIND_META = {
-  carousel: { label: 'Carrossel', color: '#7C3AED', icon: GalleryHorizontalEnd, metered: false },
+  carousel: { label: 'Carrossel', color: '#7C3AED', icon: GalleryHorizontalEnd, metered: true },
   video:    { label: 'Vídeo',     color: '#F43F5E', icon: Video,                metered: true },
   image:    { label: 'Imagem',    color: '#0EA5E9', icon: Sparkles,             metered: true },
 }

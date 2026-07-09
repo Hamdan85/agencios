@@ -1,41 +1,42 @@
-# Stripe — SaaS Billing for agencios Workspaces (seats + metered usage)
+# Stripe — SaaS Billing for agencios Workspaces (seat plans + prepaid credit packs)
 
 > Research current as of 2025–2026, against official Stripe docs.
 > agencios pricing: subscription plans **Solo** (1 person), **Agência** (5–20 people),
-> **Enterprise** (20+), PLUS usage-based metering on two meters: **carousel_generation** and
-> **video_generation**.
+> **Enterprise** (20+) — each a single **licensed** seat item. Generation usage (video/image) is
+> **NOT** Stripe-metered; it is billed from the workspace's prepaid `CreditWallet`, and credit
+> packs are bought via a one-time Stripe Checkout.
 
-> **META-NOTE on Stripe's own guidance:** Stripe's *current* official recommendation is that
-> **new** usage-based-billing integrations consider **Metronome** (Stripe's acquired,
-> higher-level UBB platform). Billing Meters is positioned as the lower-level primitive for
-> "already on it / simple pay-as-you-go" cases
-> (https://docs.stripe.com/billing/usage-based.md,
-> https://docs.stripe.com/billing/subscriptions/usage-based/compare-metronome.md). This doc
-> documents the **Billing Meters** path you asked to verify — fully supported and a reasonable
-> choice for two simple meters on top of seat plans. Make a deliberate Metronome-vs-Meters
-> decision before building.
+> **Historical note:** an earlier design used Stripe Billing Meters for usage. That was replaced
+> by prepaid credits. The Billing-Meters sections below (§1's metered-price examples onward) are
+> kept only as Stripe API reference and are **NOT** used by agencios — there are no meters, no
+> meter events, and no metered subscription items in the live system.
 
-## 0. Billing model overview (seats + metered usage)
+## 0. Billing model overview (seat plans + prepaid credits)
 
-A **single Stripe Subscription per workspace** containing **multiple subscription items**:
+A **single Stripe Subscription per workspace** containing **exactly one subscription item**:
 
 - **One licensed item** = the plan/seats (fixed recurring price, with `quantity`). `quantity`
   is only allowed on `recurring.usage_type=licensed` prices.
   (https://docs.stripe.com/subscriptions/pricing-models/per-seat-pricing.md,
   https://docs.stripe.com/billing/subscriptions/quantities.md)
-- **N metered items** = the overage/usage prices (`recurring.usage_type=metered`, each tied
-  to a meter, **no `quantity`**). Here N=2: `carousel_generation`, `video_generation`.
+- **No metered items, no Billing Meters, no meter events.**
 
-All items roll into **one invoice per billing period in one currency**
-(https://docs.stripe.com/billing/subscriptions/multiple-products.md). Mixing licensed +
-metered items on one subscription is supported; Checkout enforces it by requiring `quantity`
-on the licensed line and forbidding it on metered lines (*"Quantity should not be defined when
-`recurring.usage_type=metered`"* — https://docs.stripe.com/api/checkout/sessions/create.md).
+**Plan prices are DB-driven.** `PricingPlan.price_cents` is the source of truth; saving a plan in
+`/admin` pushes it to Stripe as a recurring **Price** via `Operations::Billing::SyncPlanToStripe`
+(`Vendors::Stripe::Actions::SyncPlanPrices` / `ProvisionPlanPrices`). Seat count is reconciled to
+the licensed item's `quantity` by `Operations::Billing::ReconcileSeats`.
 
-Usage flows through **Billing Meters**: define a **Meter** (aggregation + event_name +
-customer mapping), emit **Meter Events** as usage happens, tie each meter to a **metered
-Price** via `recurring.meter`. The legacy `usage_records` API is **removed** as of API version
-`2025-03-31.basil`.
+**Generation usage = prepaid credits (not Stripe).** Video and image generations debit the
+workspace's `CreditWallet` via `Operations::Credits::Debit` (cost-plus pricing via
+`Pricing.credits_for`); carousels are included in the plan (0 credits). Customers top up by
+**buying credit packs** through a **one-time Stripe Checkout** using inline `price_data` (no
+pre-created Stripe Price) — `Vendors::Stripe::Actions::CreateCreditCheckoutSession`; the
+`checkout.session.completed` webhook grants the credits via `Operations::Credits::Grant`.
+
+The subscription Checkout itself carries only the one licensed line
+(https://docs.stripe.com/api/checkout/sessions/create.md), and all items on a subscription roll
+into one invoice per period in one currency
+(https://docs.stripe.com/billing/subscriptions/multiple-products.md).
 
 ## 1. Products & Prices setup in Stripe (clickpath + API)
 

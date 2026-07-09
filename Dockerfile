@@ -17,8 +17,12 @@ WORKDIR /rails
 # Install base packages. `chromium` (+ fonts) powers the headless HTML→PNG
 # renderer (Ferrum) used to compose branded carousel slides. `ffmpeg` concatenates
 # the per-scene clips into the final generated video (Vendors::Ffmpeg::Concat).
+# `tini` is the container init (PID 1) — it reaps the zombie child processes that
+# Chromium leaves behind (zygote/GPU/renderer forks re-parented on quit/timeout).
+# Without it those `<defunct>` processes accumulate in the worker until Chromium
+# can no longer boot ("did not produce websocket url within N seconds").
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libjemalloc2 libvips postgresql-client \
+    apt-get install --no-install-recommends -y curl libjemalloc2 libvips postgresql-client tini \
       chromium fonts-liberation fonts-dejavu-core fonts-noto-color-emoji ffmpeg && \
     ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
@@ -90,8 +94,10 @@ USER 1000:1000
 COPY --chown=rails:rails --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
 COPY --chown=rails:rails --from=build /rails /rails
 
-# Entrypoint prepares the database.
-ENTRYPOINT ["/rails/bin/docker-entrypoint"]
+# tini (PID 1) reaps zombie Chromium children; the entrypoint then prepares the
+# database. Applies to every process (web + worker) since Upuai passes each
+# process `command` as args to this ENTRYPOINT.
+ENTRYPOINT ["/usr/bin/tini", "--", "/rails/bin/docker-entrypoint"]
 
 # Start server via Thruster by default, this can be overwritten at runtime
 EXPOSE 80

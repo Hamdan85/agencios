@@ -14,6 +14,7 @@ import { MediaThumb } from '@/components/ui/media-thumb'
 import { Badge } from '@/components/ui/badge'
 import { Page } from '@/components/ui/page'
 import { FilterBar } from '@/components/ui/filter-bar'
+import { useConfirm } from '@/components/ui/confirm-dialog'
 import { CREATIVE_TYPE_META, creativeMeta } from '@/lib/constants'
 import { GeneratorCard } from '@/components/studio/GeneratorCard'
 import { GenerateDialog } from '@/components/studio/GenerateDialog'
@@ -133,8 +134,19 @@ function CreativesGallery() {
 
   const { data, isLoading } = useWorkspaceCreatives(filters)
   const mutations = useCreativeMutations()
+  const confirm = useConfirm()
   const creatives = data?.creatives || []
   const clients = data?.clients || []
+
+  const handleDelete = async (creative) => {
+    const ok = await confirm({
+      title: 'Excluir criativo?',
+      description: 'Esta ação não pode ser desfeita.',
+      confirmLabel: 'Excluir',
+      destructive: true,
+    })
+    if (ok) mutations.destroy.mutate(creative.id)
+  }
 
   // Open the viewer on a SINGLE creative's slides (a carousel is one creative,
   // not a pile of separate items).
@@ -191,7 +203,7 @@ function CreativesGallery() {
               key={c.id}
               creative={c}
               onClick={() => (isSceneEditable(c) ? setEditorCreative(c) : openViewer(c))}
-              onDelete={() => mutations.destroy.mutate(c.id)}
+              onDelete={() => handleDelete(c)}
             />
           ))}
         </div>

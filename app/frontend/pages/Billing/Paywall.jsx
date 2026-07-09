@@ -190,8 +190,8 @@ export default function Paywall() {
         </div>
 
         <p className="mt-8 text-center text-sm text-ink-muted">
-          Sem plano gratuito. Carrosséis e legendas com IA estão inclusos; vídeos e imagens consomem
-          créditos (1 crédito = R$ 1). Cancele quando quiser.
+          Sem plano gratuito. Vídeos, imagens e carrosséis consomem créditos (1 crédito = R$ 1);
+          textos e legendas com IA são inclusos. Cancele quando quiser.
         </p>
       </div>
     </div>

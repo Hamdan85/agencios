@@ -125,12 +125,13 @@ function PlanCard({ plan, current, samePlan, subscribed, interval, discountPerce
   )
 }
 
-// The per-action credit cost card (Imagem / Carrossel / Vídeo).
+// The per-action credit cost card (Imagem / Carrossel / Vídeo). Video is
+// cost-based, so its figure is derived server-side (credit_costs.video_15s) — an
+// estimate for a 15s clip, shown as "a partir de".
 const COST_META = [
   { key: 'image', label: 'Imagem', icon: ImageIcon, color: '#0EA5E9', suffix: 'por imagem' },
-  { key: 'carousel', label: 'Carrossel', icon: GalleryHorizontalEnd, color: '#7C3AED', suffix: 'incluso' },
-  { key: 'video_standard_15s', label: 'Vídeo 15s', icon: Video, color: '#EC4899', suffix: 'padrão' },
-  { key: 'video_photoreal_15s', label: 'Vídeo 15s', icon: Video, color: '#F43F5E', suffix: 'fotorrealista' },
+  { key: 'carousel', label: 'Carrossel', icon: GalleryHorizontalEnd, color: '#7C3AED', suffix: 'por carrossel' },
+  { key: 'video_15s', label: 'Vídeo 15s', icon: Video, color: '#EC4899', suffix: 'a partir de · por 15s' },
 ]
 
 function creditLabel(n) {
@@ -228,8 +229,8 @@ function CreditsSection() {
 }
 
 // ── Usage tab ────────────────────────────────────────────────────
-// What the workspace spent credits on. Vídeo + Imagem consume credits;
-// Carrossel (and AI text) are included, so they show activity but 0 credits.
+// What the workspace spent credits on. Vídeo, Imagem, and Carrossel all consume
+// credits (carousel cost is admin-tunable, default 1).
 const KIND_META = {
   video: { label: 'Vídeo', icon: Video, color: '#EC4899' },
   image: { label: 'Imagem', icon: ImageIcon, color: '#0EA5E9' },
@@ -395,8 +396,8 @@ function UsageSection() {
           <div className="mb-5 flex items-start gap-2.5 rounded-2xl border border-sky/25 bg-sky/6 px-4 py-3">
             <Info size={16} className="mt-0.5 shrink-0 text-sky" />
             <p className="text-sm text-ink-secondary">
-              <strong className="font-semibold text-ink">Vídeos e imagens</strong> consomem créditos.{' '}
-              <strong className="font-semibold text-ink">Carrosséis</strong> e textos com IA são inclusos no plano —
+              <strong className="font-semibold text-ink">Vídeos, imagens e carrosséis</strong> consomem créditos.{' '}
+              <strong className="font-semibold text-ink">Textos e legendas com IA</strong> são inclusos no plano —
               aparecem no uso, mas custam 0 créditos.
             </p>
           </div>

@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
-# A SaaS plan in the catalog (admin-editable). The *charged* amount lives in
-# Stripe (resolved by product/lookup_key); `price_cents` here is the cached
-# display amount, refreshed from Stripe by Vendors::Stripe::Actions::SyncPlanPrices.
+# A SaaS plan in the catalog (admin-editable). `price_cents` is the SOURCE OF
+# TRUTH for the price: saving a plan in /admin pushes it to Stripe (mints the
+# recurring Price) via Operations::Billing::SyncPlanToStripe. SyncPlanPrices can
+# also pull an amount changed directly in the Stripe Dashboard back into the row.
 class PricingPlan < ApplicationRecord
   validates :key, presence: true, uniqueness: true
   validates :name, presence: true
@@ -20,7 +21,7 @@ class PricingPlan < ApplicationRecord
 
   def to_config_h
     {
-      key: key, name: name, price_cents: price_cents, usd_cents: usd_cents,
+      key: key, name: name, price_cents: price_cents,
       annual_price_cents: annual_price_cents, seats: seats, clients: clients,
       included_credits: included_credits, features: Array(features),
       stripe_lookup_key: stripe_lookup_key, stripe_annual_lookup_key: stripe_annual_lookup_key
@@ -37,7 +38,7 @@ class PricingPlan < ApplicationRecord
   def self.ransackable_attributes(_auth = nil)
     %w[id key name stripe_product_id stripe_lookup_key stripe_price_id
        stripe_annual_lookup_key stripe_annual_price_id price_cents annual_price_cents
-       usd_cents seats clients included_credits position active created_at updated_at]
+       seats clients included_credits position active created_at updated_at]
   end
 
   def self.ransackable_associations(_auth = nil) = []

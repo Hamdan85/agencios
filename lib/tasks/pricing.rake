@@ -16,14 +16,28 @@ namespace :pricing do
   desc 'Ensure the DB pricing catalog exists (idempotent, additive — safe for prod)'
   task seed: :environment do
     Pricing.seed_defaults!
-    puts "✅ Catálogo garantido: #{PricingPlan.count} planos · #{PricingPack.count} pacotes · config ##{PricingConfig.instance.id}"
+    puts "✅ Catálogo garantido: #{PricingPlan.count} planos · #{PricingPack.count} pacotes"
     Rake::Task['pricing:show'].invoke
   end
 
-  desc 'Full setup: seed the DB catalog + provision Stripe Products/Prices + sync'
+  desc 'Prod: seed the catalog (plans + packs) AND push each plan to Stripe (DB = source of truth)'
   task setup: :environment do
     Pricing.seed_defaults!
-    Rake::Task['pricing:stripe:provision'].invoke
+    puts "✅ Catálogo garantido: #{PricingPlan.count} planos · #{PricingPack.count} pacotes"
+    puts '── Sincronizando planos com o Stripe (idempotente) ─────'
+    # DB price_cents is the source of truth: push each plan (create/update the
+    # Product + recurring Prices, minting a new Price only when the amount
+    # changed). Packs need no Stripe object — checkout uses inline price_data.
+    PricingPlan.ordered.each do |plan|
+      Operations::Billing::SyncPlanToStripe.call(plan: plan)
+      puts "  ✅ #{plan.key}: #{plan.stripe_price_id || '—'} (R$#{plan.price_cents / 100.0}/mês)"
+    rescue Vendors::Base::NotConfiguredError => e
+      warn "  ⚠️  Stripe não configurado (#{e.message}). Catálogo semeado; configure stripe.secret_key e rode de novo."
+      break
+    rescue StandardError => e
+      warn "  ⚠️  #{plan.key}: falha ao sincronizar com o Stripe — #{e.message}"
+    end
+    Rake::Task['pricing:show'].invoke
   end
 
   desc 'Print the current pricing catalog'
@@ -36,15 +50,15 @@ namespace :pricing do
              (p.seats >= 1_000_000 ? '∞' : p.seats),
              p.stripe_price_id || '— (não provisionado)')
     end
-    puts "  (desconto anual: #{PricingConfig.instance.annual_discount_percent}%)"
+    puts "  (desconto anual: #{Pricing.annual_discount_percent}%)"
     puts '── Pacotes de crédito ──────────────────────────────────'
     PricingPack.ordered.each do |p|
       printf("  %-9s R$%-7.2f  %5d créditos\n", p.key, p.price_cents / 100.0, p.credits)
     end
-    c = PricingConfig.instance
-    puts '── Config ──────────────────────────────────────────────'
-    puts "  trial: #{c.trial_days} dias · crédito: R$#{c.credit_unit_cents / 100.0} · " \
-         "img #{c.image_credits}cr · vídeo #{c.video_standard_credits_per_15s}/#{c.video_photoreal_credits_per_15s}cr por 15s"
+    puts '── Math (constantes de código, não editável no admin) ──'
+    puts "  trial: #{Pricing.trial_days} dias · crédito: R$#{Pricing.credit_unit_cents / 100.0} · " \
+         "markup #{Pricing.markup}× · câmbio R$#{Pricing.usd_brl} · " \
+         "img #{Pricing.credits_for(kind: :image)}cr · carrossel #{Pricing.credits_for(kind: :carousel)}cr"
     puts ''
   end
 

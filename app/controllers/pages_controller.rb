@@ -208,7 +208,7 @@ class PagesController < ApplicationController
     { q: 'Como funciona o período de teste?',
       a: "Você tem #{Pricing.trial_days} dias de teste em qualquer plano. É preciso cadastrar um cartão para começar — só cobramos ao fim do teste, e você pode cancelar antes quando quiser." },
     { q: 'O que são os créditos?',
-      a: 'A geração de vídeos e imagens consome créditos pré-pagos da sua carteira. Cada plano já inclui uma cota mensal de créditos, e você pode comprar mais a qualquer momento. 1 crédito = R$ 1. Carrosséis com IA são inclusos, sem gastar créditos.' },
+      a: 'A geração de vídeos, imagens e carrosséis consome créditos pré-pagos da sua carteira. Cada plano já inclui uma cota mensal de créditos, e você pode comprar mais a qualquer momento. 1 crédito = R$ 1. Textos e legendas com IA são inclusos, sem gastar créditos.' },
     { q: 'Existe plano gratuito?',
       a: "Não há plano gratuito permanente — todo workspace começa com #{Pricing.trial_days} dias de teste (com cartão). Depois disso, é necessário um plano ativo para usar o app." },
     { q: 'Posso gerenciar mais de uma agência?',

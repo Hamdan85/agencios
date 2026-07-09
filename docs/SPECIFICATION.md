@@ -246,7 +246,7 @@ generation prompt scaffold). Types: `reel`, `feed_image`, `carousel`, `story`, `
 ```
 workspace_id, user_id, creative_id (nullable), kind:integer enum { carousel:0, video:1, image:2 },
 status:integer enum { queued:0, processing:1, completed:2, failed:3 },
-provider:string, external_id:string, cost_cents:integer, metered_at:datetime,
+provider:string, external_id:string, cost_cents:integer,
 params:jsonb, result:jsonb, failure_reason:string
 ```
 
@@ -260,8 +260,9 @@ provider: :heygen)`:
    `processing`; enqueue `PollHeygenVideoJob` (safety net).
 3. On webhook (`Controllers::Webhooks::Heygen`, signature-verified) or poll completion →
    `Operations::Creatives::FinalizeGeneration`: download MP4 → attach to `Creative` → `ready`;
-   set `Generation.completed`, compute `cost_cents` from duration → `Operations::Billing::
-   RecordUsage` (meter `video_generation`). Broadcast `creative_ready`.
+   set `Generation.completed`, compute the real `cost_cents`, and true-up the prepaid credit
+   debit (`Operations::Credits::Debit`, cost-plus via `Pricing.credits_for`). Broadcast
+   `creative_ready`.
 See `integrations/heygen.md`.
 
 **Carousel** — `Operations::Creatives::GenerateCarousel(ticket:, slides:, options:)`:
@@ -270,10 +271,11 @@ See `integrations/heygen.md`.
   per-creative override), optional **stock images** (a stock-image vendor search), and AI copy via
   `Prompts::CarouselCopy` (hook slide → value slides → CTA slide).
 - Render each slide (HTML→image or image-model composition) → attach as `assets` → `Generation
-  (kind: carousel)` → `RecordUsage` (meter `carousel_generation`).
+  (kind: carousel)`. Carousels are **included in the plan** (0 credits — no wallet debit).
 
 **Image** — `Operations::Creatives::GenerateImage(ticket:, prompt:, ref_images:)`:
-- Image model → attach → `Generation(kind: image)` (tracked, **not** metered currently).
+- Image model → attach → `Generation(kind: image)`; debits the prepaid `CreditWallet` (1 credit)
+  via `Operations::Credits::Debit`.
 
 **Uploaded creatives** — `Operations::Creatives::Create` with direct ActiveStorage upload (no
 generation row).
@@ -283,8 +285,9 @@ generate` body `{ kind, type, params }` → `Controllers::Creatives::Generate`. 
 **Studio** (`/estudio`) lists generators + brand assets and can generate standalone creatives.
 
 **Acceptance:** generating a UGC video creates `Generation(kind: video)`, renders async, finalizes
-on webhook, attaches the MP4, and emits a Stripe meter event exactly once (idempotent on
-generation id). Carousel generation produces N slide images using brand identity + handle + avatar.
+on webhook, attaches the MP4, and debits the prepaid `CreditWallet` exactly once (cost-based
+estimate at request, trued-up to the real cost on finalize). Carousel generation produces N slide
+images using brand identity + handle + avatar (0 credits — included in the plan).
 
 ---
 
@@ -393,39 +396,43 @@ paying it (sandbox) flips the invoice to `paid` via webhook + reconciliation.
 
 ---
 
-## 9. SaaS billing (Stripe — subscription + usage meters)
+## 9. SaaS billing (Stripe — subscription seats + prepaid credits)
 
 **Subscription** `workspace_id, plan:integer enum { solo:0, agencia:1, enterprise:2 },
 stripe_customer_id, stripe_subscription_id, status:string, seats:integer, trial_ends_at:datetime,
 current_period_end:datetime, cancel_at:datetime`
 
 - Methods: `access_granted?`, `trialing?`, `seat_limit` (solo 1, agencia 5–20, enterprise 20+).
-- **One Stripe subscription per workspace** with: one **licensed** item (the plan/seats, has
-  `quantity`) + two **metered** items via Billing Meters (`carousel_generation`,
-  `video_generation`).
+- **One Stripe subscription per workspace** with exactly **one licensed item** — the plan/seats
+  (has `quantity`). There are **no metered items / no Billing Meters**. Generation usage is billed
+  from the workspace's prepaid `CreditWallet`, not through Stripe.
 
 Wiring (see `integrations/stripe-billing.md`):
-- `Vendors::Stripe::Actions::CreateCheckoutSession` — subscription Checkout with the base licensed
-  price (adjustable quantity for Agência 5–20) + the two metered prices.
-- `Vendors::Stripe::Actions::ReportMeterEvent` — `POST /v1/billing/meter_events`, idempotent
-  `identifier = "#{generation.kind}:#{generation.id}"`, `payload { stripe_customer_id, value: 1 }`.
+- `Vendors::Stripe::Actions::CreateCheckoutSession` — subscription Checkout with the single licensed
+  plan price (adjustable quantity for Agência 5–20).
+- `Vendors::Stripe::Actions::CreateCreditCheckoutSession` — a **one-time** Checkout for a credit
+  pack, using inline `price_data` (no pre-created Stripe Price). The webhook grants the credits to
+  the wallet.
 - `Vendors::Stripe::Actions::CreatePortalSession` — billing portal.
-- `Operations::Billing::RecordUsage(generation)` — called when a `carousel`/`video` generation
-  completes; emits the meter event; sets `generation.metered_at`. **Image generations are skipped.**
+- **Plan prices** are the DB `PricingPlan.price_cents` (source of truth); saving a plan in `/admin`
+  pushes it to Stripe as a recurring Price via `Operations::Billing::SyncPlanToStripe`.
+- **Generation usage** debits the prepaid `CreditWallet` via `Operations::Credits::Debit`
+  (cost-plus via `Pricing.credits_for`): video (cost-based estimate, trued-up at compose) and image
+  (flat) debit credits; carousel is included in the plan (0 credits).
 - `Operations::Billing::SyncSubscription` — from `Controllers::Webhooks::Stripe`
   (`checkout.session.completed`, `customer.subscription.*`, `invoice.paid`,
-  `invoice.payment_failed`, `v1.billing.meter.error_report_triggered` → alert on dropped usage).
+  `invoice.payment_failed`).
 - `ReconcileSeatsJob` (cron) keeps the licensed `quantity` == `workspace.seat_count`.
 
 **Endpoints:** `resource :billing` (`show`, `checkout_session`, `portal`, `change_plan`, `cancel`,
-`reactivate`); `POST /webhooks/stripe`. Frontend `/assinatura`.
+`reactivate`) + credit-pack checkout; `POST /webhooks/stripe`. Frontend `/assinatura`.
 
 **Gating:** `member` invites blocked past `seat_limit`; generation blocked if `!access_granted?`
-(or trial usage cap). Jobs short-circuit on inactive billing.
+or the wallet lacks credits. Jobs short-circuit on inactive billing.
 
-**Acceptance:** a workspace subscribes to Agência (8 seats); generating a carousel and a video each
-emit exactly one meter event; the next invoice includes seat + usage; re-running a completed
-generation does not double-count (idempotent identifier).
+**Acceptance:** a workspace subscribes to Agência (8 seats); a video generation debits the prepaid
+credit wallet once (trued-up to real cost on finalize), a carousel debits nothing, and a completed
+generation is never double-charged.
 
 ---
 
@@ -497,8 +504,9 @@ mirroring the route table — same discipline as adv-os).
    publish on entering `published`, `SyncMetrics`. *Ship:* schedule → publish to IG/FB → see metrics.
 7. **Calendar & meetings** — calendar view, `Meeting` + Google Calendar/Meet. *Ship:* unified
    calendar of posts + meetings.
-8. **SaaS billing (Stripe)** — `Subscription`, Checkout, Billing Meters, `RecordUsage`, webhooks,
-   seat reconciliation, gating. *Ship:* paid plans + metered carousel/video usage.
+8. **SaaS billing (Stripe)** — `Subscription`, seat Checkout, prepaid credit packs (one-time
+   Checkout), `CreditWallet`/`Operations::Credits::*`, plan-price sync, webhooks, seat
+   reconciliation, gating. *Ship:* paid seat plans + prepaid video/image credits.
 9. **Client billing (Mercado Pago)** — `Invoice`/`Charge`, Pix, webhooks + reconciliation. *Ship:*
    invoice a client, get paid via Pix.
 10. **Remaining networks** — Threads, TikTok, YouTube, LinkedIn, X; each a direct vendor behind
@@ -524,7 +532,8 @@ mirroring the route table — same discipline as adv-os).
 
 ## 14. Open product decisions (flag, don't block)
 
-- **Image generation metering** — tracked now, not billed; revisit if costs warrant a third meter.
+- **Image credit pricing** — images debit a flat 1 credit today; revisit the cost-plus rate if
+  vendor costs shift materially.
 - **Approval/guest portal depth** — guests approve creatives; a richer client review surface is a
   later milestone.
 - **Direct integration per network** — every network publishes through its own direct vendor behind

@@ -16,9 +16,9 @@ module Operations
     #   2. free stock (Pexels)
     #   3. AI generation (Google Banana)
     #
-    # Produces a billable `carousel` Generation (Stripe meter) and records the AI
-    # vendor cost of the copy (Anthropic, via AiAdapter) + any generated images
-    # (Banana) in the AI ledger (AiUsageLog).
+    # Produces a `carousel` Generation that debits prepaid credits
+    # (Pricing.credits_for(:carousel)) and records the AI vendor cost of the copy
+    # (via AiAdapter) + any generated images (Banana) in the AI ledger (AiUsageLog).
     class GenerateViralCarousel < Operations::Base
       PROVIDER   = 'carousel_generator'
       COST_CENTS = 30
@@ -46,31 +46,36 @@ module Operations
           provider: PROVIDER
         )
 
-        # The creative already exists as `generating`; if the render (Chromium) or
-        # attach fails, mark it `failed` so it never spins forever.
-        generation =
-          begin
-            blobs = render_and_attach(slides)
-            slides_meta = slides_metadata(slides, blobs)
-            @creative.update!(status: :ready, metadata: { slides: slides_meta })
+        generation = workspace.generations.create!(
+          user: Current.user,
+          creative: @creative,
+          kind: :carousel,
+          status: :processing,
+          provider: PROVIDER,
+          cost_cents: COST_CENTS,
+          params: @params,
+          result: {}
+        )
 
-            gen = workspace.generations.create!(
-              user: Current.user,
-              creative: @creative,
-              kind: :carousel,
-              status: :completed,
-              provider: PROVIDER,
-              cost_cents: COST_CENTS,
-              params: @params,
-              result: { slides: slides_meta }
-            )
-            meter!(gen)
-            gen
-          rescue StandardError
-            @creative.update!(status: :failed)
-            Broadcaster.ticket(@ticket, 'creative_failed', creative_id: @creative.id) if @ticket
-            raise
-          end
+        # A carousel debits prepaid credits like an image (Pricing.credits_for →
+        # 0 makes it free again, admin-tunable). Everything that can fail — the
+        # debit, the render (Chromium), the attach — is wrapped so ANY error fails
+        # the records and refunds credits (FailGeneration), never stranding the
+        # creative in `generating`.
+        begin
+          Operations::Credits::Debit.call(
+            workspace: workspace,
+            amount: Pricing.credits_for(kind: :carousel),
+            generation: generation
+          )
+          blobs = render_and_attach(slides)
+          slides_meta = slides_metadata(slides, blobs)
+          @creative.update!(status: :ready, metadata: { slides: slides_meta })
+          generation.update!(status: :completed, result: { slides: slides_meta })
+        rescue StandardError => e
+          Operations::Creatives::FailGeneration.call(generation: generation, reason: e.message)
+          raise
+        end
 
         broadcast(event: 'generation_done', id: generation.id, kind: 'carousel')
         generation
@@ -372,12 +377,6 @@ module Operations
 
       def truthy?(value)
         [true, 'true', 1, '1'].include?(value)
-      end
-
-      def meter!(generation)
-        Operations::Billing::RecordUsage.call(generation)
-      rescue StandardError => e
-        Rails.logger.warn("[GenerateViralCarousel] RecordUsage failed for generation #{generation.id}: #{e.message}")
       end
 
       def broadcast(payload)

@@ -24,11 +24,14 @@ module Api
         skip_before_action :require_active_billing, **opts
       end
 
+      # Declared first so it sits at the bottom of the handler stack: every more
+      # specific handler below is checked before this catch-all.
+      rescue_from StandardError,                           with: :internal_error
       rescue_from ActionController::InvalidAuthenticityToken, with: :invalid_csrf
       rescue_from ActiveRecord::RecordNotFound,            with: :not_found
-      rescue_from ActiveRecord::RecordInvalid,             with: :unprocessable
+      rescue_from ActiveRecord::RecordInvalid,             with: :record_invalid
       rescue_from ActionController::ParameterMissing,      with: :bad_request
-      rescue_from Pundit::NotAuthorizedError,              with: :forbidden
+      rescue_from Pundit::NotAuthorizedError,              with: :not_authorized
       rescue_from Operations::Errors::Forbidden,           with: :forbidden
       rescue_from Operations::Errors::SeatLimitReached,    with: :payment_required
       rescue_from Operations::Errors::ClientLimitReached,  with: :payment_required
@@ -58,10 +61,42 @@ module Api
       def invalid_csrf(_error) = render json: { error: 'Token CSRF inválido.', code: 'invalid_csrf' },
                                         status: :forbidden
 
-      def not_found(error)    = render_error(error.message, status: :not_found)
-      def bad_request(error)  = render_error(error.message, status: :bad_request)
+      # Framework exceptions carry raw, technical, often-English messages — e.g.
+      # `Couldn't find Creative with 'id'=245 [WHERE "creatives"."workspace_id" = $1]`.
+      # Every API error is customer-facing, so those must never reach the user: we
+      # map each framework exception to friendly Portuguese copy and only surface
+      # `error.message` for our own Operations::Errors::* (which already carry
+      # customer-safe copy) and model validations.
+      def not_found(_error) = render_error('Não encontramos esse item — ele pode já ter sido removido.',
+                                           status: :not_found)
+      def bad_request(_error) = render_error('Requisição inválida. Confira os dados e tente novamente.',
+                                             status: :bad_request)
+      def not_authorized(_error) = render json: { error: 'Você não tem permissão para realizar esta ação.',
+                                                   code: 'forbidden' }, status: :forbidden
+
+      # Model validation failures — surface the validation copy without the
+      # technical "Validation failed:" prefix that Rails prepends to #message.
+      def record_invalid(error)
+        render_error(error.record.errors.full_messages.to_sentence.presence ||
+          'Não foi possível salvar. Confira os dados e tente novamente.')
+      end
+
       def unprocessable(error) = render_error(error.message)
       def forbidden(error) = render json: { error: error.message, code: 'forbidden' }, status: :forbidden
+
+      # Last-resort catch-all: an unhandled exception here is a bug. Log it loudly
+      # (and re-raise outside production so it crashes visibly in dev/test rather
+      # than being masked), but never leak internals to the customer — the user
+      # gets a generic, friendly 500.
+      def internal_error(error)
+        raise error unless Rails.env.production?
+
+        Rails.logger.error(
+          "[api] unhandled #{error.class}: #{error.message}\n#{Array(error.backtrace).first(20).join("\n")}"
+        )
+        render_error('Algo deu errado do nosso lado. Tente novamente em instantes.',
+                     status: :internal_server_error)
+      end
 
       def payment_required(error) = render json: { error: error.message, code: 'billing_required' },
                                            status: :payment_required

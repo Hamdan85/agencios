@@ -36,7 +36,7 @@ RSpec.describe 'Autopilot (GO mode) API', type: :request do
     expect(response).to have_http_status(:ok)
     est = JSON.parse(response.body)['estimate']
     expect(est['eligible']).to be(true)
-    expect(est['total_credits']).to eq(1) # feed_image(1) + carousel(0)
+    expect(est['total_credits']).to eq(2) # feed_image(1) + carousel(1)
   end
 
   it 'blocks the start with 402 when the wallet is short of the estimate' do

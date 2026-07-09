@@ -12,7 +12,7 @@ RSpec.describe Controllers::Credits::Usage, type: :model do
     workspace.generations.create!(kind: kind, status: :completed, provider: provider)
   end
 
-  it 'splits activity counts from credit spend (carousel is free)' do
+  it 'splits activity counts from credit spend across kinds' do
     Operations::Credits::Grant.call(workspace: workspace, amount: 100, expires_at: 1.month.from_now)
 
     video = gen(:video, 'openrouter')
@@ -24,39 +24,39 @@ RSpec.describe Controllers::Credits::Usage, type: :model do
     end
 
     carousel = gen(:carousel, 'internal')
-    # Carousel is 0 credits — Debit is a no-op and records no transaction.
+    # Carousel now debits its configured credits (1), like an image.
     Operations::Credits::Debit.call(workspace: workspace, amount: Pricing.credits_for(kind: :carousel), generation: carousel)
 
     result = described_class.call(params: { range: '30d' })
 
-    expect(result[:totals][:spent]).to eq(18)         # 16 + 1 + 1
+    expect(result[:totals][:spent]).to eq(19)         # 16 + 1 + 1 + 1
     expect(result[:totals][:generations]).to eq(4)
     expect(result[:totals][:granted_added]).to eq(100)
 
     by_kind = result[:by_kind].index_by { |k| k[:kind] }
     expect(by_kind['video']).to include(count: 1, credits: 16)
     expect(by_kind['image']).to include(count: 2, credits: 2)
-    expect(by_kind['carousel']).to include(count: 1, credits: 0)
+    expect(by_kind['carousel']).to include(count: 1, credits: 1)
 
     expect(result[:recent][:items].size).to eq(4)
-    expect(result[:recent][:items].sum { |g| g[:credits] }).to eq(18)
+    expect(result[:recent][:items].sum { |g| g[:credits] }).to eq(19)
     expect(result[:recent][:meta]).to include(total: 4)
 
     # The trend is zero-filled across the whole range (a continuous axis, never a
     # blank card) and carries both real spend and generation activity per bucket.
     expect(result[:series].size).to eq(31) # 30 days ago through today, inclusive
-    expect(result[:series].sum { |p| p[:credits] }).to eq(18)
+    expect(result[:series].sum { |p| p[:credits] }).to eq(19)
     expect(result[:series].sum { |p| p[:generations] }).to eq(4)
     today = result[:series].last
-    expect(today[:credits]).to eq(18)
+    expect(today[:credits]).to eq(19)
     expect(today[:generations]).to eq(4)
 
     # Each bucket breaks the spend/activity down per creative type so the trend
     # can draw one line per type; the parts always sum back to the bucket total.
     expect(today[:by_kind]['video']).to eq(credits: 16, generations: 1)
     expect(today[:by_kind]['image']).to eq(credits: 2, generations: 2)
-    expect(today[:by_kind]['carousel']).to eq(credits: 0, generations: 1)
-    expect(result[:series].sum { |p| p[:by_kind].values.sum { |v| v[:credits] } }).to eq(18)
+    expect(today[:by_kind]['carousel']).to eq(credits: 1, generations: 1)
+    expect(result[:series].sum { |p| p[:by_kind].values.sum { |v| v[:credits] } }).to eq(19)
     expect(result[:series].sum { |p| p[:by_kind].values.sum { |v| v[:generations] } }).to eq(4)
   end
 

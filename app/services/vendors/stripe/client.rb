@@ -3,8 +3,8 @@
 module Vendors
   module Stripe
     # Platform-level Stripe client for agencios SaaS billing (the workspace's own
-    # subscription: one licensed seat item + two metered usage items via Billing
-    # Meters). This is a thin wrapper over the official `stripe` gem (19.x) — the
+    # subscription: one licensed seat item — generation usage is prepaid credits,
+    # NOT Stripe meters). This is a thin wrapper over the official `stripe` gem (19.x) — the
     # gem owns HTTP, retries and idempotency, so we do NOT use Vendors::Base's
     # Faraday plumbing here. We DO inherit from Vendors::Base for `credential` /
     # `require_credential!` and the shared error hierarchy.
@@ -25,16 +25,13 @@ module Vendors
     #       solo: price_...                  # Solo licensed price (qty 1)
     #       agencia: price_...               # Agência per-seat licensed price (qty 5–20)
     #       enterprise: price_...            # Enterprise per-seat licensed price (qty 20+)
-    #       carousel_generation: price_...   # metered price tied to carousel meter
-    #       video_generation: price_...      # metered price tied to video meter
     #
     # Both `secret_key` and `webhook_secret` also accept ENV fallbacks
     # (STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET) for local dev — see
     # Vendors::Base#credential.
     class Client < Vendors::Base
       # Pin the API version so webhook payload shapes are stable across gem
-      # upgrades. Billing Meters + the metered-billing webhooks require Basil
-      # (2025-03-31) or later. Overridable via the stripe.api_version credential.
+      # upgrades. Overridable via the stripe.api_version credential.
       DEFAULT_API_VERSION = '2025-03-31.basil'
 
       # Stripe price ids are resolved per plan from credentials by these keys.
@@ -42,12 +39,6 @@ module Vendors
         'solo' => :solo,
         'agencia' => :agencia,
         'enterprise' => :enterprise
-      }.freeze
-
-      # Metered usage prices that ride on every subscription, by Generation kind.
-      METERED_PRICE_KEYS = {
-        carousel: :carousel_generation,
-        video: :video_generation
       }.freeze
 
       def initialize
@@ -76,6 +67,20 @@ module Vendors
 
       def create_product(name:, metadata: {})
         with_error_mapping { ::Stripe::Product.create(name: name, metadata: metadata) }
+      end
+
+      # Update a Product's mutable fields (name/active). Products are mutable
+      # (unlike Prices), so this is a plain update — keeps the Stripe Product in
+      # step with an admin-edited plan name / active flag.
+      def update_product(product_id, name:, active: true)
+        with_error_mapping { ::Stripe::Product.update(product_id, { name: name, active: active }) }
+      end
+
+      # Fetch a Price by id. A missing/deleted id maps to Client::Error via
+      # with_error_mapping — used to detect whether a plan's cached Price still
+      # matches the admin-edited amount before minting a new one.
+      def retrieve_price(price_id)
+        with_error_mapping { ::Stripe::Price.retrieve(price_id) }
       end
 
       # Archive a Price (Prices are immutable — a price change creates a new one
@@ -118,49 +123,6 @@ module Vendors
         with_error_mapping { ::Stripe::SubscriptionItem.update(item_id, params) }
       end
 
-      # ── Billing Meters ────────────────────────────────────────────────────
-
-      # POST /v1/billing/meter_events — record one usage event. `value` is sent as
-      # a string (Stripe stores the payload values as strings). `identifier` is the
-      # dedup key; Stripe enforces uniqueness for ~24h+, so a retried job is safe.
-      def create_meter_event(event_name:, stripe_customer_id:, value:, identifier:, timestamp: nil)
-        params = {
-          event_name: event_name,
-          payload: { stripe_customer_id: stripe_customer_id, value: value.to_s },
-          identifier: identifier,
-          timestamp: timestamp
-        }.compact
-
-        with_error_mapping { ::Stripe::Billing::MeterEvent.create(params) }
-      end
-
-      # POST /v1/billing/meters — provisioning helper (run once per environment to
-      # create the two meters). Not on the hot path; here for completeness/setup.
-      def create_meter(display_name:, event_name:, formula: 'sum', payload_key: 'value')
-        params = {
-          display_name: display_name,
-          event_name: event_name,
-          default_aggregation: { formula: formula },
-          value_settings: { event_payload_key: payload_key },
-          customer_mapping: { type: 'by_id', event_payload_key: 'stripe_customer_id' }
-        }
-
-        with_error_mapping { ::Stripe::Billing::Meter.create(params) }
-      end
-
-      # GET /v1/billing/meters/{id}/event_summaries — aggregated usage for a
-      # customer over a window (in-app usage dashboards / free-tier remaining).
-      def list_event_summaries(meter_id, customer:, start_time:, end_time:)
-        with_error_mapping do
-          ::Stripe::Billing::Meter.list_event_summaries(
-            meter_id,
-            customer: customer,
-            start_time: start_time,
-            end_time: end_time
-          )
-        end
-      end
-
       # ── Credential resolution ─────────────────────────────────────────────
 
       def api_version
@@ -180,14 +142,6 @@ module Vendors
           raise Error, "Plano Stripe desconhecido: #{plan.inspect}"
         end
         require_credential!(credential(:stripe, :prices, key), "stripe.prices.#{key}")
-      end
-
-      # The two metered usage price ids, in a stable order, that ride on every
-      # subscription alongside the licensed plan item.
-      def metered_price_ids
-        METERED_PRICE_KEYS.values.map do |key|
-          require_credential!(credential(:stripe, :prices, key), "stripe.prices.#{key}")
-        end
       end
 
       private

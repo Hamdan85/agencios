@@ -18,6 +18,7 @@ import { Textarea } from '@/components/ui/input'
 import { Spinner, InlineSpinner, Skeleton, EmptyState } from '@/components/ui/feedback'
 import { Bubble, TypingDots, ChatComposer } from '@/components/ui/chat'
 import { Markdown } from '@/components/ui/markdown'
+import { useConfirm } from '@/components/ui/confirm-dialog'
 import {
   useVideoScenes, useVideoChat, useFinalizeVideo, useCredits,
   useVideoAssets, useRegenerateAsset, useAddAsset, useRemoveAsset, useAssetLibrary,
@@ -1046,13 +1047,22 @@ function AssetsPanel({ creativeId, open }) {
   const { data, isLoading } = useVideoAssets(creativeId, { enabled: open })
   const regen = useRegenerateAsset(creativeId)
   const remove = useRemoveAsset(creativeId)
+  const confirm = useConfirm()
   const assets = data?.assets || {}
   const characters = assets.characters || []
   const scenarios = assets.scenarios || []
   const references = assets.references || []
   const music = assets.music
   const nothing = !isLoading && !characters.length && !scenarios.length && !references.length && !music
-  const onRemove = (item) => remove.mutate({ key: item.key })
+  const onRemove = async (item) => {
+    const ok = await confirm({
+      title: 'Remover elemento?',
+      description: 'Ele deixa de ser usado nas próximas gerações de cena.',
+      confirmLabel: 'Remover',
+      destructive: true,
+    })
+    if (ok) remove.mutate({ key: item.key })
+  }
 
   // Every element image, in display order — the viewer's slide list.
   const imageItems = useMemo(

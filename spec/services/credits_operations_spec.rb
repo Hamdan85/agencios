@@ -8,13 +8,13 @@ RSpec.describe 'Operations::Credits', type: :model do
   def balance = Operations::Credits::EnsureWallet.call(workspace: workspace).reload.available
 
   describe 'Pricing.credits_for' do
-    it 'charges 1 credit per image and 0 for carousel' do
+    it 'charges 1 credit per image and 1 per carousel' do
       expect(Pricing.credits_for(kind: :image)).to eq(1)
-      expect(Pricing.credits_for(kind: :carousel)).to eq(0)
+      expect(Pricing.credits_for(kind: :carousel)).to eq(1)
     end
 
     it 'charges video by real vendor cost (cost-plus), not by final duration' do
-      PricingConfig.first_or_create!.update!(usd_brl: 6.00, margin_multiplier: 6.5, video_usd_per_sec: 0.16)
+      # Pricing math is fixed code constants (USD_BRL 6.00, MARKUP 6.5, VIDEO_USD_PER_SEC 0.16).
       # HOLD estimate: 30s × $0.16/s = $4.80 = 480 USD¢ → ceil(480 × 6 × 6.5 ÷ 100) = 188
       expect(Pricing.credits_for(kind: :video, seconds: 30)).to eq(188)
       # TRUE-UP by the real cost: an 8s clip that really cost $1.28 (128 USD¢) → 50

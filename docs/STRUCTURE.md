@@ -96,7 +96,8 @@ agencios/
         │   ├── social/  connect_account · refresh_token
         │   ├── clients/{create,archive} · projects/create · invoices/create
         │   ├── meetings/{create,sync_to_calendar}
-        │   ├── billing/  record_usage (Stripe meters) · sync_subscription · sync_payment_status (MP)
+        │   ├── billing/  sync_plan_to_stripe · reconcile_seats · sync_subscription · sync_payment_status (MP)
+        │   ├── credits/  debit · grant · purchase · refund (prepaid CreditWallet)
         │   ├── users/register · workspaces/setup_for_user
         ├── publishers/social_publisher.rb # ★ the publish seam (provider → direct vendor)
         ├── prompts/                       # status-aware AI prompt builders
@@ -111,7 +112,7 @@ agencios/
             ├── youtube/   client · 12 actions (resumable upload, analytics + uniform seam)
             ├── linkedin/  client · 21 actions (Posts API, org analytics + uniform seam)
             ├── x/         client · 12 actions (v2 + PKCE + media upload + uniform seam)
-            ├── stripe/    client · webhook · checkout · portal · report_meter_event
+            ├── stripe/    client · webhook · checkout (plan + credit-pack) · portal · sync_plan_prices · provision_plan_prices · sync_seat_quantity
             ├── mercado_pago/ client · webhook · create_payment (Pix) · get_payment · create_preference · oauth
             ├── heygen/    client · webhook · error · 10 actions (avatar/template/render/poll)
             ├── image_gen/ client · error · generate_image

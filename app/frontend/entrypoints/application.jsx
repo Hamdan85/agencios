@@ -66,7 +66,7 @@ window.__queryClient = queryClient
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <Toaster richColors position="top-right" toastOptions={{ style: { fontFamily: 'var(--font-sans)' } }} />
+      <Toaster richColors closeButton position="top-right" toastOptions={{ style: { fontFamily: 'var(--font-sans)' } }} />
       <ConfirmProvider>
         <Sentry.ErrorBoundary fallback={<AppErrorFallback />}>
           <App />

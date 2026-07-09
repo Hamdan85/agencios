@@ -12,8 +12,8 @@ module Controllers
       def call
         deny_guests!
         require_billing!
-        # Video + image consume prepaid credits; carousels are included (0 credits).
-        # Fail fast with 402 before creating any records.
+        # Video, image, and carousel consume prepaid credits (carousel cost is
+        # admin-tunable, default 1). Fail fast with 402 before creating any records.
         require_credits!(kind: @params[:kind])
         ticket = workspace.tickets.find(@params[:ticket_id])
         { generation: serialize(run(ticket), GenerationSerializer) }

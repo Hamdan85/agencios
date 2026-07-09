@@ -23,7 +23,6 @@ ActiveAdmin.register Generation do
     column :status
     column :provider
     column('Custo (¢US$)', &:cost_cents)
-    column('Metered') { |g| g.metered? ? 'Sim' : '—' }
     column :created_at
   end
 
@@ -36,7 +35,6 @@ ActiveAdmin.register Generation do
       row :provider
       row :external_id
       row :cost_cents
-      row :metered_at
       row :failure_reason
       row :created_at
     end

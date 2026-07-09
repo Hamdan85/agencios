@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_09_041346) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_09_135647) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -163,7 +163,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_041346) do
     t.index ["batch_id"], name: "index_autopilot_runs_on_batch_id"
     t.index ["ticket_id", "state"], name: "index_autopilot_runs_on_ticket_id_and_state"
     t.index ["ticket_id"], name: "index_autopilot_runs_on_ticket_id"
-    t.index ["ticket_id"], name: "index_autopilot_runs_one_active_per_ticket", unique: true, where: "(((scope)::text = 'ticket'::text) AND ((state)::text = ANY ((ARRAY['pending'::character varying, 'scoping'::character varying, 'generating'::character varying, 'awaiting_generation'::character varying])::text[])))"
+    t.index ["ticket_id"], name: "index_autopilot_runs_one_active_per_ticket", unique: true, where: "(((scope)::text = 'ticket'::text) AND ((state)::text = ANY (ARRAY[('pending'::character varying)::text, ('scoping'::character varying)::text, ('generating'::character varying)::text, ('awaiting_generation'::character varying)::text])))"
     t.index ["user_id"], name: "index_autopilot_runs_on_user_id"
     t.index ["workspace_id", "state"], name: "index_autopilot_runs_on_workspace_id_and_state"
     t.index ["workspace_id"], name: "index_autopilot_runs_on_workspace_id"
@@ -280,7 +280,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_041346) do
     t.string "external_id"
     t.string "failure_reason"
     t.integer "kind", default: 0, null: false
-    t.datetime "metered_at"
     t.jsonb "params", default: {}, null: false
     t.string "provider"
     t.jsonb "result", default: {}, null: false
@@ -470,21 +469,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_041346) do
     t.index ["workspace_id"], name: "index_posts_on_workspace_id"
   end
 
-  create_table "pricing_configs", force: :cascade do |t|
-    t.integer "annual_discount_percent", default: 15, null: false
-    t.integer "carousel_credits", default: 0, null: false
-    t.datetime "created_at", null: false
-    t.integer "credit_unit_cents", default: 100, null: false
-    t.integer "image_credits", default: 1, null: false
-    t.decimal "margin_multiplier", precision: 5, scale: 2, default: "6.5", null: false
-    t.integer "trial_days", default: 7, null: false
-    t.datetime "updated_at", null: false
-    t.decimal "usd_brl", precision: 8, scale: 4, default: "5.4", null: false
-    t.integer "video_photoreal_credits_per_15s", default: 30, null: false
-    t.integer "video_standard_credits_per_15s", default: 8, null: false
-    t.decimal "video_usd_per_sec", precision: 6, scale: 4, default: "0.16", null: false
-  end
-
   create_table "pricing_packs", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
@@ -515,7 +499,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_041346) do
     t.string "stripe_price_id"
     t.string "stripe_product_id"
     t.datetime "updated_at", null: false
-    t.integer "usd_cents", default: 0, null: false
     t.index ["key"], name: "index_pricing_plans_on_key", unique: true
   end
 

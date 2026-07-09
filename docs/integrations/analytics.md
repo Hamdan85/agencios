@@ -85,7 +85,7 @@ across all tools.
 | `login` / `logout` | `useLogin` / `useLogout` | — |
 | `subscribe` | `useBillingMutations.changePlan` | `Subscribe` |
 | `checkout_started` | (reserved for Stripe Checkout) | `InitiateCheckout` |
-| `creative_generated` | studio `useGenerate` + ticket `generate` | — (also the usage meter) |
+| `creative_generated` | studio `useGenerate` + ticket `generate` | — (also debits prepaid credits) |
 | `client_created` / `project_created` / `ticket_created` | their create mutations | — |
 | `post_created` / `meeting_scheduled` / `invoice_created` | their mutations | — |
 | `member_invited` | `useWorkspaceMutations.invite` | — |

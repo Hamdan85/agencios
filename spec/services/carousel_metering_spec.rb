@@ -2,10 +2,9 @@
 
 require 'rails_helper'
 
-# Carousel generations are one of the two usage-based billing meters
-# (SPECIFICATION.md §9). On completion they must emit a Stripe meter event
-# exactly once. The viral carousel writes its copy with Claude and rasterizes
-# branded HTML slides — both are stubbed here so the spec stays offline.
+# A carousel debits prepaid credits like an image (Pricing.credits_for(:carousel),
+# default 1). The viral carousel writes its copy with the AI adapter and rasterizes
+# branded HTML slides — both stubbed here so the spec stays offline.
 RSpec.describe Operations::Creatives::GenerateViralCarousel do
   include ActiveJob::TestHelper
 
@@ -39,29 +38,25 @@ RSpec.describe Operations::Creatives::GenerateViralCarousel do
 
   after { Current.reset }
 
-  it 'meters a completed carousel to Stripe when the workspace has a customer' do
-    workspace.subscription.update!(status: 'active', stripe_customer_id: 'cus_test')
-    allow(Vendors::Stripe::Actions::ReportMeterEvent).to receive(:call).and_return(true)
+  # Give the wallet a starting balance so the debit has something to draw from.
+  def fund_wallet(credits)
+    Operations::Credits::Grant.call(workspace: workspace, amount: credits, expires_at: 1.year.from_now)
+  end
 
-    generation = described_class.call(ticket: ticket, slides: 3)
+  it 'debits the configured carousel credits (default 1) from the wallet on completion' do
+    fund_wallet(5)
 
+    expect { described_class.call(ticket: ticket, slides: 3) }
+      .to change { workspace.reload.credits_available }.by(-Pricing.credits_for(kind: :carousel))
+
+    generation = Generation.last
     expect(generation.kind).to eq('carousel')
     expect(generation.status).to eq('completed')
-    expect(generation.metered_at).to be_present
     expect(generation.creative.assets.count).to eq(3)
-    expect(Vendors::Stripe::Actions::ReportMeterEvent).to have_received(:call).once
   end
 
-  it 'skips metering when the workspace has no Stripe customer yet' do
-    allow(Vendors::Stripe::Actions::ReportMeterEvent).to receive(:call)
-
-    generation = described_class.call(ticket: ticket, slides: 2)
-
-    expect(generation.metered_at).to be_nil
-    expect(Vendors::Stripe::Actions::ReportMeterEvent).not_to have_received(:call)
-  end
-
-  it 'marks the creative failed (never stranded in generating) when the render raises' do
+  it 'refunds the debited credit and fails the creative when the render raises' do
+    fund_wallet(5)
     allow(Vendors::Render::Html).to receive(:batch).and_raise(
       Vendors::Render::Html::RenderError, 'Chromium down'
     )
@@ -69,8 +64,9 @@ RSpec.describe Operations::Creatives::GenerateViralCarousel do
     expect { described_class.call(ticket: ticket, slides: 3) }
       .to raise_error(Vendors::Render::Html::RenderError)
 
+    expect(workspace.reload.credits_available).to eq(5) # debit refunded
     creative = ticket.reload.creatives.where(source: Creative.sources[:generated]).last
     expect(creative.status).to eq('failed')
-    expect(Generation.where(creative: creative)).to be_empty
+    expect(Generation.last.status).to eq('failed')
   end
 end

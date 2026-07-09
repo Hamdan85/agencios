@@ -187,11 +187,22 @@ function PositioningSection({ client, onEdit }) {
 // ── Social networks (connected per client) ──────────────────────
 function SocialCard({ provider, account, mutations }) {
   const meta = CHANNEL_META[provider]
+  const confirm = useConfirm()
   if (!meta) return null
   const Icon = meta.icon
   const connected = !!account && account.status === 'connected' && !account.token_expired
   const needsReauth = !!account && (account.status === 'needs_reauth' || account.token_expired)
   const busy = mutations.connecting || mutations.disconnect.isPending
+
+  const handleDisconnect = async () => {
+    const ok = await confirm({
+      title: `Desconectar ${meta.label}?`,
+      description: 'Publicações agendadas nesta conta deixarão de ser postadas até você reconectar.',
+      confirmLabel: 'Desconectar',
+      destructive: true,
+    })
+    if (ok) mutations.disconnect.mutate(account.id)
+  }
 
   return (
     <Card className="flex flex-col p-5">
@@ -211,7 +222,7 @@ function SocialCard({ provider, account, mutations }) {
       </p>
       <div className="mt-4 flex gap-2">
         {connected ? (
-          <Button variant="outline" size="sm" className="w-full" disabled={busy} onClick={() => mutations.disconnect.mutate(account.id)}>
+          <Button variant="outline" size="sm" className="w-full" disabled={busy} onClick={handleDisconnect}>
             <Unplug size={15} /> Desconectar
           </Button>
         ) : (
