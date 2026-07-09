@@ -10,6 +10,8 @@ module Vendors
   # (or CHROME_PATH). In production the runtime image must ship chromium.
   module Render
     class Html
+      include Launcher
+
       class RenderError < StandardError; end
 
       DEFAULT_SELECTOR = '.slide'
@@ -23,7 +25,7 @@ module Vendors
       end
 
       def fetch_text(url)
-        browser = build_browser
+        browser = launch_browser(window_size: [@width, @height], browser_options: { 'hide-scrollbars' => nil })
         begin
           page = browser.create_page
           page.go_to(url)
@@ -58,7 +60,7 @@ module Vendors
       end
 
       def render_many(htmls)
-        browser = build_browser
+        browser = launch_browser(window_size: [@width, @height], browser_options: { 'hide-scrollbars' => nil })
         begin
           htmls.map { |html| render_one(browser, html) }
         ensure
@@ -95,28 +97,6 @@ module Vendors
         end
       end
 
-      def build_browser
-        Ferrum::Browser.new(
-          headless: true,
-          browser_path: browser_path,
-          window_size: [@width, @height],
-          timeout: 30,
-          process_timeout: 30,
-          pending_connection_errors: false,
-          browser_options: {
-            'no-sandbox' => nil,
-            'disable-dev-shm-usage' => nil,
-            'disable-gpu' => nil,
-            'hide-scrollbars' => nil
-          }
-        )
-      end
-
-      def browser_path
-        ENV['FERRUM_BROWSER_PATH'].presence ||
-          ENV['CHROME_PATH'].presence ||
-          %w[/usr/bin/chromium /usr/bin/chromium-browser /usr/bin/google-chrome].find { |p| File.executable?(p) }
-      end
     end
   end
 end

@@ -11,6 +11,8 @@ module Vendors
   # (or CHROME_PATH). In production the runtime image must ship chromium.
   module Render
     class Pdf
+      include Launcher
+
       class RenderError < StandardError; end
 
       def self.call(...) = new(...).call
@@ -24,7 +26,7 @@ module Vendors
       end
 
       def call
-        browser = build_browser
+        browser = launch_browser
         begin
           page = browser.create_page
           page.content = @html
@@ -60,27 +62,6 @@ module Vendors
         end
       end
 
-      def build_browser
-        Ferrum::Browser.new(
-          headless: true,
-          browser_path: browser_path,
-          timeout: 30,
-          process_timeout: 30,
-          pending_connection_errors: false,
-          browser_options: {
-            'no-sandbox' => nil,
-            'disable-dev-shm-usage' => nil,
-            'disable-gpu' => nil,
-            'hide-scrollbars' => nil
-          }
-        )
-      end
-
-      def browser_path
-        ENV['FERRUM_BROWSER_PATH'].presence ||
-          ENV['CHROME_PATH'].presence ||
-          %w[/usr/bin/chromium /usr/bin/chromium-browser /usr/bin/google-chrome].find { |p| File.executable?(p) }
-      end
     end
   end
 end
