@@ -30,6 +30,10 @@ module Controllers
         end
       rescue Vendors::Base::NotConfiguredError
         # Dev/local without Stripe keys — fall back to the mock checkout screen.
+        # In production a missing Stripe config is a real outage (the user would
+        # otherwise be bounced silently back to /assinatura), so let it crash.
+        raise unless Rails.env.local?
+
         { checkout_url: "#{SystemConfig.app_host}/assinatura?checkout=mock" }
       end
 

@@ -43,7 +43,8 @@ export function SendScopeDialog({ open, onOpenChange, project, mutation }) {
         <form onSubmit={submit} className="space-y-3.5">
           <div className="space-y-1.5">
             <Label>Destinatários</Label>
-            <ChipsInput value={recipients} onChange={setRecipients} placeholder="email@cliente.com" />
+            <ChipsInput value={recipients} onChange={setRecipients} placeholder="email@cliente.com" max={4} />
+            <p className="text-xs text-ink-faint">Até 4 e-mails. Pressione Enter ou vírgula para adicionar.</p>
           </div>
           <DialogFooter>
             <DialogClose asChild><Button type="button" variant="ghost">Cancelar</Button></DialogClose>
