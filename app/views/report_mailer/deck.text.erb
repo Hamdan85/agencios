@@ -1,0 +1,7 @@
+Relatório da campanha <%= @project.name %>
+
+Olá<%= @client&.name.present? ? ", #{@client.name}" : "" %>. Fechamos a campanha <%= @project.name %> e preparamos o relatório completo de desempenho. Ele está em anexo neste e-mail (PDF).
+
+Abra sua central: <%= @url %>
+
+Na sua central você acompanha esta e as demais campanhas a qualquer momento.

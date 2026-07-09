@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= @report&.project&.name.presence || "Relatório" %></title>
+  <style>
+    /* ---- Print / page setup ---- */
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    :root {
+      --ink: #0f172a;
+      --ink-secondary: #334155;
+      --ink-muted: #64748b;
+      --border: #e2e8f0;
+      --surface: #ffffff;
+      --surface-muted: #f1f5f9;
+      --bg: #f8fafc;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Noto Sans", sans-serif;
+      font-size: 13px;
+      line-height: 1.45;
+      padding: 40px 44px 64px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, p, ul, li {
+      margin: 0;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    /* ---- Layout primitives ---- */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      page-break-inside: avoid;
+    }
+
+    .card-pad {
+      padding: 18px;
+    }
+
+    .section {
+      page-break-inside: avoid;
+    }
+
+    /* ---- Header / cover ---- */
+    .brand-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .brand-initial {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 18px;
+    }
+
+    .brand-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.01em;
+    }
+
+    .cover {
+      margin-bottom: 26px;
+    }
+
+    .cover .gradient {
+      height: 10px;
+      width: 100%;
+    }
+
+    .cover .cover-body {
+      padding: 26px 24px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .cover h1 {
+      margin-top: 8px;
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+
+    .cover .meta {
+      margin-top: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink-secondary);
+    }
+
+    .cover .ai-warn {
+      margin-top: 14px;
+      background: rgba(245, 158, 11, 0.15);
+      color: #b45309;
+      border-radius: 10px;
+      padding: 9px 12px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    /* ---- Section titles ---- */
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 30px 0 12px;
+      page-break-after: avoid;
+    }
+
+    .section-title .dot {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    .section-title h2 {
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: var(--ink);
+    }
+
+    /* ---- Grids ---- */
+    .grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .grid-4 { grid-template-columns: repeat(4, 1fr); }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-2 { grid-template-columns: repeat(2, 1fr); }
+
+    /* ---- KPI tiles ---- */
+    .kpi .kpi-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+    }
+
+    .kpi .kpi-value {
+      margin-top: 6px;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .kpi .kpi-delta {
+      margin-top: 4px;
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .kpi .kpi-delta.up { color: #10b981; }
+    .kpi .kpi-delta.down { color: #ef4444; }
+
+    .hint {
+      margin-top: 8px;
+      font-size: 10.5px;
+      color: var(--ink-muted);
+    }
+
+    /* ---- Score ---- */
+    .score-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 26px 18px;
+    }
+
+    .score-number {
+      font-size: 58px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .score-of {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      margin-top: 4px;
+    }
+
+    .score-verdict {
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--ink-secondary);
+    }
+
+    /* ---- Colored header lists (milestones / plan / perf) ---- */
+    .list-head {
+      padding: 11px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .list-body {
+      padding: 16px;
+    }
+
+    .list-body li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 12.5px;
+      color: var(--ink-secondary);
+      padding: 4px 0;
+    }
+
+    .list-body li .bullet {
+      flex-shrink: 0;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-top: 6px;
+      display: inline-block;
+    }
+
+    /* ---- Card list (wins / opportunities / tactics) ---- */
+    .cardlist-item {
+      padding: 16px;
+    }
+
+    .cardlist-item .row {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+    }
+
+    .cardlist-item .emoji {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .tag {
+      display: inline-block;
+      margin-bottom: 5px;
+      border-radius: 6px;
+      padding: 2px 7px;
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .cardlist-item h3 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .cardlist-item p {
+      margin-top: 4px;
+      font-size: 12.5px;
+      color: var(--ink-secondary);
+    }
+
+    /* ---- Performance columns ---- */
+    .perf-row {
+      padding: 14px 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .perf-row:first-of-type {
+      border-top: none;
+    }
+
+    .perf-row .perf-label {
+      font-weight: 600;
+      color: var(--ink);
+      font-size: 12.5px;
+    }
+
+    .perf-row .perf-metric {
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .perf-empty {
+      padding: 16px;
+      font-size: 12.5px;
+      color: var(--ink-muted);
+    }
+
+    /* ---- Bottlenecks ---- */
+    .bottleneck {
+      display: flex;
+      gap: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .bottleneck .num {
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--ink-muted);
+      line-height: 1.1;
+    }
+
+    .bottleneck h3 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .bottleneck p {
+      margin-top: 4px;
+      font-size: 12.5px;
+      color: var(--ink-secondary);
+    }
+
+    /* ---- Matrix ---- */
+    .matrix-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 11px 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .matrix-row:first-child {
+      border-top: none;
+    }
+
+    .matrix-dim {
+      width: 120px;
+      flex-shrink: 0;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .matrix-track {
+      flex: 1;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--surface-muted);
+      overflow: hidden;
+    }
+
+    .matrix-fill {
+      height: 100%;
+      border-radius: 999px;
+    }
+
+    .matrix-score {
+      width: 34px;
+      flex-shrink: 0;
+      text-align: right;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .matrix-comment {
+      flex: 1.4;
+      font-size: 11px;
+      color: var(--ink-secondary);
+    }
+
+    /* ---- Projection ---- */
+    .projection h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .projection p {
+      margin-top: 10px;
+      font-size: 12.5px;
+      color: var(--ink-secondary);
+    }
+
+    .intro {
+      margin: 0 0 12px;
+      font-size: 12.5px;
+      color: var(--ink-secondary);
+    }
+
+    /* ---- Footer signature ---- */
+    .footer-sig {
+      position: fixed;
+      bottom: 12px;
+      right: 20px;
+      font-size: 9.5px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--ink-muted);
+    }
+  </style>
+</head>
+<body>
+  <%= yield %>
+  <div class="footer-sig">powered by agencios.app</div>
+</body>
+</html>

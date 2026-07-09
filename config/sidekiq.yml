@@ -2,6 +2,7 @@
 :queues:
   - critical
   - default
+  - mailers
   - media
   - imports
   - low

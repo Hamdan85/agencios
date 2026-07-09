@@ -7,6 +7,10 @@ class ProjectReport < ApplicationRecord
   belongs_to :project
   belongs_to :workspace
 
+  # The rendered branded PDF of the deck, cached so "reenviar" doesn't re-render.
+  # Regenerated whenever the report is regenerated (see Operations::Reports::RenderPdf).
+  has_one_attached :pdf
+
   enum :status, { generating: 0, ready: 1, failed: 2 }, prefix: true
 
   scope :recent, -> { order(created_at: :desc) }

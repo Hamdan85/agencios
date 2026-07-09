@@ -178,7 +178,9 @@ Rails.application.routes.draw do
         # AI content-strategy planning session (the chat that fans out into tickets).
         resource :strategy_session, only: %i[show create], controller: 'strategy_sessions'
       end
-      resources :reports, only: %i[show]
+      resources :reports, only: %i[show] do
+        member { post :send, action: :send_to_client } # e-mail the deck (PDF) to the client
+      end
 
       # Global posts hub — workspace-wide, filterable list + a single post detail.
       # `overview` declared BEFORE the resource so it isn't captured as `:id`.

@@ -38,6 +38,7 @@ module Operations
           generated_at: Time.current
         )
         Broadcaster.board(@project.workspace_id, 'report_ready', report_id: @report.id, project_id: @project.id)
+        auto_send_to_client
         @report
       rescue StandardError => e
         Rails.logger.warn("[Reports::GenerateProjectReport] report ##{@report.id}: #{e.class}: #{e.message}")
@@ -47,6 +48,17 @@ module Operations
       end
 
       private
+
+      # GO-mode campaigns e-mail the finalized report to the client automatically;
+      # manual campaigns wait for the team to click "Enviar ao cliente". Guarded so
+      # a mail failure never marks the report itself failed.
+      def auto_send_to_client
+        return unless @project.go_mode?
+
+        Operations::Reports::SendToClient.call(report: @report)
+      rescue StandardError => e
+        Rails.logger.warn("[Reports::GenerateProjectReport] auto-send failed for report ##{@report.id}: #{e.message}")
+      end
 
       def ai_sections(computed)
         builder = Prompts::ProjectAudit.new(

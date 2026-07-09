@@ -71,3 +71,17 @@ export const useReport = (id) =>
     // While the deck is being generated, poll until it's ready/failed.
     refetchInterval: (q) => (q.state.data?.report?.status === 'generating' ? 4000 : false),
   })
+
+// Manually e-mail the finalized report (branded PDF) to the client. The response
+// carries the updated report (with `sent_to_client_at`) → seed the cache.
+export function useSendReport(id) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => reportsApi.sendToClient(id),
+    onSuccess: (d) => {
+      if (d?.report) qc.setQueryData(keys.report(id), d)
+      toast.success('Relatório enviado ao cliente por e-mail 📧')
+    },
+    onError: onErr('Não foi possível enviar o relatório.'),
+  })
+}

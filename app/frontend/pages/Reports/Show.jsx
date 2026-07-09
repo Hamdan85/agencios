@@ -2,15 +2,19 @@ import { Link, useParams } from 'react-router-dom'
 import {
   ArrowLeft, FileBarChart, AlertTriangle, TrendingUp, TrendingDown,
   CheckCircle2, Sparkles, Target, Lightbulb, Rocket, CalendarClock, Users,
-  Eye, Share2, Repeat, Heart, BarChart3, MessageCircle,
+  Eye, Share2, Repeat, Heart, BarChart3, MessageCircle, Send, MailCheck,
 } from 'lucide-react'
-import { useReport } from '@/hooks/useData'
+import { useReport, useSendReport } from '@/hooks/useData'
+import { useCurrentUser } from '@/hooks/useAuth'
+import { canManage } from '@/lib/roles'
 import { Page } from '@/components/ui/page'
 import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { IconTile } from '@/components/ui/icon-tile'
 import { SectionLabel } from '@/components/ui/section-label'
+import { InlineSpinner as Spinner } from '@/components/ui/feedback'
 import { PageLoader, EmptyState, InlineSpinner } from '@/components/ui/feedback'
-import { date, num, pct } from '@/lib/formatters'
+import { date, num, pct, dt } from '@/lib/formatters'
 
 // Compact pt-BR number ("16,8 mil", "3,0 mi") for the headline tiles.
 // Unlike formatters.compact(), null/NaN render as "—" (missing metric).
@@ -166,7 +170,10 @@ export default function ReportShow() {
 
   return (
     <Page>
-      <BackLink to={back} />
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <BackLink to={back} />
+        <SendToClientButton report={report} />
+      </div>
 
       {/* Cover */}
       <Card className="mb-6 overflow-hidden">
@@ -319,9 +326,41 @@ export default function ReportShow() {
 
 function BackLink({ to }) {
   return (
-    <Link to={to} className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-muted transition hover:text-brand">
+    <Link to={to} className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-muted transition hover:text-brand">
       <ArrowLeft size={16} /> Voltar à campanha
     </Link>
+  )
+}
+
+// Manager-only "Enviar ao cliente": e-mails the branded PDF to the client. Hidden
+// until the deck is ready; disabled (with a hint) when the client has no e-mail.
+// Once sent, shows when it went out and offers a resend.
+function SendToClientButton({ report }) {
+  const me = useCurrentUser()
+  const send = useSendReport(report.id)
+  if (report.status !== 'ready' || !canManage(me?.membership?.role)) return null
+
+  const sent = report.sent_to_client_at
+  const noEmail = !report.client_email
+
+  return (
+    <div className="flex items-center gap-3">
+      {sent && (
+        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald">
+          <MailCheck size={14} /> Enviado em {dt(sent)}
+        </span>
+      )}
+      <Button
+        variant={sent ? 'outline' : 'default'}
+        size="sm"
+        disabled={send.isPending || noEmail}
+        title={noEmail ? 'O cliente não tem e-mail cadastrado.' : undefined}
+        onClick={() => send.mutate()}
+      >
+        {send.isPending ? <Spinner size={15} /> : <Send size={15} />}
+        {sent ? 'Reenviar ao cliente' : 'Enviar ao cliente'}
+      </Button>
+    </div>
   )
 }
 

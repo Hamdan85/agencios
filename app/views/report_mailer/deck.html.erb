@@ -1,0 +1,18 @@
+<% content_for :preheader do %>O relatório da campanha <%= @project.name %> está pronto — em anexo (PDF).<% end %>
+<% content_for :eyebrow do %>Relatório<% end %>
+
+<h1 style="margin:0 0 16px;font-family:'Sora','Inter',Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#18122B;">
+  Relatório da campanha <%= @project.name %>
+</h1>
+
+<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#564F6F;">
+  Olá<%= @client&.name.present? ? ", #{@client.name}" : "" %>. Fechamos a campanha
+  <strong><%= @project.name %></strong> e preparamos o relatório completo de desempenho — números,
+  destaques, gargalos e o plano de ação. Ele está <strong>em anexo neste e-mail</strong> (PDF).
+</p>
+
+<%= email_button('Abrir minha central', @url) %>
+
+<p style="margin:16px 0 0;font-size:13px;line-height:1.5;color:#8B86A3;">
+  Na sua central você acompanha esta e as demais campanhas a qualquer momento.
+</p>

@@ -1,0 +1,324 @@
+<%
+  # ---- Locals resolved from instance variables ----
+  data     = (@data || (@report.respond_to?(:data) ? @report.data : {}) || {})
+  k        = data["kpis"] || {}
+  overall  = data["overall"] || {}
+  cp       = data["content_performance"] || {}
+  plan     = data["action_plan"] || {}
+  projection = data["projection"] || {}
+  growth   = data["growth_angle"] || {}
+
+  brand           = @brand || {}
+  primary_color   = brand[:primary_color].presence || "#7C3AED"
+  secondary_color = brand[:secondary_color].presence || primary_color
+  agency_name     = brand[:agency_name].presence || "agencios"
+  logo_url        = brand[:logo_url].presence
+
+  # ---- Inline helpers ----
+  fmt_date = ->(d) { d.respond_to?(:strftime) ? d.strftime("%d/%m/%Y") : nil }
+
+  compact = lambda do |n|
+    next "—" if n.nil?
+    v = n.to_f
+    next "—" if v.respond_to?(:nan?) && v.nan?
+    abs = v.abs
+    if abs >= 1_000_000
+      s = (v / 1_000_000.0).round(1)
+      "#{(s == s.to_i ? s.to_i : s).to_s.tr('.', ',')} mi"
+    elsif abs >= 1_000
+      s = (v / 1_000.0).round(1)
+      "#{(s == s.to_i ? s.to_i : s).to_s.tr('.', ',')} mil"
+    else
+      (v == v.to_i ? v.to_i : v.round(1)).to_s.tr('.', ',')
+    end
+  end
+
+  pct = lambda do |n|
+    next nil if n.nil?
+    v = n.to_f
+    sign = v > 0 ? "+" : ""
+    "#{sign}#{v.round(1).to_s.tr('.', ',')}%"
+  end
+
+  score_color = ->(s) { s >= 7 ? "#10B981" : (s >= 5 ? "#F59E0B" : "#EF4444") }
+
+  one_dec = ->(n) { format("%.1f", n.to_f).tr(".", ",") }
+
+  overall_score = (overall["score"] || (@report.respond_to?(:overall_score) ? @report.overall_score : nil)).to_f
+%>
+
+<%# ===================== HEADER / BRAND ===================== %>
+<div class="brand-bar">
+  <% if logo_url %>
+    <img src="<%= logo_url %>" alt="<%= agency_name %>" class="brand-logo">
+  <% else %>
+    <span class="brand-initial" style="background: <%= primary_color %>;"><%= agency_name[0].to_s.upcase %></span>
+  <% end %>
+  <span class="brand-name"><%= agency_name %></span>
+</div>
+
+<%# ===================== COVER ===================== %>
+<div class="card cover">
+  <div class="gradient" style="background: linear-gradient(90deg, <%= primary_color %>, <%= secondary_color %>);"></div>
+  <div class="cover-body">
+    <span class="eyebrow" style="color: <%= primary_color %>;">Auditoria de redes sociais</span>
+    <h1><%= @report.project&.name %></h1>
+    <p class="meta">
+      <%= @report.project&.client&.name %><%
+        ps = fmt_date.call(@report.period_start)
+        pe = fmt_date.call(@report.period_end)
+      %><% if ps %> · <%= ps %> → <%= pe || ps %><% end %>
+    </p>
+    <% if data["ai_ok"] == false %>
+      <p class="ai-warn">
+        A análise textual não pôde ser gerada agora — os números abaixo refletem os dados reais da campanha.
+      </p>
+    <% end %>
+  </div>
+</div>
+
+<%# ===================== OS NÚMEROS ===================== %>
+<div class="section-title">
+  <span class="dot" style="background: <%= primary_color %>1F;"></span>
+  <h2>Os números</h2>
+</div>
+
+<%
+  kpi_tiles = [
+    ["Seguidores",            compact.call(k["followers"]),        k["follower_growth_pct"]],
+    ["Novos seguidores",      compact.call(k["new_followers"]),    nil],
+    ["Contas alcançadas",     compact.call(k["accounts_reached"]), k["reach_delta_pct"]],
+    ["Visualizações",         compact.call(k["views"]),            nil],
+    ["Alcance (posts)",       compact.call(k["reach"]),            nil],
+    ["Compart. de Reels",     compact.call(k["reel_shares"]),      nil],
+    ["Respostas em Stories",  compact.call(k["story_replies"]),    nil],
+    ["Engajamento",           compact.call(k["engagement"]),       nil],
+  ]
+%>
+<div class="grid grid-4">
+  <% kpi_tiles.each do |label, value, delta| %>
+    <div class="card kpi card-pad">
+      <div class="kpi-label"><%= label %></div>
+      <div class="kpi-value"><%= value %></div>
+      <% unless delta.nil? %>
+        <span class="kpi-delta <%= delta.to_f < 0 ? 'down' : 'up' %>"><%= pct.call(delta) %></span>
+      <% end %>
+    </div>
+  <% end %>
+</div>
+<% if k["has_account_data"] == false %>
+  <p class="hint">
+    As métricas de perfil (seguidores, alcance de contas, respostas em Stories) começam a aparecer conforme o histórico de snapshots é coletado.
+  </p>
+<% end %>
+
+<%# ===================== NOTA GERAL ===================== %>
+<% if overall_score.finite? && overall_score > 0 %>
+  <div class="section-title">
+    <span class="dot" style="background: <%= primary_color %>1F;"></span>
+    <h2>Nota geral</h2>
+  </div>
+  <div class="grid grid-3">
+    <div class="card score-card">
+      <div class="score-number" style="color: <%= score_color.call(overall_score) %>;"><%= one_dec.call(overall_score) %></div>
+      <div class="score-of">/ 10</div>
+      <% if overall["verdict"].present? %>
+        <div class="score-verdict"><%= overall["verdict"] %></div>
+      <% end %>
+    </div>
+
+    <div class="card">
+      <div class="list-head" style="background: #10B981;">Para chegar a 8</div>
+      <ul class="list-body">
+        <% Array(overall["to_8"]).each do |it| %>
+          <li><span class="bullet" style="background: #10B981;"></span><span><%= it %></span></li>
+        <% end %>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="list-head" style="background: #F59E0B;">Para chegar a 9</div>
+      <ul class="list-body">
+        <% Array(overall["to_9"]).each do |it| %>
+          <li><span class="bullet" style="background: #F59E0B;"></span><span><%= it %></span></li>
+        <% end %>
+      </ul>
+    </div>
+  </div>
+<% end %>
+
+<%# ===================== O QUE ESTÁ FUNCIONANDO ===================== %>
+<% if Array(data["wins"]).any? %>
+  <div class="section-title">
+    <span class="dot" style="background: #10B9811F;"></span>
+    <h2>O que está funcionando</h2>
+  </div>
+  <div class="grid grid-2">
+    <% Array(data["wins"]).each do |it| %>
+      <div class="card cardlist-item">
+        <div class="row">
+          <% if it["emoji"].present? %><span class="emoji"><%= it["emoji"] %></span><% end %>
+          <div>
+            <% if it["tag"].present? %>
+              <span class="tag" style="background: #10B98118; color: #10B981;"><%= it["tag"] %></span>
+            <% end %>
+            <h3><%= it["title"] %></h3>
+            <p><%= it["body"] %></p>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<%# ===================== PERFORMANCE POR FORMATO ===================== %>
+<% if Array(cp["winners"]).any? || Array(cp["losers"]).any? %>
+  <div class="section-title">
+    <span class="dot" style="background: <%= primary_color %>1F;"></span>
+    <h2>Performance por formato</h2>
+  </div>
+  <div class="grid grid-2">
+    <% [["✅ O que performa", cp["winners"], "#10B981"], ["❌ O que não funciona", cp["losers"], "#EF4444"]].each do |title, items, color| %>
+      <div class="card">
+        <div class="list-head" style="background: <%= color %>;"><%= title %></div>
+        <% rows = Array(items) %>
+        <% if rows.empty? %>
+          <p class="perf-empty">Sem dados.</p>
+        <% else %>
+          <% rows.each do |it| %>
+            <div class="perf-row">
+              <div class="perf-label"><%= it["label"] %></div>
+              <div class="perf-metric" style="color: <%= color %>;"><%= it["metric"] %></div>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<%# ===================== GARGALOS CRÍTICOS ===================== %>
+<% if Array(data["bottlenecks"]).any? %>
+  <div class="section-title">
+    <span class="dot" style="background: #EF44441F;"></span>
+    <h2>Gargalos críticos</h2>
+  </div>
+  <div>
+    <% Array(data["bottlenecks"]).each_with_index do |b, i| %>
+      <div class="card bottleneck">
+        <span class="num"><%= format("%02d", i + 1) %></span>
+        <div>
+          <h3><%= b["title"] %></h3>
+          <p><%= b["body"] %></p>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<%# ===================== O QUE PRECISA SER EXPLORADO ===================== %>
+<% if Array(data["opportunities"]).any? %>
+  <div class="section-title">
+    <span class="dot" style="background: #F59E0B1F;"></span>
+    <h2>O que precisa ser explorado</h2>
+  </div>
+  <div class="grid grid-2">
+    <% Array(data["opportunities"]).each do |it| %>
+      <div class="card cardlist-item">
+        <div class="row">
+          <% if it["emoji"].present? %><span class="emoji"><%= it["emoji"] %></span><% end %>
+          <div>
+            <% if it["tag"].present? %>
+              <span class="tag" style="background: #F59E0B18; color: #F59E0B;"><%= it["tag"] %></span>
+            <% end %>
+            <h3><%= it["title"] %></h3>
+            <p><%= it["body"] %></p>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<%# ===================== MATRIZ DE PERFORMANCE ===================== %>
+<% if Array(data["matrix"]).any? %>
+  <div class="section-title">
+    <span class="dot" style="background: <%= primary_color %>1F;"></span>
+    <h2>Matriz de performance</h2>
+  </div>
+  <div class="card">
+    <% Array(data["matrix"]).each do |m| %>
+      <% s = m["score"].to_f %>
+      <% mc = score_color.call(s) %>
+      <div class="matrix-row">
+        <span class="matrix-dim"><%= m["dimension"] %></span>
+        <span class="matrix-track">
+          <span class="matrix-fill" style="width: <%= [100, s * 10].min %>%; background: <%= mc %>;"></span>
+        </span>
+        <span class="matrix-score" style="color: <%= mc %>;"><%= one_dec.call(s) %></span>
+        <span class="matrix-comment"><%= m["comment"] %></span>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<%# ===================== PLANO DE AÇÃO ===================== %>
+<% if plan["d7"].present? || plan["d30"].present? || plan["d90"].present? %>
+  <div class="section-title">
+    <span class="dot" style="background: <%= primary_color %>1F;"></span>
+    <h2>Plano de ação</h2>
+  </div>
+  <div class="grid grid-3">
+    <% [["Próximos 7 dias", plan["d7"], "#EF4444"], ["Próximos 30 dias", plan["d30"], "#F59E0B"], ["Próximos 90 dias", plan["d90"], "#10B981"]].each do |title, items, color| %>
+      <div class="card">
+        <div class="list-head" style="background: <%= color %>;"><%= title %></div>
+        <ul class="list-body">
+          <% Array(items).each do |it| %>
+            <li><span class="bullet" style="background: <%= color %>;"></span><span><%= it %></span></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<%# ===================== PROJEÇÃO 12 MESES ===================== %>
+<% if projection["verdict"].present? %>
+  <div class="section-title">
+    <span class="dot" style="background: <%= primary_color %>1F;"></span>
+    <h2>Projeção 12 meses</h2>
+  </div>
+  <div class="card card-pad projection">
+    <h3><%= projection["verdict"] %></h3>
+    <% Array(projection["narrative"]).each do |p| %>
+      <p><%= p %></p>
+    <% end %>
+  </div>
+<% end %>
+
+<%# ===================== GROWTH ANGLE ===================== %>
+<% if Array(growth["tactics"]).any? %>
+  <div class="section-title">
+    <span class="dot" style="background: #EC48991F;"></span>
+    <h2><%= growth["title"].presence || "Vetor de crescimento" %></h2>
+  </div>
+  <% if growth["intro"].present? %>
+    <p class="intro"><%= growth["intro"] %></p>
+  <% end %>
+  <div class="grid grid-2">
+    <% Array(growth["tactics"]).each do |it| %>
+      <div class="card cardlist-item">
+        <div class="row">
+          <% if it["emoji"].present? %><span class="emoji"><%= it["emoji"] %></span><% end %>
+          <div>
+            <% if it["tag"].present? %>
+              <span class="tag" style="background: #EC489918; color: #EC4899;"><%= it["tag"] %></span>
+            <% end %>
+            <h3><%= it["title"] %></h3>
+            <p><%= it["body"] %></p>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>

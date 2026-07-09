@@ -48,4 +48,11 @@ class Project < ApplicationRecord
                 .order(started_at: :desc)
                 .first
   end
+
+  # Did this campaign ever run in GO (autopilot) mode? True when any autopilot
+  # ticket-run exists over the project's tickets (active or terminal). Drives the
+  # auto-send of the finalized report to the client (Operations::Reports::SendToClient).
+  def go_mode?
+    AutopilotRun.ticket_runs.where(ticket_id: tickets.select(:id)).exists?
+  end
 end

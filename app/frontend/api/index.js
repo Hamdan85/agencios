@@ -211,6 +211,7 @@ export const postsApi = {
 export const reportsApi = {
   listByProject: (projectId) => api.get(`/projects/${projectId}/reports`),
   get: (id) => api.get(`/reports/${id}`),
+  sendToClient: (id) => api.post(`/reports/${id}/send`),
 }
 
 export const studioApi = {
