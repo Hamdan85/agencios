@@ -106,6 +106,13 @@ Rails.application.routes.draw do
         post 'client_approvals/:token/tickets/:ticket_id/approve', to: 'client_approvals#approve'
         post 'client_approvals/:token/tickets/:ticket_id/request_changes', to: 'client_approvals#request_changes'
         post 'client_approvals/:token/tickets/:ticket_id/undo', to: 'client_approvals#undo'
+
+        # The client central: the same token now backs a full portal — campaign
+        # list + per-campaign read-only board, real-time metrics, and the report.
+        get 'portal/:token', to: 'portal#show'
+        get 'portal/:token/campaigns/:project_id/board',   to: 'portal#board'
+        get 'portal/:token/campaigns/:project_id/metrics', to: 'portal#metrics'
+        get 'portal/:token/campaigns/:project_id/report',  to: 'portal#report'
       end
 
       # Auth & identity
