@@ -33,6 +33,7 @@ module Controllers
             id: ticket.id,
             title: ticket.display_title,
             campaign: ticket.project.name,
+            project_id: ticket.project_id,
             objective: ideation['objective'],
             brief: ideation['brief'],
             channels: ticket.channels,

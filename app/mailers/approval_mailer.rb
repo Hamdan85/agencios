@@ -8,9 +8,9 @@ class ApprovalMailer < ApplicationMailer
     @client = ticket.project.client
     @project = ticket.project
     @brand_workspace = ticket.workspace
-    # One link per client — the portal lists every ticket awaiting this client's
-    # approval, not just this one.
-    @url = app_url("/aprovar/#{@client.approval_token!}")
+    # One link per client — the central lists every campaign; deep-link straight
+    # to this campaign's approvals tab.
+    @url = app_url("/portal/#{@client.approval_token!}?campanha=#{@project.id}&aba=aprovacoes")
     mail(to: recipients, subject: "Aprove o conteúdo — #{@project.name}")
   end
 end

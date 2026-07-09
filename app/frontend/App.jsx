@@ -27,8 +27,10 @@ function LegacyBoardRedirect() {
 
 const Login = lazy(() => import('@/pages/Auth/Login'))
 const Register = lazy(() => import('@/pages/Auth/Register'))
+const ForgotPassword = lazy(() => import('@/pages/Auth/ForgotPassword'))
+const ResetPassword = lazy(() => import('@/pages/Auth/ResetPassword'))
 const ConfirmEmailChange = lazy(() => import('@/pages/Auth/ConfirmEmailChange'))
-const ApprovalShow = lazy(() => import('@/pages/Approval/Show'))
+const PortalShow = lazy(() => import('@/pages/Portal/Show'))
 const Account = lazy(() => import('@/pages/Account/Index'))
 const Dashboard = lazy(() => import('@/pages/Dashboard/Index'))
 const Calendar = lazy(() => import('@/pages/Calendar/Index'))
@@ -72,13 +74,19 @@ const router = createBrowserRouter(
       <Route element={<GuestRoute />}>
         <Route path="/login" element={<Login />} />
         <Route path="/cadastro" element={<Register />} />
+        <Route path="/recuperar-senha" element={<ForgotPassword />} />
+        {/* Target of the reset link mailed by AuthMailer#password_reset. */}
+        <Route path="/redefinir-senha/:token" element={<ResetPassword />} />
       </Route>
 
       {/* Public: the link mailed to a user's new address to confirm an e-mail change. */}
       <Route path="/confirmar-troca-email/:token" element={<ConfirmEmailChange />} />
 
-      {/* Public: login-less client content approval (token is the credential). */}
-      <Route path="/aprovar/:token" element={<ApprovalShow />} />
+      {/* Public: login-less client central (token is the credential). The same
+          link backs the whole portal — campaigns, read-only board, live metrics,
+          approvals and the report. `/aprovar` is kept so older links still land. */}
+      <Route path="/portal/:token" element={<PortalShow />} />
+      <Route path="/aprovar/:token" element={<PortalShow />} />
 
       <Route path="/erro/acesso-negado" element={<Forbidden />} />
 

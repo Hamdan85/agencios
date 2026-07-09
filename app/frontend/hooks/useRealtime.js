@@ -24,6 +24,26 @@ export function useBoardChannel(workspaceId) {
   }, [workspaceId, qc])
 }
 
+// Login-less client central: subscribe to the client's portal stream (by token)
+// and refresh the active campaign's metrics in real time on a metric_updated
+// push. The channel authorizes purely by token (no session).
+export function usePortalChannel(token, projectId, onEvent) {
+  const qc = useQueryClient()
+  useEffect(() => {
+    if (!token) return
+    const sub = consumer.subscriptions.create(
+      { channel: 'PortalChannel', token },
+      {
+        received: (data) => {
+          if (projectId) qc.invalidateQueries({ queryKey: keys.portalMetrics(token, projectId) })
+          onEvent?.(data)
+        },
+      },
+    )
+    return () => sub.unsubscribe()
+  }, [token, projectId, qc, onEvent])
+}
+
 export function useTicketChannel(ticketId, onEvent) {
   const qc = useQueryClient()
   useEffect(() => {

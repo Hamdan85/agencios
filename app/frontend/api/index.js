@@ -199,6 +199,16 @@ export const approvalsApi = {
     api.post(`/public/client_approvals/${token}/tickets/${ticketId}/undo`),
 }
 
+// The login-less client central ("central do cliente"): the same token backs a
+// full portal — campaign list + per-campaign read-only board, real-time metrics,
+// and the finalized report.
+export const portalApi = {
+  get: (token) => api.get(`/public/portal/${token}`),
+  board: (token, projectId) => api.get(`/public/portal/${token}/campaigns/${projectId}/board`),
+  metrics: (token, projectId) => api.get(`/public/portal/${token}/campaigns/${projectId}/metrics`),
+  report: (token, projectId) => api.get(`/public/portal/${token}/campaigns/${projectId}/report`),
+}
+
 // The posts hub: workspace-wide filterable list, a single post detail, and the
 // analytics overview (KPIs + breakdowns) that heads the index page.
 export const postsApi = {
