@@ -14,6 +14,13 @@ module Operations
       def call
         return @generation if @generation.status_completed? || @generation.status_failed?
 
+        # TODO(loss-mapping): we refund the customer's prepaid credits here, but the
+        # PLATFORM may have already spent real vendor $ on the work that failed
+        # (partial OpenRouter video scenes, Cartesia voice, a Banana image that
+        # succeeded before a later step raised). That real cost is logged per call in
+        # AiUsageLog. Build a report/metric of platform loss = SUM(AiUsageLog.cost_cents)
+        # for generations that ended `failed` (and were refunded), sliced by kind +
+        # provider + workspace, so we can see how much failures actually cost us.
         Operations::Credits::Refund.call(generation: @generation, description: 'Estorno — geração falhou')
 
         @generation.update!(status: :failed, failure_reason: @reason)

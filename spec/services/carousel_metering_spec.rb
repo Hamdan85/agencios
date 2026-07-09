@@ -60,4 +60,17 @@ RSpec.describe Operations::Creatives::GenerateViralCarousel do
     expect(generation.metered_at).to be_nil
     expect(Vendors::Stripe::Actions::ReportMeterEvent).not_to have_received(:call)
   end
+
+  it 'marks the creative failed (never stranded in generating) when the render raises' do
+    allow(Vendors::Render::Html).to receive(:batch).and_raise(
+      Vendors::Render::Html::RenderError, 'Chromium down'
+    )
+
+    expect { described_class.call(ticket: ticket, slides: 3) }
+      .to raise_error(Vendors::Render::Html::RenderError)
+
+    creative = ticket.reload.creatives.where(source: Creative.sources[:generated]).last
+    expect(creative.status).to eq('failed')
+    expect(Generation.where(creative: creative)).to be_empty
+  end
 end

@@ -50,3 +50,8 @@ pull_meetings_from_calendar:
   cron: "*/15 * * * *"         # every 15 minutes — reflect Google Calendar edits
   class: "Meetings::PullFromCalendarJob"
   queue: low
+
+reap_stuck_generations:
+  cron: "*/10 * * * *"         # every 10 minutes — fail generations/creatives stranded mid-flight
+  class: "ReapStuckGenerationsJob"
+  queue: low

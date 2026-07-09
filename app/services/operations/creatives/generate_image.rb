@@ -52,34 +52,35 @@ module Operations
           result: {}
         )
 
-        # Charge prepaid credits BEFORE spending vendor $ — raises
-        # InsufficientCredits (→ 402) if the wallet can't cover it.
-        Operations::Credits::Debit.call(
-          workspace: workspace,
-          amount: Pricing.credits_for(kind: :image),
-          generation: generation
-        )
-
+        # Everything that can fail — the credit debit, the vendor call, the attach —
+        # is wrapped so ANY error moves the records to `failed` and refunds credits
+        # (FailGeneration), never leaving the creative stranded in `generating`.
         begin
+          # Charge prepaid credits BEFORE spending vendor $ — raises
+          # InsufficientCredits (→ 402) if the wallet can't cover it.
+          Operations::Credits::Debit.call(
+            workspace: workspace,
+            amount: Pricing.credits_for(kind: :image),
+            generation: generation
+          )
+
           result = Vendors::Google::Banana::Actions::GenerateImage.call(
             prompt: prompt,
             aspect_ratio: aspect,
             reference_images: refs
           )
-        rescue StandardError
-          Operations::Credits::Refund.call(generation: generation)
-          generation.update!(status: :failed)
-          creative.update!(status: :failed)
+
+          creative.assets.attach(
+            io: StringIO.new(result[:bytes]),
+            filename: "creative-#{creative.id}.jpg",
+            content_type: result[:content_type]
+          )
+          creative.update!(status: :ready)
+          generation.update!(status: :completed)
+        rescue StandardError => e
+          Operations::Creatives::FailGeneration.call(generation: generation, reason: e.message)
           raise
         end
-
-        creative.assets.attach(
-          io: StringIO.new(result[:bytes]),
-          filename: "creative-#{creative.id}.jpg",
-          content_type: result[:content_type]
-        )
-        creative.update!(status: :ready)
-        generation.update!(status: :completed)
 
         log_ai_cost(generation)
         broadcast(event: 'generation_done', id: generation.id, kind: 'image')

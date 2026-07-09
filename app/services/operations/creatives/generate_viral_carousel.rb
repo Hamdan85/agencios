@@ -46,22 +46,32 @@ module Operations
           provider: PROVIDER
         )
 
-        blobs = render_and_attach(slides)
-        slides_meta = slides_metadata(slides, blobs)
-        @creative.update!(status: :ready, metadata: { slides: slides_meta })
+        # The creative already exists as `generating`; if the render (Chromium) or
+        # attach fails, mark it `failed` so it never spins forever.
+        generation =
+          begin
+            blobs = render_and_attach(slides)
+            slides_meta = slides_metadata(slides, blobs)
+            @creative.update!(status: :ready, metadata: { slides: slides_meta })
 
-        generation = workspace.generations.create!(
-          user: Current.user,
-          creative: @creative,
-          kind: :carousel,
-          status: :completed,
-          provider: PROVIDER,
-          cost_cents: COST_CENTS,
-          params: @params,
-          result: { slides: slides_meta }
-        )
+            gen = workspace.generations.create!(
+              user: Current.user,
+              creative: @creative,
+              kind: :carousel,
+              status: :completed,
+              provider: PROVIDER,
+              cost_cents: COST_CENTS,
+              params: @params,
+              result: { slides: slides_meta }
+            )
+            meter!(gen)
+            gen
+          rescue StandardError
+            @creative.update!(status: :failed)
+            Broadcaster.ticket(@ticket, 'creative_failed', creative_id: @creative.id) if @ticket
+            raise
+          end
 
-        meter!(generation)
         broadcast(event: 'generation_done', id: generation.id, kind: 'carousel')
         generation
       end
