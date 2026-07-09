@@ -37,6 +37,20 @@ export function useRegister() {
   })
 }
 
+// Password recovery (both public — the user is signed out). Neither touches the
+// session cache; the reset flow ends by sending the user to /login.
+export function useForgotPassword() {
+  return useMutation({
+    mutationFn: (email) => authApi.forgotPassword(email),
+  })
+}
+
+export function useResetPassword() {
+  return useMutation({
+    mutationFn: ({ token, password }) => authApi.resetPassword(token, password),
+  })
+}
+
 export function useLogout() {
   const qc = useQueryClient()
   return useMutation({

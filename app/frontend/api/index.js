@@ -6,7 +6,9 @@ export const authApi = {
   logout: () => api.delete('/session'),
   register: (data) => api.post('/registration', data),
   forgotPassword: (email) => api.post('/password_resets', { email }),
-  resetPassword: (token, password) => api.put(`/password_resets/${token}`, { password }),
+  // The reset service reads params[:token] (not the RESTful :id), so the token
+  // rides in the body as well as the URL segment.
+  resetPassword: (token, password) => api.put(`/password_resets/${token}`, { token, password }),
 }
 
 // The signed-in user's own account (profile, avatar, password, e-mail change).

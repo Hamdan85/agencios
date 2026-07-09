@@ -60,19 +60,23 @@ Rails.application.configure do
   config.action_mailer.default_url_options = { host: _app_uri.host, protocol: _app_uri.scheme }
   config.action_mailer.asset_host = "#{_app_uri.scheme}://#{_app_uri.host}"
 
-  # Outgoing SMTP — only enabled when an SMTP host is configured, so the app
-  # boots cleanly before email delivery is wired. Credentials > ENV fallback.
+  # Outgoing SMTP — sourced from encrypted credentials (`credentials.smtp`),
+  # with ENV overrides as a fallback per field. Only enabled when an address
+  # resolves, so the app boots cleanly before email delivery is wired.
   config.action_mailer.delivery_method = :smtp
-  if (smtp_address = ENV['SMTP_ADDRESS']).present?
+  smtp = Rails.application.credentials.smtp || {}
+  smtp_address = smtp[:address].presence || ENV['SMTP_ADDRESS'].presence
+  if smtp_address.present?
     config.action_mailer.raise_delivery_errors = true
     config.action_mailer.smtp_settings = {
       address: smtp_address,
-      port: ENV.fetch('SMTP_PORT', '587').to_i,
-      user_name: Rails.application.credentials.dig(:smtp, :user_name) || ENV['SMTP_USER_NAME'],
-      password: Rails.application.credentials.dig(:smtp, :password) || ENV['SMTP_PASSWORD'],
-      authentication: ENV.fetch('SMTP_AUTHENTICATION', 'plain').to_sym,
-      enable_starttls_auto: true
-    }
+      port: (smtp[:port] || ENV.fetch('SMTP_PORT', '587')).to_i,
+      domain: smtp[:domain].presence || ENV['SMTP_DOMAIN'].presence,
+      user_name: smtp[:user_name].presence || ENV['SMTP_USER_NAME'],
+      password: smtp[:password].presence || ENV['SMTP_PASSWORD'],
+      authentication: (smtp[:authentication].presence || ENV.fetch('SMTP_AUTHENTICATION', 'plain')).to_sym,
+      enable_starttls_auto: smtp.fetch(:enable_starttls_auto, true)
+    }.compact
   else
     config.action_mailer.raise_delivery_errors = false
   end

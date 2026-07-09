@@ -12,7 +12,7 @@ module SystemConfig
   end
 
   def mailer_from
-    ENV.fetch('MAILER_FROM', 'agencios <nao-responda@agencios.app>')
+    ENV.fetch('MAILER_FROM', 'agencios <nao-responda@email.agencios.app>')
   end
 
   # How many workspaces a single user may create (own). Defaults to 1. Set the

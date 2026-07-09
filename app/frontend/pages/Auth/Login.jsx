@@ -54,7 +54,10 @@ export default function Login() {
           </div>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="password">Senha</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password">Senha</Label>
+            <Link to="/recuperar-senha" className="text-xs font-semibold text-ink-muted hover:text-brand hover:underline">Esqueci minha senha</Link>
+          </div>
           <div className="relative">
             <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
             <Input id="password" type="password" required value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className="pl-9" placeholder="••••••••" />
