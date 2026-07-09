@@ -25,6 +25,10 @@ module Operations
         )
         @post.social_account.update_column(:last_synced_at, Time.current)
         Broadcaster.ticket(@post.ticket, 'metric_updated', post_id: @post.id)
+        # Also nudge the client central (login-less portal) so campaign metrics
+        # refresh in real time for the client watching.
+        Broadcaster.portal(@post.ticket&.project&.client, 'metric_updated',
+                           post_id: @post.id, project_id: @post.ticket&.project_id)
         metric
       end
     end

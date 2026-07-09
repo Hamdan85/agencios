@@ -4,6 +4,8 @@
 # post_published, metric_updated, note_added.
 class TicketChannel < ApplicationCable::Channel
   def subscribed
+    return reject if current_user.nil?
+
     ticket = Ticket.where(workspace_id: current_user.workspaces.select(:id)).find_by(id: params[:ticket_id])
     return reject unless ticket
 

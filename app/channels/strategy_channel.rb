@@ -7,6 +7,8 @@
 # workspace may subscribe.
 class StrategyChannel < ApplicationCable::Channel
   def subscribed
+    return reject if current_user.nil?
+
     session = StrategySession
               .where(workspace_id: current_user.workspaces.select(:id))
               .find_by(id: params[:session_id])

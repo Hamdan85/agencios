@@ -5,7 +5,7 @@ module ApplicationCable
     private
 
     def member_of?(workspace_id)
-      return false if workspace_id.blank?
+      return false if workspace_id.blank? || current_user.nil?
 
       Membership.exists?(workspace_id: workspace_id, user_id: current_user.id)
     end

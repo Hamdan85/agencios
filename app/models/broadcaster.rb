@@ -17,6 +17,14 @@ module Broadcaster
     broadcast("generations_#{workspace_id}", event, payload)
   end
 
+  # Login-less client-central updates (metric_updated) — pushed to the client's
+  # own portal stream so the portal can refresh campaign metrics in real time.
+  def portal(client, event, payload = {})
+    return if client.nil?
+
+    broadcast("portal_#{client.id}", event, payload)
+  end
+
   # Per-session strategy-planning updates: plan_generating, proposal_ready,
   # plan_failed — pushed when the async plan job settles (see
   # Operations::Strategy::GeneratePlan).
