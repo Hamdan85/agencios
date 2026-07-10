@@ -28,7 +28,7 @@ module Authentication
     return if performed?
     return if Current.membership&.can_manage?
 
-    render json: { error: 'Acesso restrito a gestores do workspace.', code: 'manager_required' },
+    render json: { error: I18n.t('api.errors.manager_required'), code: 'manager_required' },
            status: :forbidden
   end
 

@@ -1,7 +1,8 @@
-import { Suspense, lazy } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import {
   createBrowserRouter, createRoutesFromElements, RouterProvider, Route, Outlet, Navigate, useParams, useLocation,
 } from 'react-router-dom'
+import i18n from '@/i18n'
 import ProtectedRoute, { GuestRoute } from '@/components/shared/ProtectedRoute'
 import Layout from '@/components/layout/Layout'
 import AnalyticsBridge from '@/components/shared/AnalyticsBridge'
@@ -139,5 +140,12 @@ const router = createBrowserRouter(
 )
 
 export default function App() {
-  return <RouterProvider router={router} />
+  // Remount the tree when the language changes (rare: account settings / login
+  // as another user) so label maps resolved via getters re-render everywhere.
+  const [lang, setLang] = useState(i18n.language)
+  useEffect(() => {
+    i18n.on('languageChanged', setLang)
+    return () => i18n.off('languageChanged', setLang)
+  }, [])
+  return <RouterProvider key={lang} router={router} />
 }

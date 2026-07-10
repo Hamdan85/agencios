@@ -1,20 +1,21 @@
 import { CREATIVE_TYPE_META } from '@/lib/constants'
+import i18n from '@/i18n'
 
-// Client-facing overrides where the internal label carries jargon.
-const CLIENT_LABEL = {
-  ugc_video: 'Vídeo',
-  thumbnail: 'Capa do vídeo',
-  cover: 'Capa',
-}
+// Client-facing overrides where the internal label carries jargon
+// (creativeName.* in locales/<locale>/common.json).
+const CLIENT_LABEL_KEYS = ['ugc_video', 'thumbnail', 'cover']
 
 // The label for a media-type slot (client-facing).
 export function slotLabel(creativeType) {
-  return CLIENT_LABEL[creativeType] || CREATIVE_TYPE_META[creativeType]?.label || creativeType
+  if (CLIENT_LABEL_KEYS.includes(creativeType)) {
+    return i18n.t(`creativeName.${creativeType}`, { ns: 'common' })
+  }
+  return CREATIVE_TYPE_META[creativeType]?.label || creativeType
 }
 
 // "Opção A" / "Opção B" … for multi-option slots.
 export function optionLabel(index) {
-  return `Opção ${String.fromCharCode(65 + index)}`
+  return i18n.t('creativeName.option', { ns: 'common', letter: String.fromCharCode(65 + index) })
 }
 
 // A creative's display name: its own name if set, else the slot label; when the

@@ -2,7 +2,7 @@
 
 module Controllers
   module Account
-    # Updates the signed-in user's own profile (currently just the display name).
+    # Updates the signed-in user's own profile (display name + UI locale).
     # E-mail and password have their own dedicated, credential-checked flows.
     class Update < Base
       def initialize(params:)
@@ -17,7 +17,7 @@ module Controllers
       private
 
       def profile_params
-        @params.fetch(:user, {}).permit(:name)
+        @params.fetch(:user, {}).permit(:name, :locale)
       end
     end
   end

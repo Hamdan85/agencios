@@ -7,6 +7,7 @@ import { EventHoverCard } from './EventHoverCard'
 import {
   MINUTES_IN_DAY, dayKey, isSameDay, layoutDayEvents, minutesOfDay,
 } from './calendarUtils'
+import i18n from '@/i18n'
 
 const HOUR_PX = 52
 const GRID_PX = 24 * HOUR_PX
@@ -215,7 +216,7 @@ export function TimeGrid({ days, today, byDay, showWorkspace, onEventClick }) {
 }
 
 function DayHeader({ day, isToday, count, week }) {
-  const wd = day.toLocaleDateString('pt-BR', { weekday: week ? 'short' : 'long' }).replace('.', '')
+  const wd = day.toLocaleDateString(i18n.language, { weekday: week ? 'short' : 'long' }).replace('.', '')
   return (
     <div
       className="sticky top-0 z-30 flex h-12 items-center justify-between gap-2 border-b border-r border-border bg-surface px-2.5 last:border-r-0"

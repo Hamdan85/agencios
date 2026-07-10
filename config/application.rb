@@ -50,6 +50,13 @@ module Agencios
     config.time_zone = 'America/Sao_Paulo'
     config.active_record.default_timezone = :utc
 
+    # i18n — pt-BR is the source language; en is the first target. Locale files
+    # are organized per surface under config/locales/<surface>/<locale>.yml.
+    config.i18n.default_locale = :'pt-BR'
+    config.i18n.available_locales = [:'pt-BR', :en]
+    config.i18n.fallbacks = [:'pt-BR']
+    config.i18n.load_path += Dir[Rails.root.join('config/locales/**/*.yml')]
+
     # Rack::Attack rate limiting.
     config.middleware.use Rack::Attack
 

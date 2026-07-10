@@ -23,6 +23,7 @@ class User < ApplicationRecord
   normalizes :pending_email, with: ->(value) { value.to_s.strip.downcase.presence }
 
   validates :email, presence: true, uniqueness: { case_sensitive: false }
+  validates :locale, inclusion: { in: ->(_) { I18n.available_locales.map(&:to_s) } }
 
   generates_token_for :password_reset, expires_in: 20.minutes do
     password_salt&.last(10)

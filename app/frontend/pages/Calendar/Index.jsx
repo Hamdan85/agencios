@@ -12,7 +12,7 @@ import { PageShell, PageTitle, PageContent } from '@/components/ui/page'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 import {
-  WEEKDAY_LABELS, monthMatrix, monthRangeIso, weekRangeIso, dayRangeIso, weekDays,
+  weekdayLabels, monthMatrix, monthRangeIso, weekRangeIso, dayRangeIso, weekDays,
   monthLabel, weekLabel, dayLabel, addMonths, addDays, isSameDay, groupEventsByDay, dayKey, startOfDay,
 } from '@/components/calendar/calendarUtils'
 import { EventChip } from '@/components/calendar/EventChip'
@@ -206,7 +206,7 @@ function MonthGrid({ cursor, today, byDay, showWorkspace, onEventClick }) {
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_1px_2px_rgba(24,18,43,0.04),0_8px_24px_-16px_rgba(24,18,43,0.12)]">
       {/* weekday header */}
       <div className="grid shrink-0 grid-cols-7 border-b border-border bg-surface-muted/50">
-        {WEEKDAY_LABELS.map((wd, i) => (
+        {weekdayLabels().map((wd, i) => (
           <div
             key={wd}
             className={cn(

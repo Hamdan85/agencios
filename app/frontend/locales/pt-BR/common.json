@@ -1,0 +1,198 @@
+{
+  "status": {
+    "ideation": {
+      "label": "Ideação",
+      "short": "Ideação",
+      "hint": "Brief, objetivo e audiência"
+    },
+    "scoping": {
+      "label": "Escopo",
+      "short": "Escopo",
+      "hint": "Tipo, canais e entregáveis"
+    },
+    "production": {
+      "label": "Produção",
+      "short": "Produção",
+      "hint": "Criativo e legenda"
+    },
+    "scheduled": {
+      "label": "Postagem",
+      "short": "Postagem",
+      "hint": "Escolha o criativo e publique — agora ou agendado"
+    },
+    "published": {
+      "label": "No ar",
+      "short": "No ar",
+      "hint": "No ar — monitorando"
+    },
+    "retrospective": {
+      "label": "Retrospectiva",
+      "short": "Retro",
+      "hint": "Lições aprendidas"
+    },
+    "done": {
+      "label": "Concluído",
+      "short": "Concluído",
+      "hint": "Arquivado com métricas"
+    }
+  },
+  "postStatus": {
+    "scheduled": {
+      "label": "Agendado",
+      "hint": "Na fila para publicar"
+    },
+    "publishing": {
+      "label": "Publicando",
+      "hint": "Subindo para a rede"
+    },
+    "published": {
+      "label": "No ar",
+      "hint": "Publicado e monitorando"
+    },
+    "failed": {
+      "label": "Falhou",
+      "hint": "A publicação não foi concluída"
+    }
+  },
+  "creativeType": {
+    "reel": "Reel",
+    "feed_image": "Imagem",
+    "carousel": "Carrossel",
+    "story": "Story",
+    "ugc_video": "Vídeo UGC",
+    "ad": "Anúncio",
+    "thumbnail": "Thumbnail",
+    "cover": "Capa"
+  },
+  "priority": {
+    "low": "Baixa",
+    "medium": "Média",
+    "high": "Alta"
+  },
+  "generationKind": {
+    "carousel": "Carrossel",
+    "video": "Vídeo",
+    "image": "Imagem"
+  },
+  "plan": {
+    "solo": "Solo",
+    "agencia": "Agência",
+    "enterprise": "Enterprise"
+  },
+  "role": {
+    "owner": "Dono",
+    "admin": "Admin",
+    "manager": "Gestor",
+    "member": "Membro",
+    "guest": "Convidado"
+  },
+  "attachmentKind": {
+    "image": "Imagem",
+    "video": "Vídeo",
+    "audio": "Áudio",
+    "pdf": "PDF",
+    "document": "Documento",
+    "spreadsheet": "Planilha",
+    "presentation": "Apresentação",
+    "archive": "Arquivo",
+    "file": "Arquivo"
+  },
+  "series": {
+    "views": "Visualizações",
+    "reach": "Alcance",
+    "engagement": "Engajamento",
+    "likes": "Curtidas",
+    "comments": "Comentários",
+    "shares": "Compartilhamentos",
+    "saves": "Salvamentos",
+    "followers": "Seguidores",
+    "posts": "Publicações"
+  },
+  "positioning": {
+    "identity": {
+      "title": "Identidade & mercado",
+      "description": "O que a marca é e onde compete."
+    },
+    "audience": {
+      "title": "Audiência",
+      "description": "Para quem a marca fala."
+    },
+    "differentiation": {
+      "title": "Diferenciação",
+      "description": "Por que escolher esta marca."
+    },
+    "content": {
+      "title": "Conteúdo",
+      "description": "Como a marca se comunica."
+    },
+    "fields": {
+      "one_liner": {
+        "label": "O que faz (em uma frase)",
+        "placeholder": "Ex.: Ajudamos pequenas confeitarias a venderem mais pelo Instagram."
+      },
+      "category": {
+        "label": "Categoria / mercado",
+        "placeholder": "Ex.: Confeitaria artesanal premium"
+      },
+      "mission": {
+        "label": "Missão / propósito",
+        "placeholder": "O porquê da marca existir."
+      },
+      "target_audience": {
+        "label": "Público-alvo (ICP)",
+        "placeholder": "Quem é o cliente ideal: perfil, faixa, contexto."
+      },
+      "audience_pain": {
+        "label": "Dor / problema que resolve",
+        "placeholder": "A principal dor que a marca elimina."
+      },
+      "value_proposition": {
+        "label": "Proposta de valor",
+        "placeholder": "A promessa única e o benefício central."
+      },
+      "differentiators": {
+        "label": "Diferenciais",
+        "placeholder": "O que a torna diferente da concorrência."
+      },
+      "competitors": {
+        "label": "Concorrentes",
+        "placeholder": "Principais concorrentes ou alternativas."
+      },
+      "content_pillars": {
+        "label": "Pilares de conteúdo",
+        "placeholder": "Um pilar por linha (ex.: bastidores, dicas, prova social)."
+      },
+      "keywords": {
+        "label": "Palavras-chave / hashtags",
+        "placeholder": "Termos e hashtags recorrentes."
+      },
+      "guardrails": {
+        "label": "Restrições / o que evitar",
+        "placeholder": "Assuntos, palavras ou abordagens proibidas."
+      }
+    }
+  },
+  "time": {
+    "now": "agora",
+    "minutesAgo": "há {{count}} min",
+    "hoursAgo": "há {{count}} h",
+    "yesterday": "ontem",
+    "daysAgo_one": "há {{count}} dia",
+    "daysAgo_other": "há {{count}} dias",
+    "today": "hoje",
+    "tomorrow": "amanhã",
+    "daysLate": "{{count}}d atraso",
+    "inDays": "em {{count}}d"
+  },
+  "errors": {
+    "crashTitle": "Algo deu errado por aqui",
+    "crashDescription": "Já fomos avisados e estamos de olho nisso. Tente recarregar a página.",
+    "reload": "Recarregar"
+  },
+  "creativeName": {
+    "ugc_video": "Vídeo",
+    "thumbnail": "Capa do vídeo",
+    "cover": "Capa",
+    "option": "Opção {{letter}}"
+  }
+}

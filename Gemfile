@@ -62,6 +62,9 @@ gem 'posthog-ruby', require: 'posthog'
 # Serialization
 gem 'active_model_serializers'
 
+# Locale data for Rails built-ins (AR validations, date/number formats) in pt-BR/en
+gem 'rails-i18n', '~> 8.0'
+
 # Authorization
 gem 'pundit'
 
@@ -87,6 +90,7 @@ group :development, :test do
   gem 'debug', platforms: %i[mri windows], require: 'debug/prelude'
   gem 'dotenv-rails'
   gem 'factory_bot_rails'
+  gem 'i18n-tasks', '~> 1.0', require: false
   gem 'rspec-rails'
   gem 'webmock'
 end

@@ -26,6 +26,7 @@ class Workspace < ApplicationRecord
   SLUG_FORMAT = /\A[a-z0-9][a-z0-9-]{0,61}[a-z0-9]?\z/
 
   validates :name, presence: true
+  validates :locale, inclusion: { in: ->(_) { I18n.available_locales.map(&:to_s) } }
   validates :slug, presence: true, uniqueness: true, format: { with: SLUG_FORMAT }
 
   def seat_count = memberships.count

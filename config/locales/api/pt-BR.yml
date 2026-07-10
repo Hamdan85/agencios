@@ -1,0 +1,12 @@
+pt-BR:
+  api:
+    errors:
+      invalid_csrf: "Token CSRF inválido."
+      not_found: "Não encontramos esse item — ele pode já ter sido removido."
+      bad_request: "Requisição inválida. Confira os dados e tente novamente."
+      not_authorized: "Você não tem permissão para realizar esta ação."
+      record_invalid: "Não foi possível salvar. Confira os dados e tente novamente."
+      internal: "Algo deu errado do nosso lado. Tente novamente em instantes."
+      billing_required: "Assinatura necessária para acessar o workspace."
+      manager_required: "Acesso restrito a gestores do workspace."
+      staff_only: "Acesso restrito à equipe da plataforma."

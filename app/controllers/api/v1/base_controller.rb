@@ -13,6 +13,8 @@ module Api
       self.allow_forgery_protection = ActionController::Base.allow_forgery_protection
       include Pundit::Authorization
       include Authentication
+      # After Authentication so the around_action resolves Current.user/workspace.
+      include Localizable
 
       # Total paywall: once authenticated + tenant resolved, block every endpoint
       # for a workspace that isn't billing-active (no free tier). Auth, identity,
@@ -58,27 +60,25 @@ module Api
         render json: { error: msg }, status: status
       end
 
-      def invalid_csrf(_error) = render json: { error: 'Token CSRF inválido.', code: 'invalid_csrf' },
+      def invalid_csrf(_error) = render json: { error: I18n.t('api.errors.invalid_csrf'), code: 'invalid_csrf' },
                                         status: :forbidden
 
       # Framework exceptions carry raw, technical, often-English messages — e.g.
       # `Couldn't find Creative with 'id'=245 [WHERE "creatives"."workspace_id" = $1]`.
       # Every API error is customer-facing, so those must never reach the user: we
-      # map each framework exception to friendly Portuguese copy and only surface
+      # map each framework exception to friendly localized copy and only surface
       # `error.message` for our own Operations::Errors::* (which already carry
       # customer-safe copy) and model validations.
-      def not_found(_error) = render_error('Não encontramos esse item — ele pode já ter sido removido.',
-                                           status: :not_found)
-      def bad_request(_error) = render_error('Requisição inválida. Confira os dados e tente novamente.',
-                                             status: :bad_request)
-      def not_authorized(_error) = render json: { error: 'Você não tem permissão para realizar esta ação.',
+      def not_found(_error) = render_error(I18n.t('api.errors.not_found'), status: :not_found)
+      def bad_request(_error) = render_error(I18n.t('api.errors.bad_request'), status: :bad_request)
+      def not_authorized(_error) = render json: { error: I18n.t('api.errors.not_authorized'),
                                                    code: 'forbidden' }, status: :forbidden
 
       # Model validation failures — surface the validation copy without the
       # technical "Validation failed:" prefix that Rails prepends to #message.
       def record_invalid(error)
         render_error(error.record.errors.full_messages.to_sentence.presence ||
-          'Não foi possível salvar. Confira os dados e tente novamente.')
+          I18n.t('api.errors.record_invalid'))
       end
 
       def unprocessable(error) = render_error(error.message)
@@ -94,8 +94,7 @@ module Api
         Rails.logger.error(
           "[api] unhandled #{error.class}: #{error.message}\n#{Array(error.backtrace).first(20).join("\n")}"
         )
-        render_error('Algo deu errado do nosso lado. Tente novamente em instantes.',
-                     status: :internal_server_error)
+        render_error(I18n.t('api.errors.internal'), status: :internal_server_error)
       end
 
       def payment_required(error) = render json: { error: error.message, code: 'billing_required' },
@@ -116,7 +115,7 @@ module Api
         return if Current.workspace.billing_active?
 
         render json: {
-          error: 'Assinatura necessária para acessar o workspace.',
+          error: I18n.t('api.errors.billing_required'),
           code: 'billing_required'
         }, status: :payment_required
       end

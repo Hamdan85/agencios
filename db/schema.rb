@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_10_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_10_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -199,10 +199,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_10_120000) do
     t.jsonb "carousel_image_palette", default: {}, null: false
     t.string "carousel_style", default: "gradient", null: false
     t.string "company"
+    t.string "content_language", default: "pt-BR", null: false
     t.datetime "created_at", null: false
     t.string "default_handle"
     t.string "document"
     t.string "email"
+    t.string "locale", default: "pt-BR", null: false
     t.string "name", null: false
     t.text "notes"
     t.string "phone"
@@ -249,6 +251,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_10_120000) do
     t.string "bucket", default: "purchased", null: false
     t.datetime "created_at", null: false
     t.string "description"
+    t.string "description_key"
+    t.jsonb "description_params", default: {}, null: false
     t.datetime "expires_at"
     t.bigint "generation_id"
     t.integer "granted_delta", default: 0, null: false
@@ -374,6 +378,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_10_120000) do
   create_table "notes", force: :cascade do |t|
     t.text "body"
     t.datetime "created_at", null: false
+    t.string "i18n_key"
+    t.jsonb "i18n_params", default: {}, null: false
     t.integer "kind", default: 0, null: false
     t.jsonb "mentioned_user_ids", default: [], null: false
     t.bigint "ticket_id", null: false
@@ -733,6 +739,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_10_120000) do
     t.datetime "google_calendar_connected_at"
     t.text "google_refresh_token"
     t.string "google_uid"
+    t.string "locale", default: "pt-BR", null: false
     t.string "mcp_connector_token"
     t.string "name"
     t.string "password_digest"

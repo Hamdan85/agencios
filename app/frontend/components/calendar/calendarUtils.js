@@ -1,7 +1,16 @@
 // Date math + formatting helpers for the calendar grid.
 // Week starts on Monday (Mon–Sun). All math is local-time, defensive.
+import i18n from '@/i18n'
 
-export const WEEKDAY_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
+// Short weekday names (Mon-first) in the active language, via Intl — no
+// translation keys needed. 2021-06-07 is a Monday.
+export function weekdayLabels() {
+  return Array.from({ length: 7 }, (_, i) => {
+    const name = new Date(2021, 5, 7 + i).toLocaleDateString(i18n.language, { weekday: 'short' })
+    const clean = name.replace(/\.$/, '')
+    return clean.charAt(0).toUpperCase() + clean.slice(1)
+  })
+}
 
 export function startOfDay(d) {
   const x = new Date(d)
@@ -82,12 +91,12 @@ export function dayRangeIso(viewDate) {
 }
 
 export function monthLabel(date) {
-  const raw = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+  const raw = date.toLocaleDateString(i18n.language, { month: 'long', year: 'numeric' })
   return raw.charAt(0).toUpperCase() + raw.slice(1)
 }
 
 export function dayLabel(date) {
-  const raw = date.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
+  const raw = date.toLocaleDateString(i18n.language, { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
   return raw.charAt(0).toUpperCase() + raw.slice(1)
 }
 
@@ -96,8 +105,8 @@ export function weekLabel(date) {
   const a = days[0]
   const b = days[6]
   const sameMonth = a.getMonth() === b.getMonth()
-  const fmtDay = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: sameMonth ? undefined : 'short' })
-  const month = b.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+  const fmtDay = (d) => d.toLocaleDateString(i18n.language, { day: '2-digit', month: sameMonth ? undefined : 'short' })
+  const month = b.toLocaleDateString(i18n.language, { month: 'long', year: 'numeric' })
   return `${fmtDay(a)} – ${fmtDay(b)} · ${month.charAt(0).toUpperCase() + month.slice(1)}`
 }
 

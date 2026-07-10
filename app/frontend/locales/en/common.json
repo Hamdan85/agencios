@@ -1,0 +1,198 @@
+{
+  "status": {
+    "ideation": {
+      "label": "Ideation",
+      "short": "Ideation",
+      "hint": "Brief, objective and audience"
+    },
+    "scoping": {
+      "label": "Scoping",
+      "short": "Scoping",
+      "hint": "Type, channels and deliverables"
+    },
+    "production": {
+      "label": "Production",
+      "short": "Production",
+      "hint": "Creative and caption"
+    },
+    "scheduled": {
+      "label": "Posting",
+      "short": "Posting",
+      "hint": "Pick the creative and publish — now or scheduled"
+    },
+    "published": {
+      "label": "Live",
+      "short": "Live",
+      "hint": "Live — monitoring"
+    },
+    "retrospective": {
+      "label": "Retrospective",
+      "short": "Retro",
+      "hint": "Lessons learned"
+    },
+    "done": {
+      "label": "Done",
+      "short": "Done",
+      "hint": "Archived with metrics"
+    }
+  },
+  "postStatus": {
+    "scheduled": {
+      "label": "Scheduled",
+      "hint": "Queued to publish"
+    },
+    "publishing": {
+      "label": "Publishing",
+      "hint": "Uploading to the network"
+    },
+    "published": {
+      "label": "Live",
+      "hint": "Published and monitoring"
+    },
+    "failed": {
+      "label": "Failed",
+      "hint": "The publication didn't complete"
+    }
+  },
+  "creativeType": {
+    "reel": "Reel",
+    "feed_image": "Image",
+    "carousel": "Carousel",
+    "story": "Story",
+    "ugc_video": "UGC Video",
+    "ad": "Ad",
+    "thumbnail": "Thumbnail",
+    "cover": "Cover"
+  },
+  "priority": {
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High"
+  },
+  "generationKind": {
+    "carousel": "Carousel",
+    "video": "Video",
+    "image": "Image"
+  },
+  "plan": {
+    "solo": "Solo",
+    "agencia": "Agency",
+    "enterprise": "Enterprise"
+  },
+  "role": {
+    "owner": "Owner",
+    "admin": "Admin",
+    "manager": "Manager",
+    "member": "Member",
+    "guest": "Guest"
+  },
+  "attachmentKind": {
+    "image": "Image",
+    "video": "Video",
+    "audio": "Audio",
+    "pdf": "PDF",
+    "document": "Document",
+    "spreadsheet": "Spreadsheet",
+    "presentation": "Presentation",
+    "archive": "Archive",
+    "file": "File"
+  },
+  "series": {
+    "views": "Views",
+    "reach": "Reach",
+    "engagement": "Engagement",
+    "likes": "Likes",
+    "comments": "Comments",
+    "shares": "Shares",
+    "saves": "Saves",
+    "followers": "Followers",
+    "posts": "Posts"
+  },
+  "positioning": {
+    "identity": {
+      "title": "Identity & market",
+      "description": "What the brand is and where it competes."
+    },
+    "audience": {
+      "title": "Audience",
+      "description": "Who the brand speaks to."
+    },
+    "differentiation": {
+      "title": "Differentiation",
+      "description": "Why choose this brand."
+    },
+    "content": {
+      "title": "Content",
+      "description": "How the brand communicates."
+    },
+    "fields": {
+      "one_liner": {
+        "label": "What it does (in one sentence)",
+        "placeholder": "E.g.: We help small bakeries sell more through Instagram."
+      },
+      "category": {
+        "label": "Category / market",
+        "placeholder": "E.g.: Premium artisanal bakery"
+      },
+      "mission": {
+        "label": "Mission / purpose",
+        "placeholder": "Why the brand exists."
+      },
+      "target_audience": {
+        "label": "Target audience (ICP)",
+        "placeholder": "Who the ideal customer is: profile, range, context."
+      },
+      "audience_pain": {
+        "label": "Pain / problem it solves",
+        "placeholder": "The main pain the brand eliminates."
+      },
+      "value_proposition": {
+        "label": "Value proposition",
+        "placeholder": "The unique promise and core benefit."
+      },
+      "differentiators": {
+        "label": "Differentiators",
+        "placeholder": "What sets it apart from the competition."
+      },
+      "competitors": {
+        "label": "Competitors",
+        "placeholder": "Main competitors or alternatives."
+      },
+      "content_pillars": {
+        "label": "Content pillars",
+        "placeholder": "One pillar per line (e.g.: behind the scenes, tips, social proof)."
+      },
+      "keywords": {
+        "label": "Keywords / hashtags",
+        "placeholder": "Recurring terms and hashtags."
+      },
+      "guardrails": {
+        "label": "Restrictions / what to avoid",
+        "placeholder": "Forbidden topics, words or approaches."
+      }
+    }
+  },
+  "time": {
+    "now": "now",
+    "minutesAgo": "{{count}} min ago",
+    "hoursAgo": "{{count}} h ago",
+    "yesterday": "yesterday",
+    "daysAgo_one": "{{count}} day ago",
+    "daysAgo_other": "{{count}} days ago",
+    "today": "today",
+    "tomorrow": "tomorrow",
+    "daysLate": "{{count}}d late",
+    "inDays": "in {{count}}d"
+  },
+  "errors": {
+    "crashTitle": "Something went wrong here",
+    "crashDescription": "We've been notified and we're on it. Try reloading the page.",
+    "reload": "Reload"
+  },
+  "creativeName": {
+    "ugc_video": "Video",
+    "thumbnail": "Video cover",
+    "cover": "Cover",
+    "option": "Option {{letter}}"
+  }
+}

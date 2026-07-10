@@ -2,6 +2,7 @@
 
 class ClientSerializer < ActiveModel::Serializer
   attributes :id, :name, :company, :email, :phone, :document, :notes,
+             :locale, :content_language,
              :status, :attribution, :positioning, :has_positioning,
              :brand_voice, :default_handle, :brand_primary_color, :brand_secondary_color,
              :carousel_style, :carousel_image_palette,

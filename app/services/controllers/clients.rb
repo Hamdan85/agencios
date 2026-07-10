@@ -17,7 +17,7 @@ module Controllers
     ATTRS_PERMIT = %i[
       name company email phone document notes
       brand_voice default_handle brand_primary_color brand_secondary_color
-      carousel_style
+      carousel_style locale content_language
     ].freeze
   end
 end

@@ -12,6 +12,35 @@ import {
   UploadCloud, AlertTriangle,
 } from 'lucide-react'
 import { InstagramIcon } from './brand-icons.jsx'
+import i18n from '@/i18n'
+
+// Labels resolve at ACCESS time (property getters bound to i18next), so every
+// existing `.label` / `.hint` read across the app follows the active language
+// without touching the call sites. Keys live in locales/<locale>/common.json.
+const tc = (key) => i18n.t(key, { ns: 'common' })
+
+// Adds `fields` as getters resolving `${prefix}.${field}` (e.g. status.ideation.label).
+const localized = (base, prefix, fields) => {
+  for (const field of fields) {
+    Object.defineProperty(base, field, { get: () => tc(`${prefix}.${field}`), enumerable: true })
+  }
+  return base
+}
+
+// Adds a single `label` getter resolving the given key directly.
+const withLabel = (base, key) => {
+  Object.defineProperty(base, 'label', { get: () => tc(key), enumerable: true })
+  return base
+}
+
+// A plain { key: string } map whose values resolve `${prefix}.${key}` lazily.
+const localizedStrings = (prefix, keys) => {
+  const out = {}
+  for (const key of keys) {
+    Object.defineProperty(out, key, { get: () => tc(`${prefix}.${key}`), enumerable: true })
+  }
+  return out
+}
 
 // lucide v1 removed brand icons (trademark) — channel identity is carried by
 // the vivid colors below; icons are recognizable generics.
@@ -25,23 +54,23 @@ const Twitter = Hash
 export const WORKFLOW = ['ideation', 'scoping', 'production', 'scheduled', 'published', 'retrospective', 'done']
 
 export const STATUS_META = {
-  ideation:      { label: 'Ideação',        short: 'Ideação',    color: '#F59E0B', icon: Lightbulb,     hint: 'Brief, objetivo e audiência' },
-  scoping:       { label: 'Escopo',         short: 'Escopo',     color: '#0EA5E9', icon: Ruler,        hint: 'Tipo, canais e entregáveis' },
-  production:    { label: 'Produção',       short: 'Produção',   color: '#7C3AED', icon: Wand2,        hint: 'Criativo e legenda' },
-  scheduled:     { label: 'Postagem',       short: 'Postagem',   color: '#EC4899', icon: CalendarClock, hint: 'Escolha o criativo e publique — agora ou agendado' },
-  published:     { label: 'No ar',          short: 'No ar',      color: '#10B981', icon: Radio,        hint: 'No ar — monitorando' },
-  retrospective: { label: 'Retrospectiva',  short: 'Retro',      color: '#6366F1', icon: LineChart,    hint: 'Lições aprendidas' },
-  done:          { label: 'Concluído',      short: 'Concluído',  color: '#14B8A6', icon: CheckCircle2, hint: 'Arquivado com métricas' },
+  ideation:      localized({ color: '#F59E0B', icon: Lightbulb },     'status.ideation',      ['label', 'short', 'hint']),
+  scoping:       localized({ color: '#0EA5E9', icon: Ruler },         'status.scoping',       ['label', 'short', 'hint']),
+  production:    localized({ color: '#7C3AED', icon: Wand2 },         'status.production',    ['label', 'short', 'hint']),
+  scheduled:     localized({ color: '#EC4899', icon: CalendarClock }, 'status.scheduled',     ['label', 'short', 'hint']),
+  published:     localized({ color: '#10B981', icon: Radio },         'status.published',     ['label', 'short', 'hint']),
+  retrospective: localized({ color: '#6366F1', icon: LineChart },     'status.retrospective', ['label', 'short', 'hint']),
+  done:          localized({ color: '#14B8A6', icon: CheckCircle2 },  'status.done',          ['label', 'short', 'hint']),
 }
 
 // Post lifecycle status (Post#status enum: scheduled / publishing / published /
-// failed) — user-facing PT-BR label + color + icon. Distinct from the ticket
+// failed) — user-facing label + color + icon. Distinct from the ticket
 // funnel STATUS_META: a post is one network's scheduled/live item, not a ticket.
 export const POST_STATUS_META = {
-  scheduled:  { label: 'Agendado',   color: '#F59E0B', icon: CalendarClock, hint: 'Na fila para publicar' },
-  publishing: { label: 'Publicando', color: '#0EA5E9', icon: UploadCloud,   hint: 'Subindo para a rede' },
-  published:  { label: 'No ar',      color: '#10B981', icon: Radio,         hint: 'Publicado e monitorando' },
-  failed:     { label: 'Falhou',     color: '#F43F5E', icon: AlertTriangle, hint: 'A publicação não foi concluída' },
+  scheduled:  localized({ color: '#F59E0B', icon: CalendarClock }, 'postStatus.scheduled',  ['label', 'hint']),
+  publishing: localized({ color: '#0EA5E9', icon: UploadCloud },   'postStatus.publishing', ['label', 'hint']),
+  published:  localized({ color: '#10B981', icon: Radio },         'postStatus.published',  ['label', 'hint']),
+  failed:     localized({ color: '#F43F5E', icon: AlertTriangle }, 'postStatus.failed',     ['label', 'hint']),
 }
 export const postStatusMeta = (key) => POST_STATUS_META[key] || POST_STATUS_META.scheduled
 
@@ -60,14 +89,14 @@ export const CHANNEL_META = {
 // reel only makes sense on Instagram/TikTok/YouTube — so the type picker is
 // derived from the channels chosen for the ticket (see creativeTypesForChannels).
 export const CREATIVE_TYPE_META = {
-  reel:       { label: 'Reel',         color: '#EC4899', icon: Film,                  networks: ['instagram', 'tiktok', 'youtube'] },
-  feed_image: { label: 'Imagem',       color: '#0EA5E9', icon: ImageIcon,            networks: ['instagram', 'facebook', 'linkedin'] },
-  carousel:   { label: 'Carrossel',    color: '#7C3AED', icon: GalleryHorizontalEnd, networks: ['instagram', 'linkedin', 'facebook'] },
-  story:      { label: 'Story',        color: '#F97316', icon: Clapperboard,         networks: ['instagram', 'facebook'] },
-  ugc_video:  { label: 'Vídeo UGC',    color: '#F43F5E', icon: Video,                networks: ['instagram', 'tiktok', 'youtube'] },
-  ad:         { label: 'Anúncio',      color: '#10B981', icon: Megaphone,            networks: ['instagram', 'facebook', 'linkedin'] },
-  thumbnail:  { label: 'Thumbnail',    color: '#6366F1', icon: LayoutTemplate,       networks: ['youtube'] },
-  cover:      { label: 'Capa',         color: '#14B8A6', icon: Camera,               networks: ['instagram', 'facebook', 'linkedin', 'youtube'] },
+  reel:       withLabel({ color: '#EC4899', icon: Film,                 networks: ['instagram', 'tiktok', 'youtube'] }, 'creativeType.reel'),
+  feed_image: withLabel({ color: '#0EA5E9', icon: ImageIcon,            networks: ['instagram', 'facebook', 'linkedin'] }, 'creativeType.feed_image'),
+  carousel:   withLabel({ color: '#7C3AED', icon: GalleryHorizontalEnd, networks: ['instagram', 'linkedin', 'facebook'] }, 'creativeType.carousel'),
+  story:      withLabel({ color: '#F97316', icon: Clapperboard,         networks: ['instagram', 'facebook'] }, 'creativeType.story'),
+  ugc_video:  withLabel({ color: '#F43F5E', icon: Video,                networks: ['instagram', 'tiktok', 'youtube'] }, 'creativeType.ugc_video'),
+  ad:         withLabel({ color: '#10B981', icon: Megaphone,            networks: ['instagram', 'facebook', 'linkedin'] }, 'creativeType.ad'),
+  thumbnail:  withLabel({ color: '#6366F1', icon: LayoutTemplate,       networks: ['youtube'] }, 'creativeType.thumbnail'),
+  cover:      withLabel({ color: '#14B8A6', icon: Camera,               networks: ['instagram', 'facebook', 'linkedin', 'youtube'] }, 'creativeType.cover'),
 }
 
 // Which media a manual upload accepts per creative type — mirrors
@@ -93,18 +122,18 @@ export const fileMatchesCreativeType = (file, type) =>
   (CREATIVE_UPLOAD_MEDIA[type] || ['image', 'video']).includes((file?.type || '').split('/')[0])
 
 export const PRIORITY_META = {
-  low:    { label: 'Baixa',  color: '#8B86A3', dot: '#B6B1C9' },
-  medium: { label: 'Média',  color: '#0EA5E9', dot: '#0EA5E9' },
-  high:   { label: 'Alta',   color: '#F43F5E', dot: '#F43F5E' },
+  low:    withLabel({ color: '#8B86A3', dot: '#B6B1C9' }, 'priority.low'),
+  medium: withLabel({ color: '#0EA5E9', dot: '#0EA5E9' }, 'priority.medium'),
+  high:   withLabel({ color: '#F43F5E', dot: '#F43F5E' }, 'priority.high'),
 }
 
 // Generation kinds. `metered` mirrors the fixed credit-cost constants in the
 // backend Pricing module (app/models/pricing.rb): image, video, and carousel all
 // consume prepaid credits — see the credit gate in Controllers::Creatives::Generate.
 export const GENERATION_KIND_META = {
-  carousel: { label: 'Carrossel', color: '#7C3AED', icon: GalleryHorizontalEnd, metered: true },
-  video:    { label: 'Vídeo',     color: '#F43F5E', icon: Video,                metered: true },
-  image:    { label: 'Imagem',    color: '#0EA5E9', icon: Sparkles,             metered: true },
+  carousel: withLabel({ color: '#7C3AED', icon: GalleryHorizontalEnd, metered: true }, 'generationKind.carousel'),
+  video:    withLabel({ color: '#F43F5E', icon: Video,                metered: true }, 'generationKind.video'),
+  image:    withLabel({ color: '#0EA5E9', icon: Sparkles,             metered: true }, 'generationKind.image'),
 }
 
 // A generatable creative type's generation kind — mirrors each backend spec's
@@ -121,27 +150,25 @@ export const GENERATION_KIND_FOR_TYPE = {
 }
 
 export const PLAN_META = {
-  solo:       { label: 'Solo',       color: '#0EA5E9' },
-  agencia:    { label: 'Agência',    color: '#7C3AED' },
-  enterprise: { label: 'Enterprise', color: '#EC4899' },
+  solo:       withLabel({ color: '#0EA5E9' }, 'plan.solo'),
+  agencia:    withLabel({ color: '#7C3AED' }, 'plan.agencia'),
+  enterprise: withLabel({ color: '#EC4899' }, 'plan.enterprise'),
 }
 
-export const ROLE_LABELS = {
-  owner: 'Dono', admin: 'Admin', manager: 'Gestor', member: 'Membro', guest: 'Convidado',
-}
+export const ROLE_LABELS = localizedStrings('role', ['owner', 'admin', 'manager', 'member', 'guest'])
 
 // Attachment kinds (derived on the backend from the blob content type). Each
 // maps to a color + icon for the file grid, and tells the viewer how to render.
 export const ATTACHMENT_KIND_META = {
-  image:        { label: 'Imagem',       color: '#0EA5E9', icon: ImageIcon },
-  video:        { label: 'Vídeo',        color: '#EC4899', icon: Film },
-  audio:        { label: 'Áudio',        color: '#8B5CF6', icon: Music2 },
-  pdf:          { label: 'PDF',          color: '#EF4444', icon: FileText },
-  document:     { label: 'Documento',    color: '#2563EB', icon: FileText },
-  spreadsheet:  { label: 'Planilha',     color: '#16A34A', icon: FileSpreadsheet },
-  presentation: { label: 'Apresentação', color: '#F97316', icon: Presentation },
-  archive:      { label: 'Arquivo',      color: '#A16207', icon: FileArchive },
-  file:         { label: 'Arquivo',      color: '#8B86A3', icon: FileIcon },
+  image:        withLabel({ color: '#0EA5E9', icon: ImageIcon },       'attachmentKind.image'),
+  video:        withLabel({ color: '#EC4899', icon: Film },            'attachmentKind.video'),
+  audio:        withLabel({ color: '#8B5CF6', icon: Music2 },          'attachmentKind.audio'),
+  pdf:          withLabel({ color: '#EF4444', icon: FileText },        'attachmentKind.pdf'),
+  document:     withLabel({ color: '#2563EB', icon: FileText },        'attachmentKind.document'),
+  spreadsheet:  withLabel({ color: '#16A34A', icon: FileSpreadsheet }, 'attachmentKind.spreadsheet'),
+  presentation: withLabel({ color: '#F97316', icon: Presentation },    'attachmentKind.presentation'),
+  archive:      withLabel({ color: '#A16207', icon: FileArchive },     'attachmentKind.archive'),
+  file:         withLabel({ color: '#8B86A3', icon: FileIcon },        'attachmentKind.file'),
 }
 
 export const ATTACHMENT_ICON = Paperclip
@@ -258,46 +285,32 @@ export const generatableKindsForTicket = (scopedTypes = [], channels = []) => {
 // pillar per line). These steps come AFTER the contact step in the
 // creation wizard, and stand alone in the client-page editor.
 // ─────────────────────────────────────────────────────────────────
+const positioningField = (key, type) =>
+  localized({ key, type }, `positioning.fields.${key}`, ['label', 'placeholder'])
+
+const positioningStep = (key, fields) =>
+  localized({ key, fields }, `positioning.${key}`, ['title', 'description'])
+
 export const POSITIONING_STEPS = [
-  {
-    key: 'identity',
-    title: 'Identidade & mercado',
-    description: 'O que a marca é e onde compete.',
-    fields: [
-      { key: 'one_liner', label: 'O que faz (em uma frase)', type: 'textarea', placeholder: 'Ex.: Ajudamos pequenas confeitarias a venderem mais pelo Instagram.' },
-      { key: 'category', label: 'Categoria / mercado', type: 'text', placeholder: 'Ex.: Confeitaria artesanal premium' },
-      { key: 'mission', label: 'Missão / propósito', type: 'textarea', placeholder: 'O porquê da marca existir.' },
-    ],
-  },
-  {
-    key: 'audience',
-    title: 'Audiência',
-    description: 'Para quem a marca fala.',
-    fields: [
-      { key: 'target_audience', label: 'Público-alvo (ICP)', type: 'textarea', placeholder: 'Quem é o cliente ideal: perfil, faixa, contexto.' },
-      { key: 'audience_pain', label: 'Dor / problema que resolve', type: 'textarea', placeholder: 'A principal dor que a marca elimina.' },
-    ],
-  },
-  {
-    key: 'differentiation',
-    title: 'Diferenciação',
-    description: 'Por que escolher esta marca.',
-    fields: [
-      { key: 'value_proposition', label: 'Proposta de valor', type: 'textarea', placeholder: 'A promessa única e o benefício central.' },
-      { key: 'differentiators', label: 'Diferenciais', type: 'textarea', placeholder: 'O que a torna diferente da concorrência.' },
-      { key: 'competitors', label: 'Concorrentes', type: 'text', placeholder: 'Principais concorrentes ou alternativas.' },
-    ],
-  },
-  {
-    key: 'content',
-    title: 'Conteúdo',
-    description: 'Como a marca se comunica.',
-    fields: [
-      { key: 'content_pillars', label: 'Pilares de conteúdo', type: 'pillars', placeholder: 'Um pilar por linha (ex.: bastidores, dicas, prova social).' },
-      { key: 'keywords', label: 'Palavras-chave / hashtags', type: 'text', placeholder: 'Termos e hashtags recorrentes.' },
-      { key: 'guardrails', label: 'Restrições / o que evitar', type: 'textarea', placeholder: 'Assuntos, palavras ou abordagens proibidas.' },
-    ],
-  },
+  positioningStep('identity', [
+    positioningField('one_liner', 'textarea'),
+    positioningField('category', 'text'),
+    positioningField('mission', 'textarea'),
+  ]),
+  positioningStep('audience', [
+    positioningField('target_audience', 'textarea'),
+    positioningField('audience_pain', 'textarea'),
+  ]),
+  positioningStep('differentiation', [
+    positioningField('value_proposition', 'textarea'),
+    positioningField('differentiators', 'textarea'),
+    positioningField('competitors', 'text'),
+  ]),
+  positioningStep('content', [
+    positioningField('content_pillars', 'pillars'),
+    positioningField('keywords', 'text'),
+    positioningField('guardrails', 'textarea'),
+  ]),
 ]
 
 // Empty positioning shape — every key the wizard tracks (statement is the

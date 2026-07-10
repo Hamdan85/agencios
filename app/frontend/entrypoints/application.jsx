@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'sonner'
 import App from '@/App'
+import i18n from '@/i18n'
 import { Button } from '@/components/ui/button'
 import { ConfirmProvider } from '@/components/ui/confirm-dialog'
 import { ErrorScene } from '@/components/errors/ErrorScene'
@@ -17,9 +18,9 @@ function AppErrorFallback() {
   return (
     <ErrorScene
       code="500"
-      title="Algo deu errado por aqui"
-      description="Já fomos avisados e estamos de olho nisso. Tente recarregar a página."
-      actions={<Button size="lg" onClick={() => window.location.reload()}>Recarregar</Button>}
+      title={i18n.t('errors.crashTitle')}
+      description={i18n.t('errors.crashDescription')}
+      actions={<Button size="lg" onClick={() => window.location.reload()}>{i18n.t('errors.reload')}</Button>}
     />
   )
 }

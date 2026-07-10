@@ -1,14 +1,18 @@
-// Portuguese display names for the metric series keys used across the charts, so
-// a tooltip/legend never leaks a raw English key ("views") when the surrounding
-// copy already says "Visualizações". Keep in sync with PostMetric fields.
-export const SERIES_LABELS = {
-  views: 'Visualizações',
-  reach: 'Alcance',
-  engagement: 'Engajamento',
-  likes: 'Curtidas',
-  comments: 'Comentários',
-  shares: 'Compartilhamentos',
-  saves: 'Salvamentos',
+// Localized display names for the metric series keys used across the charts, so
+// a tooltip/legend never leaks a raw key ("views") when the surrounding copy is
+// localized. Keys live in locales/<locale>/common.json (series.*); values resolve
+// at access time so charts follow the active language. Keep in sync with
+// PostMetric fields.
+import i18n from '@/i18n'
+
+const SERIES_KEYS = ['views', 'reach', 'engagement', 'likes', 'comments', 'shares', 'saves']
+
+export const SERIES_LABELS = {}
+for (const key of SERIES_KEYS) {
+  Object.defineProperty(SERIES_LABELS, key, {
+    get: () => i18n.t(`series.${key}`, { ns: 'common' }),
+    enumerable: true,
+  })
 }
 
 // The house color per series — the brand vocabulary the charts share (mirrors the

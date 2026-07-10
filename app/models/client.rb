@@ -26,6 +26,10 @@ class Client < ApplicationRecord
   enum :carousel_style, { gradient: 'gradient', white: 'white', image: 'image' }, prefix: :carousel
 
   validates :name, presence: true
+  validates :locale, inclusion: { in: ->(_) { I18n.available_locales.map(&:to_s) } }
+  # Audience language for AI-generated content — any BCP-47 primary(-region) tag,
+  # not limited to the UI locales (a BR agency can run an es-MX client).
+  validates :content_language, format: { with: /\A[a-z]{2}(-[A-Z]{2})?\z/ }
 
   # Brand-positioning framework captured by the creation wizard. Stored in the
   # `positioning` jsonb bag and threaded into every AI prompt for tickets under

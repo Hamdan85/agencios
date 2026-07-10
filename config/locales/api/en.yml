@@ -1,0 +1,12 @@
+en:
+  api:
+    errors:
+      invalid_csrf: "Invalid CSRF token."
+      not_found: "We couldn't find that item — it may have already been removed."
+      bad_request: "Invalid request. Check the data and try again."
+      not_authorized: "You don't have permission to perform this action."
+      record_invalid: "Couldn't save. Check the data and try again."
+      internal: "Something went wrong on our end. Please try again in a moment."
+      billing_required: "An active subscription is required to access this workspace."
+      manager_required: "Restricted to workspace managers."
+      staff_only: "Restricted to platform staff."

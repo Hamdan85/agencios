@@ -3,11 +3,16 @@ import { toast } from 'sonner'
 import { authApi, accountApi } from '@/api'
 import { keys } from '@/api/queryKeys'
 import analytics, { EVENTS } from '@/lib/analytics'
+import { applyLocale } from '@/i18n'
 
 export function useCurrentUser() {
   return useQuery({
     queryKey: keys.me(),
-    queryFn: authApi.me,
+    queryFn: async () => {
+      const data = await authApi.me()
+      applyLocale(data?.user?.locale)
+      return data
+    },
     retry: false,
     staleTime: 5 * 60_000,
   })
@@ -19,6 +24,7 @@ export function useLogin() {
     mutationFn: ({ email, password }) => authApi.login(email, password),
     onSuccess: (data) => {
       qc.setQueryData(keys.me(), data)
+      applyLocale(data?.user?.locale)
       analytics.track(EVENTS.LOGIN, { method: 'password' })
     },
   })
@@ -30,6 +36,7 @@ export function useRegister() {
     mutationFn: (data) => authApi.register(data),
     onSuccess: (data) => {
       qc.setQueryData(keys.me(), data)
+      applyLocale(data?.user?.locale)
       // The primary acquisition conversion + the trial it kicks off.
       analytics.track(EVENTS.SIGN_UP, { method: 'password' })
       analytics.track(EVENTS.TRIAL_STARTED, { plan: data?.workspace?.plan })
@@ -71,7 +78,15 @@ export function useUpdateAccount() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (data) => accountApi.update(data),
-    onSuccess: (data) => { qc.setQueryData(keys.me(), data); toast.success('Perfil atualizado.') },
+    onSuccess: (data, variables) => {
+      qc.setQueryData(keys.me(), data)
+      if (variables?.user?.locale) {
+        applyLocale(data?.user?.locale)
+        // Server-rendered copy (API errors, system notes) changes language too.
+        qc.invalidateQueries()
+      }
+      toast.success('Perfil atualizado.')
+    },
     onError: (e) => toast.error(e?.error || 'Erro ao atualizar o perfil.'),
   })
 }

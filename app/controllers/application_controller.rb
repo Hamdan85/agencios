@@ -22,6 +22,6 @@ class ApplicationController < ActionController::Base
   def authenticate_staff!
     return if current_staff_user
 
-    redirect_to '/', alert: 'Acesso restrito à equipe da plataforma.'
+    redirect_to '/', alert: I18n.t('api.errors.staff_only')
   end
 end

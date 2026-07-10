@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class UserSerializer < ActiveModel::Serializer
-  attributes :id, :email, :name, :display_name, :staff, :avatar_url,
+  attributes :id, :email, :name, :display_name, :staff, :locale, :avatar_url,
              :google_connected, :google_calendar_connected
 
   def display_name = object.display_name
