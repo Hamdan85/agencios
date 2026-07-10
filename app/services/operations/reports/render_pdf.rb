@@ -21,11 +21,20 @@ module Operations
       private
 
       def render_html
-        ApplicationController.render(
-          template: 'reports/pdf',
-          layout: 'report_pdf',
-          assigns: { report: @report, data: @report.data || {}, brand: brand }
-        )
+        # The report is a CLIENT-facing artifact — render it in the client's
+        # locale (falling back to the workspace default).
+        I18n.with_locale(client_locale) do
+          ApplicationController.render(
+            template: 'reports/pdf',
+            layout: 'report_pdf',
+            assigns: { report: @report, data: @report.data || {}, brand: brand }
+          )
+        end
+      end
+
+      def client_locale
+        code = @project.client&.locale.presence || @project.workspace&.locale
+        I18n.available_locales.find { |l| l.to_s == code.to_s } || I18n.default_locale
       end
 
       def brand

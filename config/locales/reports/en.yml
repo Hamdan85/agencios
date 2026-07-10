@@ -1,0 +1,28 @@
+en:
+  reports:
+    pdf:
+      title_fallback: "Report"
+      ai_unavailable: "The written analysis couldn't be generated right now — the numbers below reflect the campaign's real data."
+      the_numbers: "The numbers"
+      profile_metrics_hint: "Profile metrics (followers, account reach, Story replies) start appearing as the snapshot history is collected."
+      whats_working: "What's working"
+      performance_by_format: "Performance by format"
+      what_performs: "✅ What performs"
+      what_doesnt: "❌ What doesn't work"
+      critical_bottlenecks: "Critical bottlenecks"
+      to_explore: "What needs exploring"
+      performance_matrix: "Performance matrix"
+      action_plan: "Action plan"
+      next_7_days: "Next 7 days"
+      next_30_days: "Next 30 days"
+      next_90_days: "Next 90 days"
+      projection_12mo: "12-month projection"
+      kpi:
+        followers: "Followers"
+        new_followers: "New followers"
+        accounts_reached: "Accounts reached"
+        views: "Views"
+        reach: "Reach (posts)"
+        reel_shares: "Reel shares"
+        story_replies: "Story replies"
+        engagement: "Engagement"

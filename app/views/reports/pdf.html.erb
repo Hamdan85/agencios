@@ -71,7 +71,7 @@
     </p>
     <% if data["ai_ok"] == false %>
       <p class="ai-warn">
-        A análise textual não pôde ser gerada agora — os números abaixo refletem os dados reais da campanha.
+        <%= t('reports.pdf.ai_unavailable') %>
       </p>
     <% end %>
   </div>
@@ -80,19 +80,19 @@
 <%# ===================== OS NÚMEROS ===================== %>
 <div class="section-title">
   <span class="dot" style="background: <%= primary_color %>1F;"></span>
-  <h2>Os números</h2>
+  <h2><%= t('reports.pdf.the_numbers') %></h2>
 </div>
 
 <%
   kpi_tiles = [
-    ["Seguidores",            compact.call(k["followers"]),        k["follower_growth_pct"]],
-    ["Novos seguidores",      compact.call(k["new_followers"]),    nil],
-    ["Contas alcançadas",     compact.call(k["accounts_reached"]), k["reach_delta_pct"]],
-    ["Visualizações",         compact.call(k["views"]),            nil],
-    ["Alcance (posts)",       compact.call(k["reach"]),            nil],
-    ["Compart. de Reels",     compact.call(k["reel_shares"]),      nil],
-    ["Respostas em Stories",  compact.call(k["story_replies"]),    nil],
-    ["Engajamento",           compact.call(k["engagement"]),       nil],
+    [t("reports.pdf.kpi.followers"),           compact.call(k["followers"]),        k["follower_growth_pct"]],
+    [t("reports.pdf.kpi.new_followers"),       compact.call(k["new_followers"]),    nil],
+    [t("reports.pdf.kpi.accounts_reached"),    compact.call(k["accounts_reached"]), k["reach_delta_pct"]],
+    [t("reports.pdf.kpi.views"),               compact.call(k["views"]),            nil],
+    [t("reports.pdf.kpi.reach"),               compact.call(k["reach"]),            nil],
+    [t("reports.pdf.kpi.reel_shares"),         compact.call(k["reel_shares"]),      nil],
+    [t("reports.pdf.kpi.story_replies"),       compact.call(k["story_replies"]),    nil],
+    [t("reports.pdf.kpi.engagement"),          compact.call(k["engagement"]),       nil],
   ]
 %>
 <div class="grid grid-4">
@@ -108,7 +108,7 @@
 </div>
 <% if k["has_account_data"] == false %>
   <p class="hint">
-    As métricas de perfil (seguidores, alcance de contas, respostas em Stories) começam a aparecer conforme o histórico de snapshots é coletado.
+    <%= t('reports.pdf.profile_metrics_hint') %>
   </p>
 <% end %>
 
@@ -151,7 +151,7 @@
 <% if Array(data["wins"]).any? %>
   <div class="section-title">
     <span class="dot" style="background: #10B9811F;"></span>
-    <h2>O que está funcionando</h2>
+    <h2><%= t('reports.pdf.whats_working') %></h2>
   </div>
   <div class="grid grid-2">
     <% Array(data["wins"]).each do |it| %>
@@ -175,10 +175,10 @@
 <% if Array(cp["winners"]).any? || Array(cp["losers"]).any? %>
   <div class="section-title">
     <span class="dot" style="background: <%= primary_color %>1F;"></span>
-    <h2>Performance por formato</h2>
+    <h2><%= t('reports.pdf.performance_by_format') %></h2>
   </div>
   <div class="grid grid-2">
-    <% [["✅ O que performa", cp["winners"], "#10B981"], ["❌ O que não funciona", cp["losers"], "#EF4444"]].each do |title, items, color| %>
+    <% [[t("reports.pdf.what_performs"), cp["winners"], "#10B981"], [t("reports.pdf.what_doesnt"), cp["losers"], "#EF4444"]].each do |title, items, color| %>
       <div class="card">
         <div class="list-head" style="background: <%= color %>;"><%= title %></div>
         <% rows = Array(items) %>
@@ -201,7 +201,7 @@
 <% if Array(data["bottlenecks"]).any? %>
   <div class="section-title">
     <span class="dot" style="background: #EF44441F;"></span>
-    <h2>Gargalos críticos</h2>
+    <h2><%= t('reports.pdf.critical_bottlenecks') %></h2>
   </div>
   <div>
     <% Array(data["bottlenecks"]).each_with_index do |b, i| %>
@@ -220,7 +220,7 @@
 <% if Array(data["opportunities"]).any? %>
   <div class="section-title">
     <span class="dot" style="background: #F59E0B1F;"></span>
-    <h2>O que precisa ser explorado</h2>
+    <h2><%= t('reports.pdf.to_explore') %></h2>
   </div>
   <div class="grid grid-2">
     <% Array(data["opportunities"]).each do |it| %>
@@ -244,7 +244,7 @@
 <% if Array(data["matrix"]).any? %>
   <div class="section-title">
     <span class="dot" style="background: <%= primary_color %>1F;"></span>
-    <h2>Matriz de performance</h2>
+    <h2><%= t('reports.pdf.performance_matrix') %></h2>
   </div>
   <div class="card">
     <% Array(data["matrix"]).each do |m| %>
@@ -266,10 +266,10 @@
 <% if plan["d7"].present? || plan["d30"].present? || plan["d90"].present? %>
   <div class="section-title">
     <span class="dot" style="background: <%= primary_color %>1F;"></span>
-    <h2>Plano de ação</h2>
+    <h2><%= t('reports.pdf.action_plan') %></h2>
   </div>
   <div class="grid grid-3">
-    <% [["Próximos 7 dias", plan["d7"], "#EF4444"], ["Próximos 30 dias", plan["d30"], "#F59E0B"], ["Próximos 90 dias", plan["d90"], "#10B981"]].each do |title, items, color| %>
+    <% [[t("reports.pdf.next_7_days"), plan["d7"], "#EF4444"], [t("reports.pdf.next_30_days"), plan["d30"], "#F59E0B"], [t("reports.pdf.next_90_days"), plan["d90"], "#10B981"]].each do |title, items, color| %>
       <div class="card">
         <div class="list-head" style="background: <%= color %>;"><%= title %></div>
         <ul class="list-body">
@@ -286,7 +286,7 @@
 <% if projection["verdict"].present? %>
   <div class="section-title">
     <span class="dot" style="background: <%= primary_color %>1F;"></span>
-    <h2>Projeção 12 meses</h2>
+    <h2><%= t('reports.pdf.projection_12mo') %></h2>
   </div>
   <div class="card card-pad projection">
     <h3><%= projection["verdict"] %></h3>

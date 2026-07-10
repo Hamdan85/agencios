@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="<%= I18n.locale %>">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><%= @report&.project&.name.presence || "Relatório" %></title>
+  <title><%= @report&.project&.name.presence || t('reports.pdf.title_fallback') %></title>
   <style>
     /* ---- Print / page setup ---- */
     @page {
