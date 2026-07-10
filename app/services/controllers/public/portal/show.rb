@@ -41,16 +41,17 @@ module Controllers
         end
 
         # Status drives which views the client can open:
-        #   active/paused → quadro (read-only board), aprovações (when pending),
-        #                   métricas (real-time);
-        #   completed     → só o relatório da campanha;
-        #   archived      → relatório se pronto, senão o quadro.
-        def available_tabs(project, pending_count, has_ready_report)
+        #   active/paused      → quadro (read-only board), aprovações (when
+        #                        pending), métricas (real-time);
+        #   completed/archived → the full read-only quadro (every ticket) plus the
+        #                        campaign report when one is ready.
+        def available_tabs(project, pending_count, _has_ready_report)
           case project.status
-          when 'completed'
-            ['relatorio']
-          when 'archived'
-            has_ready_report ? ['relatorio'] : ['quadro']
+          when 'completed', 'archived'
+            # Every ticket stays visible (quadro) and the report tab is always
+            # offered — it shows an honest "gerando/indisponível" state until the
+            # deck is ready.
+            %w[quadro relatorio]
           else
             tabs = ['quadro']
             tabs << 'aprovacoes' if pending_count.positive?

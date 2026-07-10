@@ -1,39 +1,17 @@
-import { lazy, Suspense, useState } from 'react'
+import { useState } from 'react'
 import { X, CheckSquare, ImageIcon, Inbox, CalendarClock } from 'lucide-react'
 import { usePortalBoard } from '@/hooks/useData'
 import { cn } from '@/lib/utils'
 import { shortDt } from '@/lib/formatters'
-import { isVideoUrl } from '@/lib/media'
 import { WORKFLOW, statusMeta, creativeMeta } from '@/lib/constants'
 import { ChannelIcons, CreativeTypeChip } from '@/components/ui/iconography'
 import { SectionLabel } from '@/components/ui/section-label'
 import { MediaThumb } from '@/components/ui/media-thumb'
 import { InlineSpinner, EmptyState } from '@/components/ui/feedback'
+import CreativeExperience from '@/components/creative/CreativeExperience'
 import {
   Sheet, SheetContent, SheetClose, SheetTitle, SheetDescription,
 } from '@/components/ui/sheet'
-
-const MediaViewer = lazy(() => import('@/components/ticket/MediaViewer'))
-
-// One creative → its slide attachments for the lightbox. A carousel's slides
-// share the creative's name; a single image/video is one item.
-function creativeToAttachments(creative) {
-  const m = creativeMeta(creative.creative_type)
-  const urls = creative.asset_urls || []
-  const isCarousel = creative.creative_type === 'carousel' || urls.length > 1
-  return urls.map((url, i) => {
-    const video = isVideoUrl(url)
-    return {
-      id: `${creative.id}-${i}`,
-      url,
-      filename: isCarousel ? `${m.label}-${creative.id}-slide-${i + 1}` : `${m.label}-${creative.id}`,
-      display_name: creative.name || m.label,
-      kind: video ? 'video' : 'image',
-      content_type: video ? 'video/mp4' : 'image/jpeg',
-      description: creative.caption || undefined,
-    }
-  })
-}
 
 // Read-only status pill echoing StatusPill's look, but honoring the server's
 // `status_label` text (the source of truth for the client-facing wording).
@@ -178,58 +156,56 @@ function DetailBlock({ label, children }) {
   )
 }
 
-// A read-only grid of the ticket's finished creatives — thumbnails that open a
-// fullscreen viewer. Videos and carousels are handled by the shared viewer.
-function CreativesGrid({ creatives }) {
-  const [viewerItems, setViewerItems] = useState([])
-  const [viewerOpen, setViewerOpen] = useState(false)
-
-  const openViewer = (creative) => {
-    const atts = creativeToAttachments(creative)
-    if (!atts.length) return
-    setViewerItems(atts)
-    setViewerOpen(true)
-  }
+// The deliverables pane: a large preview of the selected creative (native
+// carousel/video/image via CreativeExperience, click to zoom) plus a filmstrip
+// to switch between the ticket's pieces — the client sees the real output, not a
+// thumbnail grid.
+function CreativesStage({ creatives, accent }) {
+  const [sel, setSel] = useState(0)
+  const current = creatives[sel] || creatives[0]
 
   return (
-    <>
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-        {creatives.map((c) => {
-          const m = creativeMeta(c.creative_type)
-          const thumb = (c.asset_urls || [])[0] || c.preview_url
-          return (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => openViewer(c)}
-              className="group relative block overflow-hidden rounded-xl border border-border bg-surface-muted text-left transition hover:border-strong"
-              title={c.name || m.label}
-            >
-              <div className="relative w-full" style={{ paddingBottom: '100%' }}>
-                <div className="absolute inset-0 overflow-hidden" style={{ background: `${m.color}12` }}>
-                  {thumb
-                    ? <MediaThumb url={thumb} alt={c.name || m.label} className="transition-transform group-hover:scale-105" />
-                    : <div className="grid size-full place-items-center"><ImageIcon size={20} style={{ color: m.color }} /></div>}
-                </div>
-              </div>
-              <div className="p-2">
-                <p className="truncate text-[12px] font-semibold text-ink">{c.name || m.label}</p>
-                <p className="truncate text-[11px] text-ink-muted">{m.label}</p>
-              </div>
-            </button>
-          )
-        })}
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 items-center justify-center">
+        <CreativeExperience key={current.id} creative={current} fit="height" />
       </div>
-
-      <Suspense fallback={null}>
-        <MediaViewer attachments={viewerItems} index={0} open={viewerOpen} onClose={() => setViewerOpen(false)} />
-      </Suspense>
-    </>
+      <p className="mt-2.5 shrink-0 text-center text-xs font-medium text-ink-muted">
+        {current.name || creativeMeta(current.creative_type).label}
+      </p>
+      {creatives.length > 1 && (
+        <div className="mt-2 flex shrink-0 items-center justify-center gap-2 overflow-x-auto pb-1">
+          {creatives.map((c, i) => {
+            const on = i === sel
+            const m = creativeMeta(c.creative_type)
+            const thumb = (c.asset_urls || [])[0] || c.preview_url
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setSel(i)}
+                title={c.name || m.label}
+                className={cn(
+                  'relative size-14 shrink-0 overflow-hidden rounded-lg border-2 transition',
+                  on ? '' : 'border-transparent opacity-70 hover:opacity-100',
+                )}
+                style={on ? { borderColor: accent } : undefined}
+              >
+                {thumb
+                  ? <MediaThumb url={thumb} alt={c.name || m.label} />
+                  : <div className="grid size-full place-items-center" style={{ background: `${m.color}12` }}><ImageIcon size={16} style={{ color: m.color }} /></div>}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
   )
 }
 
-// The read-only detail sheet: purely informational scope of one ticket, plus a
-// preview of every finished creative (what the client actually receives).
+// The read-only ticket detail: a rich, app-quality view. On desktop it's a
+// two-pane drawer — the deliverables (creatives) on the left, all the scope the
+// client cares about on the right; on mobile it stacks. Purely informational
+// (no edit affordances) — the client follows the work, they don't change it.
 function PortalTicketSheet({ ticket, accent, open, onOpenChange }) {
   const t = ticket || {}
   const channels = t.channels || []
@@ -237,16 +213,22 @@ function PortalTicketSheet({ ticket, accent, open, onOpenChange }) {
   const creatives = t.creatives || []
   const objective = (t.objective || '').trim()
   const brief = (t.brief || '').trim()
+  const hasCreatives = creatives.length > 0
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="gap-0">
+      <SheetContent side="right" className="gap-0 p-0 sm:max-w-3xl">
         <div className="flex items-start justify-between gap-3 border-b border-border px-6 py-5">
           <div className="min-w-0">
             <SheetTitle className="text-lg leading-snug">{t.title || 'Sem título'}</SheetTitle>
             <SheetDescription className="sr-only">Detalhes da tarefa</SheetDescription>
-            <div className="mt-2">
+            <div className="mt-2 flex flex-wrap items-center gap-2">
               <ReadOnlyStatusPill status={t.status} label={t.status_label} size="sm" />
+              {t.scheduled_at && (
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-ink-muted">
+                  <CalendarClock size={13} strokeWidth={2.4} /> {shortDt(t.scheduled_at)}
+                </span>
+              )}
             </div>
           </div>
           <SheetClose
@@ -257,53 +239,59 @@ function PortalTicketSheet({ ticket, accent, open, onOpenChange }) {
           </SheetClose>
         </div>
 
-        <div className="scrollbar-subtle flex-1 space-y-6 overflow-y-auto px-6 py-6">
-          {channels.length > 0 && (
-            <DetailBlock label="Canais">
-              <ChannelIcons channels={channels} size={16} max={8} />
-            </DetailBlock>
+        <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+          {/* Deliverables pane */}
+          {hasCreatives && (
+            <div className="flex min-h-[42vh] shrink-0 flex-col justify-center bg-black/3 p-4 lg:min-h-0 lg:flex-1">
+              <CreativesStage creatives={creatives} accent={accent} />
+            </div>
           )}
 
-          {creativeTypes.length > 0 && (
-            <DetailBlock label="Formatos">
-              <div className="flex flex-wrap items-center gap-1.5">
-                {creativeTypes.map((ct) => <CreativeTypeChip key={ct} type={ct} />)}
+          {/* Scope pane */}
+          <div
+            className={cn(
+              'scrollbar-subtle min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-6',
+              hasCreatives && 'lg:max-w-sm lg:border-l lg:border-border',
+            )}
+          >
+            {!hasCreatives && (
+              <div className="rounded-xl border border-dashed border-border bg-surface-muted/40 px-4 py-6 text-center text-sm text-ink-muted">
+                Os criativos aparecem aqui assim que a equipe finalizar a produção.
               </div>
-            </DetailBlock>
-          )}
+            )}
 
-          {objective && (
-            <DetailBlock label="Objetivo">
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink-secondary">{objective}</p>
-            </DetailBlock>
-          )}
+            {creativeTypes.length > 0 && (
+              <DetailBlock label="Formatos">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {creativeTypes.map((ct) => <CreativeTypeChip key={ct} type={ct} />)}
+                </div>
+              </DetailBlock>
+            )}
 
-          {brief && (
-            <DetailBlock label="Briefing">
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink-secondary">{brief}</p>
-            </DetailBlock>
-          )}
+            {channels.length > 0 && (
+              <DetailBlock label="Canais">
+                <ChannelIcons channels={channels} size={16} max={8} />
+              </DetailBlock>
+            )}
 
-          {Number(t.subtasks_count) > 0 && (
-            <DetailBlock label="Progresso">
-              <ProgressBar done={t.subtasks_done} total={t.subtasks_count} accent={accent} />
-            </DetailBlock>
-          )}
+            {objective && (
+              <DetailBlock label="Objetivo">
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink-secondary">{objective}</p>
+              </DetailBlock>
+            )}
 
-          {creatives.length > 0 && (
-            <DetailBlock label={`Criativos (${creatives.length})`}>
-              <CreativesGrid creatives={creatives} />
-            </DetailBlock>
-          )}
+            {brief && (
+              <DetailBlock label="Briefing">
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink-secondary">{brief}</p>
+              </DetailBlock>
+            )}
 
-          {t.scheduled_at && (
-            <DetailBlock label="Data prevista">
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-surface-muted px-2.5 py-1 text-sm font-bold text-ink-muted">
-                <CalendarClock size={15} strokeWidth={2.4} />
-                {shortDt(t.scheduled_at)}
-              </span>
-            </DetailBlock>
-          )}
+            {Number(t.subtasks_count) > 0 && (
+              <DetailBlock label="Progresso">
+                <ProgressBar done={t.subtasks_done} total={t.subtasks_count} accent={accent} />
+              </DetailBlock>
+            )}
+          </div>
         </div>
       </SheetContent>
     </Sheet>

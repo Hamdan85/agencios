@@ -1,23 +1,19 @@
-import { ArrowLeft } from 'lucide-react'
 import { readableOn, tint } from '@/lib/color'
 
 // The branded chrome of the client central: agency header (logo/name/colors) and
 // the "feito com ✳ Agencios" signature. Generalized from the approval portal
 // shell so the whole central shares one look. `--agency` exposes the accent to
-// descendants; the page body scrolls (unlike the no-scroll approval deck).
-export default function PortalShell({ agency = {}, children, onBack, subtitle }) {
+// descendants; the page body scrolls (unlike the no-scroll approval deck). The
+// header is sticky so the brand + context stay in view while scrolling; the
+// "back to campaigns" affordance lives on the page, not here.
+export default function PortalShell({ agency = {}, children, subtitle }) {
   const accent = agency.primary_color || '#7C3AED'
   const fg = readableOn(accent)
 
   return (
     <div className="flex min-h-dvh flex-col" style={{ background: tint(accent, 5), '--agency': accent }}>
-      <header className="shrink-0 px-5 py-3.5" style={{ background: accent, color: fg }}>
+      <header className="sticky top-0 z-30 shrink-0 px-5 py-3.5 shadow-sm" style={{ background: accent, color: fg }}>
         <div className="mx-auto flex max-w-6xl items-center gap-3">
-          {onBack && (
-            <button onClick={onBack} aria-label="Voltar" className="-ml-1 rounded-lg p-1 transition hover:bg-white/15">
-              <ArrowLeft size={20} />
-            </button>
-          )}
           {agency.logo_url
             ? <img src={agency.logo_url} alt={agency.name} className="size-9 rounded-lg bg-white object-cover" />
             : <div className="flex size-9 items-center justify-center rounded-lg bg-white/20 font-bold">{agency.name?.[0] || 'A'}</div>}

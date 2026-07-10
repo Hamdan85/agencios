@@ -51,10 +51,9 @@ export default function PortalShow() {
     <PortalShell
       agency={agency}
       subtitle={current ? current.name : `Central de ${data.client?.name || 'cliente'}`}
-      onBack={current ? backToList : undefined}
     >
       {current
-        ? <CampaignDetail campaign={current} token={token} activeTab={activeTab} onTab={setTab} accent={accent} />
+        ? <CampaignDetail campaign={current} token={token} activeTab={activeTab} onTab={setTab} accent={accent} onBack={backToList} />
         : <CampaignList campaigns={campaigns} onOpen={openCampaign} accent={accent} />}
     </PortalShell>
   )

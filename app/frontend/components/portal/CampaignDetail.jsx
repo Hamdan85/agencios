@@ -1,4 +1,4 @@
-import { LayoutGrid, CheckSquare, BarChart3, FileBarChart } from 'lucide-react'
+import { LayoutGrid, CheckSquare, BarChart3, FileBarChart, ArrowLeft } from 'lucide-react'
 import PortalBoard from './PortalBoard'
 import PortalApprovals from './PortalApprovals'
 import PortalMetrics from './PortalMetrics'
@@ -13,14 +13,22 @@ const TAB_META = {
 
 // One campaign's status-driven views. The server decides which tabs exist
 // (`available_tabs`): active/paused → quadro + (aprovações) + métricas;
-// completed → só relatório; archived → relatório ou quadro.
-export default function CampaignDetail({ campaign, token, activeTab, onTab, accent = '#7C3AED' }) {
+// completed/archived → quadro (all tickets) + relatório.
+export default function CampaignDetail({ campaign, token, activeTab, onTab, accent = '#7C3AED', onBack }) {
   const tabs = campaign.available_tabs || ['quadro']
   const active = tabs.includes(activeTab) ? activeTab : tabs[0]
   const pending = campaign.counts?.pending_approval || 0
 
   return (
     <div>
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-muted transition hover:text-ink"
+        >
+          <ArrowLeft size={16} /> Voltar às campanhas
+        </button>
+      )}
       <div className="mb-1 flex items-center gap-2.5">
         <span className="size-3 rounded-full" style={{ background: campaign.color || accent }} />
         <h1 className="font-display text-2xl font-extrabold tracking-tight text-ink">{campaign.name}</h1>
