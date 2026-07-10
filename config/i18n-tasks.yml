@@ -1,0 +1,45 @@
+# i18n-tasks — backend locale hygiene (missing/unused keys, pt-BR/en parity).
+# Run: bundle exec i18n-tasks health
+base_locale: pt-BR
+locales: [pt-BR, en]
+
+data:
+  read:
+    - config/locales/**/%{locale}.yml
+  # New keys found by `i18n-tasks add-missing` land in a catch-all file.
+  write:
+    - config/locales/misc/%{locale}.yml
+
+search:
+  paths:
+    - app/controllers
+    - app/services
+    - app/mailers
+    - app/models
+    - app/views
+    - app/jobs
+    - app/admin
+  relative_roots:
+    - app/views
+  # Dynamic keys resolved at runtime (status/kind interpolations).
+  ignore_dynamic: true
+
+ignore_unused:
+  # Keys referenced via stored DB values (notes.i18n_key, push key params,
+  # credit_transactions.description_key) — resolved at read/send time.
+  - 'notes.*'
+  - 'push.*'
+  - 'credits.ledger.*'
+  - 'statuses.*'
+  # Rails/gems internals
+  - 'activerecord.*'
+  - 'errors.*'
+  - 'date.*'
+  - 'time.*'
+  - 'number.*'
+  - 'support.*'
+  - 'datetime.*'
+  - 'helpers.*'
+
+ignore_missing:
+  - 'activerecord.*'

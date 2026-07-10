@@ -18,20 +18,39 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This includes: variable names, method names, class names, column names, enum keys,
 constant names, symbol names, hash keys, file names, comments, and git messages.
 
-**The only Portuguese allowed is user-facing strings rendered in the frontend UI.**
-Examples of what IS allowed in Portuguese: JSX label text, button labels, placeholder
-text, toast/flash messages rendered to the user, email body copy, WhatsApp/message copy sent to
-clients, **URL path segments in the frontend React Router** (these are visible to the user in the
-browser address bar — e.g. `/quadro`, `/campanhas`, `/clientes`, `/calendario`, `/painel`).
+**The app is fully i18n (pt-BR default + en). User-facing copy lives ONLY in locale files —
+hardcoded copy in code (Portuguese OR English) is a violation.**
+- Frontend: `app/frontend/locales/<locale>/<namespace>.json` via i18next — components use
+  `useTranslation('<ns>')` + `t('key')`; module-level label maps use access-time getters
+  (see `lib/constants.js`). Guard: `node bin/check-i18n.mjs` (referenced keys + pt-BR/en parity).
+- Backend: `config/locales/<surface>/{pt-BR,en}.yml` via `I18n.t`. The API request cycle runs
+  inside `I18n.with_locale` (Localizable concern; user → workspace fallback; public portal
+  resolves the CLIENT's locale). Jobs/mailers wrap explicitly (`with_recipient_locale`,
+  `I18n.with_locale(user.locale)`) — never set `I18n.locale=`. Guard:
+  `spec/i18n/hardcoded_copy_spec.rb`.
+- **Never persist rendered copy** where a key column exists: system notes
+  (`Notes::Create i18n_key:/i18n_params:` → `Note#display_body`), web push
+  (`Push::Notify title_key:/body_key:` — rendered per-recipient), credit ledger
+  (`description_key/description_params` → `display_description`).
+- Locale model: `users.locale` (app UI, personal emails, push), `clients.locale` (portal,
+  approval, invoices, report PDF), `clients.content_language` (the language AI-generated
+  CONTENT is written in — captions/carousels/scripts follow the client's audience, not the UI),
+  `workspaces.locale` (default for both + team-shared artifacts). AI prompts get the language
+  via `Prompts::Base#response_language` / `#workspace_language` — never hardcode an output
+  language in a prompt.
+- **URL path segments in the React Router stay Portuguese** (canonical for all locales —
+  e.g. `/quadro`, `/campanhas`, `/clientes`, `/calendario`, `/painel`).
 
 Examples of what is NEVER allowed in Portuguese: column names (`agendado_em` → `scheduled_at`),
 enum keys (`ideacao` → `ideation`, `concluido` → `done`), Ruby symbols (`:carrossel`),
-JS object keys used as code (`{ carrossel: '...' }`), setting keys (`token_meta` → `meta_access_token`).
+JS object keys used as code (`{ carrossel: '...' }`), setting keys (`token_meta` → `meta_access_token`),
+and i18n key names (`chave.criar` → `key.create`).
 
-The ticket workflow statuses are user-facing in Portuguese but **coded in English**:
-`ideation` → "Ideação", `scoping` → "Escopo", `production` → "Produção", `scheduled` → "Agendado",
-`published` → "Postado / Monitorando", `retrospective` → "Retrospectiva / Lições aprendidas",
-`done` → "Concluído". The translation layer is a frontend label map, never the enum key.
+The ticket workflow statuses are **coded in English** with localized labels:
+`ideation` → "Ideação"/"Ideation", `scoping` → "Escopo"/"Scoping", `production` → "Produção"/
+"Production", `scheduled` → "Postagem"/"Posting", `published` → "No ar"/"Live",
+`retrospective` → "Retrospectiva"/"Retrospective", `done` → "Concluído"/"Done". The translation
+layer is the locale files (frontend `common.json status.*`, backend `statuses.*`), never the enum key.
 
 If a Portuguese identifier already exists in the codebase, create a rename migration /
 refactor immediately — do not leave it.

@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="<%= I18n.locale %>">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="csrf-token" content="<%= form_authenticity_token %>" />
     <meta name="theme-color" content="#0E0A1F" />
-    <title>agencios — o sistema operacional da sua agência</title>
+    <title><%= t('pages.spa.title') %></title>
 
     <%# Favicon + PWA — installable app shell + iOS add-to-home-screen support %>
     <link rel="icon" href="/favicon.ico" sizes="any" />
