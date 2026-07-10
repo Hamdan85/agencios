@@ -35,7 +35,7 @@ module Operations
         )
 
         # The orchestrator may request GENERATED reference images (a character
-        # sheet / scenario plate via Banana) to lock consistency when the user
+        # sheet / scenario plate via the OpenRouter image model) to lock consistency when the user
         # gave no photo — created ONCE and attached as a typed reference to every
         # scene. Charged as image generations; a failure/broke wallet just skips it.
         generated_refs = generate_references(scene_specs.generated_references, params['aspect_ratio'])
@@ -73,7 +73,7 @@ module Operations
 
       private
 
-      # Generate each requested reference (character/scenario) via Banana. Best-
+      # Generate each requested reference (character/scenario) via the image model. Best-
       # effort: an unconfigured vendor / broke wallet / error just yields fewer
       # anchors — never blocks the video. Returns [{ url:, role: }].
       def generate_references(requests, aspect)

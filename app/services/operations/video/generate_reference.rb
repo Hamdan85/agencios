@@ -2,13 +2,13 @@
 
 module Operations
   module Video
-    # Generates a REFERENCE image (a character sheet or a scenario plate) with
-    # Google Banana so a recurring character/scenario stays IDENTICAL across every
-    # scene — the orchestrator requests it only when consistency needs an anchor
-    # and the user gave no photo of it. Generated once per video, then attached as
-    # a typed reference to every scene. Charged as an image generation.
+    # Generates a REFERENCE image (a character sheet or a scenario plate) with the
+    # OpenRouter image model so a recurring character/scenario stays IDENTICAL
+    # across every scene — the orchestrator requests it only when consistency needs
+    # an anchor and the user gave no photo of it. Generated once per video, then
+    # attached as a typed reference to every scene. Charged as an image generation.
     #
-    # Best-effort: a Banana failure refunds the debit and returns nil (the video
+    # Best-effort: a generation failure refunds the debit and returns nil (the video
     # ships without the generated anchor — never fails the whole render).
     # Returns { url:, role:, prompt: } or nil.
     class GenerateReference < Operations::Base
@@ -32,7 +32,7 @@ module Operations
         )
 
         result = begin
-          Vendors::Google::Banana::Actions::GenerateImage.call(prompt: full_prompt, aspect_ratio: banana_aspect)
+          Vendors::OpenRouter::Actions::GenerateImage.call(prompt: full_prompt, aspect_ratio: reference_aspect)
         rescue StandardError => e
           Operations::Credits::Refund.call(generation: @generation)
           Rails.logger.warn("[Video::GenerateReference] #{e.class}: #{e.message}")
@@ -56,7 +56,7 @@ module Operations
       end
 
       # A character sheet reads best square; a scenario matches the video frame.
-      def banana_aspect
+      def reference_aspect
         @role == 'scene' ? (@aspect_ratio.presence || '9:16') : '1:1'
       end
 

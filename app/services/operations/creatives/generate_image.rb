@@ -2,13 +2,13 @@
 
 module Operations
   module Creatives
-    # Generates a single image via Google Banana (Imagen 3), folding the ticket
-    # scope + brand identity into the prompt and the creative type's spec into the
-    # aspect ratio. Produces a Creative (generated, ready) plus a tracked `image`
-    # Generation. Image is NOT Stripe-metered, but its vendor cost is recorded in
-    # the AI ledger (AiUsageLog) via Operations::Ai::LogUsage.
+    # Generates a single image via OpenRouter (Gemini image model), folding the
+    # ticket scope + brand identity into the prompt and the creative type's spec
+    # into the aspect ratio. Produces a Creative (generated, ready) plus a tracked
+    # `image` Generation. Image is NOT Stripe-metered, but its vendor cost is
+    # recorded in the AI ledger (AiUsageLog) via Operations::Ai::LogUsage.
     class GenerateImage < Operations::Base
-      PROVIDER = 'google_banana'
+      PROVIDER = AiUsageLog::PROVIDER_OPENROUTER
 
       def initialize(ticket: nil, prompt: nil, ref_images: [], aspect_ratio: nil, creative_type: nil,
                      client_id: nil, revision_notes: nil)
@@ -25,7 +25,7 @@ module Operations
         ctx    = ::Tickets::CreativeContext.for(@ticket, creative_type: type, client: resolve_client,
                                                          overrides: { revision_notes: @revision_notes })
         ensure_client_active!(ctx.client)
-        aspect = @aspect_ratio.presence || ctx.banana_aspect_ratio
+        aspect = @aspect_ratio.presence || ctx.image_aspect_ratio
         refs   = ctx.reference_images
         prompt = ctx.image_prompt(@prompt)
         # Brand logo + creator avatar ride along as OPTIONAL references — the model
@@ -64,7 +64,7 @@ module Operations
             generation: generation
           )
 
-          result = Vendors::Google::Banana::Actions::GenerateImage.call(
+          result = Vendors::OpenRouter::Actions::GenerateImage.call(
             prompt: prompt,
             aspect_ratio: aspect,
             reference_images: refs
@@ -82,7 +82,7 @@ module Operations
           raise
         end
 
-        log_ai_cost(generation)
+        log_ai_cost(generation, cost_cents: result[:cost_cents])
         broadcast(event: 'generation_done', id: generation.id, kind: 'image')
         generation
       end
@@ -99,13 +99,16 @@ module Operations
         workspace.clients.find_by(id: @client_id)
       end
 
-      def log_ai_cost(generation)
+      # OpenRouter reports the REAL USD cost per generation (usage.cost) — pass it
+      # through as cost_cents so the ledger stores it verbatim (no price table).
+      def log_ai_cost(generation, cost_cents: nil)
         Operations::Ai::LogUsage.call(
-          provider: AiUsageLog::PROVIDER_GOOGLE_BANANA,
+          provider: PROVIDER,
           operation: 'generate_image',
-          model: 'imagen',
+          model: Vendors::OpenRouter::Image::DEFAULT_MODEL,
           units: 1,
           unit_kind: AiUsageLog::UNIT_IMAGE,
+          cost_cents: cost_cents,
           subject: generation
         )
       end
