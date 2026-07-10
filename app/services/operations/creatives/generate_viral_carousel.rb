@@ -14,11 +14,11 @@ module Operations
     # Image slots are filled only when a slide needs imagery, by priority:
     #   1. the user's uploaded creative images on the ticket
     #   2. free stock (Pexels)
-    #   3. AI generation (Google Banana)
+    #   3. AI generation (OpenRouter image model)
     #
     # Produces a `carousel` Generation that debits prepaid credits
     # (Pricing.credits_for(:carousel)) and records the AI vendor cost of the copy
-    # (via AiAdapter) + any generated images (Banana) in the AI ledger (AiUsageLog).
+    # (via AiAdapter) + any generated images (OpenRouter) in the AI ledger (AiUsageLog).
     class GenerateViralCarousel < Operations::Base
       PROVIDER   = 'carousel_generator'
       COST_CENTS = 30
@@ -271,7 +271,7 @@ module Operations
 
       # Slides are typographic by DEFAULT. An image is added only when the copy
       # explicitly asked for one (slide["image"]). Priority when an image is
-      # wanted: the user's uploaded images → Pexels stock → Banana. Returns a
+      # wanted: the user's uploaded images → Pexels stock → OpenRouter. Returns a
       # data URI or nil (typographic slide).
       def slide_image_uri(slide)
         return nil unless truthy?(slide['image'])
@@ -286,7 +286,7 @@ module Operations
           return data_uri(bytes, 'image/jpeg')
         end
 
-        banana_image_uri(query)
+        generated_image_uri(query)
       end
 
       def stock_photo(query)
@@ -296,15 +296,15 @@ module Operations
         nil
       end
 
-      def banana_image_uri(query)
-        result = Vendors::Google::Banana::Actions::GenerateImage.call(
+      def generated_image_uri(query)
+        result = Vendors::OpenRouter::Actions::GenerateImage.call(
           prompt: @ctx.image_prompt(query),
-          aspect_ratio: @ctx.banana_aspect_ratio
+          aspect_ratio: @ctx.image_aspect_ratio
         )
-        log_banana_image
+        log_generated_image(result[:cost_cents])
         data_uri(result[:bytes], result[:content_type])
       rescue Vendors::Base::Error => e
-        Rails.logger.warn("[GenerateViralCarousel] Banana slot failed: #{e.message}")
+        Rails.logger.warn("[GenerateViralCarousel] image slot failed: #{e.message}")
         nil
       end
 
@@ -364,13 +364,14 @@ module Operations
         Rails.application.routes.url_helpers.rails_blob_url(blob, host: SystemConfig.app_host)
       end
 
-      def log_banana_image
+      def log_generated_image(cost_cents = nil)
         Operations::Ai::LogUsage.call(
-          provider: AiUsageLog::PROVIDER_GOOGLE_BANANA,
+          provider: AiUsageLog::PROVIDER_OPENROUTER,
           operation: 'carousel_image',
-          model: 'imagen',
+          model: Vendors::OpenRouter::Image::DEFAULT_MODEL,
           units: 1,
           unit_kind: AiUsageLog::UNIT_IMAGE,
+          cost_cents: cost_cents,
           subject: @creative
         )
       end

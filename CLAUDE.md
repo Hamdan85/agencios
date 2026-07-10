@@ -82,8 +82,8 @@ EDITOR=nano bin/rails credentials:edit
 - AI text: **OpenRouter** by default, **Anthropic** as selectable fallback — both behind the
   `Vendors::Ai` seam + `AiAdapter` facade (provider/models admin-editable in `AiConfig`; every
   call's cost logged to `AiUsageLog`). Creative generation: **OpenRouter video** (scene-based
-  pipeline with Cartesia voice, Jamendo/Epidemic Sound music, FFmpeg compose), **Google Banana**
-  (Imagen 3 via Google AI API — carousels + images), **Pexels** stock imagery.
+  pipeline with Cartesia voice, Jamendo/Epidemic Sound music, FFmpeg compose), **OpenRouter image**
+  (Gemini image model — carousels + images), **Pexels** stock imagery.
 
 ## Secrets
 
@@ -181,8 +181,8 @@ calls, and discrete `Actions::*` classes that delegate to the client. Each integ
 endpoints, scopes, and OAuth flow are documented in `docs/integrations/<vendor>.md`.
 
 Current vendors — social: `Meta` (Instagram + Facebook), `InstagramLogin`, `Threads`, `TikTok`,
-`Youtube`, `Linkedin`, `X`. AI/media: `Ai` (the provider seam), `OpenRouter` (text + video),
-`Anthropic`, `Google::Banana` (image), `Cartesia` (voice), `Jamendo`/`EpidemicSound` behind
+`Youtube`, `Linkedin`, `X`. AI/media: `Ai` (the provider seam), `OpenRouter` (text + video + image),
+`Anthropic`, `Cartesia` (voice), `Jamendo`/`EpidemicSound` behind
 `Vendors::Music`, `Pexels` (stock), `Ffmpeg`. Money: `MercadoPago` (client billing), `Stripe`
 (SaaS billing). Platform: `Google` (OAuth/Calendar), `WebPush`, `Posthog`, `Web` (URL reader),
 `Render` (HTML render).
@@ -228,7 +228,7 @@ Classes: `TicketSummary` (status-aware — produces the contextual summary per s
 | Operation needing external API | `Vendors::*::Actions::*` |
 | Operation publishing a post | `Publishers::SocialPublisher` |
 | Operation generating AI text | `Prompts::*` + `AiAdapter` (→ `Vendors::Ai` → OpenRouter \| Anthropic) |
-| Operation generating a creative | `Operations::Creatives::*` (+ `Operations::Video::*` for video) / `Vendors::Google::Banana` (image) |
+| Operation generating a creative | `Operations::Creatives::*` (+ `Operations::Video::*` for video) / `Vendors::OpenRouter::Image` (image) |
 
 Controllers must not contain business logic: no status transitions, no metric writes, no
 side-effect orchestration. If it belongs in a service, create one.
@@ -277,7 +277,7 @@ screen (`/tarefas`) across all tickets/workspaces.
 spec) and a `source`: `uploaded` or `generated`. Generatable types route to a generation pipeline:
 `ugc_video` (scene-based OpenRouter pipeline — see `Operations::Video::*` + `VideoScene`),
 `carousel` (viral-pattern generator: brand identity, @handle, user avatar, optional stock
-imagery), `image` (Google Banana / Imagen 3). Holds ActiveStorage attachments + `metadata` jsonb.
+imagery), `image` (OpenRouter Gemini image model). Holds ActiveStorage attachments + `metadata` jsonb.
 
 **Generation** — `belongs_to :workspace, :user`; optional `belongs_to :creative`. `kind`:
 `carousel` / `video` / `image`. `status`, `provider`, `cost_cents`. **Customer billing is prepaid
@@ -395,7 +395,7 @@ never pre-format dates/money on the backend, never inline `toLocaleString`.
      trued-up to the real cost. Editable in the scene editor (chat + assets).
    - Carousel → `Operations::Creatives::GenerateViralCarousel` (brand identity + @handle + avatar
      + stock images + `Prompts::CarouselCopy`) → `Generation` (`kind: carousel`, 0 credits).
-   - Image → `Operations::Creatives::GenerateImage` → `Vendors::Google::Banana` →
+   - Image → `Operations::Creatives::GenerateImage` → `Vendors::OpenRouter::Image` →
      `Generation` (`kind: image`, 1 credit).
 4. **Publish & monitor** — in `scheduled`→`published`, `Posts::PublishJob` →
    `Operations::Posts::Publish` → `Publishers::SocialPublisher` → the network vendor. Then
