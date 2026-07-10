@@ -152,17 +152,22 @@ export const clientsApi = {
   update: (id, data) => api.patch(`/clients/${id}`, { client: data }),
   archive: (id) => api.post(`/clients/${id}/archive`),
   unarchive: (id) => api.post(`/clients/${id}/unarchive`),
+  rotatePortalLink: (id) => api.post(`/clients/${id}/rotate_portal_link`),
   destroy: (id) => api.delete(`/clients/${id}`),
   synthesizePositioning: (data) => api.post('/clients/positioning_preview', data),
   extractFromUrl: (data) => api.post('/clients/extract_from_url', data),
   updatePositioning: (id, positioning) => api.patch(`/clients/${id}/positioning`, { positioning }),
-  // Brand assets (logo / creator avatar) upload as multipart; either is optional.
-  uploadBrandAssets: (id, { logo, defaultCreatorAvatar } = {}) => {
+  // Brand assets (logo / creator avatar / carousel background) upload as
+  // multipart; each is optional.
+  uploadBrandAssets: (id, { logo, defaultCreatorAvatar, carouselBackground } = {}) => {
     const form = new FormData()
     if (logo) form.append('logo', logo)
     if (defaultCreatorAvatar) form.append('default_creator_avatar', defaultCreatorAvatar)
+    if (carouselBackground) form.append('carousel_background', carouselBackground)
     return api.patch(`/clients/${id}/brand_assets`, form)
   },
+  // Set the carousel background by copying an existing platform creative's image.
+  setCarouselBackground: (id, creativeId) => api.post(`/clients/${id}/carousel_background`, { creative_id: creativeId }),
 }
 
 export const projectsApi = {

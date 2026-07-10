@@ -153,6 +153,8 @@ Rails.application.routes.draw do
         member do
           post  :archive
           post  :unarchive
+          post  :rotate_portal_link
+          post  :carousel_background
           patch :positioning, action: :update_positioning
           patch :brand_assets
         end

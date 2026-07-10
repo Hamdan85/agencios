@@ -1,8 +1,11 @@
-import { Sparkles, Wand2, Image as ImageIcon, UserCircle2, Globe } from 'lucide-react'
+import { useState } from 'react'
+import { Sparkles, Wand2, Image as ImageIcon, UserCircle2, Globe, Check, Upload, Images, X } from 'lucide-react'
 import { Input, Textarea } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { InlineSpinner } from '@/components/ui/feedback'
+import { cn } from '@/lib/utils'
+import CarouselBackgroundPicker from './CarouselBackgroundPicker'
 
 // content_pillars is stored as an array; the textarea edits one pillar per line.
 export const pillarsToText = (arr) => (Array.isArray(arr) ? arr.join('\n') : arr || '')
@@ -65,6 +68,98 @@ function ColorField({ label, value, onChange }) {
   )
 }
 
+// Darken/lighten a #rrggbb hex by `pct` percent — mirrors the backend
+// Creatives::CarouselSlideTemplate#shade so the preview matches the real slide.
+function shade(hex, pct) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || '').trim())
+  if (!m) return hex || '#7C3AED'
+  const n = parseInt(m[1], 16)
+  const adj = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((c) =>
+    Math.min(255, Math.max(0, Math.round(c + (255 * pct) / 100))),
+  )
+  return `#${adj.map((c) => c.toString(16).padStart(2, '0')).join('')}`
+}
+
+export const CAROUSEL_STYLES = [
+  { key: 'gradient', label: 'Fundo gradiente' },
+  { key: 'white', label: 'Fundo branco' },
+  { key: 'image', label: 'Imagem de fundo' },
+]
+export const CAROUSEL_STYLE_LABEL = { gradient: 'Fundo gradiente', white: 'Fundo branco', image: 'Imagem de fundo' }
+
+// A faithful miniature of a generated carousel slide using the client's real
+// brand colors — mirrors Creatives::CarouselSlideTemplate so each option is a
+// literal example of the actual output, not a mockup. For the `image` style it
+// renders the chosen background photo behind a scrim (the has-image layout).
+export function CarouselSlidePreview({ style, primary, secondary, imageUrl, className }) {
+  const p = primary || '#7C3AED'
+  const s = secondary || '#F59E0B'
+  const white = style === 'white'
+  const image = style === 'image'
+  const bg = white
+    ? '#ffffff'
+    : image
+      ? '#2b2730'
+      : `radial-gradient(120% 120% at 0% 0%, ${p} 0%, ${shade(p, -28)} 70%)`
+  const ink = white ? '#18161d' : '#ffffff'
+  return (
+    <div className={cn('relative aspect-4/5 w-full overflow-hidden rounded-lg', className)} style={{ background: bg, color: ink }}>
+      {image && imageUrl && (
+        <>
+          <img src={imageUrl} alt="" className="absolute inset-0 size-full object-cover" />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(0,0,0,.35) 0%, rgba(0,0,0,.72) 100%)' }} />
+        </>
+      )}
+      <div className="relative p-3">
+        <div className="flex items-center gap-1.5">
+          <span className="size-4 shrink-0 rounded-full" style={{ background: s }} />
+          <div className="space-y-1">
+            <span className="block h-1 w-9 rounded-full" style={{ background: ink, opacity: 0.9 }} />
+            <span className="block h-1 w-5 rounded-full" style={{ background: ink, opacity: 0.45 }} />
+          </div>
+        </div>
+        <div className="mt-4 space-y-1.5">
+          <span className="block text-[11px] font-extrabold leading-tight">Sua headline aparece aqui</span>
+          {!image && <span className="block h-1 w-6 rounded-full" style={{ background: s }} />}
+        </div>
+      </div>
+      <span className="absolute bottom-2.5 left-3 z-10 text-[8px] font-bold" style={{ opacity: 0.8 }}>Arraste →</span>
+    </div>
+  )
+}
+
+// Literal slide previews the user picks between; drives carousel generation.
+function CarouselStyleField({ value, onChange, primary, secondary, imageUrl }) {
+  const active = value || 'gradient'
+  return (
+    <div className="space-y-1.5">
+      <Label>Estilo do carrossel</Label>
+      <p className="-mt-0.5 text-xs text-ink-faint">Fundo usado quando a IA gera carrosséis para este cliente.</p>
+      <div className="grid grid-cols-3 gap-2.5">
+        {CAROUSEL_STYLES.map((opt) => {
+          const on = active === opt.key
+          return (
+            <button
+              key={opt.key}
+              type="button"
+              onClick={() => onChange(opt.key)}
+              className={cn('rounded-xl border p-1.5 text-left transition', on ? 'border-brand ring-2 ring-brand/30' : 'border-border hover:border-brand/40')}
+            >
+              <CarouselSlidePreview style={opt.key} primary={primary} secondary={secondary} imageUrl={imageUrl} />
+              <div className="mt-1.5 flex items-center gap-1 px-0.5">
+                <span className={cn('grid size-3.5 shrink-0 place-items-center rounded-full border', on ? 'border-brand bg-brand text-white' : 'border-border')}>
+                  {on && <Check size={10} strokeWidth={3} />}
+                </span>
+                <span className="truncate text-[11px] font-semibold text-ink-secondary">{opt.label}</span>
+              </div>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 // One image upload tile (logo or creator avatar). Shows the selected file name
 // or the current saved image when editing.
 function ImageField({ label, icon: Icon, file, currentUrl, onFile, rounded }) {
@@ -86,8 +181,52 @@ function ImageField({ label, icon: Icon, file, currentUrl, onFile, rounded }) {
   )
 }
 
-// Brand identity step: voice + @handle + colors + logo/avatar uploads.
-export function BrandIdentityFields({ brand, onBrand, assets, onAsset, logoUrl, avatarUrl }) {
+// The carousel background source chooser, shown when the `image` style is picked:
+// upload a file or pick an existing platform creative. `bgCreative` = {id,url}.
+function CarouselBackgroundChooser({ bgPreview, onFile, bgCreative, onBgCreative }) {
+  const [pickerOpen, setPickerOpen] = useState(false)
+  return (
+    <div className="space-y-2 rounded-xl border border-border bg-surface-muted/40 p-3">
+      <div className="flex items-center gap-3">
+        <div className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-lg bg-surface text-ink-faint ring-1 ring-border">
+          {bgPreview ? <img src={bgPreview} alt="" className="size-full object-cover" /> : <ImageIcon size={20} />}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-ink-secondary">
+            {bgPreview ? 'Imagem de fundo definida' : 'Escolha a imagem de fundo'}
+          </p>
+          <p className="text-xs text-ink-faint">Envie um arquivo ou selecione um criativo da plataforma.</p>
+        </div>
+        {bgPreview && (
+          <button type="button" onClick={() => { onFile(null); onBgCreative(null) }} className="shrink-0 rounded-lg p-1.5 text-ink-faint transition hover:bg-surface hover:text-ink" title="Remover">
+            <X size={16} />
+          </button>
+        )}
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-ink-secondary transition hover:border-brand/50">
+          <Upload size={14} /> Enviar imagem
+          <input type="file" accept="image/*" className="hidden" onChange={(e) => onFile(e.target.files?.[0] || null)} />
+        </label>
+        <Button type="button" variant="outline" size="sm" onClick={() => setPickerOpen(true)}>
+          <Images size={14} /> Escolher de um criativo
+        </Button>
+      </div>
+      <CarouselBackgroundPicker open={pickerOpen} onOpenChange={setPickerOpen} onSelect={onBgCreative} />
+    </div>
+  )
+}
+
+// Brand identity step: voice + @handle + colors + carousel style + logo/avatar uploads.
+export function BrandIdentityFields({ brand, onBrand, assets, onAsset, logoUrl, avatarUrl, bgUrl, bgCreative, onBgCreative }) {
+  const carouselStyle = brand.carousel_style || 'gradient'
+  const bgFileUrl = assets.carouselBackground ? URL.createObjectURL(assets.carouselBackground) : null
+  const bgPreview = bgCreative?.url || bgFileUrl || bgUrl || null
+
+  // Uploading a file and picking a creative are mutually exclusive sources.
+  const setBgFile = (f) => { onAsset('carouselBackground', f); if (f) onBgCreative(null) }
+  const setBgCreative = (sel) => { onBgCreative(sel); if (sel) onAsset('carouselBackground', null) }
+
   return (
     <div className="space-y-3.5">
       <div className="space-y-1.5">
@@ -112,6 +251,21 @@ export function BrandIdentityFields({ brand, onBrand, assets, onAsset, logoUrl, 
         <ColorField label="Cor primária" value={brand.brand_primary_color} onChange={(v) => onBrand('brand_primary_color', v)} />
         <ColorField label="Cor secundária" value={brand.brand_secondary_color} onChange={(v) => onBrand('brand_secondary_color', v)} />
       </div>
+      <CarouselStyleField
+        value={carouselStyle}
+        onChange={(v) => onBrand('carousel_style', v)}
+        primary={brand.brand_primary_color}
+        secondary={brand.brand_secondary_color}
+        imageUrl={bgPreview}
+      />
+      {carouselStyle === 'image' && (
+        <CarouselBackgroundChooser
+          bgPreview={bgPreview}
+          onFile={setBgFile}
+          bgCreative={bgCreative}
+          onBgCreative={setBgCreative}
+        />
+      )}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <ImageField label="Logo" icon={ImageIcon} file={assets.logo} currentUrl={logoUrl} onFile={(f) => onAsset('logo', f)} />
         <ImageField label="Avatar do criador (UGC)" icon={UserCircle2} rounded file={assets.defaultCreatorAvatar} currentUrl={avatarUrl} onFile={(f) => onAsset('defaultCreatorAvatar', f)} />

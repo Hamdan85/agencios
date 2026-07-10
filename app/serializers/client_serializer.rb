@@ -4,8 +4,9 @@ class ClientSerializer < ActiveModel::Serializer
   attributes :id, :name, :company, :email, :phone, :document, :notes,
              :status, :attribution, :positioning, :has_positioning,
              :brand_voice, :default_handle, :brand_primary_color, :brand_secondary_color,
-             :logo_url, :default_creator_avatar_url, :has_brand,
-             :projects_count, :created_at, :updated_at
+             :carousel_style,
+             :logo_url, :default_creator_avatar_url, :carousel_background_url, :has_brand,
+             :portal_url, :projects_count, :created_at, :updated_at
 
   def has_positioning = object.positioning?
   def projects_count = object.projects.count
@@ -21,6 +22,7 @@ class ClientSerializer < ActiveModel::Serializer
 
   def logo_url = blob_url(object.logo)
   def default_creator_avatar_url = blob_url(object.default_creator_avatar)
+  def carousel_background_url = blob_url(object.carousel_background)
 
   private
 

@@ -317,6 +317,7 @@ export const EMPTY_BRAND = {
   default_handle: '',
   brand_primary_color: '#7C3AED',
   brand_secondary_color: '#F59E0B',
+  carousel_style: 'gradient',
 }
 
 // All positioning field metadata flattened (used to render the read view).

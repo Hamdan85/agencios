@@ -15,6 +15,10 @@ module Api
       # POST /api/v1/clients/:id/unarchive — re-checks the plan's client limit.
       def unarchive = render_ok(Controllers::Clients::Unarchive.call(params:))
 
+      # POST /api/v1/clients/:id/rotate_portal_link — mints a fresh portal token,
+      # invalidating any link already shared with the client.
+      def rotate_portal_link = render_ok(Controllers::Clients::RotatePortalLink.call(params:))
+
       # POST /api/v1/clients/positioning_preview — AI-synthesized positioning
       # (stateless; used by the creation wizard before the client exists).
       def positioning_preview = render_ok(Controllers::Clients::PositioningPreview.call(params:))
@@ -27,9 +31,13 @@ module Api
       # PATCH /api/v1/clients/:id/positioning — replace a client's positioning.
       def update_positioning = render_ok(Controllers::Clients::UpdatePositioning.call(params:))
 
-      # PATCH /api/v1/clients/:id/brand_assets — upload the client's logo and/or
-      # creator avatar (multipart). Brand text fields go through #update.
+      # PATCH /api/v1/clients/:id/brand_assets — upload the client's logo, creator
+      # avatar and/or carousel background (multipart). Brand text fields → #update.
       def brand_assets = render_ok(Controllers::Clients::UpdateBrandAssets.call(params:))
+
+      # POST /api/v1/clients/:id/carousel_background — set the carousel background
+      # from an existing platform creative (copies its image). Uploads use #brand_assets.
+      def carousel_background = render_ok(Controllers::Clients::SetCarouselBackground.call(params:))
     end
   end
 end

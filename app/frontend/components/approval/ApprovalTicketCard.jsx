@@ -25,6 +25,9 @@ export default function ApprovalTicketCard({ ticket, accent, fg, busy, onApprove
 
   const decided = slot?.state === 'approved' || slot?.state === 'changes_requested'
   const needsChoice = options.length > 1 && !chosenId
+  // What the client asked to change on this slot (shown back to them so they can
+  // see their own request while the team works on it).
+  const changeFeedback = options.find((o) => o.approval_state === 'changes_requested')?.client_feedback
   const focusSlot = (i) => { setSlotIdx(i); setViewIdx(0) }
   const choose = (id) => setChosenByType((m) => ({ ...m, [slot.creative_type]: id }))
 
@@ -128,10 +131,20 @@ export default function ApprovalTicketCard({ ticket, accent, fg, busy, onApprove
         {/* Decision — pinned, always visible */}
         <div className="shrink-0 border-t border-border p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
           {slots.length > 1 && <p className="mb-2 text-xs font-medium text-ink-muted">Decisão: {slotLabel(slot?.creative_type)}</p>}
-          {needsChoice && <p className="mb-2 text-xs text-ink-muted">Escolha uma opção ao lado para aprovar.</p>}
-          {decided ? (
-            <p className={`py-2 text-center text-sm font-semibold ${slot.state === 'approved' ? 'text-emerald-600' : 'text-amber-600'}`}>
-              {slot.state === 'approved' ? '✓ Aprovado' : '✎ Ajustes enviados'}
+          {needsChoice && !decided && <p className="mb-2 text-xs text-ink-muted">Escolha uma opção ao lado para aprovar.</p>}
+          {slot?.state === 'changes_requested' ? (
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3">
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-amber-600">
+                <MessageSquarePlus size={16} /> Você pediu ajustes
+              </p>
+              {changeFeedback && (
+                <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed text-ink-secondary">{changeFeedback}</p>
+              )}
+              <p className="mt-2 text-xs text-ink-muted">A equipe está trabalhando nos ajustes e reenviará para aprovação.</p>
+            </div>
+          ) : decided ? (
+            <p className="py-2 text-center text-sm font-semibold text-emerald-600">
+              ✓ Aprovado
             </p>
           ) : (
             <div className="flex gap-2">

@@ -163,8 +163,15 @@ module Tickets
     def brand_primary   = client&.brand_primary_color.presence || workspace&.brand_primary_color.presence || '#7C3AED'
     def brand_secondary = client&.brand_secondary_color.presence || workspace&.brand_secondary_color.presence || '#F59E0B'
 
+    # Carousel background style, a per-client setting (no workspace override).
+    # Falls back to the current gradient look when unset.
+    def carousel_style = client&.carousel_style.presence || 'gradient'
+
     def logo   = attachment(:logo)
     def avatar = attachment(:default_creator_avatar)
+
+    # Client-only: the carousel background image (image carousel style).
+    def carousel_background = attachment(:carousel_background)
 
     # --- brand reference images (for multimodal image models) -----------------
 

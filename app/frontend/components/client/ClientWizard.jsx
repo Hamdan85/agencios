@@ -13,7 +13,7 @@ import { PositioningStepFields, BrandIdentityFields, SiteImportPanel, BriefPanel
 
 const ACCENT = '#6366F1'
 const EMPTY_CONTACT = { name: '', company: '', email: '', phone: '', document: '', notes: '' }
-const EMPTY_ASSETS = { logo: null, defaultCreatorAvatar: null }
+const EMPTY_ASSETS = { logo: null, defaultCreatorAvatar: null, carouselBackground: null }
 
 // Site import (AI fills everything) → contact → brand identity → free-text brief
 // → review the structured positioning → final statement.
@@ -79,6 +79,8 @@ export default function ClientWizard({ open, onOpenChange, editing, mutations })
   const [contact, setContact] = useState(EMPTY_CONTACT)
   const [brand, setBrand] = useState(EMPTY_BRAND)
   const [assets, setAssets] = useState(EMPTY_ASSETS)
+  // Carousel background chosen from an existing platform creative: { id, url }.
+  const [bgCreative, setBgCreative] = useState(null)
   const [brief, setBrief] = useState('')
   const [url, setUrl] = useState('')
   const [positioning, setPositioning] = useState(EMPTY_POSITIONING)
@@ -99,6 +101,7 @@ export default function ClientWizard({ open, onOpenChange, editing, mutations })
     setBrief('')
     setUrl('')
     setAssets(EMPTY_ASSETS)
+    setBgCreative(null)
     setContact(isEdit
       ? { name: editing.name || '', company: editing.company || '', email: editing.email || '', phone: maskPhone(editing.phone || ''), document: maskDocument(editing.document || ''), notes: editing.notes || '' }
       : EMPTY_CONTACT)
@@ -108,22 +111,35 @@ export default function ClientWizard({ open, onOpenChange, editing, mutations })
           default_handle: editing.default_handle || '',
           brand_primary_color: editing.brand_primary_color || EMPTY_BRAND.brand_primary_color,
           brand_secondary_color: editing.brand_secondary_color || EMPTY_BRAND.brand_secondary_color,
+          carousel_style: editing.carousel_style || EMPTY_BRAND.carousel_style,
         }
       : EMPTY_BRAND)
     setPositioning(isEdit ? { ...EMPTY_POSITIONING, ...(editing.positioning || {}), content_pillars: editing.positioning?.content_pillars || [] } : EMPTY_POSITIONING)
   }
 
-  const { create, update, synthesize, importFromUrl, uploadBrandAssets } = mutations
-  const saving = create?.isPending || update?.isPending || uploadBrandAssets?.isPending
+  const { create, update, synthesize, importFromUrl, uploadBrandAssets, setCarouselBackground } = mutations
+  const saving = create?.isPending || update?.isPending || uploadBrandAssets?.isPending || setCarouselBackground?.isPending
 
   const close = () => { setSyncedKey(null); onOpenChange(false) }
 
-  // Upload brand assets (if any were chosen) after the client is saved, then close.
+  // After the client is saved: upload any chosen brand-asset files, then (if a
+  // carousel background was picked from a creative) copy it, then close.
   const finishWith = (clientId) => {
-    if (clientId && (assets.logo || assets.defaultCreatorAvatar) && uploadBrandAssets) {
-      uploadBrandAssets.mutate({ id: clientId, assets }, { onSuccess: close, onError: close })
+    if (!clientId) return close()
+
+    const copyBackground = () => {
+      if (bgCreative?.id && setCarouselBackground) {
+        setCarouselBackground.mutate({ id: clientId, creativeId: bgCreative.id }, { onSuccess: close, onError: close })
+      } else {
+        close()
+      }
+    }
+
+    const hasUpload = assets.logo || assets.defaultCreatorAvatar || assets.carouselBackground
+    if (hasUpload && uploadBrandAssets) {
+      uploadBrandAssets.mutate({ id: clientId, assets }, { onSuccess: copyBackground, onError: close })
     } else {
-      close()
+      copyBackground()
     }
   }
 
@@ -251,6 +267,9 @@ export default function ClientWizard({ open, onOpenChange, editing, mutations })
               onAsset={setAsset}
               logoUrl={editing?.logo_url}
               avatarUrl={editing?.default_creator_avatar_url}
+              bgUrl={editing?.carousel_background_url}
+              bgCreative={bgCreative}
+              onBgCreative={setBgCreative}
             />
           )}
 

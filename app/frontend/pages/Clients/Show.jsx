@@ -22,6 +22,7 @@ import { Card } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Page } from '@/components/ui/page'
 import ClientWizard from '@/components/client/ClientWizard'
+import { CarouselSlidePreview, CAROUSEL_STYLE_LABEL } from '@/components/client/positioningFields'
 import { MeetingCard } from '@/components/meeting/MeetingCard'
 import { MeetingFormDialog } from '@/components/meeting/MeetingFormDialog'
 import { POSITIONING_FIELDS, CHANNEL_META } from '@/lib/constants'
@@ -119,6 +120,22 @@ function BrandIdentitySection({ client, onEdit }) {
           <div className="flex flex-wrap gap-6">
             {swatch('Cor primária', client.brand_primary_color)}
             {swatch('Cor secundária', client.brand_secondary_color)}
+          </div>
+          <div>
+            <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-ink-faint">Carrossel</p>
+            <div className="flex items-center gap-3">
+              <div className="w-14">
+                <CarouselSlidePreview
+                  style={client.carousel_style || 'gradient'}
+                  primary={client.brand_primary_color}
+                  secondary={client.brand_secondary_color}
+                  imageUrl={client.carousel_background_url}
+                />
+              </div>
+              <span className="text-sm font-semibold text-ink-secondary">
+                {CAROUSEL_STYLE_LABEL[client.carousel_style] || CAROUSEL_STYLE_LABEL.gradient}
+              </span>
+            </div>
           </div>
           {client.brand_voice && (
             <div>
@@ -232,6 +249,71 @@ function SocialCard({ provider, account, mutations }) {
         )}
       </div>
     </Card>
+  )
+}
+
+// ── Client portal link (login-less client central) ──────────────
+function PortalLinkSection({ client, mutation }) {
+  const [, copyToClipboard] = useCopyToClipboard()
+  const confirm = useConfirm()
+  const url = client.portal_url
+
+  async function copyLink() {
+    if (!(await copyToClipboard(url))) {
+      toast.error('Não foi possível copiar o link.')
+      return
+    }
+    toast.success('Link copiado! Envie ao cliente para acompanhar campanhas e aprovar criativos.')
+  }
+
+  async function rotate() {
+    const ok = await confirm({
+      title: 'Renovar link do portal?',
+      description: 'O link atual deixará de funcionar na hora. Quem tiver o link antigo perde o acesso e você precisará enviar o novo ao cliente.',
+      confirmLabel: 'Renovar link',
+      destructive: true,
+    })
+    if (ok) mutation.mutate(client.id)
+  }
+
+  return (
+    <section className="mb-8">
+      <SectionHead icon={Share2} color="var(--ag-brand, #7C3AED)" title="Portal do cliente" />
+      <Card className="mt-1">
+        <div className="flex flex-col gap-4 p-4">
+          <div className="flex items-center gap-3">
+            <div
+              className="grid size-10 shrink-0 place-items-center rounded-xl text-white"
+              style={{ background: 'var(--ag-brand, #7C3AED)' }}
+            >
+              <Link2 size={18} />
+            </div>
+            <div>
+              <p className="font-semibold text-ink">Link de acompanhamento do cliente</p>
+              <p className="text-sm text-ink-muted">
+                Sem login: o cliente vê as campanhas, acompanha o quadro em tempo real, aprova os criativos e lê os relatórios.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <input
+              readOnly
+              value={url || ''}
+              onFocus={(e) => e.target.select()}
+              className="min-w-0 flex-1 truncate rounded-xl border border-border bg-surface-muted px-3 py-2 font-mono text-sm text-ink-secondary"
+            />
+            <div className="flex gap-2">
+              <Button variant="solid" onClick={copyLink} className="shrink-0">
+                <Copy size={15} /> Copiar
+              </Button>
+              <Button variant="outline" onClick={rotate} disabled={mutation.isPending} className="shrink-0">
+                <RefreshCw size={15} className={cn(mutation.isPending && 'animate-spin')} /> Renovar
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Card>
+    </section>
   )
 }
 
@@ -521,7 +603,7 @@ export default function ClientShow() {
   const { id, tab: seg } = useParams()
   const navigate = useNavigate()
   const { data, isLoading } = useClient(id)
-  const { create, update, synthesize, importFromUrl, uploadBrandAssets } = useClientMutations()
+  const { create, update, synthesize, importFromUrl, uploadBrandAssets, setCarouselBackground, rotatePortalLink } = useClientMutations()
   const [editorOpen, setEditorOpen] = useState(false)
 
   const tab = SEG_TO_TAB[seg] || 'branding'
@@ -575,6 +657,7 @@ export default function ClientShow() {
           </TabsContent>
 
           <TabsContent value="config" className="animate-rise">
+            <PortalLinkSection client={client} mutation={rotatePortalLink} />
             <SocialSection clientId={id} accounts={socialAccounts} />
           </TabsContent>
 
@@ -596,7 +679,7 @@ export default function ClientShow() {
         open={editorOpen}
         onOpenChange={setEditorOpen}
         editing={client}
-        mutations={{ create, update, synthesize, importFromUrl, uploadBrandAssets }}
+        mutations={{ create, update, synthesize, importFromUrl, uploadBrandAssets, setCarouselBackground }}
       />
     </Page>
   )

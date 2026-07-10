@@ -13,8 +13,17 @@ class Client < ApplicationRecord
   # carries the agency-level default that these override per client.
   has_one_attached :logo
   has_one_attached :default_creator_avatar
+  # Background image for the `image` carousel style (uploaded or copied from a
+  # platform creative). Only read when `carousel_style == 'image'`.
+  has_one_attached :carousel_background
 
   enum :status, { active: 0, archived: 1 }, prefix: true
+
+  # Background used when generating branded carousels for this client.
+  # `gradient` = the brand-color radial gradient (current default look);
+  # `white` = white background with dark text; `image` = a background image
+  # (see `carousel_background`). Read by Tickets::CreativeContext.
+  enum :carousel_style, { gradient: 'gradient', white: 'white', image: 'image' }, prefix: :carousel
 
   validates :name, presence: true
 
@@ -56,6 +65,16 @@ class Client < ApplicationRecord
     update!(approval_token: "apv_#{SecureRandom.urlsafe_base64(32)}")
     approval_token
   end
+
+  # Mints a fresh token unconditionally, invalidating any link already shared with
+  # the client. Used to rotate a leaked/compromised portal link.
+  def rotate_approval_token!
+    update!(approval_token: "apv_#{SecureRandom.urlsafe_base64(32)}")
+    approval_token
+  end
+
+  # The full, shareable portal URL (lazily minting the token on first read).
+  def portal_url = "#{SystemConfig.app_host}/portal/#{approval_token!}"
 
   def revoke_approval_token! = update!(approval_token: nil)
 

@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch'
 import { Spinner, AiRewritingOverlay } from '@/components/ui/feedback'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ChipsInput } from '@/components/ui/chips-input'
+import { RichField } from '@/components/ui/rich-field'
 import { DatePicker, DateTimePicker } from '@/components/ui/date-picker'
 import { ChannelIcons } from '@/components/ui/iconography'
 import DoneSummary from './DoneSummary'
@@ -387,9 +388,17 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
     let control
     switch (f.kind) {
       case 'textarea':
-        control = (
+        // Rich fields render as formatted value with an edit action that opens a
+        // large dialog (full-screen on mobile) — see the RichField primitive.
+        control = f.rich ? (
+          <RichField
+            value={value || ''}
+            placeholder={f.placeholder}
+            title={f.label}
+            onChange={(html) => setField(f.key, html)}
+          />
+        ) : (
           <Textarea
-            rich={f.rich}
             rows={f.rows}
             value={value || ''}
             placeholder={f.placeholder}

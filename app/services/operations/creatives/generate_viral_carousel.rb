@@ -247,11 +247,12 @@ module Operations
             height: height,
             primary: @ctx.brand_primary,
             secondary: @ctx.brand_secondary,
+            carousel_style: @ctx.carousel_style,
             handle: @ctx.brand_handle,
             brand_name: @ctx.brand_name,
             avatar_uri: avatar_uri,
             logo_uri: logo_uri,
-            image_uri: slide_image_uri(slide)
+            image_uri: slide_background_uri(slide)
           )
         end
 
@@ -323,6 +324,23 @@ module Operations
 
       def avatar_uri = @avatar_uri ||= attachment_data_uri(@ctx.avatar)
       def logo_uri   = @logo_uri   ||= attachment_data_uri(@ctx.logo)
+
+      # The client's carousel background image, inlined once (image style only).
+      def background_uri
+        return @background_uri if defined?(@background_uri)
+
+        @background_uri = @ctx.carousel_style == 'image' ? attachment_data_uri(@ctx.carousel_background) : nil
+      end
+
+      # For the image carousel style, every slide is full-bleed over the client's
+      # background image (reusing the has-image layout: scrim + white text). Falls
+      # back to the normal per-slide image behaviour otherwise, or when the image
+      # style is set but no background is attached.
+      def slide_background_uri(slide)
+        return background_uri if background_uri.present?
+
+        slide_image_uri(slide)
+      end
 
       def attachment_data_uri(att)
         return nil if att.nil?

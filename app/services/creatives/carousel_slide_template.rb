@@ -15,8 +15,8 @@ module Creatives
 
     # slide: { "role", "headline", "body" } from Prompts::CarouselCopy
     def initialize(slide:, index:, total:, width:, height:, primary:, secondary:,
-                   handle: nil, brand_name: nil, avatar_uri: nil, logo_uri: nil,
-                   image_uri: nil)
+                   carousel_style: 'gradient', handle: nil, brand_name: nil,
+                   avatar_uri: nil, logo_uri: nil, image_uri: nil)
       @slide      = slide || {}
       @index      = index
       @total      = total
@@ -24,6 +24,7 @@ module Creatives
       @height     = height.to_i
       @primary    = primary
       @secondary  = secondary
+      @style      = carousel_style.to_s
       @handle     = handle
       @brand_name = brand_name
       @avatar_uri = avatar_uri
@@ -72,6 +73,7 @@ module Creatives
     def cta?  = role == 'cta' || @index == @total
     def hook? = role == 'hook' || @index == 1
     def image? = @image_uri.present?
+    def white? = @style == 'white'
 
     def body_html
       return '' if @slide['body'].to_s.strip.blank?
@@ -156,6 +158,21 @@ module Creatives
         .has-image .headline { text-shadow:0 4px 24px rgba(0,0,0,.5); }
         .plain .headline::after { content:""; display:block; width:140px; height:10px;
           margin-top:28px; border-radius:999px; background:#{@secondary}; }
+        #{white_css}
+      CSS
+    end
+
+    # White-background variant: only the typographic (`.plain`) slides flip to a
+    # white background with dark ink; full-bleed image slides keep their dark scrim
+    # and white text. Emitted last so it overrides the gradient defaults; empty
+    # (byte-identical output) for the default gradient style.
+    def white_css
+      return '' unless white?
+
+      <<~CSS.chomp
+        .plain { background:#ffffff; color:#18161d; }
+        .plain .counter { background:rgba(0,0,0,.05); color:#18161d; }
+        .plain .avatar { border-color:rgba(0,0,0,.10); }
       CSS
     end
 

@@ -65,7 +65,7 @@ export default function TicketBody({
       {/* Client approval: actions in Produção; the "Aprovado por <actor>" badge
           persists in Publicação (scheduled) since full approval advanced it there. */}
       {(status === 'production' || (status === 'scheduled' && ticket.approval?.fully_approved)) && (
-        <ApprovalPanel ticket={ticket} onChanged={() => qc.invalidateQueries({ queryKey: keys.ticket(id) })} />
+        <ApprovalPanel ticket={ticket} creatives={creatives} onChanged={() => qc.invalidateQueries({ queryKey: keys.ticket(id) })} />
       )}
       {status === 'scheduled' ? (
         <PostingPanel

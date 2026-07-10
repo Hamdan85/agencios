@@ -57,10 +57,11 @@ function Toolbar({ editor }) {
 // A Tiptap-backed rich text editor with a value(HTML)/onChange(html) contract,
 // styled to match the design system (mirrors the Textarea surface). Used wherever
 // formatted long-form content is wanted — see `<Textarea rich />`.
-export function RichTextEditor({ value = '', onChange, onBlur, placeholder, className, disabled = false, minHeight = '6rem' }) {
+export function RichTextEditor({ value = '', onChange, onBlur, placeholder, className, disabled = false, minHeight = '6rem', autofocus = false }) {
   const editor = useEditor({
     immediatelyRender: false,
     editable: !disabled,
+    autofocus: autofocus ? 'end' : false,
     extensions: [
       StarterKit.configure({ heading: { levels: [2, 3] } }),
       Link.configure({ openOnClick: false, autolink: true, HTMLAttributes: { class: 'text-brand underline' } }),
