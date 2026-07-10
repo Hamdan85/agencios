@@ -57,6 +57,11 @@ module Operations
           result: {}
         )
 
+        # Surface the "Gerando…" card immediately — the broadcast is out-of-band
+        # from the blocking HTTP request, so the gallery shows it while the
+        # render below (Chromium) is still running.
+        broadcast(event: 'generation_progress', id: generation.id, kind: 'carousel', status: 'processing')
+
         # A carousel debits prepaid credits like an image (Pricing.credits_for →
         # 0 makes it free again, admin-tunable). Everything that can fail — the
         # debit, the render (Chromium), the attach — is wrapped so ANY error fails

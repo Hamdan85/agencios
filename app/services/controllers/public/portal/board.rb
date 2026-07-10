@@ -10,7 +10,7 @@ module Controllers
         def call
           project = project!
           grouped = project.tickets
-                           .includes(:subtasks, :creatives)
+                           .includes(:subtasks, creatives: { assets_attachments: :blob })
                            .order(:position, :created_at)
                            .group_by(&:status)
           {
@@ -31,6 +31,7 @@ module Controllers
 
         def card(ticket)
           ideation = ticket.fields_for('ideation') || {}
+          creatives = ready_creatives(ticket)
           {
             id: ticket.id,
             title: ticket.display_title,
@@ -43,8 +44,18 @@ module Controllers
             scheduled_at: ticket.scheduled_at&.iso8601,
             subtasks_count: ticket.subtasks.size,
             subtasks_done: ticket.subtasks.count(&:done),
-            creatives_count: ticket.creatives.size
+            creatives_count: creatives.size,
+            # The actual finished deliverables the client can preview in the
+            # read-only detail (an in-flight/failed generation is never shown).
+            creatives: serialize_collection(creatives, CreativeSerializer)
           }
+        end
+
+        # Finished creatives only, ordered stably for the client's review.
+        def ready_creatives(ticket)
+          ticket.creatives
+                .select { |c| c.status.to_s == 'ready' && c.assets.attached? }
+                .sort_by { |c| [c.creative_type.to_s, c.id] }
         end
       end
     end

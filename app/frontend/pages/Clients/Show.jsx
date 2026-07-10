@@ -123,8 +123,8 @@ function BrandIdentitySection({ client, onEdit }) {
           </div>
           <div>
             <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-ink-faint">Carrossel</p>
-            <div className="flex items-center gap-3">
-              <div className="w-14">
+            <div className="flex items-center gap-4">
+              <div className="w-28 shrink-0">
                 <CarouselSlidePreview
                   style={client.carousel_style || 'gradient'}
                   primary={client.brand_primary_color}

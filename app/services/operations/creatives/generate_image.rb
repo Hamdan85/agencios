@@ -52,6 +52,11 @@ module Operations
           result: {}
         )
 
+        # Surface the "Gerando…" card immediately (the studio/board gallery is
+        # subscribed to this channel) even though the vendor work below runs
+        # inline — the broadcast is out-of-band from the blocking HTTP request.
+        broadcast(event: 'generation_progress', id: generation.id, kind: 'image', status: 'processing')
+
         # Everything that can fail — the credit debit, the vendor call, the attach —
         # is wrapped so ANY error moves the records to `failed` and refunds credits
         # (FailGeneration), never leaving the creative stranded in `generating`.

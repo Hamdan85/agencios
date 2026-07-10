@@ -4,6 +4,9 @@ module Controllers
   module Creatives
     # GET /creatives — all creatives in the workspace, filterable for the Studio gallery.
     class WorkspaceIndex < Base
+      DEFAULT_PER = 40
+      MAX_PER     = 200
+
       def initialize(params:)
         @params = params
       end
@@ -21,13 +24,32 @@ module Controllers
         scope = scope.where(ticket_id: nil) if ActiveModel::Type::Boolean.new.cast(@params[:unassigned])
         scope = apply_client_filter(scope)
         scope = apply_search(scope)
+
+        # Offset pagination for the Studio gallery's infinite scroll. Fetch one
+        # extra row to know whether a next page exists without a COUNT query.
+        rows     = scope.limit(per + 1).offset((page - 1) * per).to_a
+        has_more = rows.size > per
+        page_rows = rows.first(per)
+
         {
-          creatives: serialize_collection(scope.limit(200), CreativeSerializer),
+          creatives: serialize_collection(page_rows, CreativeSerializer),
+          next_page: has_more ? page + 1 : nil,
           clients: workspace.clients.order(:name).map { |c| { id: c.id, name: c.name } }
         }
       end
 
       private
+
+      def page
+        [@params[:page].to_i, 1].max
+      end
+
+      def per
+        requested = @params[:per].to_i
+        return DEFAULT_PER if requested <= 0
+
+        [requested, MAX_PER].min
+      end
 
       def apply_client_filter(scope)
         return scope if @params[:client_id].blank?

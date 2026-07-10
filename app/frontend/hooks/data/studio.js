@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { studioApi, generationsApi, creativesApi } from '@/api'
 import { keys } from '@/api/queryKeys'
@@ -37,6 +37,20 @@ export const useWorkspaceCreatives = (filters = {}, { enabled = true } = {}) =>
     queryFn: () => creativesApi.list(filters),
     placeholderData: keepPreviousData,
     enabled,
+  })
+
+// Paginated (infinite-scroll) variant for the Studio gallery — the library can
+// grow unbounded, so it loads a page at a time as the user scrolls. The backend
+// returns `{ creatives, next_page, clients }`; `clients` is the same on every
+// page (read off page 1). Shares the `['creatives', filters]` key family so the
+// generation broadcasts / mutations that invalidate `['creatives']` refresh it.
+export const useWorkspaceCreativesInfinite = (filters = {}) =>
+  useInfiniteQuery({
+    queryKey: keys.creatives({ ...filters, infinite: true }),
+    queryFn: ({ pageParam = 1 }) => creativesApi.list({ ...filters, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (last) => last?.next_page ?? undefined,
+    placeholderData: keepPreviousData,
   })
 
 export function useCreativeMutations() {

@@ -104,13 +104,12 @@ export function CarouselSlidePreview({ style, primary, secondary, imageUrl, clas
   const ink = white ? '#18161d' : '#ffffff'
   return (
     <div className={cn('relative aspect-4/5 w-full overflow-hidden rounded-lg', className)} style={{ background: bg, color: ink }}>
+      {/* Image style shows the photo clean — no darkening lens (mirrors the
+          backend CarouselSlideTemplate). Copy stays legible via text-shadow. */}
       {image && imageUrl && (
-        <>
-          <img src={imageUrl} alt="" className="absolute inset-0 size-full object-cover" />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(0,0,0,.35) 0%, rgba(0,0,0,.72) 100%)' }} />
-        </>
+        <img src={imageUrl} alt="" className="absolute inset-0 size-full object-cover" />
       )}
-      <div className="relative p-3">
+      <div className={cn('relative p-3', image && '[text-shadow:0_1px_6px_rgba(0,0,0,.6)]')}>
         <div className="flex items-center gap-1.5">
           <span className="size-4 shrink-0 rounded-full" style={{ background: s }} />
           <div className="space-y-1">
