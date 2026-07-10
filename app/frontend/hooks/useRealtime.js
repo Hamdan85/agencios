@@ -151,6 +151,30 @@ export function useStrategyChannel(sessionId, handlers) {
   }, [sessionId, handlers])
 }
 
+// Live prepaid credit balance. Any wallet movement (debit on a generation,
+// refund on a failed render, monthly grant, pack purchase, cost true-up) pushes
+// `balance_changed` on the workspace credits stream. The drawer counter reads
+// `me.workspace.credits_available`, so invalidate `me` (the badge) alongside the
+// `credits` queries (usage/billing views) to keep every credit read fresh.
+export function useCreditsChannel(workspaceId, onEvent) {
+  const qc = useQueryClient()
+  useEffect(() => {
+    if (!workspaceId) return
+    const sub = consumer.subscriptions.create(
+      { channel: 'CreditsChannel', workspace_id: workspaceId },
+      {
+        received: (data) => {
+          qc.invalidateQueries({ queryKey: keys.me() })
+          qc.invalidateQueries({ queryKey: ['credits'] })
+          qc.invalidateQueries({ queryKey: keys.billing() })
+          onEvent?.(data)
+        },
+      },
+    )
+    return () => sub.unsubscribe()
+  }, [workspaceId, qc, onEvent])
+}
+
 export function useGenerationsChannel(workspaceId, onEvent) {
   const qc = useQueryClient()
   useEffect(() => {

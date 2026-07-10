@@ -26,7 +26,9 @@ export default function PortalShow() {
   )
 
   const openCampaign = (c) => setParams({ campanha: String(c.id), aba: (c.available_tabs || ['quadro'])[0] }, { replace: false })
-  const setTab = (tab) => setParams((prev) => { const sp = new URLSearchParams(prev); sp.set('aba', tab); return sp }, { replace: true })
+  // Switching tabs drops the open-card param (`tarefa`) — the detail sheet
+  // belongs to the board tab, so it shouldn't linger in the URL elsewhere.
+  const setTab = (tab) => setParams((prev) => { const sp = new URLSearchParams(prev); sp.set('aba', tab); sp.delete('tarefa'); return sp }, { replace: true })
   const backToList = () => setParams({}, { replace: false })
 
   if (isLoading) {

@@ -9,6 +9,8 @@ module Operations
     # unlimited godfathered workspaces and for a zero delta (capped godfathered
     # workspaces have a real wallet, so they true-up too).
     class Adjust < Operations::Base
+      include BroadcastsBalance
+
       def initialize(workspace:, amount:, generation: nil, description: nil)
         @workspace   = workspace
         @amount      = amount.to_i
@@ -21,7 +23,7 @@ module Operations
 
         wallet = Operations::Credits::EnsureWallet.call(workspace: @workspace)
 
-        ApplicationRecord.transaction do
+        result = ApplicationRecord.transaction do
           wallet.lock!
 
           if @amount.positive?
@@ -39,6 +41,8 @@ module Operations
           end
           wallet
         end
+
+        broadcast_balance(result)
       end
 
       private

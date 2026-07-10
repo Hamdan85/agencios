@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { X, CheckSquare, ImageIcon, Inbox, CalendarClock } from 'lucide-react'
 import { usePortalBoard } from '@/hooks/useData'
+import { useUrlParam } from '@/hooks/useUrlState'
 import { cn } from '@/lib/utils'
 import { shortDt } from '@/lib/formatters'
 import { WORKFLOW, statusMeta, creativeMeta } from '@/lib/constants'
@@ -299,14 +300,31 @@ function PortalTicketSheet({ ticket, accent, open, onOpenChange }) {
 }
 
 // The login-less client portal board: a read-only, per-status Kanban of the
-// campaign's tickets. No drag-and-drop, no navigation — clicking a card opens an
-// informational side panel. Themed with the per-agency `accent` color.
+// campaign's tickets. No drag-and-drop — clicking a card opens an informational
+// side panel. The open card lives in the URL (`?tarefa=<id>`) so the panel is
+// shareable and the browser Back button closes it, mirroring the main app's
+// `?ticket` drawer. Themed with the per-agency `accent` color.
 export default function PortalBoard({ token, projectId, accent = '#7C3AED' }) {
   const { data, isLoading } = usePortalBoard(token, projectId)
-  const [active, setActive] = useState(null)
-  const [open, setOpen] = useState(false)
+  const [activeId, setActiveId] = useUrlParam('tarefa')
 
-  const openTicket = (ticket) => { setActive(ticket); setOpen(true) }
+  // Resolve the open ticket from the board data by its id (supports deep links).
+  const active = useMemo(() => {
+    if (!activeId) return null
+    for (const col of data?.columns || []) {
+      const found = (col.tickets || []).find((t) => String(t.id) === String(activeId))
+      if (found) return found
+    }
+    return null
+  }, [data, activeId])
+
+  // Keep the last opened ticket mounted so its content doesn't blank out mid
+  // close animation once the URL param clears.
+  const [shown, setShown] = useState(null)
+  useEffect(() => { if (active) setShown(active) }, [active])
+
+  const openTicket = (ticket) => setActiveId(ticket.id)
+  const closeTicket = () => setActiveId(null, { replace: true })
 
   if (isLoading) {
     return (
@@ -349,7 +367,12 @@ export default function PortalBoard({ token, projectId, accent = '#7C3AED' }) {
         ))}
       </div>
 
-      <PortalTicketSheet ticket={active} accent={accent} open={open} onOpenChange={setOpen} />
+      <PortalTicketSheet
+        ticket={shown}
+        accent={accent}
+        open={!!active}
+        onOpenChange={(v) => { if (!v) closeTicket() }}
+      />
     </>
   )
 }

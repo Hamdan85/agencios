@@ -3,7 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, Mail, Phone, FileText, FolderKanban, Receipt, Wallet,
   Building2, StickyNote, Pencil, Plus, ListChecks, Sparkles, Palette, AtSign,
-  Plug, Link2, Check, RefreshCw, Unplug, Copy, Share2, Video, BarChart3,
+  Plug, Link2, Check, RefreshCw, Unplug, Copy, Share2, Video, BarChart3, Eye,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { socialApi } from '@/api'
@@ -22,7 +22,8 @@ import { Card } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Page } from '@/components/ui/page'
 import ClientWizard from '@/components/client/ClientWizard'
-import { CarouselSlidePreview, CAROUSEL_STYLE_LABEL } from '@/components/client/positioningFields'
+import { CAROUSEL_STYLE_LABEL } from '@/components/client/positioningFields'
+import { CarouselSlide, CarouselExampleDialog, buildExampleSlides } from '@/components/client/CarouselExample'
 import { MeetingCard } from '@/components/meeting/MeetingCard'
 import { MeetingFormDialog } from '@/components/meeting/MeetingFormDialog'
 import { POSITIONING_FIELDS, CHANNEL_META } from '@/lib/constants'
@@ -70,6 +71,7 @@ function SectionHead({ icon: Icon, color, title, onEdit }) {
 // ── Brand identity (voice + @handle + colors + logo/avatar) ──────
 function BrandIdentitySection({ client, onEdit }) {
   const has = client.has_brand
+  const [exampleOpen, setExampleOpen] = useState(false)
   const swatch = (label, color) => (
     <div className="flex items-center gap-2">
       <span className="size-7 rounded-lg ring-1 ring-border" style={{ background: color }} />
@@ -123,19 +125,25 @@ function BrandIdentitySection({ client, onEdit }) {
           </div>
           <div>
             <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-ink-faint">Carrossel</p>
-            <div className="flex items-center gap-4">
-              <div className="w-28 shrink-0">
-                <CarouselSlidePreview
-                  style={client.carousel_style || 'gradient'}
-                  primary={client.brand_primary_color}
-                  secondary={client.brand_secondary_color}
-                  imageUrl={client.carousel_background_url}
-                />
+            <button
+              type="button"
+              onClick={() => setExampleOpen(true)}
+              className="group flex w-full items-center gap-4 rounded-2xl border border-border bg-surface-muted/30 p-3 text-left transition hover:border-brand/40 hover:bg-brand-soft/30"
+            >
+              <div className="w-32 shrink-0">
+                {/* A real slide 1 (the hook), rendered exactly as it's generated. */}
+                <CarouselSlide slide={buildExampleSlides(client)[0]} index={1} total={5} client={client} />
               </div>
-              <span className="text-sm font-semibold text-ink-secondary">
-                {CAROUSEL_STYLE_LABEL[client.carousel_style] || CAROUSEL_STYLE_LABEL.gradient}
-              </span>
-            </div>
+              <div className="min-w-0">
+                <p className="font-display text-sm font-bold text-ink">
+                  {CAROUSEL_STYLE_LABEL[client.carousel_style] || CAROUSEL_STYLE_LABEL.gradient}
+                </p>
+                <p className="mt-0.5 text-xs text-ink-muted">Assim os carrosséis deste cliente são gerados.</p>
+                <span className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-brand">
+                  <Eye size={13} /> Ver exemplo completo
+                </span>
+              </div>
+            </button>
           </div>
           {client.brand_voice && (
             <div>
@@ -145,6 +153,7 @@ function BrandIdentitySection({ client, onEdit }) {
           )}
         </Card>
       )}
+      <CarouselExampleDialog client={client} open={exampleOpen} onOpenChange={setExampleOpen} />
     </section>
   )
 }

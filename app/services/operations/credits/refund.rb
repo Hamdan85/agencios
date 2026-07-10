@@ -9,6 +9,8 @@ module Operations
     # that failed again) refunds again, so a fail→retry→fail loop never eats
     # credits for renders that were never delivered.
     class Refund < Operations::Base
+      include BroadcastsBalance
+
       def initialize(generation:, description: nil)
         @generation  = generation
         @description = description
@@ -20,7 +22,7 @@ module Operations
         # only unlimited godfathered workspaces have nothing to return.
         return :none if workspace.godfathered? && !workspace.credit_limited?
 
-        ApplicationRecord.transaction do
+        result = ApplicationRecord.transaction do
           debit = workspace.credit_transactions
                            .where(generation_id: @generation.id, kind: 'debit')
                            .order(:created_at).last
@@ -47,6 +49,8 @@ module Operations
           )
           wallet
         end
+
+        broadcast_balance(result)
       end
 
       private

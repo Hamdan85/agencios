@@ -11,6 +11,8 @@ module Operations
     # Records a `debit` CreditTransaction carrying the per-bucket split so a later
     # refund can return credits to the exact buckets.
     class Debit < Operations::Base
+      include BroadcastsBalance
+
       def initialize(workspace:, amount:, generation: nil, user: nil, description: nil)
         @workspace   = workspace
         @amount      = amount.to_i
@@ -35,7 +37,7 @@ module Operations
 
         wallet = Operations::Credits::EnsureWallet.call(workspace: @workspace)
 
-        ApplicationRecord.transaction do
+        result = ApplicationRecord.transaction do
           wallet.lock!
           expire_stale_grant!(wallet)
 
@@ -55,6 +57,8 @@ module Operations
           record_transaction(wallet, from_granted, from_purchased)
           wallet
         end
+
+        broadcast_balance(result)
       end
 
       private

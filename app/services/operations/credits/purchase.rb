@@ -6,6 +6,8 @@ module Operations
     # Purchased credits stack and roll over. Idempotent on `reference` (the Stripe
     # payment/session id) so a re-delivered webhook can't double-credit.
     class Purchase < Operations::Base
+      include BroadcastsBalance
+
       def initialize(workspace:, amount:, reference:, user: nil, description: nil, expires_at: nil)
         @workspace   = workspace
         @amount      = amount.to_i
@@ -20,7 +22,7 @@ module Operations
 
         wallet = Operations::Credits::EnsureWallet.call(workspace: @workspace)
 
-        ApplicationRecord.transaction do
+        result = ApplicationRecord.transaction do
           wallet.lock!
           return :duplicate if already_applied?
 
@@ -37,6 +39,8 @@ module Operations
           )
           wallet
         end
+
+        broadcast_balance(result)
       end
 
       private

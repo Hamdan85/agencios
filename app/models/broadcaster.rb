@@ -17,6 +17,13 @@ module Broadcaster
     broadcast("generations_#{workspace_id}", event, payload)
   end
 
+  # Prepaid credit-balance updates (balance_changed) — pushed whenever the
+  # workspace wallet is debited, refunded, granted, purchased or adjusted, so the
+  # credit counter in the app shell stays live (see Operations::Credits::*).
+  def credits(workspace_id, event, payload = {})
+    broadcast("credits_#{workspace_id}", event, payload)
+  end
+
   # Login-less client-central updates (metric_updated) — pushed to the client's
   # own portal stream so the portal can refresh campaign metrics in real time.
   def portal(client, event, payload = {})

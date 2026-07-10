@@ -6,6 +6,8 @@ module Operations
     # granted bucket — any unused granted credits from the previous cycle expire.
     # Called on subscription renewal (invoice.paid) and on plan start.
     class Grant < Operations::Base
+      include BroadcastsBalance
+
       def initialize(workspace:, amount:, expires_at:, description: nil)
         @workspace   = workspace
         @amount      = amount.to_i
@@ -16,7 +18,7 @@ module Operations
       def call
         wallet = Operations::Credits::EnsureWallet.call(workspace: @workspace)
 
-        ApplicationRecord.transaction do
+        result = ApplicationRecord.transaction do
           wallet.lock!
           expire_previous!(wallet)
 
@@ -31,6 +33,8 @@ module Operations
           )
           wallet
         end
+
+        broadcast_balance(result)
       end
 
       private

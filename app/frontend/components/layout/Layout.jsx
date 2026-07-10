@@ -6,7 +6,7 @@ import AppBanners from './AppBanners'
 import Paywall from '@/pages/Billing/Paywall'
 import { BrandMark } from '@/components/brand/BrandMark'
 import { useCurrentUser } from '@/hooks/useAuth'
-import { useBoardChannel } from '@/hooks/useRealtime'
+import { useBoardChannel, useCreditsChannel } from '@/hooks/useRealtime'
 import { cn } from '@/lib/utils'
 
 // Routes that stay reachable even when the workspace is not billing-active, so
@@ -19,6 +19,7 @@ export default function Layout() {
   const location = useLocation()
   const [drawer, setDrawer] = useState(false)
   useBoardChannel(me?.workspace?.id)
+  useCreditsChannel(me?.workspace?.id)
 
   // The "total paywall": when the workspace has no active billing, block the
   // routed content behind the Paywall screen — unless the current route is an
