@@ -37,8 +37,8 @@ module Tickets
 
     def aspect_ratio = spec[:aspect].presence || '1:1'
 
-    def banana_aspect_ratio
-      supported = Vendors::Google::Banana::Client::SUPPORTED_ASPECT_RATIOS
+    def image_aspect_ratio
+      supported = Vendors::OpenRouter::Image::SUPPORTED_ASPECT_RATIOS
       return aspect_ratio if supported.include?(aspect_ratio)
 
       if portrait?
@@ -169,7 +169,7 @@ module Tickets
     # --- brand reference images (for multimodal image models) -----------------
 
     # The brand logo + creator avatar downloaded as labeled reference payloads
-    # handed to the image model. Gemini/Banana is multimodal: it SEES these and
+    # handed to the image model. The image model is multimodal: it SEES these and
     # decides — per the prompt — whether to use them (place the logo, feature the
     # creator). Empty when neither asset is attached. Pair with
     # REFERENCE_ASSETS_DIRECTIVE so the model knows they're optional.
@@ -266,7 +266,7 @@ module Tickets
       return nil unless att.respond_to?(:attached?) && att.attached?
 
       ct = att.blob&.content_type.to_s.downcase
-      return nil unless Vendors::Google::Banana::Client::SUPPORTED_IMAGE_MIME_TYPES.include?(ct)
+      return nil unless Vendors::OpenRouter::Image::SUPPORTED_IMAGE_MIME_TYPES.include?(ct)
 
       Rails.application.routes.url_helpers.rails_blob_url(att, host: SystemConfig.app_host)
     rescue StandardError
@@ -284,7 +284,7 @@ module Tickets
 
       # Image models only accept a fixed set of raster MIME types. Brand logos are
       # frequently SVGs, which the vendor rejects — skip them rather than 500.
-      unless Vendors::Google::Banana::Client::SUPPORTED_IMAGE_MIME_TYPES.include?(ct.to_s.downcase)
+      unless Vendors::OpenRouter::Image::SUPPORTED_IMAGE_MIME_TYPES.include?(ct.to_s.downcase)
         Rails.logger.info("[CreativeContext] skipping unsupported reference image (#{ct}) for #{label}")
         return nil
       end

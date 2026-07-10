@@ -3,7 +3,7 @@
 module Operations
   module Video
     # Regenerates a CHARACTER or SCENARIO asset from a new prompt: makes a fresh
-    # reference image (Google Banana, charged as one image generation) and swaps it
+    # reference image (OpenRouter image model, charged as one image generation) and swaps it
     # into every scene's typed references — WITHOUT re-rendering. The scenes keep
     # their current clips (and video) until the user asks for a new render; the new
     # image is what the NEXT render of each scene will use.
@@ -13,7 +13,7 @@ module Operations
     # identity described the look but had no image yet).
     #
     # Raises InsufficientCredits (→ 402) when the wallet can't cover the image, and
-    # Invalid when the prompt is blank / the Banana generation returns nothing.
+    # Invalid when the prompt is blank / the image generation returns nothing.
     class RegenerateReference < Operations::Base
       ROLES = %w[character scene].freeze
 

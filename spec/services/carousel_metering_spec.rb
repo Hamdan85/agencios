@@ -24,7 +24,7 @@ RSpec.describe Operations::Creatives::GenerateViralCarousel do
     Current.workspace = workspace
     Current.actor = user
 
-    # Deterministic, image-free copy (no Pexels/Banana slots needed).
+    # Deterministic, image-free copy (no Pexels/image slots needed).
     slides_json = [
       { role: 'hook',  headline: 'Gancho', body: 'a', image: false, image_query: '' },
       { role: 'value', headline: 'Valor',  body: 'b', image: false, image_query: '' },
