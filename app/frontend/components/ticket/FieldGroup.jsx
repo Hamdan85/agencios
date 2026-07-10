@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/i18n'
 import { statusMeta, CREATIVE_TYPE_META, CHANNEL_META, creativeTypesForChannels } from '@/lib/constants'
 import { Card } from '@/components/ui/card'
 import { Input, Textarea } from '@/components/ui/input'
@@ -55,81 +57,94 @@ function SaveIndicator({ saving, saved }) {
 // ── Per-status field schema ──────────────────────────────────────────────
 // Field kinds: text | textarea | lines (one-per-line ⇄ array) | date | datetime
 //              | select | channels | switch
+// Copy is resolved lazily (getters) so it follows the active locale — same
+// pattern as the label maps in lib/constants.
+const tr = (key) => i18n.t(`ticket:${key}`)
+const schemaField = (status, key, { placeholder, hint, ...rest }) => {
+  const field = {
+    key,
+    ...rest,
+    get label() { return tr(`schema.${status}.${key}.label`) },
+  }
+  if (placeholder) Object.defineProperty(field, 'placeholder', { enumerable: true, get: () => tr(`schema.${status}.${key}.placeholder`) })
+  if (hint) Object.defineProperty(field, 'hint', { enumerable: true, get: () => tr(`schema.${status}.${key}.hint`) })
+  return field
+}
 const SCHEMAS = {
   ideation: {
     icon: Lightbulb,
-    title: 'Brief & Ideação',
-    helper: 'O coração da ideia: para quem, por quê e em que formato.',
+    get title() { return tr('schema.ideation.title') },
+    get helper() { return tr('schema.ideation.helper') },
     fields: [
-      { key: 'brief', label: 'Brief', kind: 'textarea', rows: 5, icon: FileText, placeholder: 'Descreva o contexto, a mensagem e o tom desejado…', full: true },
-      { key: 'objective', label: 'Objetivo', kind: 'text', icon: Target, placeholder: 'Ex.: gerar awareness do lançamento' },
-      { key: 'target_persona', label: 'Persona-alvo', kind: 'text', icon: Users, placeholder: 'Quem queremos impactar?' },
-      { key: 'content_pillar', label: 'Pilar de conteúdo', kind: 'text', icon: Layers, placeholder: 'Ex.: bastidores, educacional…' },
-      { key: 'format_hypothesis', label: 'Hipótese de formato', kind: 'text', icon: FlaskConical, placeholder: 'Ex.: Reel narrativo de 30s' },
-      { key: 'references', label: 'Referências', kind: 'lines', icon: Link2, placeholder: 'Uma URL por linha…', full: true, hint: 'Uma referência por linha' },
+      schemaField('ideation', 'brief', { kind: 'textarea', rows: 5, icon: FileText, placeholder: true, full: true }),
+      schemaField('ideation', 'objective', { kind: 'text', icon: Target, placeholder: true }),
+      schemaField('ideation', 'target_persona', { kind: 'text', icon: Users, placeholder: true }),
+      schemaField('ideation', 'content_pillar', { kind: 'text', icon: Layers, placeholder: true }),
+      schemaField('ideation', 'format_hypothesis', { kind: 'text', icon: FlaskConical, placeholder: true }),
+      schemaField('ideation', 'references', { kind: 'lines', icon: Link2, placeholder: true, full: true, hint: true }),
     ],
   },
   scoping: {
     icon: Ruler,
-    title: 'Escopo & Entregáveis',
-    helper: 'Defina o tipo de criativo, os canais e o que será entregue.',
+    get title() { return tr('schema.scoping.title') },
+    get helper() { return tr('schema.scoping.helper') },
     fields: [
-      { key: 'channels', label: 'Canais', kind: 'channels', icon: Radio, full: true, hint: 'Onde este conteúdo vai ao ar' },
-      { key: 'creative_types', label: 'Tipos de criativo', kind: 'creativeTypes', icon: Wand2, full: true, hint: 'Habilitados pelos canais escolhidos — os demais ficam desativados' },
-      { key: 'copy_brief', label: 'Briefing de copy', kind: 'textarea', rows: 3, icon: MessageSquareText, placeholder: 'Direção de mensagem para a legenda…', full: true },
-      { key: 'script', label: 'Roteiro', kind: 'textarea', rows: 4, icon: FileText, placeholder: 'Roteiro / storyboard…', full: true },
-      { key: 'deliverables', label: 'Entregáveis', kind: 'lines', icon: ListChecks, placeholder: 'Um entregável por linha…', full: true, hint: 'Pelo menos um entregável (um por linha). Na postagem você escolhe qual vai ao ar.' },
-      { key: 'due_date', label: 'Prazo', kind: 'date', icon: CalendarClock },
-      { key: 'effort_estimate', label: 'Estimativa de esforço', kind: 'text', icon: Clock, placeholder: 'Ex.: 4h, 2 dias…' },
+      schemaField('scoping', 'channels', { kind: 'channels', icon: Radio, full: true, hint: true }),
+      schemaField('scoping', 'creative_types', { kind: 'creativeTypes', icon: Wand2, full: true, hint: true }),
+      schemaField('scoping', 'copy_brief', { kind: 'textarea', rows: 3, icon: MessageSquareText, placeholder: true, full: true }),
+      schemaField('scoping', 'script', { kind: 'textarea', rows: 4, icon: FileText, placeholder: true, full: true }),
+      schemaField('scoping', 'deliverables', { kind: 'lines', icon: ListChecks, placeholder: true, full: true, hint: true }),
+      schemaField('scoping', 'due_date', { kind: 'date', icon: CalendarClock }),
+      schemaField('scoping', 'effort_estimate', { kind: 'text', icon: Clock, placeholder: true }),
     ],
   },
   production: {
     icon: Wand2,
-    title: 'Produção & Legenda',
-    helper: 'A copy final e as hashtags. A aprovação do cliente vira ações abaixo.',
+    get title() { return tr('schema.production.title') },
+    get helper() { return tr('schema.production.helper') },
     fields: [
-      { key: 'caption', label: 'Legenda', kind: 'textarea', rows: 5, icon: MessageSquareText, placeholder: 'Escreva ou gere a legenda final…', full: true },
-      { key: 'hashtags', label: 'Hashtags', kind: 'chips', icon: Hash, placeholder: 'Digite e tecle Enter…', full: true, hint: 'Enter ou vírgula adiciona; clique no × para remover' },
-      { key: 'production_scope', label: 'Escopo de Produção', kind: 'textarea', rich: true, rows: 3, icon: FileText, placeholder: 'Direções de produção — orientam a geração dos criativos (referências, o que mostrar/evitar, elementos obrigatórios)…', full: true },
+      schemaField('production', 'caption', { kind: 'textarea', rows: 5, icon: MessageSquareText, placeholder: true, full: true }),
+      schemaField('production', 'hashtags', { kind: 'chips', icon: Hash, placeholder: true, full: true, hint: true }),
+      schemaField('production', 'production_scope', { kind: 'textarea', rich: true, rows: 3, icon: FileText, placeholder: true, full: true }),
     ],
   },
   scheduled: {
     icon: CalendarClock,
-    title: 'Postagem',
-    helper: 'Escolha o criativo e publique — imediatamente ou agendado.',
+    get title() { return tr('schema.scheduled.title') },
+    get helper() { return tr('schema.scheduled.helper') },
     fields: [
-      { key: 'scheduled_at', label: 'Publicar em', kind: 'datetime', icon: CalendarClock, full: true },
-      { key: 'first_comment', label: 'Primeiro comentário', kind: 'textarea', rows: 2, icon: MessageCircle, placeholder: 'Comentário fixado no post…', full: true },
-      { key: 'link_in_bio', label: 'Link na bio', kind: 'text', icon: Link2, placeholder: 'https://…' },
-      { key: 'auto_publish', label: 'Publicação automática', kind: 'switch', icon: Radio, hint: 'Publicar sem revisão manual' },
+      schemaField('scheduled', 'scheduled_at', { kind: 'datetime', icon: CalendarClock, full: true }),
+      schemaField('scheduled', 'first_comment', { kind: 'textarea', rows: 2, icon: MessageCircle, placeholder: true, full: true }),
+      schemaField('scheduled', 'link_in_bio', { kind: 'text', icon: Link2, placeholder: true }),
+      schemaField('scheduled', 'auto_publish', { kind: 'switch', icon: Radio, hint: true }),
     ],
   },
   retrospective: {
     icon: LineChart,
-    title: 'Retrospectiva',
-    helper: 'O que funcionou, o que melhorar e a recomendação para o futuro.',
+    get title() { return tr('schema.retrospective.title') },
+    get helper() { return tr('schema.retrospective.helper') },
     fields: [
-      { key: 'wins', label: 'Vitórias', kind: 'lines', icon: ThumbsUp, placeholder: 'O que deu certo? Uma por linha…', full: true, hint: 'Uma por linha' },
-      { key: 'improvements', label: 'Melhorias', kind: 'lines', icon: AlertTriangle, placeholder: 'O que pode melhorar? Uma por linha…', full: true, hint: 'Uma por linha' },
-      { key: 'repeat_recommendation', label: 'Recomendação', kind: 'radio', icon: Repeat, options: 'repeat' },
-      { key: 'lessons_learned', label: 'Lições aprendidas', kind: 'textarea', rich: true, rows: 4, icon: FileText, placeholder: 'O aprendizado consolidado…', full: true },
+      schemaField('retrospective', 'wins', { kind: 'lines', icon: ThumbsUp, placeholder: true, full: true, hint: true }),
+      schemaField('retrospective', 'improvements', { kind: 'lines', icon: AlertTriangle, placeholder: true, full: true, hint: true }),
+      schemaField('retrospective', 'repeat_recommendation', { kind: 'radio', icon: Repeat, options: 'repeat' }),
+      schemaField('retrospective', 'lessons_learned', { kind: 'textarea', rich: true, rows: 4, icon: FileText, placeholder: true, full: true }),
     ],
   },
 }
 
 const REPEAT_OPTIONS = [
-  { value: 'repeat', label: 'Repetir' },
-  { value: 'iterate', label: 'Iterar' },
-  { value: 'retire', label: 'Aposentar' },
+  { value: 'repeat', get label() { return tr('repeatMeta.repeat.label') } },
+  { value: 'iterate', get label() { return tr('repeatMeta.iterate.label') } },
+  { value: 'retire', get label() { return tr('repeatMeta.retire.label') } },
 ]
 
 const METRIC_TILES = [
-  { key: 'reach', label: 'Alcance', icon: Eye, color: '#0EA5E9' },
-  { key: 'views', label: 'Views', icon: BarChart3, color: '#7C3AED' },
-  { key: 'likes', label: 'Curtidas', icon: Heart, color: '#EC4899' },
-  { key: 'comments', label: 'Comentários', icon: MessageCircle, color: '#F59E0B' },
-  { key: 'shares', label: 'Compart.', icon: Share2, color: '#10B981' },
-  { key: 'saves', label: 'Salvos', icon: Bookmark, color: '#6366F1' },
+  { key: 'reach', get label() { return tr('metrics.reach') }, icon: Eye, color: '#0EA5E9' },
+  { key: 'views', get label() { return tr('metrics.views') }, icon: BarChart3, color: '#7C3AED' },
+  { key: 'likes', get label() { return tr('metrics.likes') }, icon: Heart, color: '#EC4899' },
+  { key: 'comments', get label() { return tr('metrics.comments') }, icon: MessageCircle, color: '#F59E0B' },
+  { key: 'shares', get label() { return tr('metrics.shares') }, icon: Share2, color: '#10B981' },
+  { key: 'saves', get label() { return tr('metrics.saves') }, icon: Bookmark, color: '#6366F1' },
 ]
 
 const linesToArray = (str) => String(str || '').split('\n').map((s) => s.trim()).filter(Boolean)
@@ -178,6 +193,7 @@ function MetricTiles({ metrics }) {
 
 // ── Read-only view for published / done ──────────────────────────────────
 function PublishedView({ status, posts, color, onUnpublish, unpublishingId }) {
+  const { t } = useTranslation('ticket')
   const Icon = status === 'done' ? CheckCircle2 : Radio
   return (
     <Card className="overflow-hidden animate-rise">
@@ -185,15 +201,15 @@ function PublishedView({ status, posts, color, onUnpublish, unpublishingId }) {
         <IconTile icon={Icon} color={color} size="sm" tint="18" strokeWidth={2.3} />
         <div>
           <h3 className="font-display text-base font-bold text-ink">
-            {status === 'done' ? 'Métricas finais' : 'No ar — monitorando'}
+            {status === 'done' ? t('fieldGroup.finalMetrics') : t('fieldGroup.monitoring')}
           </h3>
-          <p className="text-xs text-ink-muted">Desempenho por publicação.</p>
+          <p className="text-xs text-ink-muted">{t('fieldGroup.perPostPerformance')}</p>
         </div>
       </div>
       <div className="space-y-3 p-5">
         {(posts || []).length === 0 ? (
           <p className="rounded-xl border border-dashed border-border bg-surface-muted/40 px-4 py-6 text-center text-sm text-ink-muted">
-            Nenhuma publicação registrada ainda.
+            {t('fieldGroup.noPostsYet')}
           </p>
         ) : (
           posts.map((post) => {
@@ -203,9 +219,9 @@ function PublishedView({ status, posts, color, onUnpublish, unpublishingId }) {
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <ChannelIcons channels={post.provider ? [post.provider] : []} size={14} />
-                    <span className="text-sm font-semibold text-ink">{post.username || post.provider || 'Publicação'}</span>
+                    <span className="text-sm font-semibold text-ink">{post.username || post.provider || t('post.fallback')}</span>
                     <span className="text-xs text-ink-muted">· {dt(post.published_at || post.scheduled_at)}</span>
-                    {unpublished && <Badge variant="muted">Despublicado</Badge>}
+                    {unpublished && <Badge variant="muted">{t('post.unpublished')}</Badge>}
                   </div>
                   <div className="flex items-center gap-2">
                     {post.permalink && (
@@ -215,7 +231,7 @@ function PublishedView({ status, posts, color, onUnpublish, unpublishingId }) {
                         rel="noreferrer"
                         className="inline-flex items-center gap-1 text-xs font-bold text-brand hover:underline"
                       >
-                        Ver post <ExternalLink size={12} />
+                        {t('post.view')} <ExternalLink size={12} />
                       </a>
                     )}
                     {status !== 'done' && post.status === 'published' && onUnpublish && (
@@ -227,7 +243,7 @@ function PublishedView({ status, posts, color, onUnpublish, unpublishingId }) {
                         disabled={unpublishingId === post.id}
                       >
                         {unpublishingId === post.id ? <Spinner size={12} /> : <Ban size={12} />}
-                        Despublicar
+                        {t('post.unpublish')}
                       </Button>
                     )}
                   </div>
@@ -250,6 +266,7 @@ function PublishedView({ status, posts, color, onUnpublish, unpublishingId }) {
 
 // ── The contextual editable field group ──────────────────────────────────
 export default function FieldGroup({ ticket, posts, subtasks = [], onSave, saving = false, onAiAction, acting = false, filling = false }) {
+  const { t } = useTranslation('ticket')
   const status = ticket?.status
   const m = statusMeta(status)
   const schema = SCHEMAS[status]
@@ -479,7 +496,7 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
         control = (
           <Select value={value || ''} onValueChange={(v) => setField(f.key, v)}>
             <SelectTrigger>
-              <SelectValue placeholder="Selecione…" />
+              <SelectValue placeholder={t('fieldGroup.selectPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
               {opts.map((o) => (
@@ -523,13 +540,13 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
                     href={`/clientes/${clientId}/configuracoes`}
                     target="_blank"
                     rel="noreferrer"
-                    title={`${meta.label} não está conectado neste cliente — clique para conectar`}
+                    title={t('fieldGroup.notConnectedClick', { label: meta.label })}
                     className={cls}
                   >
                     {inner}
                   </a>
                 ) : (
-                  <span key={ch} className={cls} title={`${meta.label} não está conectado`}>{inner}</span>
+                  <span key={ch} className={cls} title={t('fieldGroup.notConnected', { label: meta.label })}>{inner}</span>
                 )
               }
 
@@ -571,7 +588,7 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
                 return (
                   <span
                     key={key}
-                    title={noChannels ? 'Escolha os canais primeiro' : 'Indisponível para os canais escolhidos'}
+                    title={noChannels ? t('fieldGroup.pickChannelsFirst') : t('fieldGroup.unavailableForChannels')}
                     className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-xl border border-dashed border-border px-3 py-1.5 text-sm font-semibold text-ink-faint opacity-60"
                   >
                     <Ct size={14} strokeWidth={2.3} />
@@ -608,7 +625,7 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
               checked={!!value}
               onCheckedChange={(checked) => setField(f.key, checked)}
             />
-            <span className="text-sm font-medium text-ink-secondary">{value ? 'Ativada' : 'Desativada'}</span>
+            <span className="text-sm font-medium text-ink-secondary">{value ? t('fieldGroup.switchOn') : t('fieldGroup.switchOff')}</span>
           </div>
         )
         break

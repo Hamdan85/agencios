@@ -1,0 +1,199 @@
+{
+  "page": {
+    "eyebrow": "Plan",
+    "title": "Subscription",
+    "description": "Manage your agency's plan on agencios."
+  },
+  "subscriptionStatus": {
+    "active": "Active",
+    "trialing": "Trialing",
+    "past_due": "Payment past due",
+    "canceled": "Canceled",
+    "incomplete": "Incomplete"
+  },
+  "plan": {
+    "currentBadge": "Current plan",
+    "save": "Save {{percent}}%",
+    "perMonth": "/mo",
+    "annualBilledYearly": "{{price}}/yr · billed annually",
+    "seats_one": "{{count}} seat",
+    "seats_other": "{{count}} seats",
+    "yours": "Your plan",
+    "switchToAnnual": "Switch to annual",
+    "switchToMonthly": "Switch to monthly",
+    "switchTo": "Switch to {{name}}",
+    "subscribe": "Subscribe to {{name}}",
+    "monthly": "Monthly",
+    "annual": "Annual",
+    "cycleMonthly": "monthly",
+    "cycleAnnual": "annual"
+  },
+  "intervalToggle": {
+    "ariaLabel": "Billing cycle"
+  },
+  "costs": {
+    "video15s": "15s video",
+    "perImage": "per image",
+    "perCarousel": "per carousel",
+    "from15s": "from · per 15s"
+  },
+  "credits": {
+    "title": "Credits",
+    "included": "Included",
+    "count_one": "{{count}} credit",
+    "count_other": "{{count}} credits",
+    "balance": "Available balance",
+    "unit": "credits",
+    "fromPlan": "From the plan:",
+    "purchased": "Purchased:",
+    "expiresOn": "Plan credits expire on {{date}}",
+    "buy": "Buy"
+  },
+  "generationStatus": {
+    "queued": "Queued",
+    "processing": "Processing",
+    "completed": "Completed",
+    "failed": "Failed"
+  },
+  "usage": {
+    "title": "Credit usage",
+    "ranges": {
+      "7d": "7 days",
+      "30d": "30 days",
+      "90d": "90 days",
+      "12m": "12 months"
+    },
+    "explainer": "<b>Videos, images and carousels</b> consume credits. <b>AI text and captions</b> are included in the plan — they show up in usage but cost 0 credits.",
+    "spent": "Credits spent",
+    "inPeriod": "in the period",
+    "generations": "Generations",
+    "generationsSub": "videos, images and carousels",
+    "added": "Credits added",
+    "addedSub": "{{granted}} from the plan · {{purchased}} purchased",
+    "empty": {
+      "title": "No usage in this period",
+      "description": "Generate videos, images or carousels while producing tickets and the usage shows up here."
+    },
+    "byKind": "By creative type",
+    "generationCount_one": "{{count}} generation",
+    "generationCount_other": "{{count}} generations",
+    "creditsShort": "{{value}} cr.",
+    "filters": {
+      "allKinds": "All types",
+      "allStatuses": "All statuses"
+    },
+    "chart": {
+      "creditsOverTime": "Credits spent over time",
+      "generationsOverTime": "Generations over time",
+      "emptyCredits": "No credits spent in this period.",
+      "emptyGenerations": "No generations in this period.",
+      "unitCredits": "cr.",
+      "unitGenerations": "gen.",
+      "tooltip": "{{date}} · Total {{total}} {{unit}}",
+      "total": "Total"
+    },
+    "recent": {
+      "title": "Recent generations",
+      "emptyFiltered": "No generations match these filters.",
+      "pageInfo": "{{from}}–{{to}} of {{total}}",
+      "prev": "Previous",
+      "next": "Next"
+    }
+  },
+  "seatOverage": "The workspace has {{count}} members, and the current plan allows up to {{limit}}. Remove members or upgrade — new tickets and campaigns are blocked until then.",
+  "trial": {
+    "active": "Trial period active",
+    "endsOn": "— ends on {{date}}",
+    "description": "Your plan's monthly credits unlock when the trial ends. Need to generate sooner? You can already buy standalone credit packs below."
+  },
+  "cancelBanner": {
+    "message": "Subscription will be canceled on {{date}}.",
+    "reactivate": "Reactivate"
+  },
+  "tabs": {
+    "plan": "Plan & credits",
+    "usage": "Usage"
+  },
+  "currentPlan": {
+    "seats": "Seats",
+    "nextRenewal": "Next renewal",
+    "access": "Access",
+    "granted": "Granted",
+    "restricted": "Restricted"
+  },
+  "plans": {
+    "title": "Plans"
+  },
+  "manage": {
+    "title": "Manage payment",
+    "description": "Update your payment method and view invoices in the Stripe portal.",
+    "portal": "Manage in the portal",
+    "cancel": "Cancel subscription",
+    "confirmCancel": {
+      "title": "Cancel subscription?",
+      "description": "Your subscription stays active until the end of the current period and won't renew.",
+      "keep": "Keep subscription"
+    }
+  },
+  "confirmChange": {
+    "titleChange": "Confirm plan change",
+    "titleSubscribe": "Confirm subscription",
+    "priceMonthly": "{{price}}/mo",
+    "priceAnnual": "{{price}}/mo (billed annually)",
+    "descriptionChange": "Switch to the {{name}} plan ({{cycle}}), {{price}}. The difference is prorated on your next invoice.",
+    "descriptionSubscribe": "Subscribe to the {{name}} plan ({{cycle}}), {{price}}. You'll be taken to Stripe's secure checkout.",
+    "confirm": "Confirm change",
+    "goToPayment": "Go to payment"
+  },
+  "paywall": {
+    "settings": "Settings",
+    "logout": "Log out",
+    "mostPopular": "Most popular",
+    "creditsPerMonth": "{{count}} credits/mo",
+    "billedOncePerYear": "Billed once a year",
+    "activateWorkspace": "Activate your workspace",
+    "chooseTitle": "Choose a plan to get started",
+    "noActivePlan": "Your account{{workspaceSuffix}} doesn't have an active plan yet. Subscribe to unlock the board, the creative studio and every integration.",
+    "trialDays": "{{count}}-day trial",
+    "cardRequired": "Card required to start",
+    "prepaidCredits": "Prepaid credits for video and image",
+    "footer": "No free tier. Videos, images and carousels consume credits (1 credit = R$ 1); AI text and captions are included. Cancel anytime."
+  },
+  "invoiceForm": {
+    "title": "New invoice",
+    "description": "Record an invoice for a client. You can then generate a payment link or mark it as paid.",
+    "created": "Invoice created!",
+    "sending": "Sending…",
+    "resendToClient": "Resend to client",
+    "sendToClient": "Send to client",
+    "close": "Close",
+    "client": "Client",
+    "clientPlaceholder": "Select the client",
+    "amount": "Amount",
+    "dueDate": "Due date",
+    "dueDatePlaceholder": "Select the due date",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Services rendered…",
+    "projects": "Campaigns (optional)",
+    "paymentLink": {
+      "title": "Generate with payment link",
+      "description": "Creates the Mercado Pago link and emails it to the client."
+    },
+    "cancel": "Cancel",
+    "submitting": "Recording…",
+    "submit": "Record invoice"
+  },
+  "toasts": {
+    "taskUpdateError": "Couldn't update the task.",
+    "workspaceCreated": "Workspace created!",
+    "workspaceCreateError": "Couldn't create the workspace.",
+    "workspaceUpdated": "Workspace updated!",
+    "genericError": "Something went wrong.",
+    "inviteGenerated": "Invite generated!",
+    "inviteError": "Couldn't send the invite.",
+    "accessRevoked": "Access revoked.",
+    "accessRevokeError": "Couldn't revoke access.",
+    "newUrlGenerated": "New URL generated. The previous one was invalidated.",
+    "newUrlError": "Couldn't generate a new URL."
+  }
+}

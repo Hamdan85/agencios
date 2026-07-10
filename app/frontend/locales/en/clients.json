@@ -1,0 +1,367 @@
+{
+  "actions": {
+    "edit": "Edit",
+    "archive": "Archive",
+    "unarchive": "Reactivate",
+    "back": "Back",
+    "close": "Close",
+    "remove": "Remove"
+  },
+  "status": {
+    "active": "Active",
+    "archived": "Archived"
+  },
+  "index": {
+    "eyebrow": "Portfolio",
+    "title": "Clients",
+    "description": "Your agency's client portfolio.",
+    "newClient": "New client",
+    "searchPlaceholder": "Search by name, company or email…",
+    "filters": {
+      "status": "Status",
+      "active": "Active",
+      "archived": "Archived",
+      "all": "All"
+    },
+    "empty": {
+      "noneTitle": "No clients yet",
+      "noneDescription": "Add the first client to the agency's portfolio.",
+      "filteredTitle": "Nothing here",
+      "filteredDescription": "Try adjusting the search or the status filter."
+    }
+  },
+  "card": {
+    "campaigns_one": "{{count}} campaign",
+    "campaigns_other": "{{count}} campaigns",
+    "positioned": "Positioned",
+    "positionedTitle": "Positioning defined"
+  },
+  "archiveConfirm": {
+    "title": "Archive {{name}}?",
+    "description": "The client leaves the active list. You can reactivate them later via the archived filter."
+  },
+  "show": {
+    "clientFallback": "Client",
+    "editClient": "Edit client",
+    "viewPerformance": "View performance",
+    "stats": {
+      "campaigns": "Campaigns",
+      "invoices": "Invoices",
+      "billed": "Billed"
+    },
+    "tabs": {
+      "branding": "Positioning & Brand",
+      "config": "Settings",
+      "projects": "Campaigns",
+      "meetings": "Meetings",
+      "invoices": "Invoices"
+    }
+  },
+  "projectStatus": {
+    "active": "Active",
+    "paused": "Paused",
+    "archived": "Archived"
+  },
+  "invoiceStatus": {
+    "draft": "Draft",
+    "open": "Open",
+    "paid": "Paid",
+    "overdue": "Overdue",
+    "canceled": "Canceled"
+  },
+  "brand": {
+    "title": "Brand",
+    "emptyTitle": "No brand identity",
+    "emptyDescription": "Define this client's voice, @handle, colors and logo — used in creative generation and AI prompts.",
+    "define": "Define brand",
+    "ugcAvatar": "UGC avatar",
+    "primaryColor": "Primary color",
+    "secondaryColor": "Secondary color",
+    "carousel": "Carousel",
+    "carouselHint": "This is how this client's carousels are generated.",
+    "seeFullExample": "See full example",
+    "voice": "Brand voice"
+  },
+  "positioningSection": {
+    "title": "Positioning",
+    "emptyTitle": "No positioning",
+    "emptyDescription": "Describe the brand and let AI build the positioning — it becomes AI context on every ticket in your campaigns.",
+    "define": "Define positioning"
+  },
+  "social": {
+    "title": "Social networks",
+    "connected": "Connected",
+    "reauth": "Re-authenticate",
+    "disconnected": "Disconnected",
+    "sessionExpired": "Session expired — reconnect.",
+    "connectPrompt": "Connect this client's account.",
+    "connect": "Connect",
+    "reconnect": "Reconnect",
+    "disconnect": "Disconnect",
+    "disconnectConfirm": {
+      "title": "Disconnect {{network}}?",
+      "description": "Posts scheduled on this account will stop publishing until you reconnect."
+    },
+    "selfServeTitle": "Let the client connect on their own",
+    "selfServeDescription": "Send a link and the client connects their own networks with their own login — no account needed here.",
+    "copyConnectLink": "Copy connect link",
+    "connectLinkCopied": "Link copied! Send it to the client so they can connect their own networks.",
+    "connectLinkError": "Couldn't generate the link.",
+    "manualHint": "Or connect this client's networks yourself. Campaign tickets publish to these accounts."
+  },
+  "portal": {
+    "title": "Client portal",
+    "linkTitle": "Client tracking link",
+    "linkDescription": "No login: the client sees the campaigns, follows the board in real time, approves creatives and reads the reports.",
+    "copy": "Copy",
+    "rotate": "Renew",
+    "copySuccess": "Link copied! Send it to the client to follow campaigns and approve creatives.",
+    "copyError": "Couldn't copy the link.",
+    "rotateConfirm": {
+      "title": "Renew the portal link?",
+      "description": "The current link stops working immediately. Anyone with the old link loses access and you'll need to send the new one to the client.",
+      "confirm": "Renew link"
+    }
+  },
+  "projects": {
+    "title": "Campaigns",
+    "emptyTitle": "No campaigns",
+    "emptyDescription": "This client has no campaigns yet.",
+    "newProject": "New campaign"
+  },
+  "invoices": {
+    "title": "Invoices",
+    "emptyTitle": "No invoices",
+    "emptyDescription": "No invoices have been issued for this client.",
+    "newInvoice": "New invoice",
+    "due": "Due {{date}}"
+  },
+  "meetings": {
+    "description": "All of the team's meetings with this client.",
+    "schedule": "Schedule meeting",
+    "loading": "Loading…",
+    "emptyTitle": "No meetings with this client",
+    "emptyDescription": "Schedule the first one — it lands on your Google Calendar with a Meet link.",
+    "cancelConfirm": {
+      "title": "Cancel \"{{title}}\"?",
+      "description": "The meeting will be removed from the agenda and from Google Calendar.",
+      "confirm": "Cancel meeting"
+    }
+  },
+  "wizard": {
+    "steps": {
+      "site": {
+        "title": "Website",
+        "description": "Import everything from the brand's landing page."
+      },
+      "contact": {
+        "title": "Contact",
+        "description": "Who the client is."
+      },
+      "brand": {
+        "title": "Brand",
+        "description": "Visual identity and brand voice."
+      },
+      "brief": {
+        "title": "Description",
+        "description": "Describe the brand — AI fills in the positioning."
+      },
+      "statement": {
+        "title": "Positioning",
+        "description": "Final brand synthesis."
+      }
+    },
+    "save": "Save",
+    "createDraft": "Create draft",
+    "skip": "Skip",
+    "continue": "Continue",
+    "saving": "Saving…",
+    "saveClient": "Save client",
+    "createClient": "Create client"
+  },
+  "editDialog": {
+    "sections": {
+      "contact": "Contact",
+      "brand": "Brand",
+      "positioning": "Positioning",
+      "content": "Content",
+      "statement": "Synthesis"
+    },
+    "saveChanges": "Save changes"
+  },
+  "fields": {
+    "name": "Name",
+    "namePlaceholder": "Contact name",
+    "company": "Company",
+    "companyPlaceholder": "Company name",
+    "email": "Email",
+    "emailPlaceholder": "contact@company.com",
+    "phone": "Phone",
+    "phonePlaceholder": "(11) 99999-9999",
+    "document": "Document",
+    "documentPlaceholder": "CNPJ / CPF",
+    "notes": "Notes",
+    "notesPlaceholder": "Notes about the client…",
+    "currentImage": "Current image",
+    "chooseImage": "Choose image",
+    "imageFormats": "PNG, JPG or SVG"
+  },
+  "brandFields": {
+    "voicePlaceholder": "Personality and tone (e.g.: warm, playful, expert).",
+    "handleLabel": "Default @handle",
+    "handlePlaceholder": "official_brand",
+    "creatorAvatar": "Creator avatar (UGC)"
+  },
+  "carousel": {
+    "styles": {
+      "gradient": "Gradient background",
+      "white": "White background",
+      "image": "Image background"
+    },
+    "styleLabel": "Carousel style",
+    "styleHint": "Background used when AI generates carousels for this client.",
+    "previewHeadline": "Your headline shows up here",
+    "bgSet": "Background image set",
+    "bgChoose": "Choose the background image",
+    "bgHint": "Upload a file or pick a creative from the platform.",
+    "uploadImage": "Upload image",
+    "pickFromCreative": "Pick from a creative"
+  },
+  "palette": {
+    "title": "Carousel colors (from the image)",
+    "reanalyze": "Re-analyze",
+    "accent": "Accent",
+    "text": "Text",
+    "scrim": "Scrim {{pct}}%",
+    "analyzing": "Analyzing the image to pick the colors…",
+    "noBackground": "Set a background image — AI picks the colors automatically.",
+    "note": "Colors exclusive to the image background, separate from the brand colors (used on gradient and white backgrounds)."
+  },
+  "siteImport": {
+    "banner": "Paste the brand's website / landing page link. AI reads the page and automatically fills in name, contact, visual identity (logo and colors) and the positioning. You review everything before saving.",
+    "label": "Brand website",
+    "placeholder": "https://brand.com",
+    "reading": "Reading…",
+    "import": "Import",
+    "hint": "Fills in name, email, phone, @, colors, logo and positioning — you can skip and fill in manually."
+  },
+  "brief": {
+    "banner": "Describe the brand in your own words — products, audience, differentiators, tone of voice. AI fills in the structured positioning and you review it in the next steps.",
+    "label": "Brand description",
+    "placeholder": "E.g.: We're a premium artisanal bakery in São Paulo. We sell made-to-order cakes and sweets for parties. Our audience is upper-middle-class moms who value natural ingredients. We speak in a warm, familiar way…",
+    "generating": "Generating positioning…",
+    "generate": "Fill positioning with AI"
+  },
+  "statement": {
+    "label": "Positioning (synthesis)",
+    "placeholder": "The positioning paragraph shows up here. Generate it with AI in the description step or write it manually.",
+    "generating": "Generating…",
+    "regenerate": "Regenerate with AI"
+  },
+  "backgroundPicker": {
+    "description": "Use an image from a platform creative as the carousel background.",
+    "searchPlaceholder": "Search creatives…",
+    "emptyTitle": "No creatives with an image",
+    "emptyDescription": "Generate or upload an image creative to use it as the background."
+  },
+  "example": {
+    "dialogTitle": "Carousel example",
+    "dialogDescription": "{{style}} · this is how this client's carousels are generated. Illustrative content — AI writes the real copy from the positioning.",
+    "prevSlide": "Previous slide",
+    "nextSlide": "Next slide",
+    "goToSlide": "Go to slide {{n}}",
+    "brandFallback": "Your brand",
+    "nextStep": "Next step",
+    "saveShare": "Save and share",
+    "swipe": "Swipe →",
+    "theBrand": "the brand",
+    "point1": "Strategy tailored to your brand",
+    "point2": "Execution that saves you time",
+    "point3": "Results you can track closely",
+    "hookHeadline": "Meet {{brand}}",
+    "hookBody": "Swipe to see how we can help you.",
+    "ctaHeadline": "Ready to start?",
+    "ctaBodyHandle": "Follow @{{handle}} and talk to us.",
+    "ctaBody": "Talk to us and start today."
+  },
+  "toasts": {
+    "genericError": "Something went wrong.",
+    "create": {
+      "success": "Client created!",
+      "error": "Couldn't create the client."
+    },
+    "update": {
+      "success": "Client updated!",
+      "error": "Couldn't update."
+    },
+    "archive": {
+      "success": "Client archived."
+    },
+    "unarchive": {
+      "success": "Client reactivated!",
+      "error": "Couldn't reactivate."
+    },
+    "rotatePortalLink": {
+      "success": "Portal link renewed. The previous link no longer works.",
+      "error": "Couldn't renew the portal link."
+    },
+    "synthesize": {
+      "error": "Couldn't generate the positioning with AI."
+    },
+    "importFromUrl": {
+      "error": "Couldn't read the landing page."
+    },
+    "updatePositioning": {
+      "success": "Positioning updated!",
+      "error": "Couldn't save the positioning."
+    },
+    "uploadBrandAssets": {
+      "error": "Couldn't upload the brand images."
+    },
+    "setCarouselBackground": {
+      "success": "Carousel background set!",
+      "error": "Couldn't set the carousel background."
+    },
+    "reanalyzePalette": {
+      "success": "Analyzing the image colors…",
+      "error": "Couldn't analyze the image colors."
+    },
+    "projects": {
+      "create": {
+        "success": "Campaign created!",
+        "error": "Couldn't create the campaign."
+      },
+      "start": {
+        "success": "Campaign started!",
+        "error": "Couldn't start the campaign."
+      },
+      "finalize": {
+        "success": "Campaign finalized! Generating the report…",
+        "error": "Couldn't finalize the campaign."
+      },
+      "sendScope": {
+        "success": "Scope sent to the client!",
+        "error": "Couldn't send the scope."
+      },
+      "destroy": {
+        "success": "Campaign deleted.",
+        "error": "Couldn't delete the campaign."
+      },
+      "autopilotEstimate": {
+        "error": "Couldn't estimate the credits."
+      },
+      "autopilot": {
+        "success": "Autopilot started 🚀",
+        "error": "Couldn't start the autopilot."
+      },
+      "updateSettings": {
+        "success": "Campaign settings saved!",
+        "error": "Couldn't save the settings."
+      }
+    },
+    "report": {
+      "sent": "Report emailed to the client 📧",
+      "error": "Couldn't send the report."
+    }
+  }
+}

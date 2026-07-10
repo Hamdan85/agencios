@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, lazy, Suspense } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
   Film, Loader2, RefreshCw, Check, AlertCircle, Sparkles, MessageSquare,
@@ -25,6 +26,7 @@ import {
 } from '@/hooks/useData'
 import { uploadsApi } from '@/api'
 import { cn } from '@/lib/utils'
+import i18n from '@/i18n'
 
 // The shared fullscreen media viewer (lazy — heavy) for previewing element images.
 const MediaViewer = lazy(() => import('./MediaViewer'))
@@ -33,11 +35,11 @@ const MediaViewer = lazy(() => import('./MediaViewer'))
 // so the strip stays tiny and the player keeps the room. `working` states get a
 // pulsing overlay so a queued scene never reads as idle.
 const STATE_META = {
-  ready:     { label: 'Pronta',       dot: 'bg-emerald text-white', icon: Check },
-  rendering: { label: 'Renderizando', dot: 'bg-sky text-white',     icon: Loader2, spin: true, working: true },
-  stale:     { label: 'Na fila',      dot: 'bg-amber text-white',   icon: Loader2, spin: true, working: true },
-  fresh:     { label: 'Na fila',      dot: 'bg-amber text-white',   icon: Loader2, spin: true, working: true },
-  failed:    { label: 'Falhou',       dot: 'bg-danger text-white',  icon: AlertCircle },
+  ready:     { get label() { return i18n.t('ticket:video.state.ready') },     dot: 'bg-emerald text-white', icon: Check },
+  rendering: { get label() { return i18n.t('ticket:video.state.rendering') }, dot: 'bg-sky text-white',     icon: Loader2, spin: true, working: true },
+  stale:     { get label() { return i18n.t('ticket:video.state.queued') },    dot: 'bg-amber text-white',   icon: Loader2, spin: true, working: true },
+  fresh:     { get label() { return i18n.t('ticket:video.state.queued') },    dot: 'bg-amber text-white',   icon: Loader2, spin: true, working: true },
+  failed:    { get label() { return i18n.t('ticket:video.state.failed') },    dot: 'bg-danger text-white',  icon: AlertCircle },
 }
 
 // The player box follows the video's real aspect — a 16:9 video in a fixed
@@ -54,8 +56,8 @@ const workingScenes = (scenes) => scenes.filter((s) => WORKING_STATES.includes(s
 const sceneList = (nums) => {
   const n = [...new Set(nums)].sort((a, b) => a - b)
   if (n.length === 0) return ''
-  if (n.length === 1) return `cena ${n[0]}`
-  return `cenas ${n.slice(0, -1).join(', ')} e ${n[n.length - 1]}`
+  if (n.length === 1) return i18n.t('ticket:video.sceneOne', { num: n[0] })
+  return i18n.t('ticket:video.sceneMany', { head: n.slice(0, -1).join(', '), last: n[n.length - 1] })
 }
 
 const fmtTime = (secs) => {
@@ -72,6 +74,7 @@ const fmtTime = (secs) => {
 //   * clip-hop — while scenes are still rendering: hops clips seamlessly on end
 //     (next clip preloaded), under the same global timecode.
 function SequencePlayer({ scenes, composedUrl, music, jumpTo, onJumped, onProgress, onFullscreen }) {
+  const { t } = useTranslation('ticket')
   const playable = useMemo(() => scenes.filter((s) => s.clip_url), [scenes])
   const single = !!composedUrl
   const segments = single ? scenes : playable
@@ -193,7 +196,7 @@ function SequencePlayer({ scenes, composedUrl, music, jumpTo, onJumped, onProgre
         )}
         {!playing && (
           <button
-            type="button" onClick={play} aria-label="Tocar"
+            type="button" onClick={play} aria-label={t('video.play')}
             className="absolute inset-0 grid place-items-center rounded-2xl bg-black/20 text-white transition hover:bg-black/30"
           >
             <span className="grid size-14 place-items-center rounded-full bg-white/25 backdrop-blur"><Play size={26} /></span>
@@ -224,23 +227,23 @@ function SequencePlayer({ scenes, composedUrl, music, jumpTo, onJumped, onProgre
               <button
                 type="button"
                 onClick={onFullscreen}
-                title="Ver o vídeo em tela cheia"
+                title={t('video.fullscreenTitle')}
                 className="inline-flex items-center gap-1 font-bold text-ink-secondary transition hover:text-ink"
               >
-                <Maximize2 size={12} /> Tela cheia
+                <Maximize2 size={12} /> {t('video.fullscreen')}
               </button>
             )}
             {single && (
               <a
                 href={`${composedUrl}${composedUrl.includes('?') ? '&' : '?'}disposition=attachment`}
                 download
-                title="Baixar o vídeo"
+                title={t('video.downloadTitle')}
                 className="inline-flex items-center gap-1 font-bold text-ink-secondary transition hover:text-ink"
               >
-                <Download size={12} /> Baixar
+                <Download size={12} /> {t('actions.download')}
               </a>
             )}
-            <span>Cena {activeIdx + 1}/{segments.length}</span>
+            <span>{t('video.sceneCounter', { current: activeIdx + 1, total: segments.length })}</span>
           </span>
         </div>
       </div>
@@ -250,18 +253,19 @@ function SequencePlayer({ scenes, composedUrl, music, jumpTo, onJumped, onProgre
 
 // ── Placeholder when there's nothing playable yet ─────────────────────
 function PreviewPlaceholder({ busy, failed, planning }) {
+  const { t } = useTranslation('ticket')
   return (
     <div className="grid size-full place-items-center rounded-2xl bg-brand-ink/90 text-white/70">
       {failed ? (
         <div className="flex flex-col items-center gap-2 px-4 text-center text-white/85">
           <AlertCircle size={26} className="text-danger" />
-          <p className="text-sm font-semibold">A geração falhou</p>
-          <p className="text-xs text-white/60">Peça no chat para refazer, ou gere o vídeo de novo.</p>
+          <p className="text-sm font-semibold">{t('video.generationFailed')}</p>
+          <p className="text-xs text-white/60">{t('video.generationFailedHint')}</p>
         </div>
       ) : busy ? (
         <div className="flex flex-col items-center gap-2 text-center">
           <InlineSpinner size={26} />
-          <p className="text-xs">{planning ? 'Planejando as cenas…' : 'Renderizando o vídeo…'}</p>
+          <p className="text-xs">{planning ? t('video.planning') : t('video.rendering')}</p>
         </div>
       ) : <Film size={28} />}
     </div>
@@ -300,6 +304,7 @@ function Timeline({ scenes, onSeek, playhead, noteFor, onSaveNote }) {
 // the same note by clicking again); the saved note shows as a chip above the
 // chat input and rides along with the next message.
 function SceneTile({ scene: s, isPlayhead, within, note, onSeek, onSaveNote }) {
+  const { t } = useTranslation('ticket')
   const m = STATE_META[s.render_state] || STATE_META.fresh
   const StateIcon = m.icon
   const [open, setOpen] = useState(false)
@@ -324,7 +329,7 @@ function SceneTile({ scene: s, isPlayhead, within, note, onSeek, onSaveNote }) {
       const { references: uploaded } = await uploadsApi.references(files.slice(0, 2 - draftRefs.length))
       setDraftRefs((prev) => [...prev, ...uploaded].slice(0, 2))
     } catch {
-      toast.error('Não foi possível anexar. Use JPG, PNG, WEBP ou vídeo MP4/MOV/WEBM (máx. 50 MB).')
+      toast.error(t('video.attachError'))
     } finally {
       setUploading(false)
     }
@@ -335,7 +340,7 @@ function SceneTile({ scene: s, isPlayhead, within, note, onSeek, onSaveNote }) {
       <PopoverTrigger asChild>
         <button
           type="button"
-          title={`Cena ${s.position + 1} — anotar`}
+          title={t('video.sceneTileTitle', { num: s.position + 1 })}
           onClick={openBalloon}
           className={cn(
             'relative h-20 w-12 shrink-0 overflow-hidden rounded-lg border-2 text-left transition',
@@ -377,7 +382,7 @@ function SceneTile({ scene: s, isPlayhead, within, note, onSeek, onSaveNote }) {
       </PopoverTrigger>
       <PopoverContent align="center" side="top" className="w-64">
         <SectionLabel className="mb-1.5 tracking-wider text-ink-secondary">
-          Anotar a cena {s.position + 1}
+          {t('video.annotateScene', { num: s.position + 1 })}
         </SectionLabel>
         <Textarea
           value={draft}
@@ -386,7 +391,7 @@ function SceneTile({ scene: s, isPlayhead, within, note, onSeek, onSaveNote }) {
             // Single-line comment: Enter submits (Shift+Enter for a rare newline).
             if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); save() }
           }}
-          placeholder="O que mudar nesta cena? (ex.: mais close, trocar o texto…)"
+          placeholder={t('video.annotatePlaceholder')}
           rows={2}
           autoFocus
           className="min-h-12 text-sm"
@@ -402,17 +407,17 @@ function SceneTile({ scene: s, isPlayhead, within, note, onSeek, onSaveNote }) {
               <div className="relative size-9 shrink-0 overflow-hidden rounded-lg border border-border">
                 {r.kind === 'vid'
                   ? <video src={r.url} muted preload="metadata" className="size-full object-cover" />
-                  : <img src={r.url} alt="Referência" className="size-full object-cover" />}
+                  : <img src={r.url} alt={t('video.referenceAlt')} className="size-full object-cover" />}
               </div>
               <input
                 value={r.description || ''}
                 onChange={(e) => setDraftRefs((prev) => prev.map((x, j) => (j === i ? { ...x, description: e.target.value } : x)))}
-                placeholder="O que é este arquivo?"
+                placeholder={t('video.whatIsThisFile')}
                 className="h-8 min-w-0 flex-1 rounded-lg border border-border bg-surface px-2 text-xs text-ink placeholder:text-ink-faint focus:border-brand focus:outline-none"
               />
               <button
                 type="button" onClick={() => setDraftRefs((prev) => prev.filter((_, j) => j !== i))}
-                aria-label="Remover" className="grid size-5 shrink-0 place-items-center rounded text-ink-muted transition hover:text-danger"
+                aria-label={t('actions.remove')} className="grid size-5 shrink-0 place-items-center rounded text-ink-muted transition hover:text-danger"
               >
                 <X size={11} />
               </button>
@@ -421,21 +426,21 @@ function SceneTile({ scene: s, isPlayhead, within, note, onSeek, onSaveNote }) {
           {draftRefs.length < 2 && (
             <button
               type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
-              title="Anexar referência a esta cena"
+              title={t('video.attachReferenceScene')}
               className="flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border-strong text-xs font-semibold text-ink-muted transition hover:border-brand hover:text-brand disabled:opacity-50"
             >
-              {uploading ? <InlineSpinner size={14} /> : <><ImagePlus size={14} /> Anexar referência</>}
+              {uploading ? <InlineSpinner size={14} /> : <><ImagePlus size={14} /> {t('video.attachReference')}</>}
             </button>
           )}
         </div>
         <div className="mt-2 flex justify-end gap-2">
           {pinned && (
             <Button size="sm" variant="ghost" className="h-8" onClick={clear}>
-              Remover
+              {t('actions.remove')}
             </Button>
           )}
           <Button size="sm" className="h-8" onClick={save} disabled={!draft.trim() && draftRefs.length === 0}>
-            <Check size={14} /> Salvar
+            <Check size={14} /> {t('actions.save')}
           </Button>
         </div>
       </PopoverContent>
@@ -462,16 +467,17 @@ function AlertMessage({ content }) {
 // lightbox (NOT a new tab — a top-level nav would hit the ngrok warning page).
 const isVideoUrl = (u) => /\.(mp4|mov|webm|m4v)(\?|#|$)/i.test(String(u || ''))
 function MessageThumbs({ images, align = 'start', onOpen }) {
+  const { t } = useTranslation('ticket')
   return (
     <div className={cn('-mt-3 flex flex-wrap gap-1.5 px-1', align === 'end' ? 'justify-end' : 'justify-start')}>
       {images.map((url) => (
         <button
-          key={url} type="button" onClick={() => onOpen?.(url)} title="Abrir referência"
+          key={url} type="button" onClick={() => onOpen?.(url)} title={t('video.openReference')}
           className="size-14 shrink-0 overflow-hidden rounded-lg bg-black shadow-md ring-1 ring-border transition hover:ring-2 hover:ring-brand"
         >
           {isVideoUrl(url)
             ? <video src={url} muted preload="metadata" className="size-full object-contain" />
-            : <img src={url} alt="Referência" className="size-full object-contain" />}
+            : <img src={url} alt={t('video.referenceAlt')} className="size-full object-contain" />}
         </button>
       ))}
     </div>
@@ -481,15 +487,16 @@ function MessageThumbs({ images, align = 'start', onOpen }) {
 // Full-size preview of a reference, IN-APP (avoids opening the raw ngrok URL in a
 // new tab, which would show the browser-warning interstitial). Backdrop/✕ closes.
 function Lightbox({ url, onClose }) {
+  const { t } = useTranslation('ticket')
   if (!url) return null
   return (
     <div className="fixed inset-0 z-[120] grid place-items-center bg-black/85 p-6" onClick={onClose}>
-      <button type="button" onClick={onClose} aria-label="Fechar" className="absolute right-4 top-4 text-white/80 transition hover:text-white">
+      <button type="button" onClick={onClose} aria-label={t('actions.close')} className="absolute right-4 top-4 text-white/80 transition hover:text-white">
         <X size={26} />
       </button>
       {isVideoUrl(url)
         ? <video src={url} controls autoPlay className="max-h-[88vh] max-w-[92vw] rounded-xl" onClick={(e) => e.stopPropagation()} />
-        : <img src={url} alt="Referência" className="max-h-[88vh] max-w-[92vw] rounded-xl object-contain" onClick={(e) => e.stopPropagation()} />}
+        : <img src={url} alt={t('video.referenceAlt')} className="max-h-[88vh] max-w-[92vw] rounded-xl object-contain" onClick={(e) => e.stopPropagation()} />}
     </div>
   )
 }
@@ -497,10 +504,11 @@ function Lightbox({ url, onClose }) {
 // The per-bubble cost tag: sits right under the assistant bubble whose turn
 // spent credits, so the price is tied to the exact operation that caused it.
 function CreditTag({ credits }) {
+  const { t } = useTranslation('ticket')
   return (
     <div className="flex animate-rise justify-start pl-1">
       <Badge variant="warning" className="px-2 text-[11px] tracking-normal">
-        <Coins size={11} /> −{credits} {credits === 1 ? 'crédito' : 'créditos'}
+        <Coins size={11} /> {t('video.creditsSpent', { count: credits })}
       </Badge>
     </div>
   )
@@ -511,6 +519,7 @@ function CreditTag({ credits }) {
 const MAX_CHAT_REFS = 3
 
 function Chat({ messages, notes, onRemoveNote, onSend, sending, working = [], creditBalance = null }) {
+  const { t } = useTranslation('ticket')
   const [text, setText] = useState('')
   const [refs, setRefs] = useState([]) // [{ url }] attached reference images
   const [uploading, setUploading] = useState(false)
@@ -527,13 +536,13 @@ function Chat({ messages, notes, onRemoveNote, onSend, sending, working = [], cr
     e.target.value = ''
     if (!files.length) return
     const room = MAX_CHAT_REFS - refs.length
-    if (room <= 0) { toast.error(`Máximo de ${MAX_CHAT_REFS} referências.`); return }
+    if (room <= 0) { toast.error(t('video.maxRefs', { count: MAX_CHAT_REFS })); return }
     setUploading(true)
     try {
       const { references: uploaded } = await uploadsApi.references(files.slice(0, room))
       setRefs((prev) => [...prev, ...uploaded].slice(0, MAX_CHAT_REFS))
     } catch {
-      toast.error('Não foi possível enviar. Use JPG, PNG, WEBP ou vídeo MP4/MOV/WEBM (máx. 50 MB).')
+      toast.error(t('video.uploadError'))
     } finally {
       setUploading(false)
     }
@@ -547,7 +556,7 @@ function Chat({ messages, notes, onRemoveNote, onSend, sending, working = [], cr
     // Scene annotations (set via the tile balloons) + attachments ride along
     // with the message. With only notes and no typed text, still send so the
     // annotations get applied. Each ref carries the user's description.
-    onSend(msg || (hasNotes ? 'Aplique as anotações das cenas.' : 'Use esta referência.'), refs)
+    onSend(msg || (hasNotes ? t('video.applyNotes') : t('video.useReference')), refs)
     setText('')
     setRefs([])
   }
@@ -562,8 +571,8 @@ function Chat({ messages, notes, onRemoveNote, onSend, sending, working = [], cr
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center text-ink-muted">
             <MessageSquare size={22} className="text-brand" />
-            <p className="text-sm font-semibold text-ink">Converse com o vídeo</p>
-            <p className="text-xs">Diga o que quer mudar — no vídeo todo ou numa cena. Clique numa cena para anotar algo específico dela; as anotações vão junto com a mensagem.</p>
+            <p className="text-sm font-semibold text-ink">{t('video.chatTitle')}</p>
+            <p className="text-xs">{t('video.chatHint')}</p>
           </div>
         ) : (
           messages.map((m, i) => (
@@ -589,7 +598,7 @@ function Chat({ messages, notes, onRemoveNote, onSend, sending, working = [], cr
           <div className="flex justify-start">
             <div className="inline-flex items-center gap-2 rounded-2xl bg-brand-soft/50 px-3.5 py-2 text-xs font-semibold text-brand">
               <InlineSpinner size={13} className="shrink-0" />
-              Trabalhando {working.length === 1 ? 'na' : 'nas'} {sceneList(working)}… leva 1–2 min {working.length === 1 ? '' : 'cada'}.
+              {t('video.workingChat', { count: working.length, scenes: sceneList(working) })}
             </div>
           </div>
         )}
@@ -604,10 +613,11 @@ function Chat({ messages, notes, onRemoveNote, onSend, sending, working = [], cr
               <Badge key={n.scene} className="max-w-full bg-brand-soft/60 px-2 text-[11px] font-semibold tracking-normal text-brand">
                 {n.refs?.length ? <ImagePlus size={10} className="shrink-0" /> : <Pencil size={10} className="shrink-0" />}
                 <span className="truncate">
-                  Cena {n.scene}: {n.text || 'referência anexada'}
-                  {n.refs?.length ? ` (${n.refs.length})` : ''}
+                  {n.refs?.length
+                    ? t('video.sceneNoteWithRefs', { num: n.scene, text: n.text || t('video.referenceAttached'), count: n.refs.length })
+                    : t('video.sceneNote', { num: n.scene, text: n.text || t('video.referenceAttached') })}
                 </span>
-                <button type="button" onClick={() => onRemoveNote(n.scene)} aria-label="Remover nota" className="shrink-0 opacity-70 hover:opacity-100">
+                <button type="button" onClick={() => onRemoveNote(n.scene)} aria-label={t('video.removeNoteAria')} className="shrink-0 opacity-70 hover:opacity-100">
                   <X size={11} />
                 </button>
               </Badge>
@@ -623,17 +633,17 @@ function Chat({ messages, notes, onRemoveNote, onSend, sending, working = [], cr
                 <div className="relative size-10 shrink-0 overflow-hidden rounded-lg border border-border">
                   {r.kind === 'vid'
                     ? <video src={r.url} muted preload="metadata" className="size-full object-cover" />
-                    : <img src={r.url} alt="Referência" className="size-full object-cover" />}
+                    : <img src={r.url} alt={t('video.referenceAlt')} className="size-full object-cover" />}
                 </div>
                 <input
                   value={r.description || ''}
                   onChange={(e) => setRefDescription(i, e.target.value)}
-                  placeholder="O que é este arquivo? (ex.: logo, personagem…)"
+                  placeholder={t('video.whatIsFileExample')}
                   className="h-9 min-w-0 flex-1 rounded-lg border border-border bg-surface px-2.5 text-xs text-ink placeholder:text-ink-faint focus:border-brand focus:outline-none"
                 />
                 <button
                   type="button" onClick={() => setRefs((prev) => prev.filter((_, j) => j !== i))}
-                  aria-label="Remover" className="grid size-6 shrink-0 place-items-center rounded-md text-ink-muted transition hover:text-danger"
+                  aria-label={t('actions.remove')} className="grid size-6 shrink-0 place-items-center rounded-md text-ink-muted transition hover:text-danger"
                 >
                   <X size={13} />
                 </button>
@@ -649,7 +659,7 @@ function Chat({ messages, notes, onRemoveNote, onSend, sending, working = [], cr
           <button
             type="button" onClick={() => fileRef.current?.click()}
             disabled={sending || uploading || refs.length >= MAX_CHAT_REFS}
-            title="Anexar referência (imagem ou vídeo)"
+            title={t('video.attachRefTitle')}
             className="grid h-[52px] w-11 shrink-0 place-items-center rounded-xl border border-border text-ink-muted transition hover:border-brand hover:text-brand disabled:opacity-40"
           >
             {uploading ? <InlineSpinner size={16} /> : <ImagePlus size={16} />}
@@ -661,9 +671,9 @@ function Chat({ messages, notes, onRemoveNote, onSend, sending, working = [], cr
               onSend={submit}
               sending={sending}
               placeholder={
-                refs.length ? 'Diga como usar a referência…'
-                  : hasNotes ? 'Escreva ou envie só as anotações…'
-                    : 'O que você quer mudar no vídeo?'
+                refs.length ? t('video.composerRef')
+                  : hasNotes ? t('video.composerNotes')
+                    : t('video.composerDefault')
               }
             />
           </div>
@@ -673,7 +683,7 @@ function Chat({ messages, notes, onRemoveNote, onSend, sending, working = [], cr
         <div className="mt-1.5 flex justify-end">
           <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-ink-muted">
             <Coins size={12} className="text-[#B45309]" />
-            {creditBalance === null ? '∞' : `${creditBalance ?? '—'}`} créditos
+            {t('video.creditsBalance', { value: creditBalance === null ? '∞' : `${creditBalance ?? '—'}` })}
           </span>
         </div>
       </div>
@@ -688,16 +698,16 @@ function Chat({ messages, notes, onRemoveNote, onSend, sending, working = [], cr
 //   * working — scenes are rendering/queued (names them; ~1–2 min per scene)
 //   * finalizing — the high-quality pass is running over the approved draft
 function WorkBanner({ sending, workingNums, finalizing }) {
+  const { t } = useTranslation('ticket')
   if (!sending && workingNums.length === 0) return null
 
   let text
   if (sending && workingNums.length === 0) {
-    text = 'Aplicando o que você pediu…'
+    text = t('video.applying')
   } else if (finalizing) {
-    text = `Renderizando em alta qualidade (${sceneList(workingNums)}) — a prévia continua tocando abaixo.`
+    text = t('video.finalizing', { scenes: sceneList(workingNums) })
   } else {
-    const one = workingNums.length === 1
-    text = `Trabalhando ${one ? 'na' : 'nas'} ${sceneList(workingNums)}… leva 1–2 min ${one ? 'por cena' : 'cada'}.`
+    text = t('video.workingBanner', { count: workingNums.length, scenes: sceneList(workingNums) })
   }
 
   return (
@@ -717,15 +727,15 @@ function WorkBanner({ sending, workingNums, finalizing }) {
 // The right pane during the INTERVIEW: no video yet — a calm placeholder that
 // tells the user the chat is gathering context and will build when ready.
 function InterviewPane({ sending }) {
+  const { t } = useTranslation('ticket')
   return (
     <div className="max-w-xs text-center text-ink-muted">
       <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-brand-soft/50 text-brand">
         {sending ? <InlineSpinner size={26} /> : <MessageSquare size={26} />}
       </div>
-      <p className="mt-3 text-sm font-semibold text-ink">Entendendo seu vídeo</p>
+      <p className="mt-3 text-sm font-semibold text-ink">{t('video.interviewTitle')}</p>
       <p className="mt-1 text-xs">
-        Responda as perguntas no chat. Quando eu tiver o suficiente, gero o rascunho aqui — ou
-        é só pedir “pode gerar”.
+        {t('video.interviewHint')}
       </p>
     </div>
   )
@@ -740,9 +750,10 @@ function InterviewPane({ sending }) {
 
 // The tab switcher between the conversational editor and the assets list.
 function TabBar({ tab, onChange }) {
+  const { t } = useTranslation('ticket')
   const tabs = [
-    { key: 'edicao', label: 'Edição', icon: Clapperboard },
-    { key: 'assets', label: 'Elementos', icon: Boxes },
+    { key: 'edicao', label: t('video.tabEdit'), icon: Clapperboard },
+    { key: 'assets', label: t('video.tabAssets'), icon: Boxes },
   ]
   return (
     <div className="flex shrink-0 gap-1 rounded-xl border border-border bg-surface-muted/40 p-1">
@@ -768,6 +779,7 @@ function TabBar({ tab, onChange }) {
 // (characters/scenarios only, via `regenType`) and "remove". Changes never
 // re-render the current scenes; the element is used on the next render.
 function AssetCard({ item, regenType, regen, onRemove, onOpen }) {
+  const { t } = useTranslation('ticket')
   const [editing, setEditing] = useState(false)
   const [prompt, setPrompt] = useState(item.description || '')
   const canRegen = !!regenType
@@ -791,7 +803,7 @@ function AssetCard({ item, regenType, regen, onRemove, onOpen }) {
       <div className="flex gap-3">
         {item.image_url ? (
           <button
-            type="button" onClick={() => onOpen?.(item)} title="Ver em tela cheia"
+            type="button" onClick={() => onOpen?.(item)} title={t('video.viewFullscreen')}
             className={cn(thumbClass, 'cursor-zoom-in transition hover:ring-2 hover:ring-brand')}
           >
             {item.kind === 'vid'
@@ -806,16 +818,16 @@ function AssetCard({ item, regenType, regen, onRemove, onOpen }) {
             {item.role_label}
           </Badge>
           <p className="line-clamp-2 text-xs leading-relaxed text-ink-secondary">
-            {item.description || (canRegen ? 'Sem descrição — descreva ao regenerar.' : 'Referência do vídeo.')}
+            {item.description || (canRegen ? t('video.noDescription') : t('video.videoReference'))}
           </p>
           <div className="mt-auto flex items-center gap-1 pt-2">
             {canRegen && (
               <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => setEditing((v) => !v)}>
-                <Wand2 size={13} /> {item.image_url ? 'Regenerar' : 'Gerar imagem'}
+                <Wand2 size={13} /> {item.image_url ? t('video.regenerate') : t('video.generateImage')}
               </Button>
             )}
             <Button size="sm" variant="ghost" className="h-7 px-2 text-ink-muted hover:text-danger" onClick={() => onRemove(item)}>
-              <Trash2 size={13} /> Remover
+              <Trash2 size={13} /> {t('actions.remove')}
             </Button>
           </div>
         </div>
@@ -825,15 +837,15 @@ function AssetCard({ item, regenType, regen, onRemove, onOpen }) {
           <Textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder={regenType === 'character' ? 'Descreva o personagem (aparência, roupa, estilo)…' : 'Descreva o cenário (lugar, luz, clima)…'}
+            placeholder={regenType === 'character' ? t('video.characterPlaceholder') : t('video.scenarioPlaceholder')}
             rows={2}
             autoFocus
             className="min-h-14 text-sm"
           />
           <div className="mt-2 flex items-center justify-between gap-2">
-            <span className="text-[11px] font-medium text-ink-muted">−1 crédito · não refaz as cenas atuais</span>
+            <span className="text-[11px] font-medium text-ink-muted">{t('video.regenCost')}</span>
             <Button size="sm" className="h-8" onClick={submit} disabled={busy || !prompt.trim()}>
-              {busy ? <InlineSpinner size={14} /> : <Sparkles size={14} />} Gerar
+              {busy ? <InlineSpinner size={14} /> : <Sparkles size={14} />} {t('video.generate')}
             </Button>
           </div>
         </div>
@@ -861,6 +873,7 @@ function AssetSection({ title, icon: Icon, items, regenType, regen, onRemove, on
 
 // The soundtrack asset: a playable preview + a prompt to re-search the track.
 function MusicCard({ music, regen }) {
+  const { t } = useTranslation('ticket')
   const [editing, setEditing] = useState(false)
   const [prompt, setPrompt] = useState(music.mood || '')
   const busy = regen.isPending && regen.variables?.type === 'music'
@@ -874,16 +887,16 @@ function MusicCard({ music, regen }) {
   return (
     <div>
       <SectionLabel className="mb-2 flex items-center gap-1.5 tracking-wider text-ink-secondary">
-        <Music size={13} className="text-brand" /> Trilha sonora
+        <Music size={13} className="text-brand" /> {t('video.soundtrack')}
       </SectionLabel>
       <div className="rounded-2xl border border-border bg-surface-muted/30 p-3">
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-ink">{music.title || music.attribution || 'Trilha atual'}</p>
+            <p className="truncate text-sm font-semibold text-ink">{music.title || music.attribution || t('video.currentTrack')}</p>
             {music.attribution && music.title && <p className="truncate text-xs text-ink-muted">{music.attribution}</p>}
           </div>
           <Button size="sm" variant="ghost" className="h-7 shrink-0 px-2" onClick={() => setEditing((v) => !v)}>
-            <Wand2 size={13} /> Trocar
+            <Wand2 size={13} /> {t('video.swap')}
           </Button>
         </div>
         {music.url && <audio src={music.url} controls preload="none" className="mt-2 h-8 w-full" />}
@@ -892,15 +905,15 @@ function MusicCard({ music, regen }) {
             <Textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Que trilha você quer? (ex.: algo mais animado, lo-fi calmo, épico…)"
+              placeholder={t('video.musicPlaceholder')}
               rows={2}
               autoFocus
               className="min-h-14 text-sm"
             />
             <div className="mt-2 flex items-center justify-between gap-2">
-              <span className="text-[11px] font-medium text-ink-muted">Grátis · re-mixa o vídeo</span>
+              <span className="text-[11px] font-medium text-ink-muted">{t('video.musicFree')}</span>
               <Button size="sm" className="h-8" onClick={submit} disabled={busy || !prompt.trim()}>
-                {busy ? <InlineSpinner size={14} /> : <Sparkles size={14} />} Trocar trilha
+                {busy ? <InlineSpinner size={14} /> : <Sparkles size={14} />} {t('video.swapTrack')}
               </Button>
             </div>
           </div>
@@ -910,20 +923,21 @@ function MusicCard({ music, regen }) {
   )
 }
 
-// Roles offered when adding an uploaded element (user-facing PT labels).
+// Roles offered when adding an uploaded element (localized labels).
 const ADD_ROLES = [
-  { value: 'character', label: 'Personagem' },
-  { value: 'scene', label: 'Cenário' },
-  { value: 'product', label: 'Produto' },
-  { value: 'style', label: 'Estilo' },
-  { value: 'logo', label: 'Logo' },
-  { value: 'reference', label: 'Referência' },
+  { value: 'character', get label() { return i18n.t('ticket:video.roles.character') } },
+  { value: 'scene', get label() { return i18n.t('ticket:video.roles.scene') } },
+  { value: 'product', get label() { return i18n.t('ticket:video.roles.product') } },
+  { value: 'style', get label() { return i18n.t('ticket:video.roles.style') } },
+  { value: 'logo', get label() { return i18n.t('ticket:video.roles.logo') } },
+  { value: 'reference', get label() { return i18n.t('ticket:video.roles.reference') } },
 ]
 
 // Add an element: upload a file (typed under a role) or pick one from the library
 // (brand avatar/logo + characters/scenarios used in other videos). Both add the
 // element to every scene for the NEXT render — no re-render, no credits.
 function AddElement({ creativeId }) {
+  const { t } = useTranslation('ticket')
   const [open, setOpen] = useState(false)
   const [mode, setMode] = useState('upload')
   const [role, setRole] = useState('character')
@@ -943,7 +957,7 @@ function AddElement({ creativeId }) {
       const ref = references[0]
       if (ref) add.mutate({ url: ref.url, role }, { onSuccess: () => setOpen(false) })
     } catch {
-      toast.error('Não foi possível enviar. Use JPG, PNG, WEBP ou vídeo MP4/MOV/WEBM (máx. 50 MB).')
+      toast.error(t('video.uploadError'))
     } finally {
       setUploading(false)
     }
@@ -954,12 +968,12 @@ function AddElement({ creativeId }) {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm" className="w-full">
-          <Plus size={14} /> Adicionar elemento
+          <Plus size={14} /> {t('video.addElement')}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="center" className="w-80">
         <div className="mb-2.5 flex gap-1 rounded-lg border border-border bg-surface-muted/40 p-0.5">
-          {[['upload', 'Upload', Upload], ['library', 'Biblioteca', Library]].map(([key, label, Icon]) => (
+          {[['upload', t('video.upload'), Upload], ['library', t('video.library'), Library]].map(([key, label, Icon]) => (
             <button
               key={key} type="button" onClick={() => setMode(key)}
               className={cn('inline-flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1 text-xs font-bold transition',
@@ -972,7 +986,7 @@ function AddElement({ creativeId }) {
 
         {mode === 'upload' ? (
           <div>
-            <SectionLabel className="mb-1 tracking-wider text-ink-secondary">Tipo do elemento</SectionLabel>
+            <SectionLabel className="mb-1 tracking-wider text-ink-secondary">{t('video.elementType')}</SectionLabel>
             <div className="mb-2.5 flex flex-wrap gap-1">
               {ADD_ROLES.map((r) => (
                 <button
@@ -993,22 +1007,22 @@ function AddElement({ creativeId }) {
               onClick={() => fileRef.current?.click()}
             >
               {uploading || add.isPending ? <InlineSpinner size={14} /> : <Upload size={14} />}
-              Enviar arquivo
+              {t('video.uploadFile')}
             </Button>
-            <p className="mt-1.5 text-[11px] text-ink-muted">Imagem ou vídeo curto de referência. Não refaz as cenas.</p>
+            <p className="mt-1.5 text-[11px] text-ink-muted">{t('video.uploadHint')}</p>
           </div>
         ) : (
           <div>
             {libLoading ? (
               <div className="flex justify-center py-6"><Spinner size={18} /></div>
             ) : items.length === 0 ? (
-              <p className="py-6 text-center text-xs text-ink-muted">Nada na biblioteca ainda. Faça upload ou gere elementos.</p>
+              <p className="py-6 text-center text-xs text-ink-muted">{t('video.libraryEmpty')}</p>
             ) : (
               <div className="grid max-h-64 grid-cols-3 gap-1.5 overflow-y-auto scrollbar-subtle">
                 {items.map((it) => (
                   <button
                     key={it.url} type="button" onClick={() => addFromLibrary(it)} disabled={add.isPending}
-                    title={`${it.label} — adicionar`}
+                    title={t('video.addTitle', { label: it.label })}
                     className="group relative aspect-square overflow-hidden rounded-lg border border-border bg-brand-ink/90 transition hover:ring-2 hover:ring-brand disabled:opacity-50"
                   >
                     {it.kind === 'vid'
@@ -1032,8 +1046,8 @@ function elementToAttachment(item) {
   return {
     id: item.key,
     url: item.image_url,
-    filename: item.role_label || 'elemento',
-    display_name: item.role_label || 'Elemento',
+    filename: item.role_label || i18n.t('ticket:video.element'),
+    display_name: item.role_label || i18n.t('ticket:video.elementCap'),
     kind: isVideo ? 'video' : 'image',
     content_type: isVideo ? 'video/mp4' : 'image/jpeg',
     description: item.description || undefined,
@@ -1044,6 +1058,7 @@ function elementToAttachment(item) {
 // soundtrack — each addable, regeneratable and removable. Clicking an element's
 // image opens it in the shared fullscreen media viewer.
 function AssetsPanel({ creativeId, open }) {
+  const { t } = useTranslation('ticket')
   const { data, isLoading } = useVideoAssets(creativeId, { enabled: open })
   const regen = useRegenerateAsset(creativeId)
   const remove = useRemoveAsset(creativeId)
@@ -1056,9 +1071,9 @@ function AssetsPanel({ creativeId, open }) {
   const nothing = !isLoading && !characters.length && !scenarios.length && !references.length && !music
   const onRemove = async (item) => {
     const ok = await confirm({
-      title: 'Remover elemento?',
-      description: 'Ele deixa de ser usado nas próximas gerações de cena.',
-      confirmLabel: 'Remover',
+      title: t('video.removeElementTitle'),
+      description: t('video.removeElementDescription'),
+      confirmLabel: t('actions.remove'),
       destructive: true,
     })
     if (ok) remove.mutate({ key: item.key })
@@ -1086,12 +1101,12 @@ function AssetsPanel({ creativeId, open }) {
         <div className="space-y-5">
           <AddElement creativeId={creativeId} />
           {nothing ? (
-            <EmptyState icon={Boxes} title="Sem elementos" description="Adicione um personagem, cenário ou referência acima." color="#F43F5E" />
+            <EmptyState icon={Boxes} title={t('video.noElements')} description={t('video.noElementsDescription')} color="#F43F5E" />
           ) : (
             <>
-              <AssetSection title="Personagens" icon={UserRound} items={characters} regenType="character" regen={regen} onRemove={onRemove} onOpen={openImage} />
-              <AssetSection title="Cenários" icon={ImageIcon} items={scenarios} regenType="scene" regen={regen} onRemove={onRemove} onOpen={openImage} />
-              <AssetSection title="Referências" icon={Boxes} items={references} regenType={null} regen={regen} onRemove={onRemove} onOpen={openImage} />
+              <AssetSection title={t('video.characters')} icon={UserRound} items={characters} regenType="character" regen={regen} onRemove={onRemove} onOpen={openImage} />
+              <AssetSection title={t('video.scenarios')} icon={ImageIcon} items={scenarios} regenType="scene" regen={regen} onRemove={onRemove} onOpen={openImage} />
+              <AssetSection title={t('video.references')} icon={Boxes} items={references} regenType={null} regen={regen} onRemove={onRemove} onOpen={openImage} />
               {music && <MusicCard music={music} regen={regen} />}
             </>
           )}
@@ -1114,6 +1129,7 @@ function AssetsPanel({ creativeId, open }) {
 // Editing is conversational — the agent decides which scenes to re-render.
 // Videos render DRAFT-first; approving upgrades every scene to the final model.
 export function VideoScenesDialog({ creative, open, onOpenChange }) {
+  const { t } = useTranslation('ticket')
   const creativeId = creative?.id
   const { data, isLoading } = useVideoScenes(creativeId, { enabled: open })
   const chat = useVideoChat(creativeId)
@@ -1218,13 +1234,13 @@ export function VideoScenesDialog({ creative, open, onOpenChange }) {
       <DialogContent className="sm:max-w-5xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Film size={18} className="text-[#F43F5E]" /> Editor de vídeo
+            <Film size={18} className="text-[#F43F5E]" /> {t('video.editorTitle')}
           </DialogTitle>
           <DialogDescription className="flex items-center gap-1.5">
             <Sparkles size={13} className="text-emerald" />
             {interview
-              ? 'Me conta sobre o vídeo no chat. Quando eu tiver contexto suficiente eu gero — ou peça pra gerar quando quiser.'
-              : 'Converse para editar. Clique numa cena para anotar; as anotações vão juntas na próxima mensagem.'}
+              ? t('video.interviewDescription')
+              : t('video.editDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -1244,7 +1260,7 @@ export function VideoScenesDialog({ creative, open, onOpenChange }) {
             </div>
           </div>
         ) : scenes.length === 0 && !generating ? (
-          <EmptyState icon={Film} title="Sem cenas" description="Este vídeo não tem cenas editáveis." color="#F43F5E" />
+          <EmptyState icon={Film} title={t('video.noScenes')} description={t('video.noScenesDescription')} color="#F43F5E" />
         ) : (
           <div className="flex flex-col gap-3 sm:h-[min(72vh,46rem)]">
             <TabBar tab={tab} onChange={setTab} />
@@ -1273,11 +1289,11 @@ export function VideoScenesDialog({ creative, open, onOpenChange }) {
               {canUpgrade && (
                 <div className="flex shrink-0 items-center justify-between gap-3 rounded-xl border border-brand/30 bg-brand-soft/40 px-3 py-2">
                   <p className="text-xs font-semibold text-ink">
-                    <span className="text-brand">Prévia rápida.</span> Gostou? Gere a versão final — aqui ou pedindo no chat.
+                    <span className="text-brand">{t('video.quickPreview')}</span> {t('video.quickPreviewHint')}
                   </p>
                   <Button size="sm" className="h-8 shrink-0" disabled={finalize.isPending} onClick={() => finalize.mutate()}>
                     {finalize.isPending ? <InlineSpinner size={14} /> : <ArrowUpCircle size={14} />}
-                    Alta qualidade
+                    {t('video.highQuality')}
                   </Button>
                 </div>
               )}
@@ -1299,7 +1315,7 @@ export function VideoScenesDialog({ creative, open, onOpenChange }) {
 
               <div className="shrink-0">
                 <SectionLabel className="mb-1.5 tracking-wider text-ink-secondary">
-                  Cenas · clique para anotar
+                  {t('video.scenesLabel')}
                 </SectionLabel>
                 {/* The locked identity + soundtrack are managed in the Assets tab
                     (or via the chat) — the scene strip stays focused on the shots. */}
@@ -1331,7 +1347,7 @@ export function VideoScenesDialog({ creative, open, onOpenChange }) {
           <MediaViewer
             attachments={composedUrl ? [{
               id: `video-${creativeId}`, url: composedUrl, filename: `video-${creativeId}`,
-              display_name: 'Vídeo', kind: 'video', content_type: 'video/mp4',
+              display_name: t('video.videoName'), kind: 'video', content_type: 'video/mp4',
             }] : []}
             index={0}
             open={videoFullscreen}
