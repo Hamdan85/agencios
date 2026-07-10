@@ -46,16 +46,10 @@ class Ticket < ApplicationRecord
   # posting standalone (see Operations::Tickets::Publish). Mirrored on the frontend.
   COVER_TYPES = %w[thumbnail cover].freeze
 
-  # User-facing PT-BR labels (used in system note copy + frontend label map).
-  STATUS_LABELS = {
-    'ideation' => 'Ideação',
-    'scoping' => 'Escopo',
-    'production' => 'Produção',
-    'scheduled' => 'Postagem',
-    'published' => 'No ar',
-    'retrospective' => 'Retrospectiva',
-    'done' => 'Concluído'
-  }.freeze
+  # Localized status labels (statuses.* locale keys), resolved at ACCESS time in
+  # the current locale. A default-proc hash so every `STATUS_LABELS[status]`
+  # call site keeps working unchanged while following the active language.
+  STATUS_LABELS = Hash.new { |_h, key| I18n.t("statuses.#{key}", default: key.to_s) }.freeze
 
   validates :status, presence: true
 
@@ -102,7 +96,7 @@ class Ticket < ApplicationRecord
   end
 
   def display_title
-    title.presence || [creative_type, project&.name].compact.join(' · ').presence || 'Sem título'
+    title.presence || [creative_type, project&.name].compact.join(' · ').presence || I18n.t('models.ticket.untitled')
   end
 
   def summary_for(some_status)

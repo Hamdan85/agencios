@@ -30,7 +30,12 @@ module Vendors
               price_data: {
                 currency: 'brl',
                 unit_amount: @pack[:price_cents],
-                product_data: { name: "Créditos agencios — pacote #{@pack[:name]} (#{@pack[:credits]} créditos)" }
+                product_data: {
+                  name: I18n.with_locale(workspace_locale) do
+                    I18n.t('models.pricing.billing.credit_pack_description',
+                           pack: "#{@pack[:name]} (#{@pack[:credits]})")
+                  end
+                }
               }
             }],
             payment_intent_data: {
@@ -55,6 +60,12 @@ module Vendors
         # missing) so the credits land on the same customer as the subscription.
         def existing_customer_id
           EnsureCustomer.call(workspace: @workspace, client: @client)
+        end
+
+        private
+
+        def workspace_locale
+          I18n.available_locales.find { |l| l.to_s == @workspace&.locale.to_s } || I18n.default_locale
         end
       end
     end

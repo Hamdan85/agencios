@@ -1,0 +1,46 @@
+pt-BR:
+  statuses:
+    ideation: "Ideação"
+    scoping: "Escopo"
+    production: "Produção"
+    scheduled: "Postagem"
+    published: "No ar"
+    retrospective: "Retrospectiva"
+    done: "Concluído"
+  models:
+    ticket:
+      untitled: "Sem título"
+    ticket_relation:
+      iteration_of: "Iteração de"
+      repetition_of: "Repetição de"
+      related_to: "Relacionado a"
+    attachment:
+      file_required: "é obrigatório"
+    creative_fallback: "Criativo"
+    pricing:
+      features:
+        solo:
+          seats: "2 assentos"
+          clients: "Até 3 clientes"
+          board: "Quadro de produção completo"
+          ai_text: "Legendas e textos com IA inclusos"
+          credits: "40 créditos/mês para vídeos, imagens e carrosséis"
+          social: "Integrações sociais diretas"
+        agencia:
+          seats: "Até 20 assentos"
+          clients: "Até 25 clientes"
+          all_solo: "Tudo do Solo"
+          credits: "200 créditos/mês para vídeos, imagens e carrosséis"
+          billing: "Faturamento de clientes (Mercado Pago)"
+          calendar: "Calendário e reuniões (Google)"
+          approvals: "Aprovações de cliente e relatórios com IA"
+        enterprise:
+          seats: "Assentos ilimitados"
+          clients: "Clientes ilimitados"
+          all_agencia: "Tudo da Agência"
+          credits: "600 créditos/mês para vídeos, imagens e carrosséis"
+          white_label: "White-label e SSO"
+          support: "Suporte prioritário e onboarding dedicado"
+      billing:
+        credit_pack_description: "Créditos agencios — pacote %{pack}"
+        plan_price_description: "agencios — %{plan}"

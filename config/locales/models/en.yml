@@ -1,0 +1,46 @@
+en:
+  statuses:
+    ideation: "Ideation"
+    scoping: "Scoping"
+    production: "Production"
+    scheduled: "Posting"
+    published: "Live"
+    retrospective: "Retrospective"
+    done: "Done"
+  models:
+    ticket:
+      untitled: "Untitled"
+    ticket_relation:
+      iteration_of: "Iteration of"
+      repetition_of: "Repetition of"
+      related_to: "Related to"
+    attachment:
+      file_required: "is required"
+    creative_fallback: "Creative"
+    pricing:
+      features:
+        solo:
+          seats: "2 seats"
+          clients: "Up to 3 clients"
+          board: "Full production board"
+          ai_text: "AI captions and copy included"
+          credits: "40 credits/mo for videos, images and carousels"
+          social: "Direct social integrations"
+        agencia:
+          seats: "Up to 20 seats"
+          clients: "Up to 25 clients"
+          all_solo: "Everything in Solo"
+          credits: "200 credits/mo for videos, images and carousels"
+          billing: "Client billing (Mercado Pago)"
+          calendar: "Calendar and meetings (Google)"
+          approvals: "Client approvals and AI reports"
+        enterprise:
+          seats: "Unlimited seats"
+          clients: "Unlimited clients"
+          all_agencia: "Everything in Agency"
+          credits: "600 credits/mo for videos, images and carousels"
+          white_label: "White-label and SSO"
+          support: "Priority support and dedicated onboarding"
+      billing:
+        credit_pack_description: "agencios credits — %{pack} pack"
+        plan_price_description: "agencios — %{plan}"

@@ -9,12 +9,5 @@ class TicketRelation < ApplicationRecord
 
   enum :kind, { iteration_of: 0, repetition_of: 1, related_to: 2 }, prefix: true
 
-  # User-facing PT-BR labels for each relation kind.
-  KIND_LABELS = {
-    'iteration_of' => 'Iteração de',
-    'repetition_of' => 'Repetição de',
-    'related_to' => 'Relacionado a'
-  }.freeze
-
-  def kind_label = KIND_LABELS.fetch(kind, kind)
+  def kind_label = I18n.t("models.ticket_relation.#{kind}", default: kind.to_s)
 end

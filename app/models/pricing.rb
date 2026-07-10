@@ -36,34 +36,36 @@ module Pricing
   TRIAL_DAYS = 7
   ANNUAL_DISCOUNT_PERCENT = 15
 
+  # Feature bullets are i18n KEYS (models.pricing.features.*), localized at read
+  # time by #localize_features. Admin-authored DB catalog features stay raw data.
   DEFAULT_PLANS = [
     {
       key: 'solo', name: 'Solo', stripe_lookup_key: 'solo_monthly', stripe_annual_lookup_key: 'solo_yearly',
       price_cents: 9_900, seats: 2, clients: 3, included_credits: 40,
-      features: [
-        '2 assentos', 'Até 3 clientes', 'Quadro de produção completo',
-        'Legendas e textos com IA inclusos',
-        '40 créditos/mês para vídeos, imagens e carrosséis', 'Integrações sociais diretas'
+      features: %w[
+        models.pricing.features.solo.seats models.pricing.features.solo.clients
+        models.pricing.features.solo.board models.pricing.features.solo.ai_text
+        models.pricing.features.solo.credits models.pricing.features.solo.social
       ]
     },
     {
       key: 'agencia', name: 'Agência', stripe_lookup_key: 'agencia_monthly', stripe_annual_lookup_key: 'agencia_yearly',
       price_cents: 34_900, seats: 20, clients: 25, included_credits: 200,
-      features: [
-        'Até 20 assentos', 'Até 25 clientes', 'Tudo do Solo',
-        '200 créditos/mês para vídeos, imagens e carrosséis',
-        'Faturamento de clientes (Mercado Pago)', 'Calendário e reuniões (Google)',
-        'Aprovações de cliente e relatórios com IA'
+      features: %w[
+        models.pricing.features.agencia.seats models.pricing.features.agencia.clients
+        models.pricing.features.agencia.all_solo models.pricing.features.agencia.credits
+        models.pricing.features.agencia.billing models.pricing.features.agencia.calendar
+        models.pricing.features.agencia.approvals
       ]
     },
     {
       key: 'enterprise', name: 'Enterprise', stripe_lookup_key: 'enterprise_monthly', stripe_annual_lookup_key: 'enterprise_yearly',
       price_cents: 99_900, seats: 1_000_000, clients: 1_000_000,
       included_credits: 600,
-      features: [
-        'Assentos ilimitados', 'Clientes ilimitados', 'Tudo da Agência',
-        '600 créditos/mês para vídeos, imagens e carrosséis', 'White-label e SSO',
-        'Suporte prioritário e onboarding dedicado'
+      features: %w[
+        models.pricing.features.enterprise.seats models.pricing.features.enterprise.clients
+        models.pricing.features.enterprise.all_agencia models.pricing.features.enterprise.credits
+        models.pricing.features.enterprise.white_label models.pricing.features.enterprise.support
       ]
     }
   ].freeze
@@ -74,6 +76,14 @@ module Pricing
     { key: 'studio',  name: 'Studio',  price_cents: 50_000,  credits: 575 },
     { key: 'scale',   name: 'Scale',   price_cents: 100_000, credits: 1_200 }
   ].freeze
+
+  # Translate feature bullets that are i18n keys (code defaults) in the current
+  # locale; pass through admin-authored raw strings (DB catalog) unchanged.
+  def localize_features(features)
+    Array(features).map do |feature|
+      feature.to_s.match?(/\Amodels\.pricing\.features\./) ? I18n.t(feature) : feature
+    end
+  end
 
   # ── Catalog accessors (admin-configured DB tables, code defaults as fallback) ─
 
@@ -148,6 +158,7 @@ module Pricing
       plans: plans.map do |p|
         annual = annual_price_cents_for(p[:key])
         p.slice(:key, :name, :price_cents, :seats, :clients, :included_credits, :features).merge(
+          features: localize_features(p[:features]),
           annual_price_cents: annual,
           annual_monthly_equivalent_cents: (annual / 12.0).round
         )

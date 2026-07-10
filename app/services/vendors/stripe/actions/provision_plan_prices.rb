@@ -57,7 +57,7 @@ module Vendors
         def ensure_product(plan)
           return plan.stripe_product_id if plan.stripe_product_id.present?
 
-          @client.create_product(name: "agencios — #{plan.name}", metadata: { plan: plan.key })
+          @client.create_product(name: I18n.t('models.pricing.billing.plan_price_description', plan: plan.name, locale: I18n.default_locale), metadata: { plan: plan.key })
         end
 
         def cache!(plan, spec, price)

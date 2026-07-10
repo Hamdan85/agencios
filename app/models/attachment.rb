@@ -53,7 +53,7 @@ class Attachment < ApplicationRecord
   private
 
   def file_present
-    errors.add(:file, 'é obrigatório') unless file.attached?
+    errors.add(:file, I18n.t('models.attachment.file_required')) unless file.attached?
   end
 
   def file_within_size_limit
