@@ -32,13 +32,41 @@ RSpec.describe 'Autopilot video exception' do
     it 'generates non-video creatives but skips video (video waits in production)' do
       run = run_for(%w[carousel ugc_video])
       expect(Operations::Creatives::GenerateUgcVideo).not_to receive(:call)
-      carousel = Creative.create!(workspace: workspace, ticket: run.ticket, creative_type: 'carousel', status: :ready)
+      # Stub creative lives OFF the ticket so it doesn't trip the "already has a
+      # creative" skip — the ticket starts with no creatives here.
+      carousel = Creative.create!(workspace: workspace, creative_type: 'carousel', status: :ready)
       gen = Generation.create!(workspace: workspace, user: user, kind: 'carousel', status: 'completed', creative: carousel)
       allow(Operations::Creatives::GenerateViralCarousel).to receive(:call).and_return(gen)
 
       described_class.call(run: run)
 
       expect(Operations::Creatives::GenerateViralCarousel).to have_received(:call)
+    end
+
+    it 'skips a type that already has a (non-failed) creative — no regen, no re-charge' do
+      run = run_for(%w[carousel feed_image])
+      # The ticket already has a ready carousel and a still-generating image.
+      Creative.create!(workspace: workspace, ticket: run.ticket, creative_type: 'carousel', status: :ready)
+      Creative.create!(workspace: workspace, ticket: run.ticket, creative_type: 'feed_image', status: :generating)
+      expect(Operations::Creatives::GenerateViralCarousel).not_to receive(:call)
+      expect(Operations::Creatives::GenerateImage).not_to receive(:call)
+
+      described_class.call(run: run)
+
+      # Nothing generated → GO completes and stops at production.
+      expect(run.reload.ticket.status).to eq('production')
+    end
+
+    it 'still regenerates a type whose only creative FAILED' do
+      run = run_for(%w[feed_image])
+      Creative.create!(workspace: workspace, ticket: run.ticket, creative_type: 'feed_image', status: :failed)
+      image = Creative.create!(workspace: workspace, creative_type: 'feed_image', status: :ready)
+      gen = Generation.create!(workspace: workspace, user: user, kind: 'image', status: 'completed', creative: image)
+      allow(Operations::Creatives::GenerateImage).to receive(:call).and_return(gen)
+
+      described_class.call(run: run)
+
+      expect(Operations::Creatives::GenerateImage).to have_received(:call)
     end
 
     it 'a video-only ticket generates nothing and stops at production without requesting approval' do

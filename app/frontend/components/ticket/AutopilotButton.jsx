@@ -97,7 +97,9 @@ export default function AutopilotButton({ run, estimating, starting, onEstimate,
                   {breakdown.map((b, i) => (
                     <div key={i} className="flex items-center justify-between py-0.5">
                       <span className="text-ink-secondary">{KIND_LABEL[b.kind] || b.type}</span>
-                      <span className="font-semibold">{b.credits === 0 ? 'incluso' : `${b.credits} créditos`}</span>
+                      <span className="font-semibold">
+                        {b.existing ? 'já gerado' : b.credits === 0 ? 'incluso' : `${b.credits} créditos`}
+                      </span>
                     </div>
                   ))}
                   <div className="mt-2 flex items-center justify-between border-t border-border pt-2 font-bold">

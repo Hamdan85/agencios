@@ -145,6 +145,14 @@ class Ticket < ApplicationRecord
     list.uniq
   end
 
+  # Creative types that already have a usable (non-failed) creative on this ticket
+  # — uploaded, ready, or still generating. GO uses this to SKIP regenerating (and
+  # re-charging the wallet for) a type it already has; a failed creative doesn't
+  # count, so GO can still retry it.
+  def generated_creative_types
+    creatives.reject(&:status_failed?).map { |c| c.creative_type.to_s }.uniq
+  end
+
   # A ticket's random, revocable approval-link secret. Lazily minted; stable
   # across calls so "reenviar link" reuses the same URL. Powers /aprovar/:token.
   def approval_token!

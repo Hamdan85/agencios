@@ -51,7 +51,10 @@ module Operations
 
       def ticket_row(ticket)
         elig = Operations::Autopilot::Eligibility.call(ticket: ticket)
-        breakdown = ticket.creative_types_list.map { |type| type_cost(type) }
+        # Types that already have a (non-failed) creative — GO skips regenerating
+        # them (KickGenerations), so they cost 0 here too.
+        existing = ticket.generated_creative_types
+        breakdown = ticket.creative_types_list.map { |type| type_cost(type, existing) }
         {
           ticket_id: ticket.id,
           title: ticket.display_title,
@@ -62,19 +65,25 @@ module Operations
         }
       end
 
-      def type_cost(type)
+      def type_cost(type, existing = [])
         spec = ::Creatives.spec_for(type)
         kind = spec&.dig(:kind)
+        # Already generated (or uploaded) — GO won't regenerate it, so it's free.
+        already = existing.include?(type)
         credits =
-          case kind
-          # Video is deferred to manual production — the GO run never generates it,
-          # so it costs nothing here (and is flagged via has_pending_video).
-          when 'video' then 0
-          when 'image' then Pricing.credits_for(kind: :image)
-          when 'carousel' then Pricing.credits_for(kind: :carousel)
-          else 0
+          if already
+            0
+          else
+            case kind
+            # Video is deferred to manual production — the GO run never generates it,
+            # so it costs nothing here (and is flagged via has_pending_video).
+            when 'video' then 0
+            when 'image' then Pricing.credits_for(kind: :image)
+            when 'carousel' then Pricing.credits_for(kind: :carousel)
+            else 0
+            end
           end
-        { type: type, kind: kind, credits: credits, deferred: kind == 'video' }
+        { type: type, kind: kind, credits: credits, deferred: kind == 'video', existing: already }
       end
 
       def video_type?(type) = ::Creatives.spec_for(type)&.dig(:kind) == 'video'

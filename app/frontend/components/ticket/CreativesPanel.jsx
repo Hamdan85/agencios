@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { creativeMeta, CREATIVE_TYPE_META, GENERATION_KIND_META, uploadAcceptFor, fileMatchesCreativeType, uploadableTypesForTicket, generatableKindsForTicket } from '@/lib/constants'
-import { useWorkspaceCreatives } from '@/hooks/useData'
+import { useWorkspaceCreatives, usePricing } from '@/hooks/useData'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -36,6 +36,22 @@ const GENERATABLE = [
   { kind: 'video', type: 'ugc_video', label: 'Vídeo', desc: 'Avatar falando ou produto a partir de fotos', icon: Video, color: CREATIVE_TYPE_META.ugc_video.color },
   { kind: 'image', type: 'feed_image', label: 'Imagem', desc: 'Imagem única para o feed', icon: ImageIcon, color: CREATIVE_TYPE_META.feed_image.color },
 ]
+
+// The probable credit cost of generating a given kind, read from the server
+// pricing catalog (credit_costs). Video is cost-based, so its figure is an
+// ESTIMATE for a standard clip (video_15s) — trued-up to the real duration at
+// compose. Returns null while pricing is still loading.
+function creditsForKind(kind, creditCosts) {
+  if (!creditCosts) return null
+  const value = kind === 'video' ? creditCosts.video_15s : creditCosts[kind]
+  return Number.isFinite(value) ? value : null
+}
+
+// "1 crédito" / "3 créditos"; video is prefixed "~" since it's an estimate.
+function creditBadgeLabel(kind, credits) {
+  const unit = credits === 1 ? 'crédito' : 'créditos'
+  return `${kind === 'video' ? '~' : ''}${credits} ${unit}`
+}
 
 // A generated asset is a video when its URL carries a video extension (the
 // ActiveStorage blob URL keeps the original filename, e.g. .../video-80.mp4).
@@ -380,6 +396,10 @@ export default function CreativesPanel({
   // ticket never offers a carousel or image.
   const allowedKinds = generatableKindsForTicket(creativeTypes, channels)
   const generatable = GENERATABLE.filter((g) => allowedKinds.includes(g.kind))
+  // Per-kind credit estimate shown on each generation option (replaces the old
+  // binary "Metrado" badge) so the team sees roughly what a generation will cost.
+  const { data: pricing } = usePricing()
+  const creditCosts = pricing?.credit_costs
   const [open, setOpen] = useState(false)
   const [selectedKind, setSelectedKind] = useState(null)
   // The type of a just-fired generation, so we can render a loading placeholder
@@ -545,13 +565,23 @@ export default function CreativesPanel({
                   </div>
                   {active ? (
                     <CheckCircle2 size={20} className="shrink-0 text-brand" />
-                  ) : (
-                    kindMeta?.metered ? (
-                      <Badge variant="warning" className="px-2 text-[10px] tracking-normal">Metrado</Badge>
-                    ) : (
-                      <Badge variant="success" className="bg-emerald/15 px-2 text-[10px] tracking-normal">Grátis</Badge>
+                  ) : (() => {
+                    const credits = creditsForKind(g.kind, creditCosts)
+                    if (credits === null) {
+                      // Pricing still loading — fall back to the metered/free hint.
+                      return kindMeta?.metered
+                        ? <Badge variant="warning" className="px-2 text-[10px] tracking-normal">Metrado</Badge>
+                        : <Badge variant="success" className="bg-emerald/15 px-2 text-[10px] tracking-normal">Grátis</Badge>
+                    }
+                    if (credits <= 0) {
+                      return <Badge variant="success" className="bg-emerald/15 px-2 text-[10px] tracking-normal">Grátis</Badge>
+                    }
+                    return (
+                      <Badge variant="warning" className="whitespace-nowrap px-2 text-[10px] tracking-normal">
+                        {creditBadgeLabel(g.kind, credits)}
+                      </Badge>
                     )
-                  )}
+                  })()}
                 </button>
               )
             })}
