@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation, Trans } from 'react-i18next'
 import { Rocket, Sparkles, AlertTriangle, Wallet } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -7,18 +8,24 @@ import {
 import { Button } from '@/components/ui/button'
 import { IconTile } from '@/components/ui/icon-tile'
 import { InlineSpinner } from '@/components/ui/feedback'
+import i18n from '@/i18n'
 
-// Human labels for a run's state (the chip while it walks itself).
+// Human labels for a run's state (the chip while it walks itself). Resolved
+// lazily (getters) so they follow the active locale.
 const RUN_STATE_LABEL = {
-  pending: 'Preparando…',
-  scoping: 'Escrevendo o escopo…',
-  generating: 'Gerando criativos…',
-  awaiting_generation: 'Renderizando vídeo…',
-  publishing: 'Agendando posts…',
-  running: 'No piloto automático…',
+  get pending() { return i18n.t('ticket:autopilot.runState.pending') },
+  get scoping() { return i18n.t('ticket:autopilot.runState.scoping') },
+  get generating() { return i18n.t('ticket:autopilot.runState.generating') },
+  get awaiting_generation() { return i18n.t('ticket:autopilot.runState.awaiting_generation') },
+  get publishing() { return i18n.t('ticket:autopilot.runState.publishing') },
+  get running() { return i18n.t('ticket:autopilot.runState.running') },
 }
 
-const KIND_LABEL = { video: 'Vídeo', image: 'Imagem', carousel: 'Carrossel' }
+const KIND_LABEL = {
+  get video() { return i18n.t('ticket:creatives.kinds.video.label') },
+  get image() { return i18n.t('ticket:creatives.kinds.image.label') },
+  get carousel() { return i18n.t('ticket:creatives.kinds.carousel.label') },
+}
 
 // The "GO" action — estimates the credit cost, asks the user to confirm (once in
 // motion the run generates everything and spends the credits), and on a shortfall
@@ -33,6 +40,7 @@ const KIND_LABEL = { video: 'Vídeo', image: 'Imagem', carousel: 'Carrossel' }
 //   onStart    — () => void (launch the run)
 //   label      — button text (default "GO")
 export default function AutopilotButton({ run, estimating, starting, onEstimate, onStart, label = 'GO' }) {
+  const { t } = useTranslation('ticket')
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [estimate, setEstimate] = useState(null)
@@ -41,7 +49,7 @@ export default function AutopilotButton({ run, estimating, starting, onEstimate,
     return (
       <span className="inline-flex items-center gap-2 rounded-xl border border-brand/30 bg-brand-soft px-3 py-1.5 text-xs font-bold text-brand">
         <InlineSpinner size={13} />
-        {RUN_STATE_LABEL[run.state] || 'No piloto automático…'}
+        {RUN_STATE_LABEL[run.state] || t('autopilot.runState.running')}
       </span>
     )
   }
@@ -82,11 +90,9 @@ export default function AutopilotButton({ run, estimating, starting, onEstimate,
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <IconTile icon={Rocket} tint="1A" className="mb-1 size-11" iconSize={22} />
-            <DialogTitle>Iniciar no piloto automático?</DialogTitle>
+            <DialogTitle>{t('autopilot.title')}</DialogTitle>
             <DialogDescription>
-              O agente vai preencher o briefing, gerar todos os criativos e agendar os posts em
-              todas as redes. Uma vez iniciado, os créditos são consumidos mesmo que você ajuste o
-              agendamento depois.
+              {t('autopilot.description')}
             </DialogDescription>
           </DialogHeader>
 
@@ -98,28 +104,27 @@ export default function AutopilotButton({ run, estimating, starting, onEstimate,
                     <div key={i} className="flex items-center justify-between py-0.5">
                       <span className="text-ink-secondary">{KIND_LABEL[b.kind] || b.type}</span>
                       <span className="font-semibold">
-                        {b.existing ? 'já gerado' : b.credits === 0 ? 'incluso' : `${b.credits} créditos`}
+                        {b.existing ? t('autopilot.alreadyGenerated') : b.credits === 0 ? t('autopilot.included') : t('autopilot.credits', { count: b.credits })}
                       </span>
                     </div>
                   ))}
                   <div className="mt-2 flex items-center justify-between border-t border-border pt-2 font-bold">
-                    <span>Total</span>
-                    <span>{estimate.total_credits} créditos</span>
+                    <span>{t('autopilot.total')}</span>
+                    <span>{t('autopilot.credits', { count: estimate.total_credits })}</span>
                   </div>
                 </div>
               )}
 
               <div className="flex items-center justify-between text-xs text-ink-muted">
-                <span className="inline-flex items-center gap-1.5"><Wallet size={13} /> Saldo disponível</span>
-                <span className="font-semibold">{estimate.unlimited ? 'Ilimitado' : `${estimate.available} créditos`}</span>
+                <span className="inline-flex items-center gap-1.5"><Wallet size={13} /> {t('autopilot.balance')}</span>
+                <span className="font-semibold">{estimate.unlimited ? t('autopilot.unlimited') : t('autopilot.credits', { count: estimate.available })}</span>
               </div>
 
               {blocked && (
                 <div className="flex items-start gap-2 rounded-xl bg-danger/10 p-3 text-xs font-semibold text-danger">
                   <AlertTriangle size={15} className="mt-0.5 shrink-0" />
                   <span>
-                    Alguns tickets exigem criativos manuais e não podem rodar no modo GO:{' '}
-                    {(estimate.blocking_tickets || []).map((t) => t.title).join(', ')}.
+                    {t('autopilot.blocked', { titles: (estimate.blocking_tickets || []).map((bt) => bt.title).join(', ') })}
                   </span>
                 </div>
               )}
@@ -127,7 +132,7 @@ export default function AutopilotButton({ run, estimating, starting, onEstimate,
               {!blocked && shortfall > 0 && (
                 <div className="flex items-start gap-2 rounded-xl bg-amber-500/10 p-3 text-xs font-semibold text-amber-600">
                   <AlertTriangle size={15} className="mt-0.5 shrink-0" />
-                  <span>Faltam {shortfall} créditos para este planejamento. Compre mais para continuar.</span>
+                  <span>{t('autopilot.shortfall', { count: shortfall })}</span>
                 </div>
               )}
 
@@ -135,8 +140,7 @@ export default function AutopilotButton({ run, estimating, starting, onEstimate,
                 <div className="flex items-start gap-2 rounded-xl bg-sky-500/10 p-3 text-xs font-medium text-sky-700">
                   <AlertTriangle size={15} className="mt-0.5 shrink-0" />
                   <span>
-                    Os vídeos <strong>não são gerados automaticamente</strong> no modo GO — eles
-                    ficam aguardando na fase de Produção para você gerar manualmente.
+                    <Trans t={t} i18nKey="autopilot.pendingVideo" components={{ strong: <strong /> }} />
                   </span>
                 </div>
               )}
@@ -144,10 +148,10 @@ export default function AutopilotButton({ run, estimating, starting, onEstimate,
           )}
 
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setOpen(false)} disabled={starting}>Cancelar</Button>
+            <Button variant="ghost" onClick={() => setOpen(false)} disabled={starting}>{t('actions.cancel')}</Button>
             {!blocked && shortfall > 0 ? (
               <Button onClick={() => { setOpen(false); navigate('/assinatura') }}>
-                <Wallet size={15} /> Comprar créditos
+                <Wallet size={15} /> {t('autopilot.buyCredits')}
               </Button>
             ) : (
               <Button
@@ -157,7 +161,7 @@ export default function AutopilotButton({ run, estimating, starting, onEstimate,
                 style={{ background: 'linear-gradient(135deg, #7C3AED, #EC4899)' }}
               >
                 {starting ? <InlineSpinner size={15} /> : <Sparkles size={15} />}
-                Iniciar agora
+                {t('autopilot.start')}
               </Button>
             )}
           </DialogFooter>

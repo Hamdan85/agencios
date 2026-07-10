@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import Lightbox from 'yet-another-react-lightbox'
 import Zoom from 'yet-another-react-lightbox/plugins/zoom'
 import VideoPlugin from 'yet-another-react-lightbox/plugins/video'
@@ -46,6 +47,7 @@ function useElementWidth() {
 
 // Inline multi-page PDF reader used inside the lightbox.
 function PdfView({ url, name }) {
+  const { t } = useTranslation('ticket')
   const [ref, width] = useElementWidth()
   const [pages, setPages] = useState(0)
   const [error, setError] = useState(false)
@@ -55,13 +57,13 @@ function PdfView({ url, name }) {
     <div className="flex h-full w-full justify-center overflow-auto py-6" onClick={(e) => e.stopPropagation()}>
       <div ref={ref} className="w-full max-w-3xl px-3">
         {error ? (
-          <DownloadFallback url={url} name={name} kind="pdf" message="Não foi possível pré-visualizar este PDF." />
+          <DownloadFallback url={url} name={name} kind="pdf" message={t('viewer.pdfError')} />
         ) : (
           <Document
             file={url}
             onLoadSuccess={({ numPages }) => setPages(numPages)}
             onLoadError={() => setError(true)}
-            loading={<ViewerSpinner label="Carregando PDF…" />}
+            loading={<ViewerSpinner label={t('viewer.loadingPdf')} />}
             className="flex flex-col items-center gap-4"
           >
             {Array.from({ length: pages }, (_, i) => (
@@ -107,6 +109,7 @@ function ViewerSpinner({ label }) {
 
 // Generic card for formats browsers can't preview (docx, xlsx, zip, …).
 function DownloadFallback({ url, name, kind, message }) {
+  const { t } = useTranslation('ticket')
   const meta = attachmentKindMeta(kind)
   const Icon = meta.icon
   return (
@@ -116,7 +119,7 @@ function DownloadFallback({ url, name, kind, message }) {
       </div>
       <div className="text-center">
         <p className="max-w-md truncate text-base font-bold text-white">{name}</p>
-        <p className="mt-1 text-sm text-white/60">{message || `${meta.label} — pré-visualização indisponível neste formato.`}</p>
+        <p className="mt-1 text-sm text-white/60">{message || t('viewer.noPreview', { label: meta.label })}</p>
       </div>
       <a
         href={url}
@@ -125,7 +128,7 @@ function DownloadFallback({ url, name, kind, message }) {
         rel="noreferrer"
         className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-ink shadow-lg transition hover:brightness-95"
       >
-        <DownloadIcon size={16} /> Baixar arquivo
+        <DownloadIcon size={16} /> {t('viewer.downloadFile')}
       </a>
     </div>
   )
@@ -149,6 +152,7 @@ function toSlide(att) {
 }
 
 export default function MediaViewer({ attachments = [], index = 0, open, onClose }) {
+  const { t } = useTranslation('ticket')
   const slides = useMemo(() => attachments.map(toSlide), [attachments])
 
   if (!open) return null
@@ -190,7 +194,7 @@ export default function MediaViewer({ attachments = [], index = 0, open, onClose
           )
         },
       }}
-      labels={{ Previous: 'Anterior', Next: 'Próximo', Close: 'Fechar', Download: 'Baixar' }}
+      labels={{ Previous: t('viewer.previous'), Next: t('viewer.next'), Close: t('actions.close'), Download: t('actions.download') }}
     />
   )
 }

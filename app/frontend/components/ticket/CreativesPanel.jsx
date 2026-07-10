@@ -1,5 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/i18n'
 import { toast } from 'sonner'
 import { creativeMeta, CREATIVE_TYPE_META, GENERATION_KIND_META, uploadAcceptFor, fileMatchesCreativeType, uploadableTypesForTicket, generatableKindsForTicket } from '@/lib/constants'
 import { useWorkspaceCreatives, usePricing } from '@/hooks/useData'
@@ -31,10 +33,12 @@ const MediaViewer = lazy(() => import('./MediaViewer'))
 const isSceneEditable = (c) => c?.source === 'generated' && ['ugc_video', 'reel'].includes(c?.creative_type)
 
 // The three generatable kinds, each mapped to a sensible default creative type.
+// Copy is resolved lazily (getters) so it follows the active locale.
+const tr = (key) => i18n.t(`ticket:${key}`)
 const GENERATABLE = [
-  { kind: 'carousel', type: 'carousel', label: 'Carrossel', desc: 'Padrão viral com marca + @handle', icon: GalleryHorizontalEnd, color: CREATIVE_TYPE_META.carousel.color },
-  { kind: 'video', type: 'ugc_video', label: 'Vídeo', desc: 'Avatar falando ou produto a partir de fotos', icon: Video, color: CREATIVE_TYPE_META.ugc_video.color },
-  { kind: 'image', type: 'feed_image', label: 'Imagem', desc: 'Imagem única para o feed', icon: ImageIcon, color: CREATIVE_TYPE_META.feed_image.color },
+  { kind: 'carousel', type: 'carousel', get label() { return tr('creatives.kinds.carousel.label') }, get desc() { return tr('creatives.kinds.carousel.desc') }, icon: GalleryHorizontalEnd, color: CREATIVE_TYPE_META.carousel.color },
+  { kind: 'video', type: 'ugc_video', get label() { return tr('creatives.kinds.video.label') }, get desc() { return tr('creatives.kinds.video.desc') }, icon: Video, color: CREATIVE_TYPE_META.ugc_video.color },
+  { kind: 'image', type: 'feed_image', get label() { return tr('creatives.kinds.image.label') }, get desc() { return tr('creatives.kinds.image.desc') }, icon: ImageIcon, color: CREATIVE_TYPE_META.feed_image.color },
 ]
 
 // The probable credit cost of generating a given kind, read from the server
@@ -49,8 +53,7 @@ function creditsForKind(kind, creditCosts) {
 
 // "1 crédito" / "3 créditos"; video is prefixed "~" since it's an estimate.
 function creditBadgeLabel(kind, credits) {
-  const unit = credits === 1 ? 'crédito' : 'créditos'
-  return `${kind === 'video' ? '~' : ''}${credits} ${unit}`
+  return tr(kind === 'video' ? 'creatives.creditBadgeEstimate' : 'creatives.creditBadge', { count: credits })
 }
 
 // A generated asset is a video when its URL carries a video extension (the

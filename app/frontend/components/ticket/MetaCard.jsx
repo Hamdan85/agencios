@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useWorkspaceMembers } from '@/hooks/useData'
 import { PRIORITY_META } from '@/lib/constants'
 import { Card } from '@/components/ui/card'
@@ -24,6 +25,7 @@ function Row({ icon: Icon, label, children }) {
 }
 
 export default function MetaCard({ ticket, onUpdate }) {
+  const { t } = useTranslation('ticket')
   const { data: members } = useWorkspaceMembers()
   const people = members || []
   const due = relativeDay(ticket?.due_date)
@@ -31,11 +33,11 @@ export default function MetaCard({ ticket, onUpdate }) {
   return (
     <Card className="overflow-hidden">
       <div className="border-b border-border px-4 py-3">
-        <h3 className="font-display text-sm font-bold text-ink">Detalhes</h3>
+        <h3 className="font-display text-sm font-bold text-ink">{t('meta.title')}</h3>
       </div>
       <div className="divide-y divide-border">
         {/* Assignee — inline editable */}
-        <Row icon={User} label="Responsável">
+        <Row icon={User} label={t('meta.assignee')}>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="inline-flex items-center gap-2 rounded-lg px-1.5 py-1 transition hover:bg-surface-muted">
@@ -45,15 +47,15 @@ export default function MetaCard({ ticket, onUpdate }) {
                     <span className="text-sm font-semibold text-ink">{ticket.assignee.name}</span>
                   </>
                 ) : (
-                  <span className="text-sm text-ink-faint">Atribuir…</span>
+                  <span className="text-sm text-ink-faint">{t('meta.assign')}</span>
                 )}
                 <ChevronDown size={14} className="text-ink-muted" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Atribuir a</DropdownMenuLabel>
+              <DropdownMenuLabel>{t('meta.assignTo')}</DropdownMenuLabel>
               <DropdownMenuItem onClick={() => onUpdate?.({ assignee_id: null })}>
-                <span className="text-ink-muted">Sem responsável</span>
+                <span className="text-ink-muted">{t('meta.unassigned')}</span>
                 {!ticket?.assignee && <Check size={14} className="ml-auto !text-brand" />}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -69,7 +71,7 @@ export default function MetaCard({ ticket, onUpdate }) {
         </Row>
 
         {/* Priority — inline editable */}
-        <Row icon={Flag} label="Prioridade">
+        <Row icon={Flag} label={t('meta.priority')}>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
@@ -93,7 +95,7 @@ export default function MetaCard({ ticket, onUpdate }) {
           </DropdownMenu>
         </Row>
 
-        <Row icon={CalendarDays} label="Prazo">
+        <Row icon={CalendarDays} label={t('meta.dueDate')}>
           <div className="flex items-center justify-end gap-2">
             <span className="text-sm font-medium text-ink-secondary">{date(ticket?.due_date)}</span>
             {due && (
@@ -113,28 +115,28 @@ export default function MetaCard({ ticket, onUpdate }) {
 
         {/* Agendado — always inline-editable; writes the ticket's scheduled_at
             column (the same value the "Postagem" step publishes at). */}
-        <Row icon={CalendarClock} label="Agendado">
+        <Row icon={CalendarClock} label={t('meta.scheduled')}>
           <DateTimePicker
             align="end"
-            placeholder="Agendar…"
+            placeholder={t('meta.schedulePlaceholder')}
             className="w-48"
             value={ticket?.scheduled_at ? String(ticket.scheduled_at).slice(0, 16) : ''}
             onChange={(v) => onUpdate?.({ scheduled_at: v || null })}
           />
         </Row>
 
-        <Row icon={Radio} label="Canais">
+        <Row icon={Radio} label={t('meta.channels')}>
           {ticket?.channels?.length ? <ChannelIcons channels={ticket.channels} size={14} /> : <span className="text-sm text-ink-faint">—</span>}
         </Row>
 
-        <Row icon={Wand2} label="Criativo">
+        <Row icon={Wand2} label={t('meta.creative')}>
           {ticket?.creative_type ? <CreativeTypeChip type={ticket.creative_type} /> : <span className="text-sm text-ink-faint">—</span>}
         </Row>
 
         {ticket?.relations?.length > 0 && (
           <div className="px-4 py-3">
             <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
-              <GitBranch size={14} /> Relações
+              <GitBranch size={14} /> {t('meta.relations')}
             </p>
             <div className="space-y-1">
               {ticket.relations.map((r) => (

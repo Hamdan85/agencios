@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   Users, Plus, Mail, Phone, FileText, MoreHorizontal,
   Pencil, Archive, ArchiveRestore, FolderKanban, Building2, Sparkles,
@@ -21,6 +22,7 @@ import ClientWizard from '@/components/client/ClientWizard'
 import ClientEditDialog from '@/components/client/ClientEditDialog'
 
 function ClientCard({ client, onEdit, onArchive, onUnarchive }) {
+  const { t } = useTranslation('clients')
   const navigate = useNavigate()
   const archived = client.status === 'archived'
 
@@ -54,15 +56,15 @@ function ClientCard({ client, onEdit, onArchive, onUnarchive }) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onSelect={() => onEdit(client)}>
-                <Pencil /> Editar
+                <Pencil /> {t('actions.edit')}
               </DropdownMenuItem>
               {archived ? (
                 <DropdownMenuItem onSelect={() => onUnarchive(client)}>
-                  <ArchiveRestore /> Reativar
+                  <ArchiveRestore /> {t('actions.unarchive')}
                 </DropdownMenuItem>
               ) : (
                 <DropdownMenuItem onSelect={() => onArchive(client)} className="text-danger data-[highlighted]:text-danger">
-                  <Archive /> Arquivar
+                  <Archive /> {t('actions.archive')}
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
@@ -90,15 +92,15 @@ function ClientCard({ client, onEdit, onArchive, onUnarchive }) {
 
       <div className="mt-4 flex items-center justify-between border-t border-border pt-3.5">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-2.5 py-1 text-xs font-bold text-brand">
-          <FolderKanban size={13} /> {client.projects_count ?? 0} {(client.projects_count ?? 0) === 1 ? 'campanha' : 'campanhas'}
+          <FolderKanban size={13} /> {t('card.campaigns', { count: client.projects_count ?? 0 })}
         </span>
         <div className="flex items-center gap-2">
           {client.has_positioning && (
-            <ColorBadge color="#6366F1" tint="16" className="gap-1 px-2 py-1" title="Posicionamento definido">
-              <Sparkles size={12} /> Posicionado
+            <ColorBadge color="#6366F1" tint="16" className="gap-1 px-2 py-1" title={t('card.positionedTitle')}>
+              <Sparkles size={12} /> {t('card.positioned')}
             </ColorBadge>
           )}
-          <Badge variant={archived ? 'muted' : 'success'}>{archived ? 'Arquivado' : 'Ativo'}</Badge>
+          <Badge variant={archived ? 'muted' : 'success'}>{archived ? t('status.archived') : t('status.active')}</Badge>
         </div>
       </div>
     </div>
@@ -106,6 +108,7 @@ function ClientCard({ client, onEdit, onArchive, onUnarchive }) {
 }
 
 export default function ClientsIndex() {
+  const { t } = useTranslation('clients')
   const { data: clients, isLoading } = useClients()
   const mutations = useClientMutations()
   const { archive, unarchive } = mutations
@@ -133,9 +136,9 @@ export default function ClientsIndex() {
   const onEdit = (client) => setEditing(client)
   const onArchive = async (client) => {
     const ok = await confirm({
-      title: `Arquivar ${client.name}?`,
-      description: 'O cliente sai da lista ativa. Você pode reativá-lo depois pelo filtro de arquivados.',
-      confirmLabel: 'Arquivar',
+      title: t('archiveConfirm.title', { name: client.name }),
+      description: t('archiveConfirm.description'),
+      confirmLabel: t('actions.archive'),
       icon: Archive,
       tone: '#F59E0B',
     })
@@ -150,14 +153,14 @@ export default function ClientsIndex() {
   return (
     <Page>
       <PageHeader
-        eyebrow="Carteira"
-        title="Clientes"
+        eyebrow={t('index.eyebrow')}
+        title={t('index.title')}
         icon={Users}
         color="#6366F1"
-        description="A carteira de clientes da sua agência."
+        description={t('index.description')}
         actions={(
           <Button onClick={openCreate}>
-            <Plus size={18} /> Novo cliente
+            <Plus size={18} /> {t('index.newClient')}
           </Button>
         )}
       />
@@ -166,16 +169,16 @@ export default function ClientsIndex() {
         search
         searchValue={search}
         onSearch={(v) => setSearch(v || '')}
-        searchPlaceholder="Buscar por nome, empresa ou e-mail…"
+        searchPlaceholder={t('index.searchPlaceholder')}
         filters={[
           {
             key: 'status',
             type: 'options',
-            label: 'Situação',
-            placeholder: 'Ativos',
+            label: t('index.filters.status'),
+            placeholder: t('index.filters.active'),
             options: [
-              { value: 'archived', label: 'Arquivados' },
-              { value: 'all', label: 'Todos' },
+              { value: 'archived', label: t('index.filters.archived') },
+              { value: 'all', label: t('index.filters.all') },
             ],
           },
         ]}
@@ -189,10 +192,10 @@ export default function ClientsIndex() {
         <EmptyState
           icon={Users}
           color="#6366F1"
-          title={list.length === 0 ? 'Nenhum cliente ainda' : 'Nada por aqui'}
-          description={list.length === 0 ? 'Adicione o primeiro cliente à carteira da agência.' : 'Tente ajustar a busca ou o filtro de status.'}
+          title={list.length === 0 ? t('index.empty.noneTitle') : t('index.empty.filteredTitle')}
+          description={list.length === 0 ? t('index.empty.noneDescription') : t('index.empty.filteredDescription')}
           action={list.length === 0 ? (
-            <Button onClick={openCreate}><Plus size={18} /> Novo cliente</Button>
+            <Button onClick={openCreate}><Plus size={18} /> {t('index.newClient')}</Button>
           ) : null}
         />
       ) : (

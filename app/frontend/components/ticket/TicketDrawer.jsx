@@ -1,4 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   Maximize2, X, ArrowRight, ChevronDown, Layers, Folder, Building2, Ghost,
 } from 'lucide-react'
@@ -36,6 +37,7 @@ export default function TicketDrawer({ ticketId, open, onOpenChange, showAutopil
 }
 
 function DrawerContent({ id, onOpenChange, showAutopilot }) {
+  const { t } = useTranslation('ticket')
   const navigate = useNavigate()
   const location = useLocation()
   const { data, isLoading } = useTicket(id)
@@ -69,7 +71,7 @@ function DrawerContent({ id, onOpenChange, showAutopilot }) {
       <div className="shrink-0 border-b border-border bg-surface/85 px-5 pb-4 pt-4 backdrop-blur">
         <div className="mb-3 flex items-center justify-between">
           <Button variant="ghost" size="sm" onClick={expand} className="-ml-2 hidden text-ink-secondary md:inline-flex">
-            <Maximize2 size={15} /> Abrir tela cheia
+            <Maximize2 size={15} /> {t('drawer.openFull')}
           </Button>
           <div className="ml-auto flex items-center gap-1">
             {ticket && (
@@ -84,7 +86,7 @@ function DrawerContent({ id, onOpenChange, showAutopilot }) {
               />
             )}
             <SheetClose asChild>
-              <Button variant="ghost" size="icon-sm" aria-label="Fechar">
+              <Button variant="ghost" size="icon-sm" aria-label={t('actions.close')}>
                 <X size={18} />
               </Button>
             </SheetClose>
@@ -93,7 +95,7 @@ function DrawerContent({ id, onOpenChange, showAutopilot }) {
 
         {isLoading || !ticket ? (
           <SheetTitle className="text-lg font-bold">
-            {isLoading ? 'Carregando ticket…' : 'Ticket não encontrado'}
+            {isLoading ? t('drawer.loading') : t('drawer.notFound')}
           </SheetTitle>
         ) : (
           <>
@@ -120,12 +122,12 @@ function DrawerContent({ id, onOpenChange, showAutopilot }) {
             <div className="mt-3 flex w-full items-center gap-2 sm:w-auto sm:flex-wrap">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" disabled={mut.advance.isPending} className="shrink-0" aria-label="Mover etapa">
-                    <Layers size={14} /> <span className="hidden sm:inline">Mover etapa</span> <ChevronDown size={13} className="hidden sm:inline" />
+                  <Button variant="outline" size="sm" disabled={mut.advance.isPending} className="shrink-0" aria-label={t('drawer.moveStage')}>
+                    <Layers size={14} /> <span className="hidden sm:inline">{t('drawer.moveStage')}</span> <ChevronDown size={13} className="hidden sm:inline" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="min-w-52">
-                  <DropdownMenuLabel>Ir para a etapa</DropdownMenuLabel>
+                  <DropdownMenuLabel>{t('drawer.goToStage')}</DropdownMenuLabel>
                   {WORKFLOW.map((key) => {
                     const sm = STATUS_META[key]
                     const Icon = sm.icon
@@ -141,7 +143,7 @@ function DrawerContent({ id, onOpenChange, showAutopilot }) {
                           <Icon size={12} strokeWidth={2.5} />
                         </span>
                         <span className="font-semibold">{sm.label}</span>
-                        {active && <span className="ml-auto text-[10px] font-bold uppercase text-ink-faint">atual</span>}
+                        {active && <span className="ml-auto text-[10px] font-bold uppercase text-ink-faint">{t('drawer.current')}</span>}
                       </DropdownMenuItem>
                     )
                   })}
@@ -173,7 +175,7 @@ function DrawerContent({ id, onOpenChange, showAutopilot }) {
                   style={{ background: `linear-gradient(135deg, ${nextMeta.color}, ${nextMeta.color}cc)` }}
                   className="min-w-0 flex-1 justify-center text-white shadow-[0_8px_20px_-8px_rgba(0,0,0,0.4)] hover:brightness-105 sm:flex-none"
                 >
-                  <span className="truncate">Avançar para {nextMeta.label}</span>
+                  <span className="truncate">{t('drawer.advanceTo', { label: nextMeta.label })}</span>
                   <ArrowRight size={14} className="shrink-0" />
                 </Button>
               )}
@@ -189,8 +191,8 @@ function DrawerContent({ id, onOpenChange, showAutopilot }) {
         ) : !ticket ? (
           <EmptyState
             icon={Ghost}
-            title="Ticket não encontrado"
-            description="Este ticket pode ter sido removido ou você não tem acesso a ele."
+            title={t('drawer.notFound')}
+            description={t('drawer.notFoundDescription')}
           />
         ) : (
           <div className="space-y-5">

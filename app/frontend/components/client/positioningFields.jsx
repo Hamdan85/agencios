@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/i18n'
 import { Sparkles, Wand2, Image as ImageIcon, UserCircle2, Globe, Check, Upload, Images, X } from 'lucide-react'
 import { Input, Textarea } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -12,35 +14,36 @@ import CarouselBackgroundPicker from './CarouselBackgroundPicker'
 // fields have ONE source of truth. Owns the phone/document input masks; `onField`
 // receives the already-masked value.
 export function ContactFields({ contact, onField }) {
+  const { t } = useTranslation('clients')
   const set = (k) => (e) => onField(k, e.target.value)
   const masked = (k, mask) => (e) => onField(k, mask(e.target.value))
   return (
     <div className="space-y-3.5">
       <div className="space-y-1.5">
-        <Label htmlFor="cl-name">Nome</Label>
-        <Input id="cl-name" required value={contact.name || ''} onChange={set('name')} placeholder="Nome do contato" />
+        <Label htmlFor="cl-name">{t('fields.name')}</Label>
+        <Input id="cl-name" required value={contact.name || ''} onChange={set('name')} placeholder={t('fields.namePlaceholder')} />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="cl-company">Empresa</Label>
-        <Input id="cl-company" value={contact.company || ''} onChange={set('company')} placeholder="Nome da empresa" />
+        <Label htmlFor="cl-company">{t('fields.company')}</Label>
+        <Input id="cl-company" value={contact.company || ''} onChange={set('company')} placeholder={t('fields.companyPlaceholder')} />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label htmlFor="cl-email">E-mail</Label>
-          <Input id="cl-email" type="email" value={contact.email || ''} onChange={set('email')} placeholder="contato@empresa.com" />
+          <Label htmlFor="cl-email">{t('fields.email')}</Label>
+          <Input id="cl-email" type="email" value={contact.email || ''} onChange={set('email')} placeholder={t('fields.emailPlaceholder')} />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="cl-phone">Telefone</Label>
-          <Input id="cl-phone" type="tel" inputMode="numeric" value={contact.phone || ''} onChange={masked('phone', maskPhone)} placeholder="(11) 99999-9999" />
+          <Label htmlFor="cl-phone">{t('fields.phone')}</Label>
+          <Input id="cl-phone" type="tel" inputMode="numeric" value={contact.phone || ''} onChange={masked('phone', maskPhone)} placeholder={t('fields.phonePlaceholder')} />
         </div>
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="cl-document">Documento</Label>
-        <Input id="cl-document" inputMode="numeric" value={contact.document || ''} onChange={masked('document', maskDocument)} placeholder="CNPJ / CPF" />
+        <Label htmlFor="cl-document">{t('fields.document')}</Label>
+        <Input id="cl-document" inputMode="numeric" value={contact.document || ''} onChange={masked('document', maskDocument)} placeholder={t('fields.documentPlaceholder')} />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="cl-notes">Observações</Label>
-        <Textarea id="cl-notes" value={contact.notes || ''} onChange={set('notes')} placeholder="Anotações sobre o cliente…" />
+        <Label htmlFor="cl-notes">{t('fields.notes')}</Label>
+        <Textarea id="cl-notes" value={contact.notes || ''} onChange={set('notes')} placeholder={t('fields.notesPlaceholder')} />
       </div>
     </div>
   )
@@ -119,18 +122,26 @@ function shade(hex, pct) {
   return `#${adj.map((c) => c.toString(16).padStart(2, '0')).join('')}`
 }
 
+// Labels resolve lazily (getters) so they follow the active locale — same
+// pattern as the label maps in lib/constants.
+const tr = (key) => i18n.t(`clients:${key}`)
 export const CAROUSEL_STYLES = [
-  { key: 'gradient', label: 'Fundo gradiente' },
-  { key: 'white', label: 'Fundo branco' },
-  { key: 'image', label: 'Imagem de fundo' },
+  { key: 'gradient', get label() { return tr('carousel.styles.gradient') } },
+  { key: 'white', get label() { return tr('carousel.styles.white') } },
+  { key: 'image', get label() { return tr('carousel.styles.image') } },
 ]
-export const CAROUSEL_STYLE_LABEL = { gradient: 'Fundo gradiente', white: 'Fundo branco', image: 'Imagem de fundo' }
+export const CAROUSEL_STYLE_LABEL = {
+  get gradient() { return tr('carousel.styles.gradient') },
+  get white() { return tr('carousel.styles.white') },
+  get image() { return tr('carousel.styles.image') },
+}
 
 // A faithful miniature of a generated carousel slide using the client's real
 // brand colors — mirrors Creatives::CarouselSlideTemplate so each option is a
 // literal example of the actual output, not a mockup. For the `image` style it
 // renders the chosen background photo behind a scrim (the has-image layout).
 export function CarouselSlidePreview({ style, primary, secondary, imageUrl, className }) {
+  const { t } = useTranslation('clients')
   const p = primary || '#7C3AED'
   const s = secondary || '#F59E0B'
   const white = style === 'white'
@@ -157,22 +168,23 @@ export function CarouselSlidePreview({ style, primary, secondary, imageUrl, clas
           </div>
         </div>
         <div className="mt-4 space-y-1.5">
-          <span className="block text-[11px] font-extrabold leading-tight">Sua headline aparece aqui</span>
+          <span className="block text-[11px] font-extrabold leading-tight">{t('carousel.previewHeadline')}</span>
           {!image && <span className="block h-1 w-6 rounded-full" style={{ background: s }} />}
         </div>
       </div>
-      <span className="absolute bottom-2.5 left-3 z-10 text-[8px] font-bold" style={{ opacity: 0.8 }}>Arraste →</span>
+      <span className="absolute bottom-2.5 left-3 z-10 text-[8px] font-bold" style={{ opacity: 0.8 }}>{t('example.swipe')}</span>
     </div>
   )
 }
 
 // Literal slide previews the user picks between; drives carousel generation.
 function CarouselStyleField({ value, onChange, primary, secondary, imageUrl }) {
+  const { t } = useTranslation('clients')
   const active = value || 'gradient'
   return (
     <div className="space-y-1.5">
-      <Label>Estilo do carrossel</Label>
-      <p className="-mt-0.5 text-xs text-ink-faint">Fundo usado quando a IA gera carrosséis para este cliente.</p>
+      <Label>{t('carousel.styleLabel')}</Label>
+      <p className="-mt-0.5 text-xs text-ink-faint">{t('carousel.styleHint')}</p>
       <div className="grid grid-cols-3 gap-2.5">
         {CAROUSEL_STYLES.map((opt) => {
           const on = active === opt.key
@@ -201,6 +213,7 @@ function CarouselStyleField({ value, onChange, primary, secondary, imageUrl }) {
 // One image upload tile (logo or creator avatar). Shows the selected file name
 // or the current saved image when editing.
 function ImageField({ label, icon: Icon, file, currentUrl, onFile, rounded }) {
+  const { t } = useTranslation('clients')
   const preview = file ? URL.createObjectURL(file) : currentUrl
   return (
     <div className="space-y-1.5">
@@ -210,8 +223,8 @@ function ImageField({ label, icon: Icon, file, currentUrl, onFile, rounded }) {
           {preview ? <img src={preview} alt="" className="size-full object-cover" /> : <Icon size={20} />}
         </div>
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-ink-secondary">{file ? file.name : (currentUrl ? 'Imagem atual' : 'Escolher imagem')}</p>
-          <p className="text-xs text-ink-faint">PNG, JPG ou SVG</p>
+          <p className="truncate text-sm font-semibold text-ink-secondary">{file ? file.name : (currentUrl ? t('fields.currentImage') : t('fields.chooseImage'))}</p>
+          <p className="text-xs text-ink-faint">{t('fields.imageFormats')}</p>
         </div>
         <input type="file" accept="image/*" className="hidden" onChange={(e) => onFile(e.target.files?.[0] || null)} />
       </label>
@@ -222,6 +235,7 @@ function ImageField({ label, icon: Icon, file, currentUrl, onFile, rounded }) {
 // The carousel background source chooser, shown when the `image` style is picked:
 // upload a file or pick an existing platform creative. `bgCreative` = {id,url}.
 function CarouselBackgroundChooser({ bgPreview, onFile, bgCreative, onBgCreative }) {
+  const { t } = useTranslation('clients')
   const [pickerOpen, setPickerOpen] = useState(false)
   return (
     <div className="space-y-2 rounded-xl border border-border bg-surface-muted/40 p-3">
@@ -231,23 +245,23 @@ function CarouselBackgroundChooser({ bgPreview, onFile, bgCreative, onBgCreative
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-ink-secondary">
-            {bgPreview ? 'Imagem de fundo definida' : 'Escolha a imagem de fundo'}
+            {bgPreview ? t('carousel.bgSet') : t('carousel.bgChoose')}
           </p>
-          <p className="text-xs text-ink-faint">Envie um arquivo ou selecione um criativo da plataforma.</p>
+          <p className="text-xs text-ink-faint">{t('carousel.bgHint')}</p>
         </div>
         {bgPreview && (
-          <button type="button" onClick={() => { onFile(null); onBgCreative(null) }} className="shrink-0 rounded-lg p-1.5 text-ink-faint transition hover:bg-surface hover:text-ink" title="Remover">
+          <button type="button" onClick={() => { onFile(null); onBgCreative(null) }} className="shrink-0 rounded-lg p-1.5 text-ink-faint transition hover:bg-surface hover:text-ink" title={t('actions.remove')}>
             <X size={16} />
           </button>
         )}
       </div>
       <div className="flex flex-wrap gap-2">
         <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-ink-secondary transition hover:border-brand/50">
-          <Upload size={14} /> Enviar imagem
+          <Upload size={14} /> {t('carousel.uploadImage')}
           <input type="file" accept="image/*" className="hidden" onChange={(e) => onFile(e.target.files?.[0] || null)} />
         </label>
         <Button type="button" variant="outline" size="sm" onClick={() => setPickerOpen(true)}>
-          <Images size={14} /> Escolher de um criativo
+          <Images size={14} /> {t('carousel.pickFromCreative')}
         </Button>
       </div>
       <CarouselBackgroundPicker open={pickerOpen} onOpenChange={setPickerOpen} onSelect={onBgCreative} />
@@ -275,6 +289,7 @@ function PaletteSwatch({ color, label }) {
 // use the brand palette. Only rendered by the edit dialog (which can re-analyze);
 // the wizard omits the `palette` prop (analysis runs after the image is saved).
 export function CarouselPaletteSwatches({ palette, hasBackground, onReanalyze, analyzing }) {
+  const { t } = useTranslation('clients')
   const accent = palette?.accent
   const hasColors = !!(accent || palette?.text_color)
   return (
@@ -282,7 +297,7 @@ export function CarouselPaletteSwatches({ palette, hasBackground, onReanalyze, a
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <Sparkles size={13} className="text-brand" />
-          <Label className="mb-0">Cores do carrossel (da imagem)</Label>
+          <Label className="mb-0">{t('palette.title')}</Label>
         </div>
         {hasBackground && onReanalyze && (
           <button
@@ -291,27 +306,27 @@ export function CarouselPaletteSwatches({ palette, hasBackground, onReanalyze, a
             disabled={analyzing}
             className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-ink-secondary transition hover:bg-surface disabled:opacity-50"
           >
-            {analyzing ? <InlineSpinner size={12} /> : <Wand2 size={12} />} Reanalisar
+            {analyzing ? <InlineSpinner size={12} /> : <Wand2 size={12} />} {t('palette.reanalyze')}
           </button>
         )}
       </div>
       {hasColors ? (
         <div className="flex flex-wrap items-center gap-4">
-          <PaletteSwatch color={accent} label="Destaque" />
-          <PaletteSwatch color={palette.text_color} label="Texto" />
+          <PaletteSwatch color={accent} label={t('palette.accent')} />
+          <PaletteSwatch color={palette.text_color} label={t('palette.text')} />
           {palette.scrim_opacity > 0 && (
-            <span className="text-xs text-ink-faint">Escurecimento {Math.round(palette.scrim_opacity * 100)}%</span>
+            <span className="text-xs text-ink-faint">{t('palette.scrim', { pct: Math.round(palette.scrim_opacity * 100) })}</span>
           )}
         </div>
       ) : (
         <p className="text-xs text-ink-faint">
           {hasBackground
-            ? 'Analisando a imagem para escolher as cores…'
-            : 'Defina uma imagem de fundo — a IA escolhe as cores automaticamente.'}
+            ? t('palette.analyzing')
+            : t('palette.noBackground')}
         </p>
       )}
       <p className="text-[11px] leading-snug text-ink-faint">
-        Cores exclusivas do fundo com imagem, separadas das cores da marca (usadas nos fundos gradiente e branco).
+        {t('palette.note')}
       </p>
     </div>
   )
@@ -324,6 +339,7 @@ export function BrandIdentityFields({
   brand, onBrand, assets, onAsset, logoUrl, avatarUrl, bgUrl, bgCreative, onBgCreative,
   palette, onReanalyzePalette, analyzingPalette,
 }) {
+  const { t } = useTranslation('clients')
   const carouselStyle = brand.carousel_style || 'gradient'
   const bgFileUrl = assets.carouselBackground ? URL.createObjectURL(assets.carouselBackground) : null
   const bgPreview = bgCreative?.url || bgFileUrl || bgUrl || null
@@ -335,26 +351,26 @@ export function BrandIdentityFields({
   return (
     <div className="space-y-3.5">
       <div className="space-y-1.5">
-        <Label htmlFor="brand-voice">Voz da marca</Label>
+        <Label htmlFor="brand-voice">{t('brand.voice')}</Label>
         <Textarea
           id="brand-voice"
           value={brand.brand_voice || ''}
           onChange={(e) => onBrand('brand_voice', e.target.value)}
-          placeholder="Personalidade e tom (ex.: próxima, divertida, especialista)."
+          placeholder={t('brandFields.voicePlaceholder')}
         />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="brand-handle">@handle padrão</Label>
+        <Label htmlFor="brand-handle">{t('brandFields.handleLabel')}</Label>
         <Input
           id="brand-handle"
           value={brand.default_handle || ''}
           onChange={(e) => onBrand('default_handle', e.target.value.replace(/^@/, ''))}
-          placeholder="marca_oficial"
+          placeholder={t('brandFields.handlePlaceholder')}
         />
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <ColorField label="Cor primária" value={brand.brand_primary_color} onChange={(v) => onBrand('brand_primary_color', v)} />
-        <ColorField label="Cor secundária" value={brand.brand_secondary_color} onChange={(v) => onBrand('brand_secondary_color', v)} />
+        <ColorField label={t('brand.primaryColor')} value={brand.brand_primary_color} onChange={(v) => onBrand('brand_primary_color', v)} />
+        <ColorField label={t('brand.secondaryColor')} value={brand.brand_secondary_color} onChange={(v) => onBrand('brand_secondary_color', v)} />
       </div>
       <CarouselStyleField
         value={carouselStyle}
@@ -383,7 +399,7 @@ export function BrandIdentityFields({
       )}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <ImageField label="Logo" icon={ImageIcon} file={assets.logo} currentUrl={logoUrl} onFile={(f) => onAsset('logo', f)} />
-        <ImageField label="Avatar do criador (UGC)" icon={UserCircle2} rounded file={assets.defaultCreatorAvatar} currentUrl={avatarUrl} onFile={(f) => onAsset('defaultCreatorAvatar', f)} />
+        <ImageField label={t('brandFields.creatorAvatar')} icon={UserCircle2} rounded file={assets.defaultCreatorAvatar} currentUrl={avatarUrl} onFile={(f) => onAsset('defaultCreatorAvatar', f)} />
       </div>
     </div>
   )
@@ -392,19 +408,18 @@ export function BrandIdentityFields({
 // First step: import the whole client from the brand's site. The AI reads the
 // page and fills name, contact, brand identity (logo + colors) and positioning.
 export function SiteImportPanel({ url, onUrl, onImport, importing }) {
+  const { t } = useTranslation('clients')
   const ready = String(url || '').trim().length > 0
   return (
     <div className="space-y-4">
       <div className="flex items-start gap-2.5 rounded-xl border border-brand/20 bg-brand-soft px-4 py-3">
         <Sparkles size={18} className="mt-0.5 shrink-0 text-brand" />
         <p className="text-sm text-ink-secondary">
-          Cole o link do site / landing page da marca. A IA lê a página e preenche
-          automaticamente nome, contato, identidade visual (logo e cores) e o
-          posicionamento. Você revisa tudo antes de salvar.
+          {t('siteImport.banner')}
         </p>
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="brand-url">Site da marca</Label>
+        <Label htmlFor="brand-url">{t('siteImport.label')}</Label>
         <div className="flex gap-2">
           <Input
             id="brand-url"
@@ -413,15 +428,15 @@ export function SiteImportPanel({ url, onUrl, onImport, importing }) {
             value={url || ''}
             onChange={(e) => onUrl(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); if (!importing && ready) onImport() } }}
-            placeholder="https://marca.com.br"
+            placeholder={t('siteImport.placeholder')}
           />
           <Button type="button" onClick={onImport} disabled={importing || !ready} className="shrink-0">
             {importing ? <InlineSpinner /> : <Globe />}
-            {importing ? 'Lendo…' : 'Importar'}
+            {importing ? t('siteImport.reading') : t('siteImport.import')}
           </Button>
         </div>
         <p className="text-xs text-ink-faint">
-          Preenche nome, e-mail, telefone, @, cores, logo e posicionamento — você pode pular e preencher manualmente.
+          {t('siteImport.hint')}
         </p>
       </div>
     </div>
@@ -431,28 +446,28 @@ export function SiteImportPanel({ url, onUrl, onImport, importing }) {
 // AI-first brief: the client describes the brand in free text and the model fills
 // the structured positioning fields below.
 export function BriefPanel({ brief, onBrief, onGenerate, generating }) {
+  const { t } = useTranslation('clients')
   return (
     <div className="space-y-3.5">
       <div className="flex items-start gap-2.5 rounded-xl border border-brand/20 bg-brand-soft px-4 py-3">
         <Sparkles size={18} className="mt-0.5 shrink-0 text-brand" />
         <p className="text-sm text-ink-secondary">
-          Descreva a marca com suas palavras — produtos, público, diferenciais, jeito de falar.
-          A IA preenche o posicionamento estruturado e você revisa nas próximas etapas.
+          {t('brief.banner')}
         </p>
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="brand-brief">Descrição da marca</Label>
+        <Label htmlFor="brand-brief">{t('brief.label')}</Label>
         <Textarea
           id="brand-brief"
           rows={7}
           value={brief || ''}
           onChange={(e) => onBrief(e.target.value)}
-          placeholder="Ex.: Somos uma confeitaria artesanal premium em SP. Vendemos bolos e doces sob encomenda para festas. Nosso público são mães de classe média-alta que valorizam ingredientes naturais. A gente fala de um jeito caloroso e próximo…"
+          placeholder={t('brief.placeholder')}
         />
       </div>
       <Button type="button" className="w-full" onClick={onGenerate} disabled={generating || !String(brief || '').trim()}>
         {generating ? <InlineSpinner /> : <Wand2 />}
-        {generating ? 'Gerando posicionamento…' : 'Preencher posicionamento com IA'}
+        {generating ? t('brief.generating') : t('brief.generate')}
       </Button>
     </div>
   )
@@ -460,22 +475,23 @@ export function BriefPanel({ brief, onBrief, onGenerate, generating }) {
 
 // Final review of the AI-synthesized one-paragraph statement (editable).
 export function StatementPanel({ statement, onStatement, onRegenerate, generating, canRegenerate }) {
+  const { t } = useTranslation('clients')
   return (
     <div className="space-y-3.5">
       <div className="space-y-1.5">
-        <Label htmlFor="pos-statement">Posicionamento (síntese)</Label>
+        <Label htmlFor="pos-statement">{t('statement.label')}</Label>
         <Textarea
           id="pos-statement"
           rows={6}
           value={statement || ''}
           onChange={(e) => onStatement(e.target.value)}
-          placeholder="O parágrafo de posicionamento aparece aqui. Gere com IA na etapa de descrição ou escreva manualmente."
+          placeholder={t('statement.placeholder')}
         />
       </div>
       {canRegenerate && (
         <Button type="button" variant="outline" size="sm" onClick={onRegenerate} disabled={generating}>
           {generating ? <InlineSpinner /> : <Sparkles />}
-          {generating ? 'Gerando…' : 'Regerar com IA'}
+          {generating ? t('statement.generating') : t('statement.regenerate')}
         </Button>
       )}
     </div>

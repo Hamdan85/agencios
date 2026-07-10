@@ -1,10 +1,12 @@
 import { Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 
 // "Working" indicator for a ticket executing on autopilot (GO mode) — the ticket
 // is walking itself (generating creatives + scheduling posts). Shown on the board
 // card and the list row while `ticket.autopilot_running` is true.
 export function WorkingBadge({ className }) {
+  const { t } = useTranslation('ticket')
   return (
     <span
       className={cn(
@@ -13,7 +15,7 @@ export function WorkingBadge({ className }) {
       )}
     >
       <Loader2 size={11} strokeWidth={2.6} className="animate-spin" />
-      Executando
+      {t('workingBadge')}
     </span>
   )
 }

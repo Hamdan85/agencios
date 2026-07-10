@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/i18n'
 import { ChevronLeft, ChevronRight, GalleryHorizontalEnd } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -35,6 +37,7 @@ function initialsOf(name) {
 // themed with the client's real brand identity (colors, @handle, avatar, logo)
 // and carousel style (gradient / white / image).
 export function CarouselSlide({ slide, index, total, client, className }) {
+  const { t } = useTranslation('clients')
   const primary = client?.brand_primary_color || '#7C3AED'
   const secondary = client?.brand_secondary_color || '#F59E0B'
   const style = client?.carousel_style || 'gradient'
@@ -88,7 +91,7 @@ export function CarouselSlide({ slide, index, total, client, className }) {
               </div>
             )}
             <div className="flex flex-col" style={{ lineHeight: 1.15 }}>
-              <span className="font-extrabold" style={{ fontSize: u(36), textShadow: shadow }}>{client?.name || 'Sua marca'}</span>
+              <span className="font-extrabold" style={{ fontSize: u(36), textShadow: shadow }}>{client?.name || t('example.brandFallback')}</span>
               {handle && <span className="font-semibold" style={{ fontSize: u(28), opacity: 0.82, textShadow: shadow }}>@{handle}</span>}
             </div>
           </div>
@@ -112,7 +115,7 @@ export function CarouselSlide({ slide, index, total, client, className }) {
               className="self-start font-extrabold uppercase"
               style={{ fontSize: u(30), letterSpacing: u(2), color: secondary, textShadow: shadow }}
             >
-              Próximo passo
+              {t('example.nextStep')}
             </span>
           )}
           <div>
@@ -139,7 +142,7 @@ export function CarouselSlide({ slide, index, total, client, className }) {
             className="font-bold"
             style={{ fontSize: u(30), opacity: 0.85, borderTop: `${u(4)} solid ${secondary}`, paddingTop: u(16), textShadow: shadow }}
           >
-            {isCta ? 'Salve e compartilhe' : 'Arraste →'}
+            {isCta ? t('example.saveShare') : t('example.swipe')}
           </span>
           {client?.logo_url && (
             <img src={client.logo_url} alt="" style={{ height: u(64), width: 'auto', objectFit: 'contain', opacity: 0.95 }} />
@@ -156,7 +159,7 @@ export function CarouselSlide({ slide, index, total, client, className }) {
 // tailored — the real copy is written by the AI, but the shape is identical.
 export function buildExampleSlides(client) {
   const pos = client?.positioning || {}
-  const brand = client?.name || 'a marca'
+  const brand = client?.name || i18n.t('clients:example.theBrand')
   const pillars = (Array.isArray(pos.content_pillars) ? pos.content_pillars : []).map((p) => String(p || '').trim()).filter(Boolean)
   const oneLiner = String(pos.one_liner || '').trim()
   const value = String(pos.value_proposition || '').trim()
@@ -166,21 +169,21 @@ export function buildExampleSlides(client) {
   const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s)
 
   const points = (pillars.length ? pillars : [
-    'Estratégia sob medida para a sua marca',
-    'Execução que economiza o seu tempo',
-    'Resultados que você acompanha de perto',
+    i18n.t('clients:example.point1'),
+    i18n.t('clients:example.point2'),
+    i18n.t('clients:example.point3'),
   ]).slice(0, 4)
 
   const hook = {
     role: 'hook',
-    headline: clip(pain ? cap(pain) : `Conheça a ${brand}`),
-    body: clip(oneLiner || value || 'Arraste para ver como podemos ajudar você.', 90),
+    headline: clip(pain ? cap(pain) : i18n.t('clients:example.hookHeadline', { brand })),
+    body: clip(oneLiner || value || i18n.t('clients:example.hookBody'), 90),
   }
   const valueSlides = points.map((p) => ({ role: 'value', headline: clip(cap(p)) }))
   const cta = {
     role: 'cta',
-    headline: 'Bora começar?',
-    body: clip(client?.default_handle ? `Siga @${String(client.default_handle).replace(/^@/, '')} e fale com a gente.` : 'Fale com a gente e comece hoje.', 90),
+    headline: i18n.t('clients:example.ctaHeadline'),
+    body: clip(client?.default_handle ? i18n.t('clients:example.ctaBodyHandle', { handle: String(client.default_handle).replace(/^@/, '') }) : i18n.t('clients:example.ctaBody'), 90),
   }
 
   return [hook, ...valueSlides, cta]
@@ -190,6 +193,7 @@ export function buildExampleSlides(client) {
 // so the team can see the real output before generating anything. Purely
 // illustrative (the copy is example content; the AI writes the real words).
 export function CarouselExampleDialog({ client, open, onOpenChange }) {
+  const { t } = useTranslation('clients')
   const slides = buildExampleSlides(client)
   const total = slides.length
   const [i, setI] = useState(0)
@@ -207,10 +211,10 @@ export function CarouselExampleDialog({ client, open, onOpenChange }) {
       }}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <GalleryHorizontalEnd size={18} className="text-brand" /> Exemplo de carrossel
+            <GalleryHorizontalEnd size={18} className="text-brand" /> {t('example.dialogTitle')}
           </DialogTitle>
           <DialogDescription>
-            {styleLabel} · assim os carrosséis deste cliente são gerados. Conteúdo ilustrativo — a IA escreve o texto real a partir do posicionamento.
+            {t('example.dialogDescription', { style: styleLabel })}
           </DialogDescription>
         </DialogHeader>
 
@@ -219,7 +223,7 @@ export function CarouselExampleDialog({ client, open, onOpenChange }) {
             type="button"
             onClick={() => go(-1)}
             disabled={i === 0}
-            aria-label="Slide anterior"
+            aria-label={t('example.prevSlide')}
             className="grid size-9 shrink-0 place-items-center rounded-full border border-border bg-surface text-ink-muted transition hover:border-brand/40 hover:text-ink disabled:opacity-30"
           >
             <ChevronLeft size={18} />
@@ -233,7 +237,7 @@ export function CarouselExampleDialog({ client, open, onOpenChange }) {
             type="button"
             onClick={() => go(1)}
             disabled={i === total - 1}
-            aria-label="Próximo slide"
+            aria-label={t('example.nextSlide')}
             className="grid size-9 shrink-0 place-items-center rounded-full border border-border bg-surface text-ink-muted transition hover:border-brand/40 hover:text-ink disabled:opacity-30"
           >
             <ChevronRight size={18} />
@@ -246,7 +250,7 @@ export function CarouselExampleDialog({ client, open, onOpenChange }) {
               key={idx}
               type="button"
               onClick={() => setI(idx)}
-              aria-label={`Ir para o slide ${idx + 1}`}
+              aria-label={t('example.goToSlide', { n: idx + 1 })}
               className={cn(
                 'h-1.5 rounded-full transition-all',
                 idx === i ? 'w-5 bg-brand' : 'w-1.5 bg-border hover:bg-ink-faint',

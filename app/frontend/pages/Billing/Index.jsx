@@ -5,6 +5,8 @@ import {
   BarChart3, TrendingUp, Activity, Clock, Info, ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation, Trans } from 'react-i18next'
+import i18n from '@/i18n'
 import {
   useBilling, useBillingMutations, useCredits, useCreditsMutations, useCreditUsage,
 } from '@/hooks/useData'
@@ -30,9 +32,14 @@ const STATUS_VARIANT = {
   active: 'success', trialing: 'soft', past_due: 'danger',
   canceled: 'muted', incomplete: 'warning',
 }
+// Copy is resolved lazily (getters) so it follows the active locale.
+const tr = (key) => i18n.t(`billing:${key}`)
 const STATUS_LABEL = {
-  active: 'Ativo', trialing: 'Em teste', past_due: 'Pagamento pendente',
-  canceled: 'Cancelado', incomplete: 'Incompleto',
+  get active() { return tr('subscriptionStatus.active') },
+  get trialing() { return tr('subscriptionStatus.trialing') },
+  get past_due() { return tr('subscriptionStatus.past_due') },
+  get canceled() { return tr('subscriptionStatus.canceled') },
+  get incomplete() { return tr('subscriptionStatus.incomplete') },
 }
 
 const PLAN_ICON = { solo: Sparkles, agencia: Rocket, enterprise: Crown }
@@ -43,6 +50,7 @@ const PLAN_GRADIENT = {
 }
 
 function PlanCard({ plan, current, samePlan, subscribed, interval, discountPercent, onChange, pending }) {
+  const { t } = useTranslation('billing')
   const meta = PLAN_META[plan.key] || { label: plan.name, color: '#7C3AED' }
   const Icon = PLAN_ICON[plan.key] || Sparkles
   const gradient = PLAN_GRADIENT[plan.key] || 'linear-gradient(135deg, #7C3AED, #EC4899)'
@@ -60,7 +68,7 @@ function PlanCard({ plan, current, samePlan, subscribed, interval, discountPerce
       {current && (
         <div className="absolute right-0 top-0 z-10">
           <span className="inline-block rounded-bl-xl bg-brand px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
-            Plano atual
+            {t('plan.currentBadge')}
           </span>
         </div>
       )}
@@ -69,21 +77,21 @@ function PlanCard({ plan, current, samePlan, subscribed, interval, discountPerce
           <IconTile icon={Icon} color="#FFFFFF" tint="33" size="sm" className="size-11 backdrop-blur" iconSize={22} />
           {annual && discountPercent > 0 && (
             <ColorBadge color="#FFFFFF" tint="33" className="py-1 text-[11px] backdrop-blur">
-              Economize {discountPercent}%
+              {t('plan.save', { percent: discountPercent })}
             </ColorBadge>
           )}
         </div>
         <h3 className="mt-3 font-display text-xl font-extrabold">{plan.name || meta.label}</h3>
         <div className="mt-1 flex items-baseline gap-1">
           <span className="font-display text-3xl font-extrabold tracking-tight">{brl(displayCents)}</span>
-          <span className="text-sm font-semibold text-white/80">/mês</span>
+          <span className="text-sm font-semibold text-white/80">{t('plan.perMonth')}</span>
         </div>
         {annual && plan.annual_price_cents != null && (
-          <p className="mt-0.5 text-xs font-medium text-white/75">{brl(plan.annual_price_cents)}/ano · cobrado anualmente</p>
+          <p className="mt-0.5 text-xs font-medium text-white/75">{t('plan.annualBilledYearly', { price: brl(plan.annual_price_cents) })}</p>
         )}
         {plan.seats != null && (
           <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-white/90">
-            <Users2 size={14} /> {plan.seats} {plan.seats === 1 ? 'assento' : 'assentos'}
+            <Users2 size={14} /> {t('plan.seats', { count: plan.seats })}
           </p>
         )}
       </div>
@@ -101,7 +109,7 @@ function PlanCard({ plan, current, samePlan, subscribed, interval, discountPerce
         <div className="mt-5">
           {current ? (
             <Button variant="outline" className="w-full" disabled>
-              <Check size={16} /> Seu plano
+              <Check size={16} /> {t('plan.yours')}
             </Button>
           ) : (
             <Button
@@ -112,10 +120,10 @@ function PlanCard({ plan, current, samePlan, subscribed, interval, discountPerce
             >
               <Zap size={16} /> {
                 samePlan
-                  ? `Mudar para ${interval === 'year' ? 'anual' : 'mensal'}`
+                  ? (interval === 'year' ? t('plan.switchToAnnual') : t('plan.switchToMonthly'))
                   : subscribed
-                    ? `Mudar para ${plan.name || meta.label}`
-                    : `Assinar ${plan.name || meta.label}`
+                    ? t('plan.switchTo', { name: plan.name || meta.label })
+                    : t('plan.subscribe', { name: plan.name || meta.label })
               }
             </Button>
           )}
@@ -129,19 +137,20 @@ function PlanCard({ plan, current, samePlan, subscribed, interval, discountPerce
 // cost-based, so its figure is derived server-side (credit_costs.video_15s) — an
 // estimate for a 15s clip, shown as "a partir de".
 const COST_META = [
-  { key: 'image', label: 'Imagem', icon: ImageIcon, color: '#0EA5E9', suffix: 'por imagem' },
-  { key: 'carousel', label: 'Carrossel', icon: GalleryHorizontalEnd, color: '#7C3AED', suffix: 'por carrossel' },
-  { key: 'video_15s', label: 'Vídeo 15s', icon: Video, color: '#EC4899', suffix: 'a partir de · por 15s' },
+  { key: 'image', get label() { return i18n.t('common:generationKind.image') }, icon: ImageIcon, color: '#0EA5E9', get suffix() { return tr('costs.perImage') } },
+  { key: 'carousel', get label() { return i18n.t('common:generationKind.carousel') }, icon: GalleryHorizontalEnd, color: '#7C3AED', get suffix() { return tr('costs.perCarousel') } },
+  { key: 'video_15s', get label() { return tr('costs.video15s') }, icon: Video, color: '#EC4899', get suffix() { return tr('costs.from15s') } },
 ]
 
 function creditLabel(n) {
-  if (n === 0) return 'Incluso'
-  return `${n} ${n === 1 ? 'crédito' : 'créditos'}`
+  if (n === 0) return tr('credits.included')
+  return i18n.t('billing:credits.count', { count: n })
 }
 
 // The prepaid credit wallet: balance, per-action costs, buyable packs and a
 // short ledger. Rendered under the plan cards on the billing screen.
 function CreditsSection() {
+  const { t } = useTranslation('billing')
   const { data, isLoading } = useCredits()
   const { checkout } = useCreditsMutations()
 
@@ -159,7 +168,7 @@ function CreditsSection() {
     <div className="mt-10">
       <div className="mb-3 flex items-center gap-2">
         <Coins size={18} className="text-amber" />
-        <h2 className="font-display text-lg font-bold text-ink">Créditos</h2>
+        <h2 className="font-display text-lg font-bold text-ink">{t('credits.title')}</h2>
       </div>
 
       {/* Balance banner */}
@@ -168,19 +177,19 @@ function CreditsSection() {
           <div className="flex items-center gap-4">
             <IconTile icon={Wallet} color="#FFFFFF" tint="33" className="size-14 backdrop-blur" iconSize={28} />
             <div>
-              <SectionLabel className="text-white/80">Saldo disponível</SectionLabel>
+              <SectionLabel className="text-white/80">{t('credits.balance')}</SectionLabel>
               <p className="font-display text-3xl font-extrabold">
                 {unlimited ? <InfinityIcon size={30} className="inline align-[-4px]" /> : num(balance)}
-                {!unlimited && <span className="ml-1.5 text-base font-semibold text-white/80">créditos</span>}
+                {!unlimited && <span className="ml-1.5 text-base font-semibold text-white/80">{t('credits.unit')}</span>}
               </p>
             </div>
           </div>
           {!unlimited && (
             <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-white/90">
-              <span>Do plano: <strong className="font-extrabold">{num(wallet.granted)}</strong></span>
-              <span>Comprados: <strong className="font-extrabold">{num(wallet.purchased)}</strong></span>
+              <span>{t('credits.fromPlan')} <strong className="font-extrabold">{num(wallet.granted)}</strong></span>
+              <span>{t('credits.purchased')} <strong className="font-extrabold">{num(wallet.purchased)}</strong></span>
               {wallet.granted_expires_at && (
-                <span className="text-white/75">Créditos do plano expiram em {date(wallet.granted_expires_at)}</span>
+                <span className="text-white/75">{t('credits.expiresOn', { date: date(wallet.granted_expires_at) })}</span>
               )}
             </div>
           )}
@@ -208,7 +217,7 @@ function CreditsSection() {
               <p className="font-display text-sm font-bold text-ink">{pack.name}</p>
               <p className="mt-1 flex items-baseline gap-1">
                 <span className="font-display text-2xl font-extrabold text-ink">{num(pack.credits)}</span>
-                <span className="text-xs font-semibold text-ink-muted">créditos</span>
+                <span className="text-xs font-semibold text-ink-muted">{t('credits.unit')}</span>
               </p>
               <p className="mt-0.5 text-sm text-ink-muted">{brl(pack.price_cents)}</p>
               <Button
@@ -218,7 +227,7 @@ function CreditsSection() {
                 onClick={() => checkout.mutate(pack.key)}
                 disabled={checkout.isPending}
               >
-                <Zap size={14} /> Comprar
+                <Zap size={14} /> {t('credits.buy')}
               </Button>
             </Card>
           ))}
@@ -232,27 +241,27 @@ function CreditsSection() {
 // What the workspace spent credits on. Vídeo, Imagem, and Carrossel all consume
 // credits (carousel cost is admin-tunable, default 1).
 const KIND_META = {
-  video: { label: 'Vídeo', icon: Video, color: '#EC4899' },
-  image: { label: 'Imagem', icon: ImageIcon, color: '#0EA5E9' },
-  carousel: { label: 'Carrossel', icon: GalleryHorizontalEnd, color: '#7C3AED' },
+  video: { get label() { return i18n.t('common:generationKind.video') }, icon: Video, color: '#EC4899' },
+  image: { get label() { return i18n.t('common:generationKind.image') }, icon: ImageIcon, color: '#0EA5E9' },
+  carousel: { get label() { return i18n.t('common:generationKind.carousel') }, icon: GalleryHorizontalEnd, color: '#7C3AED' },
 }
 const GEN_STATUS = {
-  queued: { label: 'Na fila', className: 'bg-ink/8 text-ink-muted' },
-  processing: { label: 'Processando', className: 'bg-sky/12 text-sky' },
-  completed: { label: 'Concluído', className: 'bg-emerald/12 text-emerald' },
-  failed: { label: 'Falhou', className: 'bg-danger/12 text-danger' },
+  queued: { get label() { return tr('generationStatus.queued') }, className: 'bg-ink/8 text-ink-muted' },
+  processing: { get label() { return tr('generationStatus.processing') }, className: 'bg-sky/12 text-sky' },
+  completed: { get label() { return tr('generationStatus.completed') }, className: 'bg-emerald/12 text-emerald' },
+  failed: { get label() { return tr('generationStatus.failed') }, className: 'bg-danger/12 text-danger' },
 }
 const USAGE_RANGES = [
-  { key: '7d', label: '7 dias' },
-  { key: '30d', label: '30 dias' },
-  { key: '90d', label: '90 dias' },
-  { key: '12m', label: '12 meses' },
+  { key: '7d', get label() { return tr('usage.ranges.7d') } },
+  { key: '30d', get label() { return tr('usage.ranges.30d') } },
+  { key: '90d', get label() { return tr('usage.ranges.90d') } },
+  { key: '12m', get label() { return tr('usage.ranges.12m') } },
 ]
 
 function chartLabel(iso, granularity) {
   const d = new Date(iso)
-  if (granularity === 'month') return d.toLocaleDateString('pt-BR', { month: 'short' })
-  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+  if (granularity === 'month') return d.toLocaleDateString(i18n.language, { month: 'short' })
+  return d.toLocaleDateString(i18n.language, { day: '2-digit', month: '2-digit' })
 }
 
 // The trend chart plots on a normalized 100×100 viewBox stretched to the card
@@ -286,20 +295,21 @@ function UsageStat({ icon: Icon, label, value, sub, color }) {
 }
 
 const KIND_FILTERS = [
-  { key: 'all', label: 'Todos os tipos' },
-  { key: 'video', label: 'Vídeo' },
-  { key: 'image', label: 'Imagem' },
-  { key: 'carousel', label: 'Carrossel' },
+  { key: 'all', get label() { return tr('usage.filters.allKinds') } },
+  { key: 'video', get label() { return i18n.t('common:generationKind.video') } },
+  { key: 'image', get label() { return i18n.t('common:generationKind.image') } },
+  { key: 'carousel', get label() { return i18n.t('common:generationKind.carousel') } },
 ]
 const STATUS_FILTERS = [
-  { key: 'all', label: 'Todos os status' },
-  { key: 'completed', label: 'Concluído' },
-  { key: 'processing', label: 'Processando' },
-  { key: 'queued', label: 'Na fila' },
-  { key: 'failed', label: 'Falhou' },
+  { key: 'all', get label() { return tr('usage.filters.allStatuses') } },
+  { key: 'completed', get label() { return tr('generationStatus.completed') } },
+  { key: 'processing', get label() { return tr('generationStatus.processing') } },
+  { key: 'queued', get label() { return tr('generationStatus.queued') } },
+  { key: 'failed', get label() { return tr('generationStatus.failed') } },
 ]
 
 function UsageSection() {
+  const { t } = useTranslation('billing')
   const [range, setRange] = useState('30d')
   const [kind, setKind] = useState('all')
   const [status, setStatus] = useState('all')
@@ -369,7 +379,7 @@ function UsageSection() {
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <BarChart3 size={18} className="text-brand" />
-          <h2 className="font-display text-lg font-bold text-ink">Uso de créditos</h2>
+          <h2 className="font-display text-lg font-bold text-ink">{t('usage.title')}</h2>
         </div>
         <div className="inline-flex items-center gap-1 rounded-xl bg-surface-muted p-1">
           {USAGE_RANGES.map((r) => (
@@ -396,9 +406,7 @@ function UsageSection() {
           <div className="mb-5 flex items-start gap-2.5 rounded-2xl border border-sky/25 bg-sky/6 px-4 py-3">
             <Info size={16} className="mt-0.5 shrink-0 text-sky" />
             <p className="text-sm text-ink-secondary">
-              <strong className="font-semibold text-ink">Vídeos, imagens e carrosséis</strong> consomem créditos.{' '}
-              <strong className="font-semibold text-ink">Textos e legendas com IA</strong> são inclusos no plano —
-              aparecem no uso, mas custam 0 créditos.
+              <Trans t={t} i18nKey="usage.explainer" components={{ b: <strong className="font-semibold text-ink" /> }} />
             </p>
           </div>
 
@@ -407,23 +415,23 @@ function UsageSection() {
             <UsageStat
               icon={Coins}
               color="#F59E0B"
-              label="Créditos gastos"
+              label={t('usage.spent')}
               value={num(spent)}
-              sub="no período"
+              sub={t('usage.inPeriod')}
             />
             <UsageStat
               icon={Activity}
               color="#7C3AED"
-              label="Gerações"
+              label={t('usage.generations')}
               value={num(totals.generations)}
-              sub="vídeos, imagens e carrosséis"
+              sub={t('usage.generationsSub')}
             />
             <UsageStat
               icon={TrendingUp}
               color="#10B981"
-              label="Créditos adicionados"
+              label={t('usage.added')}
               value={num(Number(totals.granted_added ?? 0) + Number(totals.purchased_added ?? 0))}
-              sub={`${num(totals.granted_added)} do plano · ${num(totals.purchased_added)} comprados`}
+              sub={t('usage.addedSub', { granted: num(totals.granted_added), purchased: num(totals.purchased_added) })}
             />
           </div>
 
@@ -433,9 +441,9 @@ function UsageSection() {
                 <span className="flex size-12 items-center justify-center rounded-2xl bg-surface-muted text-ink-muted">
                   <BarChart3 size={24} />
                 </span>
-                <p className="font-display text-base font-bold text-ink">Nenhum uso no período</p>
+                <p className="font-display text-base font-bold text-ink">{t('usage.empty.title')}</p>
                 <p className="max-w-sm text-sm text-ink-muted">
-                  Gere vídeos, imagens ou carrosséis na produção dos tickets e o consumo aparece aqui.
+                  {t('usage.empty.description')}
                 </p>
               </CardContent>
             </Card>

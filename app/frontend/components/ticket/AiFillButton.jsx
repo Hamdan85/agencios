@@ -1,4 +1,5 @@
 import { RefreshCw } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Spinner } from '@/components/ui/feedback'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 
@@ -7,6 +8,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 // stages. A soft stage-tinted circle (no outline) + tooltip keeps it out of the
 // way — it's not a primary, click-all-the-time action.
 export default function AiFillButton({ onClick, acting = false, color = '#6366F1' }) {
+  const { t } = useTranslation('ticket')
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -14,7 +16,7 @@ export default function AiFillButton({ onClick, acting = false, color = '#6366F1
           type="button"
           onClick={() => onClick?.()}
           disabled={acting}
-          aria-label="Atualizar campos com IA"
+          aria-label={t('aiFill.button')}
           style={{ background: `${color}14`, color }}
           className="inline-flex size-8 items-center justify-center rounded-full transition hover:brightness-95 active:scale-95 disabled:opacity-50"
         >
@@ -22,7 +24,7 @@ export default function AiFillButton({ onClick, acting = false, color = '#6366F1
         </button>
       </TooltipTrigger>
       <TooltipContent>
-        Regera os campos desta etapa com IA, a partir de tudo o que foi feito nas etapas anteriores.
+        {t('aiFill.tooltip')}
       </TooltipContent>
     </Tooltip>
   )

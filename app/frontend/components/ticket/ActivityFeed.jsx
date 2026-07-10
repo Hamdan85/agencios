@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Card } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/feedback'
 import { Avatar } from '@/components/ui/avatar'
@@ -68,6 +69,7 @@ function NoteAttachments({ attachments = [] }) {
 // One entry in the timeline. System notes are subtle/grey, AI notes carry a
 // brand tint + Sparkles, comments show the author avatar.
 function NoteItem({ note }) {
+  const { t } = useTranslation('ticket')
   const kind = note?.kind || 'comment'
 
   if (kind === 'system') {
@@ -92,7 +94,7 @@ function NoteItem({ note }) {
         </div>
         <div className="flex-1 rounded-2xl rounded-tl-sm border border-brand/20 bg-brand-soft/50 px-3 py-2">
           <div className="mb-0.5 flex items-center gap-1.5">
-            <span className="text-xs font-bold text-brand">IA</span>
+            <span className="text-xs font-bold text-brand">{t('ai')}</span>
             <span className="text-[11px] text-ink-faint">{dt(note.created_at)}</span>
           </div>
           <p className="whitespace-pre-wrap text-[13px] leading-snug text-ink">{note.body}</p>
@@ -108,7 +110,7 @@ function NoteItem({ note }) {
       <div className="flex-1">
         <div className="rounded-2xl rounded-tl-sm border border-border bg-surface px-3 py-2">
           <div className="mb-0.5 flex items-center gap-1.5">
-            <span className="text-xs font-bold text-ink">{note.user_name || 'Membro'}</span>
+            <span className="text-xs font-bold text-ink">{note.user_name || t('activity.member')}</span>
             <span className="text-[11px] text-ink-faint">{dt(note.created_at)}</span>
           </div>
           {note.body && (
@@ -124,6 +126,7 @@ function NoteItem({ note }) {
 }
 
 export default function ActivityFeed({ notes = [], onComment, posting = false }) {
+  const { t } = useTranslation('ticket')
   // Newest first.
   const items = [...(notes || [])].sort(
     (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0),
@@ -135,7 +138,7 @@ export default function ActivityFeed({ notes = [], onComment, posting = false })
         <div className="flex size-8 items-center justify-center rounded-xl" style={{ background: '#6366F118', color: '#6366F1' }}>
           <MessageSquare size={16} strokeWidth={2.3} />
         </div>
-        <h3 className="font-display text-sm font-bold text-ink">Atividade</h3>
+        <h3 className="font-display text-sm font-bold text-ink">{t('activity.title')}</h3>
       </div>
 
       <div className="max-h-[420px] flex-1 overflow-y-auto px-3 no-scrollbar">
@@ -143,8 +146,8 @@ export default function ActivityFeed({ notes = [], onComment, posting = false })
           <div className="py-2">
             <EmptyState
               icon={MessageSquare}
-              title="Sem atividade ainda"
-              description="Comentários e o histórico do ticket aparecem aqui."
+              title={t('activity.empty.title')}
+              description={t('activity.empty.description')}
               color="#6366F1"
             />
           </div>

@@ -10,6 +10,8 @@ pt-BR:
       billing_required: "Assinatura necessária para acessar o workspace."
       manager_required: "Acesso restrito a gestores do workspace."
       staff_only: "Acesso restrito à equipe da plataforma."
+      owner_required: "Acesso restrito ao owner do workspace."
+      seat_limit_over_plan: "O workspace tem mais membros do que o plano atual permite. Remova membros ou faça upgrade para continuar criando tickets e campanhas."
     credits:
       invalid_pack: "Pacote de créditos inválido."
     public:
@@ -20,3 +22,86 @@ pt-BR:
     strategy:
       not_allowed: "Você não tem permissão para planejar esta campanha."
       session_not_found: "Sessão não encontrada."
+    account:
+      email_taken: "Este e-mail já está em uso."
+      email_confirmed: "E-mail confirmado e atualizado."
+      wrong_current_password: "Senha atual incorreta."
+      invalid_email: "Informe um e-mail válido."
+      email_unchanged: "Este já é o seu e-mail atual."
+      confirmation_link_sent: "Enviamos um link de confirmação para o novo e-mail."
+      password_too_short: "A nova senha deve ter ao menos %{min} caracteres."
+      password_changed: "Senha alterada."
+      no_image_uploaded: "Nenhuma imagem enviada."
+    attachments:
+      none_uploaded: "Nenhum arquivo enviado."
+      removed: "Arquivo removido."
+      remove_forbidden: "Apenas quem enviou o arquivo ou um gestor pode removê-lo."
+    autopilot:
+      ticket_requires_manual_creatives: "Este ticket exige criativos manuais e não pode rodar no modo GO."
+      project_requires_manual_creatives: "Há tickets que exigem criativos manuais. Resolva-os antes de iniciar a campanha."
+    billing:
+      invalid_plan: "Plano inválido."
+      seat_overage: "O plano %{plan} permite até %{seats} assentos, mas o workspace tem %{members} membros. Remova membros antes de trocar de plano."
+    calendar:
+      post_fallback_title: "Publicação"
+    clients:
+      removed: "Cliente removido."
+      background_image_required: "Defina uma imagem de fundo antes de analisar as cores."
+    creatives:
+      removed: "Criativo removido."
+      unknown_generation_kind: "Tipo de geração desconhecido: %{kind}"
+      media_mismatch_images: "Este tipo de criativo aceita apenas imagens. Envie um arquivo compatível."
+      media_mismatch_videos: "Este tipo de criativo aceita apenas vídeos. Envie um arquivo compatível."
+      media_mismatch_images_or_videos: "Este tipo de criativo aceita apenas imagens ou vídeos. Envie um arquivo compatível."
+    invitations:
+      invalid_or_expired: "Convite inválido ou expirado."
+      canceled: "Convite cancelado."
+    mcp:
+      plan_required: "O conector do Claude requer um workspace no plano Agência ou Enterprise com assinatura ativa."
+    meetings:
+      removed: "Reunião removida."
+    memberships:
+      cannot_remove_owner: "Não é possível remover o owner."
+      removed: "Membro removido."
+      owner_role_restricted: "Só o owner pode conceder ou remover o papel de owner."
+      last_owner: "O workspace precisa de ao menos um owner — transfira a propriedade antes de rebaixar este membro."
+    passwords:
+      instructions_sent: "Se o e-mail existir, enviaremos instruções."
+      invalid_token: "Token inválido ou expirado."
+      reset_done: "Senha redefinida."
+    portal:
+      campaign_status:
+        active: "Em andamento"
+        paused: "Pausada"
+        completed: "Finalizada"
+        archived: "Arquivada"
+        draft: "Rascunho"
+    posts:
+      schedule_canceled: "Agendamento cancelado."
+    projects:
+      removed: "Campanha removido."
+    push:
+      notifications_enabled:
+        title: "Notificações ativadas ✅"
+        body: "Você vai receber avisos de tickets, prazos e publicações aqui."
+    reports:
+      not_ready_or_no_email: "O relatório ainda não está pronto ou o cliente não tem e-mail cadastrado."
+      filename: "relatorio-%{project}.pdf"
+    social:
+      disconnected: "Conta desconectada."
+      unsupported_network: "Rede não suportada: %{network}"
+      reconnect_failed: "Não foi possível reativar com o token atual — reconecte a conta pelo fluxo de autorização da rede."
+    studio:
+      prompt_draft_required: "Escreva um rascunho do prompt primeiro."
+    subtasks:
+      removed: "Subtarefa removida."
+    tickets:
+      archived: "Ticket arquivado."
+    uploads:
+      at_least_one_file: "Envie ao menos um arquivo."
+      video_too_large: "Vídeo de referência muito grande (máx. 50 MB)."
+      unsupported_format: "Formato não suportado. Envie JPG, PNG, WEBP ou um vídeo MP4/MOV/WEBM."
+    video:
+      invalid_asset_type: "Tipo de asset inválido."
+    workspaces:
+      create_limit_reached: "Você atingiu o limite de workspaces que pode criar."

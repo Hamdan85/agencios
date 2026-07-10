@@ -1,9 +1,11 @@
 import { AlertTriangle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 
 // Shown when a ticket is "in alert" — something broke at posting time (a failed
 // publish). The reason is the tooltip; a generated task tracks the fix.
 export function AlertBadge({ reason, className }) {
+  const { t } = useTranslation('ticket')
   return (
     <span
       title={reason || undefined}
@@ -13,7 +15,7 @@ export function AlertBadge({ reason, className }) {
       )}
     >
       <AlertTriangle size={11} strokeWidth={2.6} />
-      Em alerta
+      {t('alertBadge')}
     </span>
   )
 }

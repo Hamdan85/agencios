@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
 import { subtasksApi } from '@/api'
 import { keys } from '@/api/queryKeys'
@@ -16,6 +17,7 @@ import { ListChecks, Plus, Check, Wand2, Pencil, X } from 'lucide-react'
 // The right-rail checklist: progress bar, toggleable items, inline add, plus
 // per-item edit (title + due date) and assignment.
 export default function SubtasksPanel({ ticketId, subtasks = [], onAdd, adding = false, onGenerate, generating = false }) {
+  const { t } = useTranslation('ticket')
   const qc = useQueryClient()
   const { data: members } = useWorkspaceMembers()
   const people = members || []
@@ -89,7 +91,7 @@ export default function SubtasksPanel({ ticketId, subtasks = [], onAdd, adding =
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <IconTile icon={ListChecks} color="#10B981" size="xs" tint="18" strokeWidth={2.3} className="rounded-xl" />
-            <h3 className="font-display text-sm font-bold text-ink">Subtarefas</h3>
+            <h3 className="font-display text-sm font-bold text-ink">{t('subtasksPanel.title')}</h3>
           </div>
           <div className="flex items-center gap-2">
             {onGenerate && (
@@ -97,11 +99,11 @@ export default function SubtasksPanel({ ticketId, subtasks = [], onAdd, adding =
                 type="button"
                 onClick={() => onGenerate()}
                 disabled={generating}
-                title="Gerar a checklist de produção com IA a partir do brief e do escopo"
+                title={t('subtasksPanel.generateTooltip')}
                 className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold text-emerald transition hover:bg-emerald/10 disabled:opacity-50"
               >
                 {generating ? <Spinner size={12} className="border-emerald/30 border-t-emerald" /> : <Wand2 size={12} />}
-                IA
+                {t('ai')}
               </button>
             )}
             <span className="font-mono text-xs font-bold text-ink-muted">{done}/{total}</span>
@@ -119,7 +121,7 @@ export default function SubtasksPanel({ ticketId, subtasks = [], onAdd, adding =
 
       <div className="divide-y divide-border">
         {items.length === 0 ? (
-          <p className="px-4 py-6 text-center text-sm text-ink-muted">Nenhuma subtarefa ainda.</p>
+          <p className="px-4 py-6 text-center text-sm text-ink-muted">{t('subtasksPanel.empty')}</p>
         ) : (
           items.map((sub) => {
             const isDone = sub.id in pending ? pending[sub.id] : sub.done
@@ -134,21 +136,21 @@ export default function SubtasksPanel({ ticketId, subtasks = [], onAdd, adding =
                     value={draft.title}
                     onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
                     onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(sub); if (e.key === 'Escape') cancelEdit() }}
-                    placeholder="Título da subtarefa"
+                    placeholder={t('subtasksPanel.titlePlaceholder')}
                     className="h-9"
                   />
                   <div className="flex items-center gap-2">
                     <DatePicker
                       value={draft.due_date || ''}
                       onChange={(v) => setDraft((d) => ({ ...d, due_date: v }))}
-                      placeholder="Prazo"
+                      placeholder={t('subtasksPanel.duePlaceholder')}
                       className="h-9 flex-1"
                     />
                     <button
                       type="button"
                       onClick={cancelEdit}
                       className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border text-ink-muted transition hover:bg-surface-muted"
-                      aria-label="Cancelar"
+                      aria-label={t('actions.cancel')}
                     >
                       <X size={16} />
                     </button>
@@ -157,7 +159,7 @@ export default function SubtasksPanel({ ticketId, subtasks = [], onAdd, adding =
                       onClick={() => saveEdit(sub)}
                       disabled={!draft.title.trim() || saving}
                       className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-brand-gradient text-white shadow-sm transition active:scale-95 disabled:opacity-40"
-                      aria-label="Salvar"
+                      aria-label={t('actions.save')}
                     >
                       {saving ? <Spinner size={14} className="border-white/30 border-t-white" /> : <Check size={16} strokeWidth={2.6} />}
                     </button>
@@ -207,8 +209,8 @@ export default function SubtasksPanel({ ticketId, subtasks = [], onAdd, adding =
                     type="button"
                     onClick={() => startEdit(sub)}
                     className="flex size-7 items-center justify-center rounded-lg text-ink-muted opacity-0 transition hover:bg-surface-muted hover:text-ink group-hover:opacity-100"
-                    aria-label="Editar subtarefa"
-                    title="Editar"
+                    aria-label={t('subtasksPanel.editAria')}
+                    title={t('actions.edit')}
                   >
                     <Pencil size={13} />
                   </button>
@@ -223,7 +225,7 @@ export default function SubtasksPanel({ ticketId, subtasks = [], onAdd, adding =
         <Input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Adicionar subtarefa…"
+          placeholder={t('subtasksPanel.addPlaceholder')}
           className="h-9"
         />
         <button

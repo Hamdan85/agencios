@@ -1,5 +1,7 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/i18n'
 import { Card } from '@/components/ui/card'
 import { Markdown } from '@/components/ui/markdown'
 import { Badge, ColorBadge } from '@/components/ui/badge'
@@ -15,27 +17,30 @@ import {
 
 const DONE = '#14B8A6'
 
+// Copy is resolved lazily (getters) so it follows the active locale — same
+// pattern as the label maps in lib/constants.
+const tr = (key) => i18n.t(`ticket:${key}`)
 const METRIC_TILES = [
-  { key: 'reach', label: 'Alcance', icon: Eye, color: '#0EA5E9' },
-  { key: 'views', label: 'Views', icon: BarChart3, color: '#7C3AED' },
-  { key: 'likes', label: 'Curtidas', icon: Heart, color: '#EC4899' },
-  { key: 'comments', label: 'Comentários', icon: MessageCircle, color: '#F59E0B' },
-  { key: 'shares', label: 'Compart.', icon: Share2, color: '#10B981' },
-  { key: 'saves', label: 'Salvos', icon: Bookmark, color: '#6366F1' },
+  { key: 'reach', get label() { return tr('metrics.reach') }, icon: Eye, color: '#0EA5E9' },
+  { key: 'views', get label() { return tr('metrics.views') }, icon: BarChart3, color: '#7C3AED' },
+  { key: 'likes', get label() { return tr('metrics.likes') }, icon: Heart, color: '#EC4899' },
+  { key: 'comments', get label() { return tr('metrics.comments') }, icon: MessageCircle, color: '#F59E0B' },
+  { key: 'shares', get label() { return tr('metrics.shares') }, icon: Share2, color: '#10B981' },
+  { key: 'saves', get label() { return tr('metrics.saves') }, icon: Bookmark, color: '#6366F1' },
 ]
 
 // The engagement breakdown bar — the "gráfico" of how people interacted.
 const ENGAGEMENT = [
-  { key: 'likes', label: 'Curtidas', color: '#EC4899' },
-  { key: 'comments', label: 'Comentários', color: '#F59E0B' },
-  { key: 'shares', label: 'Compart.', color: '#10B981' },
-  { key: 'saves', label: 'Salvos', color: '#6366F1' },
+  { key: 'likes', get label() { return tr('metrics.likes') }, color: '#EC4899' },
+  { key: 'comments', get label() { return tr('metrics.comments') }, color: '#F59E0B' },
+  { key: 'shares', get label() { return tr('metrics.shares') }, color: '#10B981' },
+  { key: 'saves', get label() { return tr('metrics.saves') }, color: '#6366F1' },
 ]
 
 const REPEAT_META = {
-  repeat: { label: 'Repetir', color: '#10B981', hint: 'Vale rodar de novo como está' },
-  iterate: { label: 'Iterar', color: '#6366F1', hint: 'Vale repetir com ajustes' },
-  retire: { label: 'Aposentar', color: '#8B86A3', hint: 'Não vale repetir' },
+  repeat: { get label() { return tr('repeatMeta.repeat.label') }, color: '#10B981', get hint() { return tr('repeatMeta.repeat.hint') } },
+  iterate: { get label() { return tr('repeatMeta.iterate.label') }, color: '#6366F1', get hint() { return tr('repeatMeta.iterate.hint') } },
+  retire: { get label() { return tr('repeatMeta.retire.label') }, color: '#8B86A3', get hint() { return tr('repeatMeta.retire.hint') } },
 }
 
 const fmt = (n) => (n != null ? num(n) : '—')
@@ -88,6 +93,7 @@ function Bullets({ items, icon: Icon, color }) {
 }
 
 export default function DoneSummary({ ticket, posts = [], subtasks = [] }) {
+  const { t } = useTranslation('ticket')
   const ideation = ticket?.fields?.ideation || {}
   const production = ticket?.fields?.production || {}
   const retro = ticket?.fields?.retrospective || {}
@@ -123,8 +129,8 @@ export default function DoneSummary({ ticket, posts = [], subtasks = [] }) {
               <CheckCircle2 size={20} strokeWidth={2.4} />
             </div>
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color: DONE }}>Concluído</p>
-              <p className="text-xs font-medium text-ink-muted">Retrospecto completo deste ticket</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color: DONE }}>{t('done.headline')}</p>
+              <p className="text-xs font-medium text-ink-muted">{t('done.subtitle')}</p>
             </div>
           </div>
 
@@ -138,26 +144,26 @@ export default function DoneSummary({ ticket, posts = [], subtasks = [] }) {
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {days != null && <StatChip icon={Clock} label="Dias no funil" value={days} />}
-            <StatChip icon={Send} label="Publicações" value={fmt((posts || []).length)} />
-            <StatChip icon={ListChecks} label="Subtarefas" value={`${subDone}/${subtasks.length}`} />
-            <StatChip icon={Eye} label="Alcance total" value={fmt(agg.reach)} />
+            {days != null && <StatChip icon={Clock} label={t('done.daysInFunnel')} value={days} />}
+            <StatChip icon={Send} label={t('done.publications')} value={fmt((posts || []).length)} />
+            <StatChip icon={ListChecks} label={t('done.subtasks')} value={`${subDone}/${subtasks.length}`} />
+            <StatChip icon={Eye} label={t('done.totalReach')} value={fmt(agg.reach)} />
           </div>
         </div>
       </div>
 
       {/* ── AI case-study summary ── */}
       {summary && (
-        <SectionCard icon={Sparkles} title="Resumo da IA">
+        <SectionCard icon={Sparkles} title={t('done.aiSummary')}>
           <Markdown className="text-[15px]">{summary}</Markdown>
         </SectionCard>
       )}
 
       {/* ── Aggregate performance + engagement graphic ── */}
-      <SectionCard icon={BarChart3} color="#7C3AED" title="Desempenho consolidado">
+      <SectionCard icon={BarChart3} color="#7C3AED" title={t('done.aggregatePerformance')}>
         {!hasPosts ? (
           <p className="rounded-xl border border-dashed border-border bg-surface-muted/40 px-4 py-6 text-center text-sm text-ink-muted">
-            Nenhuma publicação registrada para este ticket.
+            {t('done.noPosts')}
           </p>
         ) : (
           <div className="space-y-4">
@@ -177,8 +183,8 @@ export default function DoneSummary({ ticket, posts = [], subtasks = [] }) {
             {engagementTotal > 0 && (
               <div>
                 <div className="mb-2 flex items-center justify-between">
-                  <SectionLabel className="text-xs tracking-wide">Composição do engajamento</SectionLabel>
-                  <p className="font-mono text-xs font-bold text-ink-secondary">{fmt(engagementTotal)} interações</p>
+                  <SectionLabel className="text-xs tracking-wide">{t('done.engagementMix')}</SectionLabel>
+                  <p className="font-mono text-xs font-bold text-ink-secondary">{t('done.interactions', { value: fmt(engagementTotal) })}</p>
                 </div>
                 <div className="flex h-3 overflow-hidden rounded-full ring-1 ring-border">
                   {ENGAGEMENT.map((e) => {
@@ -203,19 +209,19 @@ export default function DoneSummary({ ticket, posts = [], subtasks = [] }) {
 
       {/* ── Per-post breakdown ── */}
       {hasPosts && (
-        <SectionCard icon={Send} color="#10B981" title="Por publicação">
+        <SectionCard icon={Send} color="#10B981" title={t('done.perPost')}>
           <div className="space-y-3">
             {posts.map((post) => (
               <div key={post.id} className="rounded-xl border border-border bg-surface p-3.5">
                 <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <ChannelIcons channels={post.provider ? [post.provider] : []} size={14} />
-                    <span className="text-sm font-semibold text-ink">{post.username || post.provider || 'Publicação'}</span>
+                    <span className="text-sm font-semibold text-ink">{post.username || post.provider || t('post.fallback')}</span>
                     <span className="text-xs text-ink-muted">· {dt(post.published_at || post.scheduled_at)}</span>
                   </div>
                   {post.permalink && (
                     <a href={post.permalink} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-bold text-brand hover:underline">
-                      Ver post <ExternalLink size={12} />
+                      {t('post.view')} <ExternalLink size={12} />
                     </a>
                   )}
                 </div>
@@ -235,13 +241,13 @@ export default function DoneSummary({ ticket, posts = [], subtasks = [] }) {
 
       {/* ── Content recap ── */}
       {(ideation.objective || ideation.target_persona || production.caption) && (
-        <SectionCard icon={FileText} color="#0EA5E9" title="O conteúdo">
+        <SectionCard icon={FileText} color="#0EA5E9" title={t('done.content')}>
           <div className="space-y-3.5">
             {ideation.objective && (
               <div className="flex items-start gap-2">
                 <Target size={15} className="mt-0.5 shrink-0 text-sky" />
                 <div>
-                  <SectionLabel className="tracking-wide text-ink-faint">Objetivo</SectionLabel>
+                  <SectionLabel className="tracking-wide text-ink-faint">{t('done.objective')}</SectionLabel>
                   <p className="text-sm text-ink-secondary">{ideation.objective}</p>
                 </div>
               </div>
@@ -250,14 +256,14 @@ export default function DoneSummary({ ticket, posts = [], subtasks = [] }) {
               <div className="flex items-start gap-2">
                 <Users size={15} className="mt-0.5 shrink-0 text-sky" />
                 <div>
-                  <SectionLabel className="tracking-wide text-ink-faint">Persona-alvo</SectionLabel>
+                  <SectionLabel className="tracking-wide text-ink-faint">{t('done.targetPersona')}</SectionLabel>
                   <p className="text-sm text-ink-secondary">{ideation.target_persona}</p>
                 </div>
               </div>
             )}
             {production.caption && (
               <div>
-                <SectionLabel className="mb-1 tracking-wide text-ink-faint">Legenda publicada</SectionLabel>
+                <SectionLabel className="mb-1 tracking-wide text-ink-faint">{t('done.publishedCaption')}</SectionLabel>
                 <p className="whitespace-pre-wrap rounded-xl bg-surface-muted/60 p-3 text-sm text-ink-secondary">{production.caption}</p>
               </div>
             )}
@@ -279,7 +285,7 @@ export default function DoneSummary({ ticket, posts = [], subtasks = [] }) {
         <SectionCard
           icon={Repeat}
           color="#6366F1"
-          title="Retrospectiva"
+          title={t('done.retrospective')}
           action={rec && (
             <ColorBadge color={rec.color} solid className="py-1" title={rec.hint}>
               <Repeat size={12} /> {rec.label}
@@ -289,20 +295,20 @@ export default function DoneSummary({ ticket, posts = [], subtasks = [] }) {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {retro.wins?.length > 0 && (
               <div>
-                <SectionLabel className="mb-2 tracking-wide text-ink-faint">Vitórias</SectionLabel>
+                <SectionLabel className="mb-2 tracking-wide text-ink-faint">{t('done.wins')}</SectionLabel>
                 <Bullets items={retro.wins} icon={ThumbsUp} color="#10B981" />
               </div>
             )}
             {retro.improvements?.length > 0 && (
               <div>
-                <SectionLabel className="mb-2 tracking-wide text-ink-faint">Melhorias</SectionLabel>
+                <SectionLabel className="mb-2 tracking-wide text-ink-faint">{t('done.improvements')}</SectionLabel>
                 <Bullets items={retro.improvements} icon={AlertTriangle} color="#F59E0B" />
               </div>
             )}
           </div>
           {retro.lessons_learned && (
             <div className="mt-4 border-t border-border pt-4">
-              <SectionLabel className="mb-2 tracking-wide text-ink-faint">Lições aprendidas</SectionLabel>
+              <SectionLabel className="mb-2 tracking-wide text-ink-faint">{t('done.lessons')}</SectionLabel>
               <div
                 className="prose prose-sm max-w-none text-ink-secondary prose-strong:text-ink"
                 dangerouslySetInnerHTML={{ __html: retro.lessons_learned }}
@@ -314,7 +320,7 @@ export default function DoneSummary({ ticket, posts = [], subtasks = [] }) {
 
       {/* ── Related tickets ── */}
       {ticket?.relations?.length > 0 && (
-        <SectionCard icon={GitBranch} color="#7C3AED" title="Tickets relacionados">
+        <SectionCard icon={GitBranch} color="#7C3AED" title={t('done.relatedTickets')}>
           <div className="space-y-1.5">
             {ticket.relations.map((r) => (
               <Link

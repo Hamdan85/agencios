@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/i18n'
 import {
   ArrowLeft, Mail, Phone, FileText, FolderKanban, Receipt, Wallet,
   Building2, StickyNote, Pencil, Plus, ListChecks, Sparkles, Palette, AtSign,
@@ -30,17 +32,20 @@ import { POSITIONING_FIELDS, CHANNEL_META } from '@/lib/constants'
 import { brl, date } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 
+// Labels resolve lazily (getters) so they follow the active locale — same
+// pattern as the label maps in lib/constants.
+const tr = (key) => i18n.t(`clients:${key}`)
 const PROJECT_STATUS = {
-  active: { label: 'Ativa', variant: 'success' },
-  paused: { label: 'Pausada', variant: 'warning' },
-  archived: { label: 'Arquivada', variant: 'muted' },
+  active: { get label() { return tr('projectStatus.active') }, variant: 'success' },
+  paused: { get label() { return tr('projectStatus.paused') }, variant: 'warning' },
+  archived: { get label() { return tr('projectStatus.archived') }, variant: 'muted' },
 }
 const INVOICE_STATUS = {
-  draft: { label: 'Rascunho', variant: 'muted' },
-  open: { label: 'Em aberto', variant: 'default' },
-  paid: { label: 'Pago', variant: 'success' },
-  overdue: { label: 'Vencida', variant: 'danger' },
-  canceled: { label: 'Cancelada', variant: 'muted' },
+  draft: { get label() { return tr('invoiceStatus.draft') }, variant: 'muted' },
+  open: { get label() { return tr('invoiceStatus.open') }, variant: 'default' },
+  paid: { get label() { return tr('invoiceStatus.paid') }, variant: 'success' },
+  overdue: { get label() { return tr('invoiceStatus.overdue') }, variant: 'danger' },
+  canceled: { get label() { return tr('invoiceStatus.canceled') }, variant: 'muted' },
 }
 
 function ContactChip({ icon: Icon, value, mono }) {
@@ -55,13 +60,14 @@ function ContactChip({ icon: Icon, value, mono }) {
 
 // ── Section header ──────────────────────────────────────────────
 function SectionHead({ icon: Icon, color, title, onEdit }) {
+  const { t } = useTranslation('clients')
   return (
     <div className="mb-3 flex items-center gap-2">
       <Icon size={18} style={{ color }} />
       <h2 className="font-display text-lg font-bold text-ink">{title}</h2>
       {onEdit && (
         <Button variant="ghost" size="sm" className="ml-auto text-ink-muted" onClick={onEdit}>
-          <Pencil size={14} /> Editar
+          <Pencil size={14} /> {t('actions.edit')}
         </Button>
       )}
     </div>
@@ -70,6 +76,7 @@ function SectionHead({ icon: Icon, color, title, onEdit }) {
 
 // ── Brand identity (voice + @handle + colors + logo/avatar) ──────
 function BrandIdentitySection({ client, onEdit }) {
+  const { t } = useTranslation('clients')
   const has = client.has_brand
   const [exampleOpen, setExampleOpen] = useState(false)
   const swatch = (label, color) => (
@@ -84,14 +91,14 @@ function BrandIdentitySection({ client, onEdit }) {
 
   return (
     <section className="mb-8">
-      <SectionHead icon={Palette} color="#7C3AED" title="Marca" onEdit={onEdit} />
+      <SectionHead icon={Palette} color="#7C3AED" title={t('brand.title')} onEdit={onEdit} />
       {!has ? (
         <EmptyState
           icon={Palette}
           color="#7C3AED"
-          title="Sem identidade de marca"
-          description="Defina voz, @handle, cores e logo deste cliente — usados na geração de criativos e nos prompts da IA."
-          action={<Button onClick={onEdit}><Palette size={16} /> Definir marca</Button>}
+          title={t('brand.emptyTitle')}
+          description={t('brand.emptyDescription')}
+          action={<Button onClick={onEdit}><Palette size={16} /> {t('brand.define')}</Button>}
         />
       ) : (
         <Card className="space-y-5 p-6">
@@ -106,7 +113,7 @@ function BrandIdentitySection({ client, onEdit }) {
             )}
             {client.default_creator_avatar_url && (
               <div>
-                <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-ink-faint">Avatar UGC</p>
+                <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-ink-faint">{t('brand.ugcAvatar')}</p>
                 <Avatar name="Avatar" src={client.default_creator_avatar_url} size={64} className="ring-1 ring-border" />
               </div>
             )}
@@ -120,11 +127,11 @@ function BrandIdentitySection({ client, onEdit }) {
             )}
           </div>
           <div className="flex flex-wrap gap-6">
-            {swatch('Cor primária', client.brand_primary_color)}
-            {swatch('Cor secundária', client.brand_secondary_color)}
+            {swatch(t('brand.primaryColor'), client.brand_primary_color)}
+            {swatch(t('brand.secondaryColor'), client.brand_secondary_color)}
           </div>
           <div>
-            <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-ink-faint">Carrossel</p>
+            <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-ink-faint">{t('brand.carousel')}</p>
             <button
               type="button"
               onClick={() => setExampleOpen(true)}
@@ -138,16 +145,16 @@ function BrandIdentitySection({ client, onEdit }) {
                 <p className="font-display text-sm font-bold text-ink">
                   {CAROUSEL_STYLE_LABEL[client.carousel_style] || CAROUSEL_STYLE_LABEL.gradient}
                 </p>
-                <p className="mt-0.5 text-xs text-ink-muted">Assim os carrosséis deste cliente são gerados.</p>
+                <p className="mt-0.5 text-xs text-ink-muted">{t('brand.carouselHint')}</p>
                 <span className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-brand">
-                  <Eye size={13} /> Ver exemplo completo
+                  <Eye size={13} /> {t('brand.seeFullExample')}
                 </span>
               </div>
             </button>
           </div>
           {client.brand_voice && (
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-ink-faint">Voz da marca</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-ink-faint">{t('brand.voice')}</p>
               <p className="mt-1 text-sm leading-relaxed text-ink-secondary">{client.brand_voice}</p>
             </div>
           )}
@@ -160,6 +167,7 @@ function BrandIdentitySection({ client, onEdit }) {
 
 // ── Positioning read view ───────────────────────────────────────
 function PositioningSection({ client, onEdit }) {
+  const { t } = useTranslation('clients')
   const positioning = client.positioning || {}
   const has = client.has_positioning
   const filled = POSITIONING_FIELDS.filter((f) => {
@@ -169,14 +177,14 @@ function PositioningSection({ client, onEdit }) {
 
   return (
     <section className="mb-2">
-      <SectionHead icon={Sparkles} color="#6366F1" title="Posicionamento" onEdit={has ? onEdit : null} />
+      <SectionHead icon={Sparkles} color="#6366F1" title={t('positioningSection.title')} onEdit={has ? onEdit : null} />
       {!has ? (
         <EmptyState
           icon={Sparkles}
           color="#6366F1"
-          title="Sem posicionamento"
-          description="Descreva a marca e deixe a IA montar o posicionamento — vira contexto da IA em todos os tickets das suas campanhas."
-          action={<Button onClick={onEdit}><Sparkles size={16} /> Definir posicionamento</Button>}
+          title={t('positioningSection.emptyTitle')}
+          description={t('positioningSection.emptyDescription')}
+          action={<Button onClick={onEdit}><Sparkles size={16} /> {t('positioningSection.define')}</Button>}
         />
       ) : (
         <Card className="space-y-5 p-6">
@@ -212,6 +220,7 @@ function PositioningSection({ client, onEdit }) {
 
 // ── Social networks (connected per client) ──────────────────────
 function SocialCard({ provider, account, mutations }) {
+  const { t } = useTranslation('clients')
   const meta = CHANNEL_META[provider]
   const confirm = useConfirm()
   if (!meta) return null
@@ -222,9 +231,9 @@ function SocialCard({ provider, account, mutations }) {
 
   const handleDisconnect = async () => {
     const ok = await confirm({
-      title: `Desconectar ${meta.label}?`,
-      description: 'Publicações agendadas nesta conta deixarão de ser postadas até você reconectar.',
-      confirmLabel: 'Desconectar',
+      title: t('social.disconnectConfirm.title', { network: meta.label }),
+      description: t('social.disconnectConfirm.description'),
+      confirmLabel: t('social.disconnect'),
       destructive: true,
     })
     if (ok) mutations.disconnect.mutate(account.id)
@@ -235,25 +244,25 @@ function SocialCard({ provider, account, mutations }) {
       <div className="flex items-start justify-between gap-2">
         <IconTile icon={Icon} color={meta.color} iconSize={22} className="size-11 rounded-xl" />
         {connected ? (
-          <Badge variant="success"><Check size={12} /> Conectado</Badge>
+          <Badge variant="success"><Check size={12} /> {t('social.connected')}</Badge>
         ) : needsReauth ? (
-          <Badge variant="warning"><RefreshCw size={12} /> Reautenticar</Badge>
+          <Badge variant="warning"><RefreshCw size={12} /> {t('social.reauth')}</Badge>
         ) : (
-          <Badge variant="muted">Desconectado</Badge>
+          <Badge variant="muted">{t('social.disconnected')}</Badge>
         )}
       </div>
       <h3 className="mt-3 font-display text-base font-bold text-ink">{meta.label}</h3>
       <p className="mt-0.5 min-h-5 truncate text-sm text-ink-muted">
-        {connected ? `@${account.username || ''}` : needsReauth ? 'Sessão expirada — reconecte.' : 'Conecte a conta deste cliente.'}
+        {connected ? `@${account.username || ''}` : needsReauth ? t('social.sessionExpired') : t('social.connectPrompt')}
       </p>
       <div className="mt-4 flex gap-2">
         {connected ? (
           <Button variant="outline" size="sm" className="w-full" disabled={busy} onClick={handleDisconnect}>
-            <Unplug size={15} /> Desconectar
+            <Unplug size={15} /> {t('social.disconnect')}
           </Button>
         ) : (
           <Button variant="solid" size="sm" className="w-full" disabled={busy} onClick={() => mutations.connect(provider)}>
-            {needsReauth ? <><RefreshCw size={15} /> Reconectar</> : <><Link2 size={15} /> Conectar</>}
+            {needsReauth ? <><RefreshCw size={15} /> {t('social.reconnect')}</> : <><Link2 size={15} /> {t('social.connect')}</>}
           </Button>
         )}
       </div>
@@ -263,23 +272,24 @@ function SocialCard({ provider, account, mutations }) {
 
 // ── Client portal link (login-less client central) ──────────────
 function PortalLinkSection({ client, mutation }) {
+  const { t } = useTranslation('clients')
   const [, copyToClipboard] = useCopyToClipboard()
   const confirm = useConfirm()
   const url = client.portal_url
 
   async function copyLink() {
     if (!(await copyToClipboard(url))) {
-      toast.error('Não foi possível copiar o link.')
+      toast.error(t('portal.copyError'))
       return
     }
-    toast.success('Link copiado! Envie ao cliente para acompanhar campanhas e aprovar criativos.')
+    toast.success(t('portal.copySuccess'))
   }
 
   async function rotate() {
     const ok = await confirm({
-      title: 'Renovar link do portal?',
-      description: 'O link atual deixará de funcionar na hora. Quem tiver o link antigo perde o acesso e você precisará enviar o novo ao cliente.',
-      confirmLabel: 'Renovar link',
+      title: t('portal.rotateConfirm.title'),
+      description: t('portal.rotateConfirm.description'),
+      confirmLabel: t('portal.rotateConfirm.confirm'),
       destructive: true,
     })
     if (ok) mutation.mutate(client.id)
@@ -287,7 +297,7 @@ function PortalLinkSection({ client, mutation }) {
 
   return (
     <section className="mb-8">
-      <SectionHead icon={Share2} color="var(--ag-brand, #7C3AED)" title="Portal do cliente" />
+      <SectionHead icon={Share2} color="var(--ag-brand, #7C3AED)" title={t('portal.title')} />
       <Card className="mt-1">
         <div className="flex flex-col gap-4 p-4">
           <div className="flex items-center gap-3">
@@ -298,9 +308,9 @@ function PortalLinkSection({ client, mutation }) {
               <Link2 size={18} />
             </div>
             <div>
-              <p className="font-semibold text-ink">Link de acompanhamento do cliente</p>
+              <p className="font-semibold text-ink">{t('portal.linkTitle')}</p>
               <p className="text-sm text-ink-muted">
-                Sem login: o cliente vê as campanhas, acompanha o quadro em tempo real, aprova os criativos e lê os relatórios.
+                {t('portal.linkDescription')}
               </p>
             </div>
           </div>
@@ -313,10 +323,10 @@ function PortalLinkSection({ client, mutation }) {
             />
             <div className="flex gap-2">
               <Button variant="solid" onClick={copyLink} className="shrink-0">
-                <Copy size={15} /> Copiar
+                <Copy size={15} /> {t('portal.copy')}
               </Button>
               <Button variant="outline" onClick={rotate} disabled={mutation.isPending} className="shrink-0">
-                <RefreshCw size={15} className={cn(mutation.isPending && 'animate-spin')} /> Renovar
+                <RefreshCw size={15} className={cn(mutation.isPending && 'animate-spin')} /> {t('portal.rotate')}
               </Button>
             </div>
           </div>
@@ -327,6 +337,7 @@ function PortalLinkSection({ client, mutation }) {
 }
 
 function SocialSection({ clientId, accounts }) {
+  const { t } = useTranslation('clients')
   const mutations = useSocialAccountMutations(clientId)
   const [linking, setLinking] = useState(false)
   const [, copyToClipboard] = useCopyToClipboard()
@@ -343,9 +354,9 @@ function SocialSection({ clientId, accounts }) {
     try {
       const { url } = await socialApi.connectLink(clientId)
       if (!(await copyToClipboard(url))) throw new Error('clipboard unavailable')
-      toast.success('Link copiado! Envie ao cliente para ele conectar as próprias redes.')
+      toast.success(t('social.connectLinkCopied'))
     } catch {
-      toast.error('Não foi possível gerar o link.')
+      toast.error(t('social.connectLinkError'))
     } finally {
       setLinking(false)
     }
@@ -353,7 +364,7 @@ function SocialSection({ clientId, accounts }) {
 
   return (
     <section>
-      <SectionHead icon={Plug} color="var(--ag-brand, #7C3AED)" title="Redes sociais" />
+      <SectionHead icon={Plug} color="var(--ag-brand, #7C3AED)" title={t('social.title')} />
 
       {/* Banner: send the login-less self-serve link to the client. */}
       <Card className="mb-5 mt-1">
@@ -366,20 +377,20 @@ function SocialSection({ clientId, accounts }) {
               <Share2 size={18} />
             </div>
             <div>
-              <p className="font-semibold text-ink">Deixe o cliente conectar sozinho</p>
+              <p className="font-semibold text-ink">{t('social.selfServeTitle')}</p>
               <p className="text-sm text-ink-muted">
-                Envie um link e o cliente conecta as próprias redes com o login dele — sem precisar de conta aqui.
+                {t('social.selfServeDescription')}
               </p>
             </div>
           </div>
           <Button variant="solid" disabled={linking} onClick={copyConnectLink} className="shrink-0">
-            <Copy size={15} /> Copiar link de conexão
+            <Copy size={15} /> {t('social.copyConnectLink')}
           </Button>
         </div>
       </Card>
 
       <p className="mb-4 max-w-2xl text-sm text-ink-muted">
-        Ou conecte as redes deste cliente você mesmo. Os tickets das campanhas publicam nestas contas.
+        {t('social.manualHint')}
       </p>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {Object.keys(CHANNEL_META).map((provider) => (
@@ -392,16 +403,17 @@ function SocialSection({ clientId, accounts }) {
 
 // ── Projects ────────────────────────────────────────────────────
 function ProjectsSection({ projects }) {
+  const { t } = useTranslation('clients')
   return (
     <section>
-      <SectionHead icon={FolderKanban} color="#10B981" title="Campanhas" />
+      <SectionHead icon={FolderKanban} color="#10B981" title={t('projects.title')} />
       {projects.length === 0 ? (
         <EmptyState
           icon={FolderKanban}
           color="#10B981"
-          title="Nenhuma campanha"
-          description="Este cliente ainda não tem campanhas."
-          action={<Button asChild variant="outline"><Link to="/campanhas"><Plus size={16} /> Nova campanha</Link></Button>}
+          title={t('projects.emptyTitle')}
+          description={t('projects.emptyDescription')}
+          action={<Button asChild variant="outline"><Link to="/campanhas"><Plus size={16} /> {t('projects.newProject')}</Link></Button>}
         />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -431,16 +443,17 @@ function ProjectsSection({ projects }) {
 
 // ── Invoices ────────────────────────────────────────────────────
 function InvoicesSection({ invoices }) {
+  const { t } = useTranslation('clients')
   return (
     <section>
-      <SectionHead icon={Receipt} color="#F97316" title="Faturas" />
+      <SectionHead icon={Receipt} color="#F97316" title={t('invoices.title')} />
       {invoices.length === 0 ? (
         <EmptyState
           icon={Receipt}
           color="#F97316"
-          title="Nenhuma fatura"
-          description="Nenhuma cobrança foi emitida para este cliente."
-          action={<Button asChild variant="outline"><Link to="/cobrancas"><Plus size={16} /> Nova cobrança</Link></Button>}
+          title={t('invoices.emptyTitle')}
+          description={t('invoices.emptyDescription')}
+          action={<Button asChild variant="outline"><Link to="/cobrancas"><Plus size={16} /> {t('invoices.newInvoice')}</Link></Button>}
         />
       ) : (
         <Card className="divide-y divide-border">
@@ -458,7 +471,7 @@ function InvoicesSection({ invoices }) {
                   </div>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3">
-                  <span className="whitespace-nowrap text-xs font-medium text-ink-muted">Venc. {date(inv.due_date)}</span>
+                  <span className="whitespace-nowrap text-xs font-medium text-ink-muted">{t('invoices.due', { date: date(inv.due_date) })}</span>
                   <Badge variant={st.variant}>{st.label}</Badge>
                 </div>
               </div>
@@ -472,25 +485,26 @@ function InvoicesSection({ invoices }) {
 
 // ── Left column: basic client data ──────────────────────────────
 function BasicColumn({ client, projects, invoices, totalPaid, archived, onEdit }) {
+  const { t } = useTranslation('clients')
   return (
     <Card className="overflow-hidden lg:sticky lg:top-6">
       <div className="h-1.5 w-full bg-brand-gradient" />
       <div className="p-5">
         <div className="flex flex-col items-center text-center">
           <Avatar name={client.name} src={client.logo_url} size={72} ring />
-          <h1 className="mt-3 font-display text-xl font-extrabold tracking-tight text-ink">{client.name || 'Cliente'}</h1>
-          <Badge className="mt-1.5" variant={archived ? 'muted' : 'success'}>{archived ? 'Arquivado' : 'Ativo'}</Badge>
+          <h1 className="mt-3 font-display text-xl font-extrabold tracking-tight text-ink">{client.name || t('show.clientFallback')}</h1>
+          <Badge className="mt-1.5" variant={archived ? 'muted' : 'success'}>{archived ? t('status.archived') : t('status.active')}</Badge>
           {client.company && (
             <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-ink-muted">
               <Building2 size={14} /> {client.company}
             </p>
           )}
           <Button variant="outline" size="sm" className="mt-4 w-full" onClick={onEdit}>
-            <Pencil size={15} /> Editar cliente
+            <Pencil size={15} /> {t('show.editClient')}
           </Button>
           <Button asChild variant="outline" size="sm" className="mt-2 w-full">
             <Link to={`/publicacoes?client=${client.id}`}>
-              <BarChart3 size={15} /> Ver desempenho
+              <BarChart3 size={15} /> {t('show.viewPerformance')}
             </Link>
           </Button>
         </div>
@@ -508,9 +522,9 @@ function BasicColumn({ client, projects, invoices, totalPaid, archived, onEdit }
         )}
 
         <div className="mt-5 grid grid-cols-3 gap-2 border-t border-border pt-4 text-center">
-          <Stat icon={FolderKanban} color="#10B981" label="Campanhas" value={projects.length} />
-          <Stat icon={Receipt} color="#F97316" label="Faturas" value={invoices.length} />
-          <Stat icon={Wallet} color="#7C3AED" label="Faturado" value={brl(totalPaid)} />
+          <Stat icon={FolderKanban} color="#10B981" label={t('show.stats.campaigns')} value={projects.length} />
+          <Stat icon={Receipt} color="#F97316" label={t('show.stats.invoices')} value={invoices.length} />
+          <Stat icon={Wallet} color="#7C3AED" label={t('show.stats.billed')} value={brl(totalPaid)} />
         </div>
       </div>
     </Card>
@@ -531,6 +545,7 @@ function Stat({ icon: Icon, color, label, value }) {
 // personal, so only the owner of each one can edit/cancel it; the owner chip
 // shows who scheduled it.
 function MeetingsSection({ client }) {
+  const { t } = useTranslation('clients')
   const { data: meetings, isLoading } = useMeetings({ client_id: client.id })
   const { create, update, destroy } = useMeetingMutations()
   const { data: me } = useCurrentUser()
@@ -547,10 +562,10 @@ function MeetingsSection({ client }) {
   const onEdit = (m) => { setEditing(m); setOpen(true) }
   const onCancel = async (m) => {
     const ok = await confirm({
-      title: `Cancelar "${m.title}"?`,
-      description: 'A reunião será removida da agenda e do Google Calendar.',
-      confirmLabel: 'Cancelar reunião',
-      cancelLabel: 'Voltar',
+      title: t('meetings.cancelConfirm.title', { title: m.title }),
+      description: t('meetings.cancelConfirm.description'),
+      confirmLabel: t('meetings.cancelConfirm.confirm'),
+      cancelLabel: t('actions.back'),
       destructive: true,
     })
     if (ok) destroy.mutate(m.id)
@@ -559,21 +574,21 @@ function MeetingsSection({ client }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-ink-muted">Todas as reuniões do time com este cliente.</p>
+        <p className="text-sm text-ink-muted">{t('meetings.description')}</p>
         <Button size="sm" onClick={() => { setEditing(null); setOpen(true) }}>
-          <Plus size={16} /> Agendar reunião
+          <Plus size={16} /> {t('meetings.schedule')}
         </Button>
       </div>
 
       {isLoading ? (
-        <p className="py-8 text-center text-sm text-ink-faint">Carregando…</p>
+        <p className="py-8 text-center text-sm text-ink-faint">{t('meetings.loading')}</p>
       ) : list.length === 0 ? (
         <EmptyState
           icon={Video}
           color="#14B8A6"
-          title="Nenhuma reunião com este cliente"
-          description="Agende a primeira — ela entra no seu Google Calendar com link do Meet."
-          action={<Button size="sm" onClick={() => { setEditing(null); setOpen(true) }}><Plus size={16} /> Agendar reunião</Button>}
+          title={t('meetings.emptyTitle')}
+          description={t('meetings.emptyDescription')}
+          action={<Button size="sm" onClick={() => { setEditing(null); setOpen(true) }}><Plus size={16} /> {t('meetings.schedule')}</Button>}
         />
       ) : (
         <div className="space-y-4">
@@ -609,6 +624,7 @@ const TAB_TO_SEG = { branding: '', config: 'configuracoes', projects: 'campanhas
 const SEG_TO_TAB = { configuracoes: 'config', campanhas: 'projects', projetos: 'projects', faturas: 'invoices', reunioes: 'meetings' }
 
 export default function ClientShow() {
+  const { t } = useTranslation('clients')
   const { id, tab: seg } = useParams()
   const navigate = useNavigate()
   const { data, isLoading } = useClient(id)
@@ -639,7 +655,7 @@ export default function ClientShow() {
   return (
     <Page>
       <Link to="/clientes" className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-muted transition hover:text-brand">
-        <ArrowLeft size={16} /> Clientes
+        <ArrowLeft size={16} /> {t('index.title')}
       </Link>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[340px_1fr]">
@@ -654,11 +670,11 @@ export default function ClientShow() {
 
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="mb-5">
-            <TabsTrigger value="branding"><Palette size={15} /> Posicionamento & Marca</TabsTrigger>
-            <TabsTrigger value="config"><Plug size={15} /> Configurações</TabsTrigger>
-            <TabsTrigger value="projects"><FolderKanban size={15} /> Campanhas</TabsTrigger>
-            <TabsTrigger value="meetings"><Video size={15} /> Reuniões</TabsTrigger>
-            <TabsTrigger value="invoices"><Receipt size={15} /> Faturas</TabsTrigger>
+            <TabsTrigger value="branding"><Palette size={15} /> {t('show.tabs.branding')}</TabsTrigger>
+            <TabsTrigger value="config"><Plug size={15} /> {t('show.tabs.config')}</TabsTrigger>
+            <TabsTrigger value="projects"><FolderKanban size={15} /> {t('show.tabs.projects')}</TabsTrigger>
+            <TabsTrigger value="meetings"><Video size={15} /> {t('show.tabs.meetings')}</TabsTrigger>
+            <TabsTrigger value="invoices"><Receipt size={15} /> {t('show.tabs.invoices')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="branding" className="animate-rise">

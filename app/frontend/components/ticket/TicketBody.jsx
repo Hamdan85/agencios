@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
 import { keys } from '@/api/queryKeys'
 import { Layers, MessageSquare } from 'lucide-react'
@@ -24,6 +25,7 @@ export default function TicketBody({
   id, status, ticket, subtasks = [], creatives = [], attachments = [], posts = [], notes = [], mut,
   compact = false, tab, onTabChange,
 }) {
+  const { t } = useTranslation('ticket')
   // Local tab state for the compact (drawer) variant. Declared unconditionally.
   const [drawerTab, setDrawerTab] = useState('details')
   // "Atualizar com IA" opens a dialog asking what to change before regenerating.
@@ -52,9 +54,9 @@ export default function TicketBody({
   const qc = useQueryClient()
   const cancelPost = async (postId) => {
     const ok = await confirm({
-      title: 'Cancelar agendamento?',
-      description: 'O post não será publicado nesta rede. Você pode agendar de novo quando quiser.',
-      confirmLabel: 'Cancelar agendamento',
+      title: t('body.cancelScheduleTitle'),
+      description: t('body.cancelScheduleDescription'),
+      confirmLabel: t('body.cancelScheduleConfirm'),
       destructive: true,
     })
     if (ok) mut.removePost.mutate(postId)
@@ -152,8 +154,8 @@ export default function TicketBody({
 
   const tabList = (
     <TabsList className="mb-4 w-full">
-      <TabsTrigger value="details" className="flex-1"><Layers size={14} /> Detalhes</TabsTrigger>
-      <TabsTrigger value="activity" className="flex-1"><MessageSquare size={14} /> Atividade</TabsTrigger>
+      <TabsTrigger value="details" className="flex-1"><Layers size={14} /> {t('body.tabDetails')}</TabsTrigger>
+      <TabsTrigger value="activity" className="flex-1"><MessageSquare size={14} /> {t('body.tabActivity')}</TabsTrigger>
     </TabsList>
   )
 

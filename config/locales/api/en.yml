@@ -10,6 +10,8 @@ en:
       billing_required: "An active subscription is required to access this workspace."
       manager_required: "Restricted to workspace managers."
       staff_only: "Restricted to platform staff."
+      owner_required: "Restricted to the workspace owner."
+      seat_limit_over_plan: "The workspace has more members than the current plan allows. Remove members or upgrade to keep creating tickets and campaigns."
     credits:
       invalid_pack: "Invalid credit pack."
     public:
@@ -20,3 +22,86 @@ en:
     strategy:
       not_allowed: "You don't have permission to plan this campaign."
       session_not_found: "Session not found."
+    account:
+      email_taken: "This email is already in use."
+      email_confirmed: "Email confirmed and updated."
+      wrong_current_password: "Current password is incorrect."
+      invalid_email: "Enter a valid email address."
+      email_unchanged: "This is already your current email."
+      confirmation_link_sent: "We've sent a confirmation link to the new email."
+      password_too_short: "The new password must be at least %{min} characters long."
+      password_changed: "Password changed."
+      no_image_uploaded: "No image uploaded."
+    attachments:
+      none_uploaded: "No file uploaded."
+      removed: "File removed."
+      remove_forbidden: "Only the uploader or a manager can remove this file."
+    autopilot:
+      ticket_requires_manual_creatives: "This ticket requires manual creatives and can't run in GO mode."
+      project_requires_manual_creatives: "Some tickets require manual creatives. Resolve them before starting the campaign."
+    billing:
+      invalid_plan: "Invalid plan."
+      seat_overage: "The %{plan} plan allows up to %{seats} seats, but the workspace has %{members} members. Remove members before changing plans."
+    calendar:
+      post_fallback_title: "Post"
+    clients:
+      removed: "Client removed."
+      background_image_required: "Set a background image before analyzing the colors."
+    creatives:
+      removed: "Creative removed."
+      unknown_generation_kind: "Unknown generation kind: %{kind}"
+      media_mismatch_images: "This creative type only accepts images. Upload a compatible file."
+      media_mismatch_videos: "This creative type only accepts videos. Upload a compatible file."
+      media_mismatch_images_or_videos: "This creative type only accepts images or videos. Upload a compatible file."
+    invitations:
+      invalid_or_expired: "Invalid or expired invitation."
+      canceled: "Invitation canceled."
+    mcp:
+      plan_required: "The Claude connector requires a workspace on an Agência or Enterprise plan with an active subscription."
+    meetings:
+      removed: "Meeting removed."
+    memberships:
+      cannot_remove_owner: "The owner can't be removed."
+      removed: "Member removed."
+      owner_role_restricted: "Only the owner can grant or remove the owner role."
+      last_owner: "The workspace needs at least one owner — transfer ownership before demoting this member."
+    passwords:
+      instructions_sent: "If the email exists, we'll send instructions."
+      invalid_token: "Invalid or expired token."
+      reset_done: "Password reset."
+    portal:
+      campaign_status:
+        active: "In progress"
+        paused: "Paused"
+        completed: "Finished"
+        archived: "Archived"
+        draft: "Draft"
+    posts:
+      schedule_canceled: "Scheduled post canceled."
+    projects:
+      removed: "Campaign removed."
+    push:
+      notifications_enabled:
+        title: "Notifications enabled ✅"
+        body: "You'll get updates about tickets, deadlines, and posts here."
+    reports:
+      not_ready_or_no_email: "The report isn't ready yet or the client has no email on file."
+      filename: "report-%{project}.pdf"
+    social:
+      disconnected: "Account disconnected."
+      unsupported_network: "Unsupported network: %{network}"
+      reconnect_failed: "Couldn't reactivate with the current token — reconnect the account through the network's authorization flow."
+    studio:
+      prompt_draft_required: "Write a draft prompt first."
+    subtasks:
+      removed: "Subtask removed."
+    tickets:
+      archived: "Ticket archived."
+    uploads:
+      at_least_one_file: "Upload at least one file."
+      video_too_large: "Reference video is too large (max 50 MB)."
+      unsupported_format: "Unsupported format. Upload a JPG, PNG, or WEBP image, or an MP4/MOV/WEBM video."
+    video:
+      invalid_asset_type: "Invalid asset type."
+    workspaces:
+      create_limit_reached: "You've reached the limit of workspaces you can create."

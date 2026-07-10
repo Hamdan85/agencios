@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Textarea } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/feedback'
@@ -45,6 +46,7 @@ function activeMention(value, caret) {
 // The comment input: a plain textarea enriched with @-mention autocomplete and
 // file attachments. Submits `{ body, mentionedUserIds, files }`.
 export default function CommentComposer({ onSubmit, posting = false }) {
+  const { t } = useTranslation('ticket')
   const { data: members = [] } = useWorkspaceMembers()
   const [text, setText] = useState('')
   const [mentions, setMentions] = useState([]) // { userId, name }
@@ -191,7 +193,7 @@ export default function CommentComposer({ onSubmit, posting = false }) {
             addFiles(e.clipboardData.files)
           }
         }}
-        placeholder="Escreva um comentário… use @ para mencionar (⌘+Enter para enviar)"
+        placeholder={t('comment.placeholder')}
         rows={2}
         className="min-h-[60px]"
       />
@@ -210,7 +212,7 @@ export default function CommentComposer({ onSubmit, posting = false }) {
                 type="button"
                 onClick={() => removeFile(i)}
                 className="flex size-4 shrink-0 items-center justify-center rounded text-ink-muted transition hover:text-danger"
-                aria-label={`Remover ${f.name}`}
+                aria-label={t('comment.removeFile', { name: f.name })}
               >
                 <X size={13} />
               </button>
@@ -235,13 +237,13 @@ export default function CommentComposer({ onSubmit, posting = false }) {
           type="button"
           onClick={() => fileRef.current?.click()}
           className="flex size-8 items-center justify-center rounded-lg text-ink-muted transition hover:bg-surface-muted hover:text-ink"
-          aria-label="Anexar arquivo"
+          aria-label={t('comment.attach')}
         >
           <Paperclip size={16} />
         </button>
         <Button type="submit" size="sm" disabled={!canSubmit}>
           {posting ? <Spinner size={14} className="border-white/30 border-t-white" /> : <Send size={14} />}
-          Comentar
+          {t('comment.submit')}
         </Button>
       </div>
     </form>

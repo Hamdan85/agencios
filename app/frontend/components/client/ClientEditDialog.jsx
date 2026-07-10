@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { User, Palette, Compass, Layers, Sparkles } from 'lucide-react'
 import { SettingsDialog, SettingsPanel } from '@/components/ui/settings-dialog'
 import { Button } from '@/components/ui/button'
@@ -39,6 +40,7 @@ const seedPositioning = (c) => ({
 })
 
 export default function ClientEditDialog({ open, onOpenChange, client, mutations }) {
+  const { t } = useTranslation('clients')
   const [tab, setTab] = useState('contact')
   const [contact, setContact] = useState(EMPTY_CONTACT)
   const [brand, setBrand] = useState(EMPTY_BRAND)
@@ -102,18 +104,18 @@ export default function ClientEditDialog({ open, onOpenChange, client, mutations
   }
 
   const sections = [
-    { key: 'contact', label: 'Contato', icon: User },
-    { key: 'brand', label: 'Marca', icon: Palette, dirty },
-    { key: 'positioning', label: 'Posicionamento', icon: Compass },
-    { key: 'content', label: 'Conteúdo', icon: Layers },
-    { key: 'statement', label: 'Síntese', icon: Sparkles },
+    { key: 'contact', label: t('editDialog.sections.contact'), icon: User },
+    { key: 'brand', label: t('editDialog.sections.brand'), icon: Palette, dirty },
+    { key: 'positioning', label: t('editDialog.sections.positioning'), icon: Compass },
+    { key: 'content', label: t('editDialog.sections.content'), icon: Layers },
+    { key: 'statement', label: t('editDialog.sections.statement'), icon: Sparkles },
   ]
 
   return (
     <SettingsDialog
       open={open}
       onOpenChange={(v) => (v ? onOpenChange(true) : close())}
-      title="Editar cliente"
+      title={t('show.editClient')}
       description={live?.name || client?.name}
       icon={User}
       accent={ACCENT}
@@ -122,9 +124,9 @@ export default function ClientEditDialog({ open, onOpenChange, client, mutations
       onValueChange={setTab}
       footer={(
         <>
-          <Button variant="ghost" onClick={close}>Fechar</Button>
+          <Button variant="ghost" onClick={close}>{t('actions.close')}</Button>
           <Button onClick={save} disabled={!dirty || saving}>
-            {saving ? 'Salvando…' : 'Salvar alterações'}
+            {saving ? t('wizard.saving') : t('editDialog.saveChanges')}
           </Button>
         </>
       )}

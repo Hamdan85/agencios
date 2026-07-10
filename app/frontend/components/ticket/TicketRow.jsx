@@ -1,6 +1,7 @@
 import {
   Archive, ArchiveRestore, MoreVertical, CalendarClock,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { statusMeta } from '@/lib/constants'
 import { relativeDay } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
@@ -19,11 +20,11 @@ import { WorkingBadge } from '@/components/ticket/WorkingBadge'
 import { AlertBadge } from '@/components/ticket/AlertBadge'
 import { DUE_TONE, AUTOPILOT_RING, ALERT_RING, projectAccent } from '@/components/ticket/ticketVisuals'
 
-// Client-approval state → a small row chip.
-const APPROVAL_CHIP = {
-  pending: ['Aguardando cliente', 'bg-amber/15 text-[#B45309]'],
-  approved: ['Aprovado', 'bg-emerald-500/15 text-emerald-700'],
-  changes_requested: ['Ajustes pedidos', 'bg-danger/12 text-danger'],
+// Client-approval state → a small row chip (label lives in ticket:row.approval.*).
+const APPROVAL_CHIP_CLS = {
+  pending: 'bg-amber/15 text-[#B45309]',
+  approved: 'bg-emerald-500/15 text-emerald-700',
+  changes_requested: 'bg-danger/12 text-danger',
 }
 
 // A single ticket row, shared by the global ticket list and the project page.
@@ -36,7 +37,9 @@ export function TicketRow({
   selected, onToggleSelect, proposed = false, state = 'ready', op = 'create',
   pendingChange = null, members = null, onAssign = null,
 }) {
-  const approvalChip = APPROVAL_CHIP[ticket.approval?.state]
+  const { t } = useTranslation('ticket')
+  const approvalState = ticket.approval?.state
+  const approvalChipCls = APPROVAL_CHIP_CLS[approvalState]
   const canAssign = manager && !proposed && onAssign && Array.isArray(members)
   const project = ticket.project
   const title = ticket.display_title || ticket.title
@@ -50,8 +53,8 @@ export function TicketRow({
   // ticket (update), or a REMOVAL of one (remove — struck-through, in danger tone).
   const removing = (proposed && op === 'remove') || pendingChange === 'remove'
   // A real row targeted by a staged edit/removal is dimmed with a pending badge.
-  const GHOST_BADGE = { create: ['Proposto', 'text-brand border-brand/50'], update: ['Editar', 'text-amber-600 border-amber-500/50'], remove: ['Remover', 'text-danger border-danger/50'] }
-  const PENDING_BADGE = { edit: ['A editar', 'text-amber-600 border-amber-500/50'], remove: ['A remover', 'text-danger border-danger/50'] }
+  const GHOST_BADGE = { create: [t('row.ghost.create'), 'text-brand border-brand/50'], update: [t('row.ghost.update'), 'text-amber-600 border-amber-500/50'], remove: [t('row.ghost.remove'), 'text-danger border-danger/50'] }
+  const PENDING_BADGE = { edit: [t('row.pending.edit'), 'text-amber-600 border-amber-500/50'], remove: [t('row.pending.remove'), 'text-danger border-danger/50'] }
   const [ghostLabel, ghostCls] = GHOST_BADGE[op] || GHOST_BADGE.create
 
   // The title block is identical whether it's a clickable button or a static
@@ -67,7 +70,7 @@ export function TicketRow({
         <span className={cn('truncate font-display text-[15px] font-semibold text-ink', removing && 'text-ink-muted line-through')}>{title}</span>
         {ticket.archived && (
           <Badge variant="muted" className="shrink-0 px-2 text-[10px] uppercase">
-            Arquivado
+            {t('row.archived')}
           </Badge>
         )}
       </span>
@@ -105,7 +108,7 @@ export function TicketRow({
       !proposed && ticket.archived && 'opacity-75',
     )}>
       {manager && !proposed && (
-        <SelectCheckbox checked={selected} onChange={() => onToggleSelect(ticket.id)} label={`Selecionar ${title}`} />
+        <SelectCheckbox checked={selected} onChange={() => onToggleSelect(ticket.id)} label={t('row.select', { title })} />
       )}
       <span className="hidden sm:block"><StatusDot status={ticket.status} size={9} /></span>
 
@@ -122,9 +125,9 @@ export function TicketRow({
         {ticket.channels?.length > 0 && <ChannelIcons channels={ticket.channels} size={12} max={4} />}
       </div>
 
-      {!proposed && approvalChip && (
-        <Badge className={cn('hidden shrink-0 px-2 text-[10.5px] tracking-normal sm:inline-flex', approvalChip[1])}>
-          {approvalChip[0]}
+      {!proposed && approvalChipCls && (
+        <Badge className={cn('hidden shrink-0 px-2 text-[10.5px] tracking-normal sm:inline-flex', approvalChipCls)}>
+          {t(`row.approval.${approvalState}`)}
         </Badge>
       )}
       {!proposed && ticket.in_alert && <AlertBadge reason={ticket.alert_reason} />}
@@ -168,7 +171,7 @@ export function TicketRow({
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  aria-label="Ações do ticket"
+                  aria-label={t('row.actionsAria')}
                   className="flex size-7 shrink-0 items-center justify-center rounded-md text-ink-muted transition hover:bg-surface-muted hover:text-ink focus:outline-none"
                 >
                   <MoreVertical size={16} />
@@ -177,11 +180,11 @@ export function TicketRow({
               <DropdownMenuContent align="end" className="min-w-44">
                 {ticket.archived ? (
                   <DropdownMenuItem onClick={() => onUnarchive(ticket.id)} disabled={busy}>
-                    <ArchiveRestore size={15} /> Restaurar
+                    <ArchiveRestore size={15} /> {t('actions.restore')}
                   </DropdownMenuItem>
                 ) : (
                   <DropdownMenuItem onClick={() => onArchive(ticket.id)} disabled={busy}>
-                    <Archive size={15} /> Arquivar
+                    <Archive size={15} /> {t('actions.archive')}
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>

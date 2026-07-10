@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/i18n'
 import { Check, UserPlus, ArrowRight, ArrowLeft } from 'lucide-react'
 import { POSITIONING_STEPS, EMPTY_POSITIONING, EMPTY_BRAND } from '@/lib/constants'
 import { Button } from '@/components/ui/button'
@@ -15,13 +17,20 @@ const EMPTY_ASSETS = { logo: null, defaultCreatorAvatar: null, carouselBackgroun
 
 // Site import (AI fills everything) → contact → brand identity → free-text brief
 // → review the structured positioning → final statement.
+// Copy resolves lazily (getters) so it follows the active locale — same pattern
+// as POSITIONING_STEPS in lib/constants.
+const wizardStep = (key) => ({
+  key,
+  get title() { return i18n.t(`clients:wizard.steps.${key}.title`) },
+  get description() { return i18n.t(`clients:wizard.steps.${key}.description`) },
+})
 const STEPS = [
-  { key: 'site', title: 'Site', description: 'Importe tudo da landing page da marca.' },
-  { key: 'contact', title: 'Contato', description: 'Quem é o cliente.' },
-  { key: 'brand', title: 'Marca', description: 'Identidade visual e voz da marca.' },
-  { key: 'brief', title: 'Descrição', description: 'Descreva a marca — a IA preenche o posicionamento.' },
+  wizardStep('site'),
+  wizardStep('contact'),
+  wizardStep('brand'),
+  wizardStep('brief'),
   ...POSITIONING_STEPS,
-  { key: 'statement', title: 'Posicionamento', description: 'Síntese final de marca.' },
+  wizardStep('statement'),
 ]
 const FIRST_POSITIONING = 4 // index of POSITIONING_STEPS[0] within STEPS
 const LAST = STEPS.length - 1
@@ -72,6 +81,7 @@ function WizardSteps({ step, onJump }) {
 }
 
 export default function ClientWizard({ open, onOpenChange, editing, mutations }) {
+  const { t } = useTranslation('clients')
   const isEdit = !!editing
   const [step, setStep] = useState(0)
   const [contact, setContact] = useState(EMPTY_CONTACT)
@@ -205,7 +215,7 @@ export default function ClientWizard({ open, onOpenChange, editing, mutations })
           <div className="mb-1 flex size-11 items-center justify-center rounded-2xl" style={{ background: `${ACCENT}16`, color: ACCENT }}>
             <UserPlus size={22} strokeWidth={2.2} />
           </div>
-          <DialogTitle>{isEdit ? 'Editar cliente' : 'Novo cliente'}</DialogTitle>
+          <DialogTitle>{isEdit ? t('show.editClient') : t('index.newClient')}</DialogTitle>
           <DialogDescription>
             {current.title} — {current.description}
           </DialogDescription>
@@ -263,23 +273,23 @@ export default function ClientWizard({ open, onOpenChange, editing, mutations })
           <div>
             {!isSite && (
               <Button type="button" variant="ghost" onClick={() => setStep((s) => s - 1)}>
-                <ArrowLeft /> Voltar
+                <ArrowLeft /> {t('actions.back')}
               </Button>
             )}
           </div>
           <div className="flex flex-col-reverse gap-2 sm:flex-row">
             {isContact && (
               <Button type="button" variant="outline" onClick={submit} disabled={!contact.name.trim() || saving}>
-                {isEdit ? 'Salvar' : 'Criar rascunho'}
+                {isEdit ? t('wizard.save') : t('wizard.createDraft')}
               </Button>
             )}
             {!isStatement ? (
               <Button type="button" onClick={() => setStep((s) => s + 1)} disabled={!isSite && !contact.name.trim()}>
-                {(isSite || isBrief) ? 'Pular' : 'Continuar'} <ArrowRight />
+                {(isSite || isBrief) ? t('wizard.skip') : t('wizard.continue')} <ArrowRight />
               </Button>
             ) : (
               <Button type="button" onClick={submit} disabled={!contact.name.trim() || saving}>
-                {saving ? 'Salvando…' : isEdit ? 'Salvar cliente' : 'Criar cliente'}
+                {saving ? t('wizard.saving') : isEdit ? t('wizard.saveClient') : t('wizard.createClient')}
               </Button>
             )}
           </div>

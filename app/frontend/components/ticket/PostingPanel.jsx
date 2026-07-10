@@ -1,4 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/i18n'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input, Textarea } from '@/components/ui/input'
@@ -19,7 +21,15 @@ import {
 
 const MediaViewer = lazy(() => import('./MediaViewer'))
 
-const MEDIA_LABEL = { image: 'imagem', carousel: 'carrossel', video: 'vídeo', text: 'texto' }
+// Copy is resolved lazily (getters) so it follows the active locale — same
+// pattern as the label maps in lib/constants.
+const tr = (key) => i18n.t(`ticket:${key}`)
+const MEDIA_LABEL = {
+  get image() { return tr('posting.media.image') },
+  get carousel() { return tr('posting.media.carousel') },
+  get video() { return tr('posting.media.video') },
+  get text() { return tr('posting.media.text') },
+}
 
 // A generated asset is a video when its URL carries a video extension (the
 // ActiveStorage blob URL keeps the original filename, e.g. .../video-80.mp4).
@@ -44,11 +54,11 @@ function creativeToAttachments(creative) {
 }
 
 const POST_STATUS = {
-  scheduled:   { label: 'Agendado',    variant: 'muted',   icon: Clock },
-  publishing:  { label: 'Publicando…', variant: 'warning', icon: Loader2 },
-  published:   { label: 'No ar',       variant: 'success', icon: CheckCircle2 },
-  failed:      { label: 'Falhou',      variant: 'danger',  icon: AlertCircle },
-  unpublished: { label: 'Despublicado', variant: 'muted',  icon: Ban },
+  scheduled:   { get label() { return tr('posting.status.scheduled') },   variant: 'muted',   icon: Clock },
+  publishing:  { get label() { return tr('posting.status.publishing') },  variant: 'warning', icon: Loader2 },
+  published:   { get label() { return tr('posting.status.published') },   variant: 'success', icon: CheckCircle2 },
+  failed:      { get label() { return tr('posting.status.failed') },      variant: 'danger',  icon: AlertCircle },
+  unpublished: { get label() { return tr('posting.status.unpublished') }, variant: 'muted',   icon: Ban },
 }
 
 // The "Postagem" step: pick ONE creative per scoped type, choose immediate vs
@@ -60,6 +70,7 @@ export default function PostingPanel({
   onAiAction, acting = false, filling = false, onUnpublish, unpublishingId,
   onCancelPost, cancelingId, color = '#EC4899',
 }) {
+  const { t } = useTranslation('ticket')
   const fields = ticket?.fields?.scheduled || {}
   const channels = Array.isArray(ticket?.channels) ? ticket.channels : []
   const ready = creatives.filter((c) => c?.status === 'ready' && (c?.asset_urls?.length || 0) > 0)
@@ -164,8 +175,8 @@ export default function PostingPanel({
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <IconTile icon={Send} color={color} size="sm" tint="1A" strokeWidth={2.3} />
           <div className="min-w-0">
-            <h3 className="truncate font-display text-base font-bold text-ink">Postagem</h3>
-            <p className="truncate text-xs text-ink-muted">Escolha um criativo por tipo e publique — agora ou agendado.</p>
+            <h3 className="truncate font-display text-base font-bold text-ink">{t('posting.title')}</h3>
+            <p className="truncate text-xs text-ink-muted">{t('posting.hint')}</p>
           </div>
         </div>
         {onAiAction && <div className="shrink-0"><AiFillButton onClick={onAiAction} acting={acting} color={color} /></div>}
@@ -175,12 +186,12 @@ export default function PostingPanel({
       <div className="space-y-5 p-5">
         {/* 1 — choose one creative per scoped type */}
         <div className="space-y-4">
-          <Label className="flex items-center gap-1.5"><ImagePlus size={13} style={{ color }} /> Criativos a postar</Label>
+          <Label className="flex items-center gap-1.5"><ImagePlus size={13} style={{ color }} /> {t('posting.creativesToPost')}</Label>
           {displayTypes.length === 0 ? (
             <EmptyState
               icon={ImagePlus}
-              title="Nenhum tipo definido"
-              description="Volte ao Escopo e escolha os tipos de criativo deste ticket."
+              title={t('posting.noTypes.title')}
+              description={t('posting.noTypes.description')}
               color={color}
             />
           ) : (
@@ -194,11 +205,11 @@ export default function PostingPanel({
                     <span className="inline-flex items-center gap-1.5 rounded-lg px-2 py-0.5 text-xs font-bold" style={{ background: `${tm.color}18`, color: tm.color }}>
                       <TmIcon size={12} strokeWidth={2.4} /> {tm.label}
                     </span>
-                    {isCoverType(type) && <span className="text-[11px] text-ink-faint">— vira capa do vídeo, ou post se não houver vídeo</span>}
+                    {isCoverType(type) && <span className="text-[11px] text-ink-faint">{t('posting.coverHint')}</span>}
                   </div>
                   {group.length === 0 ? (
                     <p className="rounded-xl border border-dashed border-border px-3.5 py-2.5 text-xs text-ink-faint">
-                      Nenhum {tm.label.toLowerCase()} pronto — gere ou anexe um na Produção.
+                      {t('posting.noneReady', { type: tm.label.toLowerCase() })}
                     </p>
                   ) : (
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -236,7 +247,7 @@ export default function PostingPanel({
                                 {hasAssets && (
                                   <button
                                     type="button"
-                                    aria-label="Visualizar criativo"
+                                    aria-label={t('posting.previewAria')}
                                     onClick={(e) => { e.stopPropagation(); openViewer(c) }}
                                     className="absolute left-1.5 top-1.5 z-10 grid size-6 place-items-center rounded-full bg-white/90 text-ink-muted shadow-sm backdrop-blur transition hover:bg-white hover:text-ink focus:outline-none sm:opacity-0 sm:group-hover:opacity-100"
                                   >
@@ -263,17 +274,20 @@ export default function PostingPanel({
         {selectedCreatives.length > 0 && (
           <div className="space-y-1.5 rounded-xl border border-border bg-surface-muted/50 p-3.5">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-ink-secondary">
-              <Radio size={13} className="text-ink-muted" /> O que vai para cada canal
+              <Radio size={13} className="text-ink-muted" /> {t('posting.routingTitle')}
             </div>
             {routing.map(({ channel, posts: chPosts }) => (
               <div key={channel} className="flex items-center gap-2 text-xs">
                 <ChannelIcons channels={[channel]} />
                 <span className="font-semibold text-ink-secondary">{channelMeta(channel).label}</span>
                 {chPosts.length === 0 ? (
-                  <span className="text-danger">nenhum criativo compatível</span>
+                  <span className="text-danger">{t('posting.noCompatible')}</span>
                 ) : (
                   <span className="text-ink-muted">
-                    {chPosts.map((p) => `${MEDIA_LABEL[creativeMediaKind(p.creative)] || 'post'}${p.cover ? ' + capa' : ''}`).join(', ')}
+                    {chPosts.map((p) => {
+                      const media = MEDIA_LABEL[creativeMediaKind(p.creative)] || t('posting.media.post')
+                      return p.cover ? t('posting.withCover', { media }) : media
+                    }).join(', ')}
                   </span>
                 )}
               </div>
@@ -285,7 +299,7 @@ export default function PostingPanel({
         {channels.length > 0 && (
           <div className="space-y-3">
             <Label className="flex items-center gap-1.5">
-              <MessageSquareText size={13} style={{ color }} /> Legenda por canal
+              <MessageSquareText size={13} style={{ color }} /> {t('posting.captionPerChannel')}
             </Label>
             {channels.map((channel) => {
               const expanded = !!expandedCaptions[channel]
@@ -301,14 +315,14 @@ export default function PostingPanel({
                       className="inline-flex items-center gap-1 rounded-lg px-1.5 py-0.5 text-[11px] font-semibold text-ink-muted transition hover:text-brand"
                     >
                       {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-                      {expanded ? 'Recolher' : 'Expandir'}
+                      {expanded ? t('posting.collapse') : t('posting.expand')}
                     </button>
                   </div>
                   <Textarea
                     rows={expanded ? 8 : 3}
                     maxRows={expanded ? 100 : 6}
                     value={captionByChannel[channel] ?? baseCaption}
-                    placeholder="Legenda deste post…"
+                    placeholder={t('posting.captionPlaceholder')}
                     onChange={(e) => setChannelCaption(channel, e.target.value)}
                     onBlur={saveChannelCaption}
                   />
@@ -320,9 +334,9 @@ export default function PostingPanel({
 
         {/* 2 — when */}
         <div className="space-y-2">
-          <Label className="flex items-center gap-1.5"><Clock size={13} style={{ color }} /> Quando publicar</Label>
+          <Label className="flex items-center gap-1.5"><Clock size={13} style={{ color }} /> {t('posting.when')}</Label>
           <div className="flex flex-wrap gap-2">
-            {[{ v: 'immediate', label: 'Imediato', icon: Zap }, { v: 'scheduled', label: 'Agendar', icon: Clock }].map((o) => {
+            {[{ v: 'immediate', label: t('posting.immediate'), icon: Zap }, { v: 'scheduled', label: t('posting.schedule'), icon: Clock }].map((o) => {
               const active = mode === o.v
               const Icon = o.icon
               return (
@@ -350,17 +364,17 @@ export default function PostingPanel({
         {/* 3 — optional extras */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5 sm:col-span-2">
-            <Label className="flex items-center gap-1.5"><MessageCircle size={13} style={{ color }} /> Primeiro comentário</Label>
+            <Label className="flex items-center gap-1.5"><MessageCircle size={13} style={{ color }} /> {t('posting.firstComment')}</Label>
             <Textarea
               rows={2}
               value={firstComment}
-              placeholder="Comentário fixado no post…"
+              placeholder={t('posting.firstCommentPlaceholder')}
               onChange={(e) => setFirstComment(e.target.value)}
               onBlur={() => saveField('first_comment', firstComment)}
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="flex items-center gap-1.5"><Link2 size={13} style={{ color }} /> Link na bio</Label>
+            <Label className="flex items-center gap-1.5"><Link2 size={13} style={{ color }} /> {t('posting.linkInBio')}</Label>
             <Input
               value={linkInBio}
               placeholder="https://…"
@@ -372,10 +386,10 @@ export default function PostingPanel({
 
         {/* publish action */}
         <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
-          <p className="text-xs text-ink-muted">O ticket vai para “No ar” quando a publicação for concluída.</p>
+          <p className="text-xs text-ink-muted">{t('posting.goesLiveNote')}</p>
           <Button onClick={handlePublish} disabled={!canPublish}>
             {publishing ? <Spinner size={14} className="border-white/30 border-t-white" /> : mode === 'immediate' ? <Zap size={14} /> : <Clock size={14} />}
-            {mode === 'immediate' ? 'Publicar agora' : 'Agendar publicação'}
+            {mode === 'immediate' ? t('posting.publishNow') : t('posting.schedulePublish')}
           </Button>
         </div>
 
@@ -414,7 +428,7 @@ export default function PostingPanel({
                         disabled={cancelingId === post.id}
                       >
                         {cancelingId === post.id ? <Spinner size={11} /> : <CalendarX2 size={11} />}
-                        Cancelar
+                        {t('actions.cancel')}
                       </Button>
                     )}
                     {post.status === 'published' && onUnpublish && (
@@ -426,7 +440,7 @@ export default function PostingPanel({
                         disabled={unpublishingId === post.id}
                       >
                         {unpublishingId === post.id ? <Spinner size={11} /> : <Ban size={11} />}
-                        Despublicar
+                        {t('post.unpublish')}
                       </Button>
                     )}
                   </div>
