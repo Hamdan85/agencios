@@ -47,7 +47,7 @@ module Prompts
             "statement": "um parágrafo no estilo: Para <público> que <necessidade>, <marca> é <categoria> que <benefício>, diferente de <alternativa> porque <diferencial>"
           }
         }
-        Use português do Brasil.
+        Use #{response_language}.
       SYS
     end
 

@@ -21,7 +21,7 @@ module Prompts
         Regras:
         - Use SOMENTE os números fornecidos; não invente métricas. Interprete-os.
         - Seja específico e direto; aponte gargalos reais e oportunidades concretas.
-        - Português do Brasil. Tom profissional, sem floreio.
+        - #{response_language}. Tom profissional, sem floreio.
 
         Responda SOMENTE com um objeto JSON válido (sem markdown, sem cercas de
         código, sem texto fora do JSON), exatamente nesta forma:

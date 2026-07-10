@@ -41,7 +41,7 @@ module Prompts
         ]
         POR PADRÃO os slides são tipográficos: "image": false e "image_query": "".
         Use "image": true apenas em casos excepcionais, quando uma foto for
-        essencial (ex.: mostrar um produto físico). O texto é em português do Brasil.
+        essencial (ex.: mostrar um produto físico). O texto é em #{response_language}.
       SYS
     end
 
@@ -58,6 +58,9 @@ module Prompts
     end
 
     private
+
+    # Output speaks to the client's social-media audience.
+    def content_prompt? = true
 
     # References the team attached (ideation). UNLIKE the news-hook link, these are
     # supporting material to actually READ and USE for context, data and direction

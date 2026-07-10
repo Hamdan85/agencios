@@ -11,6 +11,9 @@ module Prompts
   # Only *content* fields are AI-fillable — human decisions (dates, switches,
   # approval status, the channel selection) are intentionally excluded.
   class FieldFill < Base
+    # Output speaks to the client's social-media audience.
+    def content_prompt? = true
+
     TOOL_NAME = 'fill_ticket_fields'
 
     # Per-status field descriptions, used both as the tool's input_schema
@@ -126,7 +129,7 @@ module Prompts
         Campos a preencher:
         #{task_lines}
 
-        Português do Brasil.
+        #{response_language}.
       SYS
     end
 

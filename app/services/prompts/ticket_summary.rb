@@ -24,7 +24,7 @@ module Prompts
         Estágio do ticket: #{Ticket::STATUS_LABELS[status]}.
         Tarefa: #{PER_STATUS.fetch(status, 'Resuma o estado atual do ticket de forma objetiva.')}
 
-        Responda em português do Brasil, em no máximo 3 frases curtas e diretas,
+        Responda em #{response_language}, em no máximo 3 frases curtas e diretas,
         sem rodeios e sem repetir os dados literais — entregue leitura estratégica.
       SYS
     end

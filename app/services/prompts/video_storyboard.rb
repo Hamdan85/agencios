@@ -10,7 +10,7 @@ module Prompts
   # prompts should read as one flowing shot list, not disconnected clips.
   #
   # System/tool text is ENGLISH (code); only the user-facing outputs (scene
-  # captions) are produced in PT-BR, per the language rules.
+  # captions) are produced in the response language, per the language rules.
   #
   # Context keys: mode (VideoConfig::MODES), brief, script, total_duration,
   # aspect_ratio, max_scenes (int), has_references (bool), media_references
@@ -41,7 +41,7 @@ module Prompts
           if has_character), wardrobe, setting/world, color palette and visual
           style. These are LOCKED — every scene reuses them so the video reads as
           one piece; do not drift between scenes. WRITE the identity descriptions
-          (character, wardrobe, setting, palette, style) in BRAZILIAN PORTUGUESE —
+          (character, wardrobe, setting, palette, style) in #{workspace_language} —
           they are shown to the user in the editor.
         - CONSISTENCY ANCHORS (optional, you decide): when a recurring CHARACTER or
           a distinctive SCENARIO must stay identical across scenes AND the user gave
@@ -93,12 +93,12 @@ module Prompts
           PURELY VISUAL: no spoken lines, no lettering. Faithful to the brand and
           the brief; never distort the product or invent foreign elements.
         - #{audio_rule}
-        - on_screen_text: the EXACT final text for the scene (Brazilian
-          Portuguese, correctly spelled) — or leave it empty for a text-free
+        - on_screen_text: the EXACT final text for the scene (#{response_language},
+          correctly spelled) — or leave it empty for a text-free
           scene. Most scenes should have NO text; use it only when lettering
           genuinely serves the message.
         - #{mode_guidance}
-        - Each scene caption is a short BRAZILIAN PORTUGUESE summary of that scene
+        - Each scene caption is a short #{workspace_language} summary of that scene
           for the human editor (it is not on-screen text).
 
         Return the storyboard by calling the tool.
@@ -114,8 +114,8 @@ module Prompts
       else
         ['Sound is ON. You DIRECT the audio of EACH scene independently — decide, per ' \
          'scene, what the model should generate:',
-         '(a) DIALOGUE — put the EXACT spoken line(s) in `dialogue` (Brazilian ' \
-         'Portuguese, final wording, spoken verbatim). The voice is a single fixed ' \
+         "(a) DIALOGUE — put the EXACT spoken line(s) in `dialogue` (#{response_language}, " \
+         'final wording, spoken verbatim). The voice is a single fixed ' \
          'voice DUBBED in post, so the model shows the talking performance without ' \
          'speaking — never write spoken words inside the visual prompt.',
          '(b) SOUND EFFECTS — when a scene needs DIEGETIC sound that belongs to the ' \
@@ -249,7 +249,7 @@ module Prompts
       {
         'name' => STORYBOARD_TOOL,
         'description' => 'Returns the video storyboard: the ordered list of needed scenes, each ' \
-                         'with a visual prompt (English) and a caption (Brazilian Portuguese), ' \
+                         'with a visual prompt (English) and a caption (the response language set in the system prompt), ' \
                          'plus optional per-scene pacing (duration) and whether it continues the ' \
                          'previous shot or is a cut.',
         'input_schema' => {
@@ -263,7 +263,7 @@ module Prompts
             'identity' => {
               'type' => 'object',
               'description' => 'The LOCKED project identity — the consistent look every scene shares ' \
-                               '(the director\'s decision). Descriptions in BRAZILIAN PORTUGUESE (they ' \
+                               '(the director\'s decision). Descriptions in the response language set in the system prompt (they ' \
                                'are shown to the user in the editor).',
               'properties' => {
                 'has_character' => { 'type' => 'boolean', 'description' => 'true = a recurring on-camera person/mascot/spokesperson; false = product/scenery/abstract (no character).' },
@@ -325,10 +325,10 @@ module Prompts
                 'properties' => {
                   'camera' => { 'type' => 'string', 'description' => 'CINEMATOGRAPHY only, in English: ONE dominant camera movement + shot type + framing (e.g. "slow push-in, medium close-up" or "static locked-off wide shot"). Keep it SEPARATE from what the subject does — never mix camera motion and subject motion. Always give a camera; use "static locked-off" for a still shot.' },
                   'prompt' => { 'type' => 'string', 'description' => 'The VISUAL narrative in English, written in this order: SUBJECT → ACTION → SETTING → STYLE (lighting/mood/grade). Do NOT put camera moves here (use "camera"), no spoken lines, no lettering.' },
-                  'dialogue' => { 'type' => 'string', 'description' => 'EXACT spoken line(s) of the scene, Brazilian Portuguese, final wording — spoken verbatim (dubbed in a fixed voice). Empty/omitted = no speech in the scene.' },
+                  'dialogue' => { 'type' => 'string', 'description' => 'EXACT spoken line(s) of the scene, the response language set in the system prompt, final wording — spoken verbatim (dubbed in a fixed voice). Empty/omitted = no speech in the scene.' },
                   'sound_effects' => { 'type' => 'string', 'description' => 'DIEGETIC sound the model should GENERATE for this scene, in English (e.g. "laser blasts, explosions and spaceship engines" or "footsteps on gravel, wind"). Empty/omitted = the model generates NO sound. NEVER put music here.' },
-                  'on_screen_text' => { 'type' => 'string', 'description' => 'EXACT on-screen text, Brazilian Portuguese, correctly spelled. Empty/omitted = a text-free scene (the default).' },
-                  'caption' => { 'type' => 'string', 'description' => 'Short scene summary in Brazilian Portuguese (for the editor).' },
+                  'on_screen_text' => { 'type' => 'string', 'description' => 'EXACT on-screen text, the response language set in the system prompt, correctly spelled. Empty/omitted = a text-free scene (the default).' },
+                  'caption' => { 'type' => 'string', 'description' => 'Short scene summary in the response language set in the system prompt (for the editor).' },
                   'duration_seconds' => { 'type' => 'integer', 'description' => 'The shot\'s intended length in seconds (any value, sized to its beat / spoken line — the system renders a clip and trims to this). Omit for an even split.' },
                   'continues_previous' => { 'type' => 'boolean', 'description' => 'true (default) = continues the previous shot seamlessly from its final frame; false = a CUT (new shot/scenario, same characters and world, does NOT start from the previous frame). Ignored for the first scene.' }
                 }
@@ -340,6 +340,9 @@ module Prompts
     end
 
     private
+
+    # Output speaks to the client's social-media audience.
+    def content_prompt? = true
 
     # A citation example matched to the FIRST reference's actual role, so the
     # hint never says "the product from img_avatar_v1". Falls back to a neutral

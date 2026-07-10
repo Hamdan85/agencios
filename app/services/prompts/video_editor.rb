@@ -10,10 +10,13 @@ module Prompts
   # tweak is free (no re-render).
   #
   # System/tool text is ENGLISH (code); the user-facing chat reply is produced in
-  # PT-BR, per the language rules.
+  # the response language, per the language rules.
   #
   # Context key: creative (the video Creative being edited).
   class VideoEditor < Base
+    # Output speaks to the client's social-media audience.
+    def content_prompt? = true
+
     EDIT_TOOL = 'video_edit'
 
     def system
@@ -46,7 +49,7 @@ module Prompts
         - Do NOT interrogate: a couple of good questions is enough. As soon as you
           have enough to make a great video — OR the user tells you to go ("pode
           gerar", "gera", "manda ver") — use action "generate": pass a consolidated
-          "brief" (everything you gathered, in English) and a short PT-BR "message".
+          "brief" (everything you gathered, in English) and a short "message" in #{workspace_language}.
           Generating COSTS credits (see the context) — if the user can't afford it,
           say so instead of generating.
         - While interviewing, use action "reply" (a question/answer). NEVER use
@@ -144,7 +147,7 @@ module Prompts
           triggers the render. Replying "done!" without editing does NOTHING.
 
         Your reply to the user (the "message" field):
-        - BRAZILIAN PORTUGUESE, natural and short, like a human editor: say WHAT
+        - #{workspace_language}, natural and short, like a human editor: say WHAT
           you are changing in the video (e.g. "Beleza, vou refazer a abertura mais
           rápida e luminosa.").
         - NEVER mention internal mechanics: no "prompt", "English", "fps",
@@ -164,7 +167,7 @@ module Prompts
           SETTING → STYLE. No camera moves here (use "camera"), no spoken lines,
           no lettering. You receive each scene's FULL current prompt — to change
           one thing and keep the rest, rewrite it whole.
-        - "dialogue": the EXACT spoken line(s), Brazilian Portuguese, final
+        - "dialogue": the EXACT spoken line(s), #{response_language}, final
           wording — spoken verbatim (dubbed in a fixed voice). Empty string =
           remove the speech. Omit = keep the current dialogue.
         - "sound_effects": the DIEGETIC sound the model should GENERATE for the
@@ -173,7 +176,7 @@ module Prompts
           barulho dos passos") or the scene clearly needs it. Empty string = no
           model-generated sound; omit = keep. NEVER put music here (music is a
           separate post track — use action "music").
-        - "on_screen_text": the EXACT lettering, Brazilian Portuguese, correctly
+        - "on_screen_text": the EXACT lettering, #{response_language}, correctly
           spelled. Empty string = a text-free scene. Omit = keep the current
           text. Only use text that genuinely serves the message.
         - Write each scene as the NEXT BEAT that continues the previous scene
@@ -229,7 +232,7 @@ module Prompts
             },
             'message' => {
               'type' => 'string',
-              'description' => 'Your reply to the user, short and in Brazilian Portuguese ' \
+              'description' => 'Your reply to the user, short and in the response language set in the system prompt ' \
                                '(what you will do, or your question).'
             },
             'brief' => {
@@ -281,10 +284,10 @@ module Prompts
                   'scene' => { 'type' => 'integer', 'description' => 'Scene number as the user sees it, starting at 1.' },
                   'camera' => { 'type' => 'string', 'description' => 'CINEMATOGRAPHY only, English: ONE dominant camera move + shot type + framing ("slow push-in, medium close-up"; "static locked-off wide"). Separate from subject motion. Omit to keep; re-renders.' },
                   'prompt' => { 'type' => 'string', 'description' => 'The scene\'s FULL new VISUAL narrative, English, ordered SUBJECT → ACTION → SETTING → STYLE (re-renders it). No camera moves (use "camera"), no spoken lines or lettering.' },
-                  'dialogue' => { 'type' => 'string', 'description' => 'EXACT spoken line(s), Brazilian Portuguese, spoken verbatim (re-renders). Empty string removes the speech; omit to keep.' },
+                  'dialogue' => { 'type' => 'string', 'description' => 'EXACT spoken line(s), the response language set in the system prompt, spoken verbatim (re-renders). Empty string removes the speech; omit to keep.' },
                   'sound_effects' => { 'type' => 'string', 'description' => 'DIEGETIC sound the model should GENERATE for this scene, in English (e.g. "explosions and laser fire", "footsteps, wind"). Empty string = a scene with no model-generated sound; omit to keep. NEVER music. (re-renders)' },
-                  'on_screen_text' => { 'type' => 'string', 'description' => 'EXACT on-screen text, Brazilian Portuguese (re-renders). Empty string makes the scene text-free; omit to keep.' },
-                  'caption' => { 'type' => 'string', 'description' => 'Short label shown in the editor UI only (Brazilian Portuguese). NEVER appears in the video and does not render anything.' },
+                  'on_screen_text' => { 'type' => 'string', 'description' => 'EXACT on-screen text, the response language set in the system prompt (re-renders). Empty string makes the scene text-free; omit to keep.' },
+                  'caption' => { 'type' => 'string', 'description' => 'Short label shown in the editor UI only (the response language set in the system prompt). NEVER appears in the video and does not render anything.' },
                   'restyle' => { 'type' => 'boolean', 'description' => 'true ONLY when the user wants a genuinely NEW look for this scene; otherwise the re-render keeps the current footage as visual reference.' },
                   'add' => { 'type' => 'boolean', 'description' => 'true to INSERT a NEW scene AT this number (existing scenes shift down). Requires "prompt". Charged like a render.' },
                   'move_to' => { 'type' => 'integer', 'description' => 'New number for this scene (reorder only — nothing re-renders; free).' },

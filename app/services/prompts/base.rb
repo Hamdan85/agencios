@@ -60,6 +60,14 @@ module Prompts
 
     def content_prompt? = false
 
+    # The workspace TEAM's language — for prompt output that speaks to the
+    # editor/user (chat messages, editor captions), regardless of the content
+    # audience language.
+    def workspace_language
+      code = workspace&.locale.presence || 'pt-BR'
+      LANGUAGE_NAMES[code.to_s] || code.to_s
+    end
+
     # The standard output-language directive injected into every system prompt in
     # place of the old hardcoded "responda em português".
     def language_directive

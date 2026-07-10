@@ -9,7 +9,7 @@ module Prompts
         recomendação clara (repetir / iterar / aposentar).
         #{positioning_block}
 
-        Responda em português do Brasil e APENAS com HTML simples (sem markdown,
+        Responda em #{response_language} e APENAS com HTML simples (sem markdown,
         sem cercas de código), usando somente estas tags: <h3> para os títulos das
         seções, <p> para parágrafos, <ul>/<li> para listas e <strong> para
         destaques. Não inclua <html>, <head> ou <body> — apenas o conteúdo.

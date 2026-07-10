@@ -8,7 +8,7 @@ module Prompts
   # for THIS client and THIS setup, not generically.
   #
   # System/tool text is ENGLISH (code); the improved prompt itself is produced
-  # in PT-BR — it lands back in the user's input field as editable content.
+  # in the response language — it lands back in the user's input field as editable content.
   #
   # Context keys: mode ('avatar' | 'product'), aspect_ratio, duration,
   # with_audio (bool), voice, reference_count (int), has_logo (bool),
@@ -46,7 +46,7 @@ module Prompts
           or features.
         - On-screen text: only suggest it when it is short, real and correctly
           spelled — otherwise suggest none.
-        - Write the improved prompt in BRAZILIAN PORTUGUESE — it goes back into
+        - Write the improved prompt in #{response_language} — it goes back into
           the user's input field as editable text.
         - At most #{context[:max_chars].to_i} characters. No headings, no bullet
           lists, no surrounding quotes — just the prompt text, 1–3 short
@@ -65,7 +65,7 @@ module Prompts
           'properties' => {
             'prompt' => {
               'type' => 'string',
-              'description' => 'The improved prompt, in Brazilian Portuguese, ready to replace the draft.'
+              'description' => 'The improved prompt, in the response language set in the system prompt, ready to replace the draft.'
             }
           }
         }

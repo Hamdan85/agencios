@@ -11,7 +11,7 @@ module Prompts
         sem negrito (**), sem títulos (#) e sem qualquer formatação. Apenas o
         texto da tarefa em cada linha.
         #{positioning_block}
-        Português do Brasil.
+        #{response_language}.
       SYS
     end
 

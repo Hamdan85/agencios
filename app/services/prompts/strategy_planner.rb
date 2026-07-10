@@ -270,7 +270,7 @@ module Prompts
           ticket é criado — o plano é só o esqueleto: título, formato, canais,
           prioridade e data.
 
-        Responda sempre em português do Brasil, de forma direta e profissional.
+        Responda sempre em #{response_language}, de forma direta e profissional.
       SYS
     end
 

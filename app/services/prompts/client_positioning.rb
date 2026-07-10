@@ -36,7 +36,7 @@ module Prompts
           "guardrails": "assuntos ou abordagens a evitar",
           "statement": "um parágrafo no estilo: Para <público> que <necessidade>, <marca> é <categoria> que <benefício>, diferente de <alternativa> porque <diferencial>"
         }
-        Use português do Brasil. Se um campo não puder ser inferido, devolva string vazia
+        Use #{response_language}. Se um campo não puder ser inferido, devolva string vazia
         (ou lista vazia para content_pillars).
       SYS
     end
