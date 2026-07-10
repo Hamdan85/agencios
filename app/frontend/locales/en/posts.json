@@ -1,0 +1,95 @@
+{
+  "header": {
+    "title": "Posts",
+    "description": "Everything scheduled and published, with performance per network."
+  },
+  "tabs": {
+    "posts": "Posts",
+    "performance": "Performance"
+  },
+  "loadMore": {
+    "loading": "Loading…",
+    "button": "Load more"
+  },
+  "show": {
+    "back": "Posts",
+    "notFound": {
+      "title": "Post not found",
+      "description": "It may have been removed, or you don't have access to this workspace."
+    },
+    "noCreativePreview": "No creative preview",
+    "caption": "Caption"
+  },
+  "detail": {
+    "fallbackTitle": "Post",
+    "clientFallback": "Client",
+    "campaignFallback": "Campaign",
+    "viewTicket": "View ticket",
+    "viewOn": "View on {{network}}",
+    "scheduledFor": "Scheduled for {{date}}",
+    "publishedAgo": "Published {{time}}",
+    "unpublishedAgo": "Unpublished {{time}}",
+    "failed": "The post failed to publish"
+  },
+  "metrics": {
+    "sharesShort": "Shares",
+    "savesShort": "Saves"
+  },
+  "performance": {
+    "noMetrics": {
+      "title": "No metrics yet",
+      "description": "Metrics show up here as soon as the post goes live and syncs with the network."
+    },
+    "metricsTitle": "Metrics",
+    "syncedAgo": "Synced {{time}}",
+    "engagementRate": "Engagement rate",
+    "interactions": "{{value}} interactions",
+    "overReach": "over {{value}} reached",
+    "engagementTitle": "Engagement",
+    "engagementHint": "How people interacted",
+    "interactionsUnit": "interactions",
+    "evolutionTitle": "Over time",
+    "evolutionHint": "Views, engagement and reach over time"
+  },
+  "list": {
+    "empty": {
+      "title": "No posts",
+      "description": "No posts match this filter."
+    },
+    "scheduledAt": "Scheduled · {{date}}",
+    "noCampaign": "No campaign",
+    "awaitingMetrics": "Waiting for metrics"
+  },
+  "filters": {
+    "client": "Client",
+    "campaign": "Campaign",
+    "network": "Network",
+    "status": "Status",
+    "period": "Period",
+    "last7Days": "Last 7 days",
+    "last30Days": "Last 30 days",
+    "last90Days": "Last 90 days"
+  },
+  "sort": {
+    "label": "Sort",
+    "recent": "Newest first",
+    "oldest": "Oldest first",
+    "views": "Most views",
+    "engagement": "Most engagement"
+  },
+  "performanceTab": {
+    "empty": {
+      "title": "No performance data",
+      "description": "Publish content to start tracking reach, views, and engagement here."
+    },
+    "rateSub": "engagement / reach",
+    "trend": "Trend",
+    "byNetwork": "By network",
+    "byFormat": "By format",
+    "byCampaign": "By campaign",
+    "topPosts": "Top posts",
+    "noPostsInPeriod": "No posts in this period",
+    "engagementShort": "{{value}} eng.",
+    "openOnNetwork": "Open on the network"
+  }
+}

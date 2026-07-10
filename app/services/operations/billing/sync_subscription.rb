@@ -103,7 +103,7 @@ module Operations
           workspace: workspace,
           amount: read(metadata, :credits).to_i,
           reference: read(session, :id),
-          description: "Compra de créditos — pacote #{read(metadata, :pack)}"
+          description_key: 'credits.ledger.pack_purchase', description_params: { pack: read(metadata, :pack) }
         )
         # Credit-pack revenue — server-only (a Stripe checkout webhook).
         track_billing('credit_pack_purchased', workspace,
@@ -122,7 +122,7 @@ module Operations
           workspace: subscription.workspace,
           amount: amount,
           expires_at: subscription.current_period_end || 1.month.from_now,
-          description: "Créditos mensais do plano #{subscription.plan}"
+          description_key: 'credits.ledger.plan_monthly_named', description_params: { plan: subscription.plan }
         )
       end
 

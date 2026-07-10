@@ -29,7 +29,7 @@ module Operations
             amount: @amount, granted_delta: @amount, purchased_delta: 0,
             balance_after: wallet.granted_balance + wallet.purchased_balance,
             expires_at: @expires_at,
-            description: @description || 'Créditos mensais do plano'
+            description: @description, description_key: (@description ? nil : 'credits.ledger.plan_monthly')
           )
           wallet
         end
@@ -50,7 +50,7 @@ module Operations
           kind: 'expire', bucket: 'granted',
           amount: -leftover, granted_delta: -leftover, purchased_delta: 0,
           balance_after: wallet.purchased_balance,
-          description: 'Créditos mensais não usados expirados'
+          description_key: 'credits.ledger.expired_unused'
         )
       end
     end

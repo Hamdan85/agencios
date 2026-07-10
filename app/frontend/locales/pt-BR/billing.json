@@ -1,0 +1,199 @@
+{
+  "page": {
+    "eyebrow": "Plano",
+    "title": "Assinatura",
+    "description": "Gerencie o plano da sua agência no agencios."
+  },
+  "subscriptionStatus": {
+    "active": "Ativo",
+    "trialing": "Em teste",
+    "past_due": "Pagamento pendente",
+    "canceled": "Cancelado",
+    "incomplete": "Incompleto"
+  },
+  "plan": {
+    "currentBadge": "Plano atual",
+    "save": "Economize {{percent}}%",
+    "perMonth": "/mês",
+    "annualBilledYearly": "{{price}}/ano · cobrado anualmente",
+    "seats_one": "{{count}} assento",
+    "seats_other": "{{count}} assentos",
+    "yours": "Seu plano",
+    "switchToAnnual": "Mudar para anual",
+    "switchToMonthly": "Mudar para mensal",
+    "switchTo": "Mudar para {{name}}",
+    "subscribe": "Assinar {{name}}",
+    "monthly": "Mensal",
+    "annual": "Anual",
+    "cycleMonthly": "mensal",
+    "cycleAnnual": "anual"
+  },
+  "intervalToggle": {
+    "ariaLabel": "Ciclo de cobrança"
+  },
+  "costs": {
+    "video15s": "Vídeo 15s",
+    "perImage": "por imagem",
+    "perCarousel": "por carrossel",
+    "from15s": "a partir de · por 15s"
+  },
+  "credits": {
+    "title": "Créditos",
+    "included": "Incluso",
+    "count_one": "{{count}} crédito",
+    "count_other": "{{count}} créditos",
+    "balance": "Saldo disponível",
+    "unit": "créditos",
+    "fromPlan": "Do plano:",
+    "purchased": "Comprados:",
+    "expiresOn": "Créditos do plano expiram em {{date}}",
+    "buy": "Comprar"
+  },
+  "generationStatus": {
+    "queued": "Na fila",
+    "processing": "Processando",
+    "completed": "Concluído",
+    "failed": "Falhou"
+  },
+  "usage": {
+    "title": "Uso de créditos",
+    "ranges": {
+      "7d": "7 dias",
+      "30d": "30 dias",
+      "90d": "90 dias",
+      "12m": "12 meses"
+    },
+    "explainer": "<b>Vídeos, imagens e carrosséis</b> consomem créditos. <b>Textos e legendas com IA</b> são inclusos no plano — aparecem no uso, mas custam 0 créditos.",
+    "spent": "Créditos gastos",
+    "inPeriod": "no período",
+    "generations": "Gerações",
+    "generationsSub": "vídeos, imagens e carrosséis",
+    "added": "Créditos adicionados",
+    "addedSub": "{{granted}} do plano · {{purchased}} comprados",
+    "empty": {
+      "title": "Nenhum uso no período",
+      "description": "Gere vídeos, imagens ou carrosséis na produção dos tickets e o consumo aparece aqui."
+    },
+    "byKind": "Por tipo de criativo",
+    "generationCount_one": "{{count}} geração",
+    "generationCount_other": "{{count}} gerações",
+    "creditsShort": "{{value}} cr.",
+    "filters": {
+      "allKinds": "Todos os tipos",
+      "allStatuses": "Todos os status"
+    },
+    "chart": {
+      "creditsOverTime": "Créditos gastos ao longo do tempo",
+      "generationsOverTime": "Gerações ao longo do tempo",
+      "emptyCredits": "Nenhum crédito gasto no período.",
+      "emptyGenerations": "Nenhuma geração no período.",
+      "unitCredits": "cr.",
+      "unitGenerations": "ger.",
+      "tooltip": "{{date}} · Total {{total}} {{unit}}",
+      "total": "Total"
+    },
+    "recent": {
+      "title": "Gerações recentes",
+      "emptyFiltered": "Nenhuma geração com esses filtros.",
+      "pageInfo": "{{from}}–{{to}} de {{total}}",
+      "prev": "Anterior",
+      "next": "Próxima"
+    }
+  },
+  "seatOverage": "O workspace tem {{count}} membros, e o plano atual permite até {{limit}}. Remova membros ou faça upgrade — novos tickets e campanhas estão bloqueados enquanto isso.",
+  "trial": {
+    "active": "Período de teste ativo",
+    "endsOn": "— termina em {{date}}",
+    "description": "Os créditos mensais do plano serão liberados quando o período de teste terminar. Precisa gerar antes? Você já pode comprar packs de créditos avulsos abaixo."
+  },
+  "cancelBanner": {
+    "message": "Assinatura será cancelada em {{date}}.",
+    "reactivate": "Reativar"
+  },
+  "tabs": {
+    "plan": "Plano & créditos",
+    "usage": "Uso"
+  },
+  "currentPlan": {
+    "seats": "Assentos",
+    "nextRenewal": "Próxima renovação",
+    "access": "Acesso",
+    "granted": "Liberado",
+    "restricted": "Restrito"
+  },
+  "plans": {
+    "title": "Planos"
+  },
+  "manage": {
+    "title": "Gerenciar pagamento",
+    "description": "Atualize forma de pagamento e veja faturas no portal Stripe.",
+    "portal": "Gerenciar no portal",
+    "cancel": "Cancelar assinatura",
+    "confirmCancel": {
+      "title": "Cancelar assinatura?",
+      "description": "Sua assinatura continua ativa até o fim do período atual e não será renovada.",
+      "keep": "Manter assinatura"
+    }
+  },
+  "confirmChange": {
+    "titleChange": "Confirmar mudança de plano",
+    "titleSubscribe": "Confirmar assinatura",
+    "priceMonthly": "{{price}}/mês",
+    "priceAnnual": "{{price}}/mês (cobrado anualmente)",
+    "descriptionChange": "Mudar para o plano {{name}} ({{cycle}}), {{price}}. A diferença é ajustada proporcionalmente na sua próxima fatura (proração).",
+    "descriptionSubscribe": "Assinar o plano {{name}} ({{cycle}}), {{price}}. Você será levado ao pagamento seguro do Stripe.",
+    "confirm": "Confirmar mudança",
+    "goToPayment": "Ir para o pagamento"
+  },
+  "paywall": {
+    "settings": "Configurações",
+    "logout": "Sair",
+    "mostPopular": "Mais popular",
+    "creditsPerMonth": "{{count}} créditos/mês",
+    "billedOncePerYear": "Cobrado uma vez por ano",
+    "activateWorkspace": "Ative seu workspace",
+    "chooseTitle": "Escolha um plano para começar",
+    "noActivePlan": "Sua conta{{workspaceSuffix}} ainda não tem um plano ativo. Assine para liberar o quadro, o estúdio de criação e todas as integrações.",
+    "trialDays": "{{count}} dias de teste",
+    "cardRequired": "Cartão obrigatório para iniciar",
+    "prepaidCredits": "Créditos pré-pagos para vídeo e imagem",
+    "footer": "Sem plano gratuito. Vídeos, imagens e carrosséis consomem créditos (1 crédito = R$ 1); textos e legendas com IA são inclusos. Cancele quando quiser."
+  },
+  "invoiceForm": {
+    "title": "Nova cobrança",
+    "description": "Registre uma cobrança para um cliente. Depois você pode gerar um link de pagamento ou marcá-la como paga.",
+    "created": "Cobrança criada!",
+    "sending": "Enviando…",
+    "resendToClient": "Reenviar ao cliente",
+    "sendToClient": "Enviar ao cliente",
+    "close": "Fechar",
+    "client": "Cliente",
+    "clientPlaceholder": "Selecione o cliente",
+    "amount": "Valor",
+    "dueDate": "Vencimento",
+    "dueDatePlaceholder": "Selecione o vencimento",
+    "descriptionLabel": "Descrição",
+    "descriptionPlaceholder": "Serviços prestados…",
+    "projects": "Campanhas (opcional)",
+    "paymentLink": {
+      "title": "Gerar com link de pagamento",
+      "description": "Gera o link no Mercado Pago e envia por e-mail ao cliente."
+    },
+    "cancel": "Cancelar",
+    "submitting": "Registrando…",
+    "submit": "Registrar cobrança"
+  },
+  "toasts": {
+    "taskUpdateError": "Erro ao atualizar tarefa.",
+    "workspaceCreated": "Workspace criado!",
+    "workspaceCreateError": "Erro ao criar workspace.",
+    "workspaceUpdated": "Workspace atualizado!",
+    "genericError": "Erro.",
+    "inviteGenerated": "Convite gerado!",
+    "inviteError": "Erro ao convidar.",
+    "accessRevoked": "Acesso revogado.",
+    "accessRevokeError": "Erro ao revogar acesso.",
+    "newUrlGenerated": "Nova URL gerada. A anterior foi invalidada.",
+    "newUrlError": "Erro ao gerar nova URL."
+  }
+}

@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { useTranslation, Trans } from 'react-i18next'
 import { CheckCircle2, PartyPopper } from 'lucide-react'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
@@ -16,6 +17,7 @@ import RequestChangesDialog from '@/components/approval/RequestChangesDialog'
 // Per-client approval portal. Mobile: a no-scroll deck (one ticket at a time).
 // Desktop: a queue index (all pending tickets + scope) beside the focused ticket.
 export default function ApprovalShow() {
+  const { t } = useTranslation('portal')
   const { token } = useParams()
   const { data, isLoading, isError } = usePublicApproval(token)
   const qc = useQueryClient()
@@ -42,7 +44,7 @@ export default function ApprovalShow() {
   if (isError || !data) {
     return <Shell accent={accent} fg={fg} agency={agency}>
       <div className="flex flex-1 items-center justify-center px-6 text-center text-ink-muted">
-        Este link não é mais válido. Fale com sua agência para receber um novo.
+        {t('shell.linkInvalid')}
       </div>
     </Shell>
   }
@@ -56,12 +58,12 @@ export default function ApprovalShow() {
       decidedRef.current += 1
       burstConfetti(accent)
       if (navigator.vibrate) navigator.vibrate(15)
-      toast.success('Conteúdo aprovado ✓', {
+      toast.success(t('toasts.approved'), {
         action: {
-          label: 'Desfazer',
+          label: t('toasts.undo'),
           onClick: async () => {
             try { const undone = await approvalsApi.undo(token, ticketId); decidedRef.current -= 1; setFocusId(ticketId); setQueue(undone) }
-            catch (e) { toast.error(e?.error || 'Não foi possível desfazer.') }
+            catch (e) { toast.error(e?.error || t('toasts.undoError')) }
           },
         },
       })
@@ -75,7 +77,7 @@ export default function ApprovalShow() {
     try {
       const res = await approvalsApi.approveSlot(token, ticketId, { creativeType, creativeId })
       reconcile(res, ticketId, { celebrate: true })
-    } catch (e) { toast.error(e?.error || 'Erro ao aprovar.') }
+    } catch (e) { toast.error(e?.error || t('toasts.approveError')) }
     finally { setBusy(false) }
   }
 
@@ -86,8 +88,8 @@ export default function ApprovalShow() {
       const res = await approvalsApi.requestChanges(token, ticketId, { creativeId, feedback })
       setChangesFor(null)
       reconcile(res, ticketId)
-      toast.success('Enviamos seu feedback à equipe 👍')
-    } catch (e) { toast.error(e?.error || 'Erro ao enviar.') }
+      toast.success(t('toasts.feedbackSent'))
+    } catch (e) { toast.error(e?.error || t('toasts.sendError')) }
     finally { setBusy(false) }
   }
 
@@ -136,6 +138,7 @@ export default function ApprovalShow() {
 }
 
 function Shell({ accent, fg, agency, progress, children }) {
+  const { t } = useTranslation('portal')
   return (
     <div className="flex h-dvh flex-col overflow-hidden" style={{ background: tint(accent, 6), '--agency': accent }}>
       <header className="shrink-0 px-5 py-3.5" style={{ background: accent, color: fg }}>
@@ -144,7 +147,7 @@ function Shell({ accent, fg, agency, progress, children }) {
             ? <img src={agency.logo_url} alt={agency.name} className="size-9 rounded-lg bg-white object-cover" />
             : <div className="flex size-9 items-center justify-center rounded-lg bg-white/20 font-bold">{agency.name?.[0] || 'A'}</div>}
           <span className="font-display text-base font-bold">{agency.name}</span>
-          {progress && <span className="ml-auto text-sm font-medium opacity-90">Conteúdo {progress.position} de {progress.total}</span>}
+          {progress && <span className="ml-auto text-sm font-medium opacity-90">{t('progress.counter', { position: progress.position, total: progress.total })}</span>}
         </div>
         {progress && (
           <div className="mx-auto mt-2.5 h-1 max-w-5xl overflow-hidden rounded-full bg-black/15">
@@ -158,7 +161,7 @@ function Shell({ accent, fg, agency, progress, children }) {
 
       <footer className="shrink-0 py-2 text-center">
         <a href="https://agencios.app" target="_blank" rel="noreferrer" className="text-[11px] font-medium text-ink-faint hover:text-ink-muted">
-          feito com <span style={{ color: '#7C3AED' }}>✳</span> Agencios
+          <Trans t={t} i18nKey="shell.madeWith" components={{ star: <span style={{ color: '#7C3AED' }} /> }} />
         </a>
       </footer>
     </div>
@@ -166,16 +169,17 @@ function Shell({ accent, fg, agency, progress, children }) {
 }
 
 function Terminal({ done, count, agency, accent }) {
+  const { t } = useTranslation('portal')
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
       <div className="flex size-20 items-center justify-center rounded-full" style={{ background: `${accent}18`, color: accent }}>
         {done ? <PartyPopper size={40} /> : <CheckCircle2 size={40} />}
       </div>
-      <h1 className="mt-5 font-display text-2xl font-extrabold text-ink">{done ? 'Tudo aprovado!' : 'Nada pendente por aqui'}</h1>
+      <h1 className="mt-5 font-display text-2xl font-extrabold text-ink">{done ? t('terminal.allApprovedTitle') : t('terminal.nothingPendingTitle')}</h1>
       <p className="mt-2 max-w-sm text-ink-muted">
         {done
-          ? `Você revisou ${count} ${count === 1 ? 'conteúdo' : 'conteúdos'}. A equipe da ${agency.name} já foi avisada. ✨`
-          : 'Tudo em dia! Avisaremos assim que houver algo novo para revisar.'}
+          ? t('terminal.doneBody', { count, agency: agency.name })
+          : t('terminal.upToDate')}
       </p>
     </div>
   )

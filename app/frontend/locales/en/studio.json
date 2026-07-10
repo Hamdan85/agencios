@@ -1,0 +1,177 @@
+{
+  "dialog": {
+    "carousel": {
+      "title": "Generate Carousel",
+      "description": "A viral carousel from an idea, text or link — copy, slides and brand identity."
+    },
+    "video": {
+      "title": "New video",
+      "description": "Give us the essentials and generate a draft — style, references and tweaks happen by chatting in the editor."
+    },
+    "image": {
+      "title": "Generate Image",
+      "description": "An original image from your creative prompt."
+    },
+    "clientLabel": "Client",
+    "clientPlaceholder": "Which client is this for?",
+    "clientEmpty": "Create a client first.",
+    "brandLabel": "Brand",
+    "cancel": "Cancel",
+    "submitVideo": "Continue in the editor",
+    "submitGenerate": "Generate now"
+  },
+  "carousel": {
+    "sourceLabel": "Content source",
+    "source": {
+      "idea": "Idea",
+      "text": "Text",
+      "link": "Link"
+    },
+    "ideaLabel": "Idea / topic",
+    "ideaPlaceholder": "E.g.: 5 mistakes when starting out in content marketing",
+    "textLabel": "Source text",
+    "textPlaceholder": "Paste the text (article, script, notes) to turn into a carousel…",
+    "linkLabel": "Link",
+    "linkPlaceholder": "https://example.com/article",
+    "slidesLabel": "Slide count",
+    "slidesAuto": "Automatic",
+    "slidesCount": "{{count}} slides",
+    "objectiveLabel": "Objective",
+    "objective": {
+      "engagement": "Engagement",
+      "reach": "Reach",
+      "conversion": "Conversion",
+      "education": "Education"
+    }
+  },
+  "video": {
+    "briefLabel": "What's the video about?",
+    "briefPlaceholder": "Describe the video: who/what appears, what it should say, the vibe. You can paste a script. Fine-tune the rest by chatting in the editor.",
+    "referencesLabel": "References (optional)",
+    "referencesHint": "Up to {{max}} — say what each file is so the video uses it the right way.",
+    "formatLabel": "Format",
+    "durationLabel": "Duration",
+    "duration": {
+      "short": "Short",
+      "medium": "Medium",
+      "long": "Long"
+    },
+    "soundLabel": "Sound",
+    "sound": {
+      "on": "With sound",
+      "onHint": "speech + ambient",
+      "off": "No sound",
+      "offHint": "silent"
+    }
+  },
+  "image": {
+    "promptLabel": "Prompt",
+    "promptPlaceholder": "Describe the image you want to generate — style, scene, colors, mood…",
+    "referencesLabel": "Reference images (optional)",
+    "referencesHint": "Up to {{max}} — a reference style, object or composition."
+  },
+  "improve": {
+    "title": "Improve this prompt",
+    "improving": "Improving…",
+    "typing": "Writing…",
+    "cta": "Improve",
+    "error": "Couldn't improve the prompt. Try again."
+  },
+  "refs": {
+    "maxPhotos": "Maximum of {{max}} photos.",
+    "uploadError": "Couldn't upload the photo. Try another image (JPG, PNG or WEBP).",
+    "alt": "Reference",
+    "remove": "Remove",
+    "describePlaceholder": "What is this file? (e.g.: product photo, character, style…)",
+    "add": "Add reference",
+    "imageTile": "Image"
+  },
+  "generating": {
+    "openingEditor": "Opening the editor…",
+    "title": "Generating {{kind}}…",
+    "videoBody": "I'll ask a few questions to get the video just right.",
+    "body": "The AI is creating your creative. This takes a few moments."
+  },
+  "success": {
+    "title": "Generation sent!",
+    "body": "Track the progress under “Recent generations”."
+  },
+  "generatorCard": {
+    "cta": "Generate with AI"
+  },
+  "page": {
+    "eyebrow": "Creation",
+    "title": "Studio",
+    "description": "Generate AI creatives on-brand for each client and manage your library."
+  },
+  "generators": {
+    "carousel": {
+      "title": "Carousel",
+      "subtitle": "Viral · idea, text or link"
+    },
+    "video": {
+      "title": "Video",
+      "subtitle": "Talking avatar or product from photos"
+    },
+    "image": {
+      "title": "Image",
+      "subtitle": "An original image from a prompt"
+    }
+  },
+  "gallery": {
+    "searchPlaceholder": "Search by name or caption…",
+    "filterType": "Type",
+    "filterClient": "Client",
+    "empty": {
+      "title": "No creatives yet",
+      "description": "Generate a carousel, video or image with AI using the generators above."
+    },
+    "status": {
+      "generating": "Generating…",
+      "failed": "Failed"
+    },
+    "view": "View {{type}}",
+    "aiBadge": "AI",
+    "remove": "Remove",
+    "deleteTitle": "Delete creative?",
+    "deleteDescription": "This action cannot be undone.",
+    "deleteConfirm": "Delete"
+  },
+  "toasts": {
+    "generateStartedVideo": "Generation started ✨",
+    "generateDone": "Generation complete ✨",
+    "generateError": "Error generating creative.",
+    "creativeUpdated": "Creative updated.",
+    "creativeUpdateError": "Error updating creative.",
+    "creativeRemoved": "Creative removed.",
+    "creativeRemoveError": "Error removing creative."
+  },
+  "videoEditor": {
+    "openError": "Couldn't open the video editor.",
+    "sceneRedoing": "Redoing the scene…",
+    "sceneUpdated": "Scene updated",
+    "sceneEditError": "Couldn't edit the scene.",
+    "finalizeStarted": "Generating in high quality ✨",
+    "finalizeError": "Couldn't start the upgrade.",
+    "chatError": "Couldn't talk to the editor.",
+    "musicUpdated": "Soundtrack updated ✨",
+    "assetRegenerated": "Element regenerated ✨",
+    "assetRegenerateError": "Couldn't regenerate the element.",
+    "assetAdded": "Element added ✨",
+    "assetAddError": "Couldn't add the element.",
+    "assetRemoved": "Element removed",
+    "assetRemoveError": "Couldn't remove the element."
+  },
+  "strategy": {
+    "startError": "Error starting the planning session.",
+    "applySuccess": "{{count}} ticket(s) created from the strategy ✨",
+    "applySuccessNoTickets": "Changes applied to the campaign ✨",
+    "applyError": "Error applying the plan.",
+    "discarded": "Plan discarded.",
+    "discardError": "Error discarding the plan.",
+    "buildFailed": "I couldn't put the plan together right now. Try asking again.",
+    "fallbackReply": "Got it! Let me put this together and I'll bring you the proposal.",
+    "chatError": "Strategy chat error.",
+    "errorBubble": "⚠️ Something went wrong. Try again."
+  }
+}

@@ -1,4 +1,5 @@
 import { useParams, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Hash, ImageOff } from 'lucide-react'
 import { Page } from '@/components/ui/page'
 import { Card } from '@/components/ui/card'
@@ -21,6 +22,7 @@ function splitCaption(caption) {
 // performance panel (metric tiles + engagement donut + evolution chart).
 // Reached from the /publicacoes grid.
 export default function PostShow() {
+  const { t } = useTranslation('posts')
   const { id } = useParams()
   const { data: post, isLoading } = usePost(id)
 
@@ -38,12 +40,12 @@ export default function PostShow() {
     return (
       <Page>
         <Link to="/publicacoes" className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-ink-muted transition hover:text-ink">
-          <ArrowLeft size={16} /> Publicações
+          <ArrowLeft size={16} /> {t('show.back')}
         </Link>
         <EmptyState
           icon={ImageOff}
-          title="Publicação não encontrada"
-          description="Ela pode ter sido removida ou você não tem acesso a este workspace."
+          title={t('show.notFound.title')}
+          description={t('show.notFound.description')}
         />
       </Page>
     )
@@ -54,7 +56,7 @@ export default function PostShow() {
   return (
     <Page>
       <Link to="/publicacoes" className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-ink-muted transition hover:text-ink">
-        <ArrowLeft size={16} /> Publicações
+        <ArrowLeft size={16} /> {t('show.back')}
       </Link>
 
       <PostDetailHeader post={post} />
@@ -66,13 +68,13 @@ export default function PostShow() {
             <CreativeExperience creative={post.creative} />
           ) : (
             <div className="flex aspect-square w-full items-center justify-center rounded-2xl border border-border bg-surface-muted text-sm text-ink-muted">
-              Sem prévia do criativo
+              {t('show.noCreativePreview')}
             </div>
           )}
 
           {(body || tags.length > 0) && (
             <Card className="p-4 animate-rise">
-              <SectionLabel className="mb-2 tracking-wide">Legenda</SectionLabel>
+              <SectionLabel className="mb-2 tracking-wide">{t('show.caption')}</SectionLabel>
               {body && <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-ink-secondary">{body}</p>}
               {tags.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-1.5">

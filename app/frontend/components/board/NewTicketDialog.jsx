@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Sparkles, FolderOpen } from 'lucide-react'
 import { PRIORITY_META } from '@/lib/constants'
 import {
@@ -28,6 +29,7 @@ const EMPTY = {
 // `defaultProjectId` pre-selects the project (e.g. when opened from a project
 // view); the board passes none and the user picks one.
 export function NewTicketDialog({ open, onOpenChange, create, defaultProjectId }) {
+  const { t } = useTranslation('board')
   const initial = () => ({ ...EMPTY, project_id: defaultProjectId || '' })
   const [form, setForm] = useState(initial)
 
@@ -68,58 +70,58 @@ export function NewTicketDialog({ open, onOpenChange, create, defaultProjectId }
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <IconTile icon={Sparkles} size="sm" strokeWidth={2.3} />
-            Novo ticket
+            {t('newTicket')}
           </DialogTitle>
           <DialogDescription>
-            Comece pelo contexto. Tipo de criativo, canais e prazo são definidos depois, na etapa de Escopo.
+            {t('newDialog.description')}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={submit} className="space-y-4">
           {/* project */}
           <div className="space-y-1.5">
-            <Label htmlFor="nt-project">Campanha</Label>
+            <Label htmlFor="nt-project">{t('newDialog.campaignLabel')}</Label>
             <ProjectSelect
               id="nt-project"
               variant="field"
               value={form.project_id}
               onChange={(v) => set('project_id', v || '')}
-              placeholder="Selecione uma campanha"
-              emptyMessage="Crie uma campanha primeiro para abrir tickets."
+              placeholder={t('newDialog.campaignPlaceholder')}
+              emptyMessage={t('newDialog.campaignEmpty')}
               listParams={{ exclude_archived: true }}
             />
           </div>
 
           {/* title */}
           <div className="space-y-1.5">
-            <Label htmlFor="nt-title">Título</Label>
+            <Label htmlFor="nt-title">{t('newDialog.titleLabel')}</Label>
             <Input
               id="nt-title"
               autoFocus
               value={form.title}
               onChange={(e) => set('title', e.target.value)}
-              placeholder="Ex.: Lançamento — coleção de inverno"
+              placeholder={t('newDialog.titlePlaceholder')}
             />
           </div>
 
           {/* brief — the ideation context */}
           <div className="space-y-1.5">
-            <Label htmlFor="nt-brief">Brief / contexto</Label>
+            <Label htmlFor="nt-brief">{t('newDialog.briefLabel')}</Label>
             <Textarea
               id="nt-brief"
               rows={4}
               value={form.brief}
               onChange={(e) => set('brief', e.target.value)}
-              placeholder="Descreva o contexto, a mensagem e o tom desejado… (opcional, você pode evoluir na Ideação)"
+              placeholder={t('newDialog.briefPlaceholder')}
             />
           </div>
 
           {/* priority */}
           <div className="space-y-1.5">
-            <Label htmlFor="nt-priority">Prioridade</Label>
+            <Label htmlFor="nt-priority">{t('newDialog.priorityLabel')}</Label>
             <Select value={form.priority} onValueChange={(v) => set('priority', v)}>
               <SelectTrigger id="nt-priority" className="max-w-[220px]">
-                <SelectValue placeholder="Prioridade" />
+                <SelectValue placeholder={t('newDialog.priorityLabel')} />
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(PRIORITY_META).map(([key, m]) => (
@@ -135,9 +137,9 @@ export function NewTicketDialog({ open, onOpenChange, create, defaultProjectId }
           </div>
 
           <DialogFooter className="pt-2">
-            <Button type="button" variant="ghost" onClick={() => handleOpenChange(false)}>Cancelar</Button>
+            <Button type="button" variant="ghost" onClick={() => handleOpenChange(false)}>{t('newDialog.cancel')}</Button>
             <Button type="submit" disabled={create.isPending || !form.title.trim() || !form.project_id}>
-              {create.isPending ? 'Criando…' : (<><FolderOpen size={16} /> Criar ticket</>)}
+              {create.isPending ? t('newDialog.creating') : (<><FolderOpen size={16} /> {t('newDialog.create')}</>)}
             </Button>
           </DialogFooter>
         </form>

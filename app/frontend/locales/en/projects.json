@@ -1,0 +1,189 @@
+{
+  "status": {
+    "draft": "Draft",
+    "active": "Active",
+    "paused": "Paused",
+    "archived": "Archived",
+    "completed": "Completed"
+  },
+  "ticketsCount": "{{count}} tickets",
+  "index": {
+    "eyebrow": "Work",
+    "title": "Campaigns",
+    "description": "Each campaign groups a client's tickets.",
+    "newProject": "New campaign",
+    "searchPlaceholder": "Search campaigns…",
+    "filters": {
+      "clientLabel": "Client",
+      "statusLabel": "Status",
+      "allClients": "All clients",
+      "statusPlaceholder": "Status",
+      "allStatuses": "All statuses"
+    },
+    "emptyState": {
+      "noneTitle": "No campaigns yet",
+      "noneDescription": "Create your first campaign to organize the agency's work.",
+      "filteredTitle": "Nothing here",
+      "filteredDescription": "Adjust the filters to see campaigns."
+    }
+  },
+  "form": {
+    "createTitle": "New campaign",
+    "editTitle": "Edit campaign",
+    "description": "Group tickets under one of a client's campaigns.",
+    "client": "Client",
+    "clientPlaceholder": "Select a client",
+    "name": "Name",
+    "namePlaceholder": "E.g. Summer campaign",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Campaign goal and scope…",
+    "color": "Color",
+    "colorAria": "Color {{color}}",
+    "status": "Status",
+    "budget": "Budget (R$)",
+    "budgetPlaceholder": "0.00",
+    "startsOn": "Start",
+    "startsOnPlaceholder": "Start date",
+    "endsOn": "End",
+    "endsOnPlaceholder": "End date",
+    "settingsSection": "Settings",
+    "cancel": "Cancel",
+    "saving": "Saving…",
+    "save": "Save",
+    "create": "Create campaign"
+  },
+  "show": {
+    "back": "Campaigns",
+    "fallbackName": "Campaign",
+    "generatingAudit": "Generating audit…",
+    "auditFailed": "Audit generation failed",
+    "edit": "Edit",
+    "viewReport": "View report",
+    "start": "Start campaign",
+    "finalize": "Finish campaign",
+    "startBilling": "Start billing",
+    "moreActions": "More actions",
+    "reactivate": "Reactivate",
+    "archive": "Archive",
+    "delete": "Delete",
+    "score": "Score {{score}}/10",
+    "views": "{{value}} views",
+    "engagement": "{{value}} engagement",
+    "tabTickets": "Tickets",
+    "tabSettings": "Settings",
+    "ticketsHeading": "Tickets",
+    "newTicket": "New ticket",
+    "emptyFiltered": {
+      "title": "No tickets match the filters",
+      "description": "Adjust or clear the filters to see more of this campaign's tickets.",
+      "clear": "Clear filters"
+    },
+    "emptyNone": {
+      "title": "No tickets in this campaign",
+      "description": "Create this campaign's first ticket to start production."
+    }
+  },
+  "autopilot": {
+    "inProgress": "Autopilot in progress",
+    "progress_one": "{{done}} of {{count}} ticket",
+    "progress_other": "{{done}} of {{count}} tickets",
+    "failedCount": "{{count}} failed"
+  },
+  "plan": {
+    "opsToAdd": "{{count}} to add",
+    "opsToEdit": "{{count}} to edit",
+    "opsToRemove": "{{count}} to remove",
+    "none": "none",
+    "proposedChanges": "Proposed changes · {{summary}}",
+    "proposedReady": "Proposed plan ready · {{count}} tickets",
+    "reviewOrApplyRemoval": "Review in the chat or apply — includes removing a ticket.",
+    "reviewOrApply": "Review in the chat or apply it to the campaign.",
+    "reviewOrApplyCreate": "Review in the chat or apply to create the tickets.",
+    "discard": "Discard",
+    "review": "Review",
+    "applying": "Applying…",
+    "apply": "Apply"
+  },
+  "strategy": {
+    "title": "Plan content with AI",
+    "description": "Describe the content strategy. The strategist builds the tickets already scheduled, with estimated tasks.",
+    "close": "Close",
+    "emptyHint": "E.g. “1 reel and 2 carousels per week, starting next week.” Tell it the cadence and the period (a month, a campaign, ongoing…) — the strategist pulls the rest from the client's context.",
+    "newTicketsToAdd": "{{count}} new ticket(s) to add",
+    "planReady": "Plan ready · {{count}} tickets",
+    "additiveHint": "The new tickets appear dimmed next to the existing ones in the list. Review and add them below.",
+    "fullHint": "The proposed tickets appear in the campaign list (dimmed). Review and click approve below.",
+    "creatingTickets": "Creating tickets…",
+    "addTickets": "Add {{count}} ticket(s)",
+    "approveAndCreate": "Approve and create {{count}} tickets",
+    "applied": "Plan applied — watch the tickets appear in the campaign.",
+    "composerPlaceholder": "Reply to the strategist…  (Enter sends · Shift+Enter for a new line)"
+  },
+  "loader": {
+    "readingBrandContext": "Reading the brand context…",
+    "designingCadence": "Designing the month's cadence…",
+    "choosingHooks": "Picking the right hooks…",
+    "writingBriefs": "Writing the briefs…",
+    "schedulingPosts": "Scheduling the posts…",
+    "estimatingTasks": "Estimating the production tasks…",
+    "finishingTouches": "Adding the final touches…"
+  },
+  "settings": {
+    "weekdays": {
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun"
+    },
+    "requireApproval": {
+      "title": "Require client approval",
+      "description": "GO pauses in Production and the client receives the approval link by email."
+    },
+    "autoPublish": {
+      "title": "Publish after approval",
+      "description": "Once every creative is approved, the post is scheduled automatically."
+    },
+    "postingWindow": {
+      "title": "Posting window",
+      "times": "Times (comma-separated)",
+      "minGap": "Minimum gap between posts (min)"
+    },
+    "save": "Save settings"
+  },
+  "scope": {
+    "title": "Send scope to client",
+    "description": "Emails a summary of the campaign's tickets (names, types and dates) — no internal details.",
+    "recipients": "Recipients",
+    "recipientsPlaceholder": "email@client.com",
+    "recipientsHint": "Up to 4 emails. Press Enter or comma to add.",
+    "sending": "Sending…",
+    "send": "Send"
+  },
+  "toasts": {
+    "ticketCreated": "Ticket created!",
+    "ticketCreateError": "Could not create the ticket.",
+    "reactivated": "Campaign reactivated.",
+    "archived": "Campaign archived."
+  },
+  "confirm": {
+    "finalize": {
+      "title": "Finish campaign?",
+      "description": "We'll wrap up the campaign and generate the audit report with a summary of the production.",
+      "confirm": "Finish"
+    },
+    "delete": {
+      "title": "Delete campaign?",
+      "description": "This removes the campaign and all of its tickets. This action cannot be undone.",
+      "confirm": "Delete campaign"
+    },
+    "bulkDelete": {
+      "title_one": "Delete ticket?",
+      "title_other": "Delete {{count}} tickets?",
+      "description": "This action is permanent and cannot be undone. The tickets and all of their content (subtasks, creatives, posts) will be removed.",
+      "confirm": "Delete"
+    }
+  }
+}

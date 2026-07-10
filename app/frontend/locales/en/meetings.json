@@ -1,0 +1,64 @@
+{
+  "header": {
+    "eyebrow": "Schedule",
+    "title": "Meetings",
+    "description": "Your meetings — the ones you scheduled and the ones you were invited to.",
+    "schedule": "Schedule meeting"
+  },
+  "calendarNudge": {
+    "message": "Connect your Google Calendar to create real events with a Meet link and automatic invites.",
+    "connect": "Connect"
+  },
+  "filters": {
+    "searchPlaceholder": "Search meetings…",
+    "client": "Client"
+  },
+  "cancelConfirm": {
+    "title": "Cancel \"{{title}}\"?",
+    "description": "The meeting will be removed from the schedule and from Google Calendar.",
+    "confirmLabel": "Cancel meeting",
+    "cancelLabel": "Go back"
+  },
+  "emptyState": {
+    "filteredTitle": "No meetings found",
+    "filteredDescription": "Adjust the search or the client filter.",
+    "title": "No meetings scheduled",
+    "description": "Schedule your first meeting with a client — it will show up here and on the calendar."
+  },
+  "sections": {
+    "upcoming": "Upcoming",
+    "past": "Past",
+    "noUpcoming": "No upcoming meetings."
+  },
+  "card": {
+    "edit": "Edit",
+    "cancel": "Cancel",
+    "attendees_one": "{{count}} attendee",
+    "attendees_other": "{{count}} attendees",
+    "openRecording": "Open recording",
+    "joinMeet": "Join Meet"
+  },
+  "form": {
+    "removeAttendee": "Remove attendee",
+    "guestEmailPlaceholder": "guest@email.com",
+    "add": "Add",
+    "editTitle": "Edit meeting",
+    "createTitle": "Schedule meeting",
+    "description": "Meetings show up on the calendar with the Meet link.",
+    "titleLabel": "Title",
+    "titlePlaceholder": "E.g. Monthly sync",
+    "startLabel": "Start",
+    "startPlaceholder": "Start",
+    "endLabel": "End",
+    "endPlaceholder": "End (optional)",
+    "clientLabel": "Client (optional)",
+    "clientPlaceholder": "No client",
+    "attendeesLabel": "Attendees",
+    "notesLabel": "Notes",
+    "notesPlaceholder": "Meeting agenda…",
+    "cancel": "Cancel",
+    "saving": "Saving…",
+    "save": "Save",
+    "schedule": "Schedule"
+  }
+}

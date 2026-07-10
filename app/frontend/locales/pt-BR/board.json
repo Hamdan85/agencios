@@ -1,0 +1,86 @@
+{
+  "hub": {
+    "eyebrow": "Operação",
+    "title": "Tickets",
+    "description": "O funil de produção da agência, da ideia ao arquivo.",
+    "tabs": {
+      "board": "Quadro",
+      "list": "Lista"
+    }
+  },
+  "newTicket": "Novo ticket",
+  "filters": {
+    "searchPlaceholder": "Buscar por título…",
+    "campaign": "Campanha",
+    "client": "Cliente",
+    "assignee": "Responsável",
+    "channel": "Canal",
+    "type": "Tipo",
+    "status": "Etapa",
+    "priority": "Prioridade",
+    "situation": "Situação",
+    "situationActive": "Ativos",
+    "situationArchived": "Arquivados",
+    "situationAll": "Todos"
+  },
+  "empty": {
+    "title": "Nenhum ticket por aqui",
+    "description": "Crie o primeiro card e comece a mover o trabalho pelo funil de produção."
+  },
+  "clearDialog": {
+    "title": "Arquivar concluídos?",
+    "description": "Todos os {{count}} ticket(s) da coluna \"Concluído\" serão arquivados e sairão do quadro. Você ainda poderá vê-los na visão de lista, filtrando por arquivados.",
+    "confirm": "Arquivar todos"
+  },
+  "column": {
+    "actions": "Ações da coluna",
+    "archiveDone": "Arquivar concluídos",
+    "dropHere": "Arraste cards para cá"
+  },
+  "card": {
+    "untitled": "Sem título",
+    "noCampaign": "Sem campanha",
+    "overdue": "Atrasado"
+  },
+  "list": {
+    "selectAllError": "Não foi possível selecionar todos os tickets.",
+    "delete": "Excluir",
+    "loadErrorTitle": "Erro ao carregar",
+    "loadErrorDescription": "Não foi possível carregar os tickets. Tente novamente.",
+    "emptyArchivedTitle": "Nenhum ticket arquivado",
+    "emptyTitle": "Nenhum ticket encontrado",
+    "emptyFiltered": "Ajuste os filtros para ver mais resultados.",
+    "emptyDescription": "Crie o primeiro ticket e comece a mover o trabalho pelo funil.",
+    "ticketCount_one": "{{count}} ticket",
+    "ticketCount_other": "{{count}} tickets",
+    "endOfList": "Fim da lista",
+    "deleteConfirm": {
+      "title_one": "Excluir ticket?",
+      "title_other": "Excluir {{count}} tickets?",
+      "description": "Esta ação é permanente e não pode ser desfeita. Os tickets e todo o seu conteúdo (subtarefas, criativos, posts) serão removidos.",
+      "confirm": "Excluir"
+    }
+  },
+  "newDialog": {
+    "description": "Comece pelo contexto. Tipo de criativo, canais e prazo são definidos depois, na etapa de Escopo.",
+    "campaignLabel": "Campanha",
+    "campaignPlaceholder": "Selecione uma campanha",
+    "campaignEmpty": "Crie uma campanha primeiro para abrir tickets.",
+    "titleLabel": "Título",
+    "titlePlaceholder": "Ex.: Lançamento — coleção de inverno",
+    "briefLabel": "Brief / contexto",
+    "briefPlaceholder": "Descreva o contexto, a mensagem e o tom desejado… (opcional, você pode evoluir na Ideação)",
+    "priorityLabel": "Prioridade",
+    "cancel": "Cancelar",
+    "creating": "Criando…",
+    "create": "Criar ticket"
+  },
+  "toasts": {
+    "moveError": "Não foi possível mover o ticket.",
+    "createSuccess": "Ticket criado!",
+    "createError": "Erro ao criar ticket.",
+    "archivedCount": "{{count}} ticket(s) arquivado(s).",
+    "nothingToArchive": "Nada para arquivar.",
+    "clearColumnError": "Não foi possível limpar a coluna."
+  }
+}

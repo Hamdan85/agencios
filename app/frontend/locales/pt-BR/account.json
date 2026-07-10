@@ -1,0 +1,113 @@
+{
+  "header": {
+    "eyebrow": "Você",
+    "title": "Minha conta",
+    "description": "Seu perfil, segurança e conexões pessoais."
+  },
+  "tabs": {
+    "profile": "Perfil",
+    "security": "Segurança",
+    "connections": "Conexões"
+  },
+  "profile": {
+    "title": "Seu perfil",
+    "description": "Foto e nome exibidos para a sua equipe.",
+    "avatarLabel": "Foto de perfil",
+    "avatarHint": "PNG ou JPG, quadrada de preferência.",
+    "nameLabel": "Nome",
+    "namePlaceholder": "Seu nome",
+    "save": "Salvar alterações",
+    "saving": "Salvando…"
+  },
+  "email": {
+    "title": "E-mail",
+    "description": "Usado para login e notificações.",
+    "confirmed": "Confirmado",
+    "unconfirmed": "Não confirmado",
+    "pendingNotice": "Aguardando confirmação de <strong>{{email}}</strong>. Verifique a caixa de entrada do novo e-mail.",
+    "newLabel": "Novo e-mail",
+    "newPlaceholder": "novo@email.com",
+    "currentPasswordLabel": "Senha atual",
+    "sendConfirmation": "Enviar confirmação",
+    "sending": "Enviando…",
+    "cancel": "Cancelar",
+    "confirmationHint": "Enviaremos um link ao novo e-mail. A troca só ocorre após a confirmação.",
+    "change": "Alterar e-mail"
+  },
+  "security": {
+    "title": "Alterar senha",
+    "description": "Use uma senha forte com pelo menos 8 caracteres.",
+    "currentLabel": "Senha atual",
+    "newLabel": "Nova senha",
+    "tooShort": "Mínimo de 8 caracteres.",
+    "confirmLabel": "Confirmar nova senha",
+    "mismatch": "As senhas não coincidem.",
+    "submit": "Alterar senha",
+    "saving": "Salvando…"
+  },
+  "calendar": {
+    "description": "Suas reuniões são criadas no <strong>seu</strong> Google Calendar, com link do Meet e convite para todos os participantes.",
+    "connected": "Conectado",
+    "disconnect": "Desconectar",
+    "disconnecting": "Desconectando…",
+    "notConnected": "Nenhuma conta conectada.",
+    "connect": "Conectar Google Calendar",
+    "opening": "Abrindo…",
+    "disconnectConfirm": {
+      "title": "Desconectar Google Calendar?",
+      "description": "Novas reuniões deixarão de ser criadas no seu calendário até você reconectar.",
+      "confirm": "Desconectar"
+    }
+  },
+  "connector": {
+    "title": "Conector do Claude",
+    "description": "Sua URL pessoal — vale para <strong>todos os seus workspaces</strong>. Adicione no Claude em <strong>Configurações → Conectores → Adicionar conector personalizado</strong>. A URL já contém sua credencial — não precisa de login nem OAuth.",
+    "lockedTitle": "Requer um workspace com assinatura ativa",
+    "lockedDescription": "O conector fica disponível quando você tem ao menos um workspace no plano Agência ou Enterprise com assinatura ativa. Assine para operar seus workspaces pelo Claude.",
+    "seePlans": "Ver planos",
+    "urlLabel": "URL do conector",
+    "loading": "Carregando…",
+    "hide": "Ocultar",
+    "reveal": "Revelar",
+    "copied": "Copiado",
+    "copy": "Copiar",
+    "secretHint": "A URL é um segredo: quem a tiver opera seus workspaces com as suas permissões.",
+    "rotate": "Gerar nova URL",
+    "rotateConfirm": {
+      "title": "Gerar nova URL?",
+      "description": "A URL atual deixa de funcionar no Claude. Você precisará reconectar o conector com a nova URL.",
+      "confirm": "Gerar nova URL"
+    }
+  },
+  "apps": {
+    "title": "Apps autorizados",
+    "description": "Aplicativos com acesso à sua conta via OAuth.",
+    "loading": "Carregando…",
+    "empty": "Nenhum app conectado ainda.",
+    "revoke": "Revogar",
+    "revokeConfirm": {
+      "title": "Revogar acesso de {{name}}?",
+      "description": "O app perde o acesso à sua conta imediatamente.",
+      "confirm": "Revogar"
+    }
+  },
+  "toasts": {
+    "profileUpdated": "Perfil atualizado.",
+    "profileError": "Erro ao atualizar o perfil.",
+    "avatarUpdated": "Foto atualizada.",
+    "avatarError": "Erro ao enviar a foto.",
+    "passwordUpdated": "Senha alterada.",
+    "passwordError": "Erro ao alterar a senha.",
+    "emailChangeSent": "Enviamos um link de confirmação para o novo e-mail.",
+    "emailChangeError": "Erro ao solicitar a troca de e-mail."
+  },
+  "workspace": {
+    "createTitle": "Novo workspace",
+    "createDescription": "Crie uma nova agência. Você será o owner e entrará nela automaticamente.",
+    "nameLabel": "Nome do workspace",
+    "namePlaceholder": "Minha Agência",
+    "cancel": "Cancelar",
+    "create": "Criar workspace",
+    "creating": "Criando…"
+  }
+}

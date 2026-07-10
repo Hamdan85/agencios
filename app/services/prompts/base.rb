@@ -31,9 +31,40 @@ module Prompts
       raise NotImplementedError
     end
 
+    # Language names an LLM directive can point at unambiguously.
+    LANGUAGE_NAMES = {
+      'pt-BR' => 'português do Brasil (pt-BR)',
+      'pt' => 'português (pt)',
+      'en' => 'English (en-US)',
+      'es' => 'español (es)'
+    }.freeze
+
     private
 
     attr_reader :workspace, :client, :context
+
+    # The language the model must WRITE in. Content prompts (captions, carousel
+    # copy, scripts, storyboards) speak to the client's social-media AUDIENCE and
+    # follow client.content_language; workspace-facing prompts (summaries,
+    # retrospectives, audits) follow the workspace locale. Subclasses that
+    # generate audience-facing content override `content_prompt?` to true.
+    def response_language
+      code = if content_prompt?
+               client&.content_language.presence || workspace&.locale
+             else
+               workspace&.locale
+             end
+      code = code.presence || 'pt-BR'
+      LANGUAGE_NAMES[code.to_s] || code.to_s
+    end
+
+    def content_prompt? = false
+
+    # The standard output-language directive injected into every system prompt in
+    # place of the old hardcoded "responda em português".
+    def language_directive
+      "Escreva TODO o texto voltado ao usuário em #{response_language}."
+    end
 
     # Brand identity injected into every generative prompt. Uses the CLIENT's
     # brand when a client is in context (voice, @handle, colors), falling back to

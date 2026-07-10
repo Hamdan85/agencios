@@ -1,0 +1,62 @@
+{
+  "compact": {
+    "millions": "{{value}} mi",
+    "thousands": "{{value}} mil"
+  },
+  "show": {
+    "notFound": "Relatório não encontrado",
+    "back": "Voltar à campanha",
+    "generatingTitle": "Gerando a auditoria…",
+    "generatingDescription": "Estamos agregando as métricas e a análise estratégica da campanha. Isso atualiza sozinho.",
+    "failedTitle": "Não foi possível gerar o relatório",
+    "failedDescription": "Tente finalizar a campanha novamente.",
+    "pdfFilename": "relatorio-{{name}}.pdf",
+    "pdfFallbackName": "campanha"
+  },
+  "send": {
+    "sentAt": "Enviado em {{date}}",
+    "noEmail": "O cliente não tem e-mail cadastrado.",
+    "resend": "Reenviar ao cliente",
+    "send": "Enviar ao cliente"
+  },
+  "toolbar": {
+    "print": "Imprimir",
+    "downloadPdf": "Baixar PDF",
+    "printError": "Não foi possível abrir a impressão. Baixe o PDF e imprima por lá.",
+    "pdfError": "Não foi possível gerar o PDF."
+  },
+  "deck": {
+    "coverEyebrow": "Auditoria de redes sociais",
+    "aiUnavailable": "A análise textual não pôde ser gerada agora — os números abaixo refletem os dados reais da campanha.",
+    "numbersTitle": "Os números",
+    "kpis": {
+      "followers": "Seguidores",
+      "newFollowers": "Novos seguidores",
+      "accountsReached": "Contas alcançadas",
+      "views": "Visualizações",
+      "postsReach": "Alcance (posts)",
+      "reelShares": "Compart. de Reels",
+      "storyReplies": "Respostas em Stories",
+      "engagement": "Engajamento"
+    },
+    "accountDataNotice": "As métricas de perfil (seguidores, alcance de contas, respostas em Stories) começam a aparecer conforme o histórico de snapshots é coletado.",
+    "overallTitle": "Nota geral",
+    "outOfTen": "/ 10",
+    "toReach8": "Para chegar a 8",
+    "toReach9": "Para chegar a 9",
+    "winsTitle": "O que está funcionando",
+    "formatPerformanceTitle": "Performance por formato",
+    "whatPerforms": "✅ O que performa",
+    "whatDoesnt": "❌ O que não funciona",
+    "noData": "Sem dados.",
+    "bottlenecksTitle": "Gargalos críticos",
+    "opportunitiesTitle": "O que precisa ser explorado",
+    "matrixTitle": "Matriz de performance",
+    "actionPlanTitle": "Plano de ação",
+    "next7Days": "Próximos 7 dias",
+    "next30Days": "Próximos 30 dias",
+    "next90Days": "Próximos 90 dias",
+    "projectionTitle": "Projeção 12 meses",
+    "growthFallbackTitle": "Vetor de crescimento"
+  }
+}

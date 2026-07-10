@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { time } from '@/lib/formatters'
@@ -28,6 +29,7 @@ const TODAY_STICKY_BG = { background: 'color-mix(in srgb, var(--color-sky) 9%, v
 // iconic markers at their exact time. Simultaneous events split the column
 // width side by side.
 export function TimeGrid({ days, today, byDay, showWorkspace, onEventClick }) {
+  const { t } = useTranslation('calendar')
   const scrollRef = useRef(null)
   const [now, setNow] = useState(() => new Date())
   // The all-day band collapses to MAX_ALL_DAY chips per day (Google
@@ -101,12 +103,12 @@ export function TimeGrid({ days, today, byDay, showWorkspace, onEventClick }) {
         {hasAllDay && (
           <>
             <div className="sticky left-0 top-12 z-40 flex flex-col items-end justify-between border-b border-r border-border bg-surface px-1.5 py-1.5">
-              <span className="font-mono text-[9px] font-semibold uppercase tracking-wider text-ink-faint">dia</span>
+              <span className="font-mono text-[9px] font-semibold uppercase tracking-wider text-ink-faint">{t('timeGrid.allDayGutter')}</span>
               {[...allDayByDay.values()].some((list) => list.length > MAX_ALL_DAY) && (
                 <button
                   type="button"
                   onClick={() => setAllDayExpanded((v) => !v)}
-                  aria-label={allDayExpanded ? 'Recolher tarefas' : 'Expandir tarefas'}
+                  aria-label={allDayExpanded ? t('timeGrid.collapseTasks') : t('timeGrid.expandTasks')}
                   className="grid size-5 place-items-center rounded-md text-ink-muted transition-all hover:bg-surface-muted hover:text-ink"
                 >
                   <ChevronDown size={13} strokeWidth={2.6} className={cn('transition-transform', allDayExpanded && 'rotate-180')} />
@@ -140,7 +142,7 @@ export function TimeGrid({ days, today, byDay, showWorkspace, onEventClick }) {
                       onClick={() => setAllDayExpanded(true)}
                       className="rounded px-1.5 py-0.5 text-left text-[10px] font-bold text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink"
                     >
-                      +{overflow} mais
+                      {t('moreCount', { count: overflow })}
                     </button>
                   )}
                 </div>
@@ -269,9 +271,10 @@ function AllDayChip({ event, onEventClick, showWorkspace }) {
 }
 
 function GridEvent({ item, onEventClick, showWorkspace }) {
+  const { t } = useTranslation('calendar')
   const ev = item.event
   const { color, Icon } = eventVisual(ev)
-  const label = ev?.title || (ev?.type === 'meeting' ? 'Reunião' : 'Post')
+  const label = ev?.title || (ev?.type === 'meeting' ? t('event.meeting') : t('event.post'))
   // Posts have a moment, not a duration — render them as a compact iconic
   // marker pinned at their time; meetings keep the duration block.
   const marker = !ev.end

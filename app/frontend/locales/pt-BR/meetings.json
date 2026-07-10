@@ -1,0 +1,64 @@
+{
+  "header": {
+    "eyebrow": "Agenda",
+    "title": "Reuniões",
+    "description": "Suas reuniões — as que você marcou e as que te incluíram.",
+    "schedule": "Agendar reunião"
+  },
+  "calendarNudge": {
+    "message": "Conecte seu Google Calendar para criar eventos reais com link do Meet e convites automáticos.",
+    "connect": "Conectar"
+  },
+  "filters": {
+    "searchPlaceholder": "Buscar reunião…",
+    "client": "Cliente"
+  },
+  "cancelConfirm": {
+    "title": "Cancelar \"{{title}}\"?",
+    "description": "A reunião será removida da agenda e do Google Calendar.",
+    "confirmLabel": "Cancelar reunião",
+    "cancelLabel": "Voltar"
+  },
+  "emptyState": {
+    "filteredTitle": "Nenhuma reunião encontrada",
+    "filteredDescription": "Ajuste a busca ou o filtro de cliente.",
+    "title": "Nenhuma reunião agendada",
+    "description": "Agende a primeira reunião com um cliente — ela aparecerá aqui e no calendário."
+  },
+  "sections": {
+    "upcoming": "Próximas",
+    "past": "Anteriores",
+    "noUpcoming": "Nenhuma reunião futura."
+  },
+  "card": {
+    "edit": "Editar",
+    "cancel": "Cancelar",
+    "attendees_one": "{{count}} participante",
+    "attendees_other": "{{count}} participantes",
+    "openRecording": "Abrir gravação",
+    "joinMeet": "Entrar no Meet"
+  },
+  "form": {
+    "removeAttendee": "Remover participante",
+    "guestEmailPlaceholder": "email@convidado.com",
+    "add": "Adicionar",
+    "editTitle": "Editar reunião",
+    "createTitle": "Agendar reunião",
+    "description": "Reuniões aparecem no calendário com o link do Meet.",
+    "titleLabel": "Título",
+    "titlePlaceholder": "Ex: Alinhamento mensal",
+    "startLabel": "Início",
+    "startPlaceholder": "Início",
+    "endLabel": "Fim",
+    "endPlaceholder": "Fim (opcional)",
+    "clientLabel": "Cliente (opcional)",
+    "clientPlaceholder": "Sem cliente",
+    "attendeesLabel": "Participantes",
+    "notesLabel": "Notas",
+    "notesPlaceholder": "Pauta da reunião…",
+    "cancel": "Cancelar",
+    "saving": "Salvando…",
+    "save": "Salvar",
+    "schedule": "Agendar"
+  }
+}

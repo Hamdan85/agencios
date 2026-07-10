@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   FolderKanban, Plus, ListChecks, Wallet, CalendarRange, Check, Sparkles,
 } from 'lucide-react'
@@ -28,11 +29,11 @@ import { cn } from '@/lib/utils'
 const PALETTE = ['#7C3AED', '#EC4899', '#0EA5E9', '#10B981', '#F59E0B', '#6366F1', '#F43F5E', '#14B8A6']
 
 const STATUS_OPTIONS = [
-  { value: 'draft', label: 'Rascunho', variant: 'muted' },
-  { value: 'active', label: 'Ativa', variant: 'success' },
-  { value: 'paused', label: 'Pausada', variant: 'warning' },
-  { value: 'archived', label: 'Arquivada', variant: 'muted' },
-  { value: 'completed', label: 'Finalizada', variant: 'soft' },
+  { value: 'draft', variant: 'muted' },
+  { value: 'active', variant: 'success' },
+  { value: 'paused', variant: 'warning' },
+  { value: 'archived', variant: 'muted' },
+  { value: 'completed', variant: 'soft' },
 ]
 const statusMeta = (s) => STATUS_OPTIONS.find((o) => o.value === s) || STATUS_OPTIONS[1]
 
@@ -42,6 +43,7 @@ const EMPTY_FORM = {
 }
 
 function ProjectFormDialog({ open, onOpenChange, mutation, onCreated }) {
+  const { t } = useTranslation('projects')
   const [form, setForm] = useState(EMPTY_FORM)
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }))
 
@@ -68,29 +70,29 @@ function ProjectFormDialog({ open, onOpenChange, mutation, onCreated }) {
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <IconTile icon={Sparkles} color="#10B981" iconSize={22} className="mb-1 size-11" />
-          <DialogTitle>Nova campanha</DialogTitle>
-          <DialogDescription>Agrupe tickets sob uma campanha de um cliente.</DialogDescription>
+          <DialogTitle>{t('form.createTitle')}</DialogTitle>
+          <DialogDescription>{t('form.description')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-3.5">
           <div className="space-y-1.5">
-            <Label>Cliente</Label>
+            <Label>{t('form.client')}</Label>
             <ClientSelect
               variant="field"
               value={form.client_id}
               onChange={(v) => set('client_id')(v || '')}
-              placeholder="Selecione o cliente"
+              placeholder={t('form.clientPlaceholder')}
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="pj-name">Nome</Label>
-            <Input id="pj-name" required value={form.name} onChange={(e) => set('name')(e.target.value)} placeholder="Ex: Campanha de verão" />
+            <Label htmlFor="pj-name">{t('form.name')}</Label>
+            <Input id="pj-name" required value={form.name} onChange={(e) => set('name')(e.target.value)} placeholder={t('form.namePlaceholder')} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="pj-desc">Descrição</Label>
-            <Textarea id="pj-desc" value={form.description} onChange={(e) => set('description')(e.target.value)} placeholder="Objetivo e escopo da campanha…" />
+            <Label htmlFor="pj-desc">{t('form.descriptionLabel')}</Label>
+            <Textarea id="pj-desc" value={form.description} onChange={(e) => set('description')(e.target.value)} placeholder={t('form.descriptionPlaceholder')} />
           </div>
           <div className="space-y-2">
-            <Label>Cor</Label>
+            <Label>{t('form.color')}</Label>
             <div className="flex flex-wrap gap-2">
               {PALETTE.map((c) => (
                 <button
@@ -102,7 +104,7 @@ function ProjectFormDialog({ open, onOpenChange, mutation, onCreated }) {
                     form.color === c && 'ring-2 ring-offset-2 ring-offset-surface',
                   )}
                   style={{ background: c, '--tw-ring-color': c }}
-                  aria-label={`Cor ${c}`}
+                  aria-label={t('form.colorAria', { color: c })}
                 >
                   {form.color === c && <Check size={16} className="text-white" strokeWidth={3} />}
                 </button>
@@ -111,33 +113,33 @@ function ProjectFormDialog({ open, onOpenChange, mutation, onCreated }) {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Status</Label>
+              <Label>{t('form.status')}</Label>
               <Select value={form.status} onValueChange={set('status')}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {STATUS_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                  {STATUS_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{t(`status.${o.value}`)}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="pj-budget">Orçamento (R$)</Label>
-              <Input id="pj-budget" inputMode="decimal" value={form.budget} onChange={(e) => set('budget')(maskCurrency(e.target.value))} placeholder="0,00" />
+              <Label htmlFor="pj-budget">{t('form.budget')}</Label>
+              <Input id="pj-budget" inputMode="decimal" value={form.budget} onChange={(e) => set('budget')(maskCurrency(e.target.value))} placeholder={t('form.budgetPlaceholder')} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="pj-start">Início</Label>
-              <DatePicker id="pj-start" value={form.starts_on} onChange={set('starts_on')} placeholder="Data de início" />
+              <Label htmlFor="pj-start">{t('form.startsOn')}</Label>
+              <DatePicker id="pj-start" value={form.starts_on} onChange={set('starts_on')} placeholder={t('form.startsOnPlaceholder')} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="pj-end">Fim</Label>
-              <DatePicker id="pj-end" value={form.ends_on} onChange={set('ends_on')} placeholder="Data de fim" />
+              <Label htmlFor="pj-end">{t('form.endsOn')}</Label>
+              <DatePicker id="pj-end" value={form.ends_on} onChange={set('ends_on')} placeholder={t('form.endsOnPlaceholder')} />
             </div>
           </div>
           <DialogFooter>
-            <DialogClose asChild><Button type="button" variant="ghost">Cancelar</Button></DialogClose>
+            <DialogClose asChild><Button type="button" variant="ghost">{t('form.cancel')}</Button></DialogClose>
             <Button type="submit" disabled={mutation.isPending || !form.client_id}>
-              {mutation.isPending ? 'Salvando…' : 'Criar campanha'}
+              {mutation.isPending ? t('form.saving') : t('form.create')}
             </Button>
           </DialogFooter>
         </form>
@@ -147,6 +149,7 @@ function ProjectFormDialog({ open, onOpenChange, mutation, onCreated }) {
 }
 
 function ProjectCard({ project }) {
+  const { t } = useTranslation('projects')
   const navigate = useNavigate()
   const color = project.color || '#7C3AED'
   const st = statusMeta(project.status)
@@ -164,7 +167,7 @@ function ProjectCard({ project }) {
       <div className="flex flex-1 flex-col p-5">
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-display text-base font-bold text-ink">{project.name}</h3>
-          <Badge variant={st.variant}>{st.label}</Badge>
+          <Badge variant={st.variant}>{t(`status.${st.value}`)}</Badge>
         </div>
         {project.client_name && (
           <p className="mt-0.5 text-sm font-medium text-ink-muted">{project.client_name}</p>
@@ -175,7 +178,7 @@ function ProjectCard({ project }) {
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <ColorBadge color={color} tint="14" className="py-1">
-            <ListChecks size={13} /> {project.tickets_count ?? 0} tickets
+            <ListChecks size={13} /> {t('ticketsCount', { count: project.tickets_count ?? 0 })}
           </ColorBadge>
           {project.budget_cents != null && (
             <Badge variant="success" className="gap-1.5 py-1 tracking-normal">
@@ -196,6 +199,7 @@ function ProjectCard({ project }) {
 }
 
 export default function ProjectsIndex() {
+  const { t } = useTranslation('projects')
   const navigate = useNavigate()
   const { data: projects, isLoading } = useProjects()
   const { create } = useProjectMutations()
@@ -217,14 +221,14 @@ export default function ProjectsIndex() {
   const clientFilterProps = {
     value: clientFilter === 'all' ? undefined : clientFilter,
     onChange: (v) => setClientFilter(v || 'all'),
-    placeholder: 'Todos os clientes',
+    placeholder: t('index.filters.allClients'),
   }
   const statusSelect = (className) => (
     <Select value={statusFilter} onValueChange={setStatusFilter}>
-      <SelectTrigger className={className}><SelectValue placeholder="Status" /></SelectTrigger>
+      <SelectTrigger className={className}><SelectValue placeholder={t('index.filters.statusPlaceholder')} /></SelectTrigger>
       <SelectContent>
-        <SelectItem value="all">Todos os status</SelectItem>
-        {STATUS_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+        <SelectItem value="all">{t('index.filters.allStatuses')}</SelectItem>
+        {STATUS_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{t(`status.${o.value}`)}</SelectItem>)}
       </SelectContent>
     </Select>
   )
@@ -236,12 +240,12 @@ export default function ProjectsIndex() {
   return (
     <Page>
       <PageHeader
-        eyebrow="Trabalho"
-        title="Campanhas"
+        eyebrow={t('index.eyebrow')}
+        title={t('index.title')}
         icon={FolderKanban}
         color="#10B981"
-        description="Cada campanha agrupa os tickets de um cliente."
-        actions={<Button onClick={() => setOpen(true)}><Plus size={18} /> Nova campanha</Button>}
+        description={t('index.description')}
+        actions={<Button onClick={() => setOpen(true)}><Plus size={18} /> {t('index.newProject')}</Button>}
       />
 
       {/* Search + filters — search always visible; filters inline on desktop,
@@ -250,7 +254,7 @@ export default function ProjectsIndex() {
         <SearchInput
           value={search}
           onChange={setSearch}
-          placeholder="Buscar campanha…"
+          placeholder={t('index.searchPlaceholder')}
           className="min-w-0 flex-1 lg:w-64 lg:flex-none"
         />
         <div className="hidden flex-wrap items-center gap-3 lg:flex">
@@ -258,8 +262,8 @@ export default function ProjectsIndex() {
           {statusSelect('w-44')}
         </div>
         <FilterSheet count={filterCount} onClear={clearFilters} className="lg:hidden">
-          <FilterField label="Cliente"><ClientSelect {...clientFilterProps} variant="field" /></FilterField>
-          <FilterField label="Status">{statusSelect('w-full')}</FilterField>
+          <FilterField label={t('index.filters.clientLabel')}><ClientSelect {...clientFilterProps} variant="field" /></FilterField>
+          <FilterField label={t('index.filters.statusLabel')}>{statusSelect('w-full')}</FilterField>
         </FilterSheet>
       </div>
 
@@ -267,9 +271,9 @@ export default function ProjectsIndex() {
         <EmptyState
           icon={FolderKanban}
           color="#10B981"
-          title={list.length === 0 ? 'Nenhuma campanha ainda' : 'Nada por aqui'}
-          description={list.length === 0 ? 'Crie a primeira campanha para organizar o trabalho da agência.' : 'Ajuste os filtros para ver campanhas.'}
-          action={list.length === 0 ? <Button onClick={() => setOpen(true)}><Plus size={18} /> Nova campanha</Button> : null}
+          title={list.length === 0 ? t('index.emptyState.noneTitle') : t('index.emptyState.filteredTitle')}
+          description={list.length === 0 ? t('index.emptyState.noneDescription') : t('index.emptyState.filteredDescription')}
+          action={list.length === 0 ? <Button onClick={() => setOpen(true)}><Plus size={18} /> {t('index.newProject')}</Button> : null}
         />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

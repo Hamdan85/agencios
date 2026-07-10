@@ -1,0 +1,98 @@
+{
+  "confirm": {
+    "title": "Tem certeza?",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar"
+  },
+  "feedback": {
+    "loading": "Carregando",
+    "aiRewriting": "Reescrevendo com IA…"
+  },
+  "datePicker": {
+    "weekdays": "D,S,T,Q,Q,S,S",
+    "prevMonth": "Mês anterior",
+    "nextMonth": "Próximo mês",
+    "clearDate": "Limpar data",
+    "selectDate": "Selecione uma data",
+    "selectDateTime": "Selecione data e hora",
+    "dateFormat": "dd 'de' MMM 'de' yyyy",
+    "dateTimeFormat": "dd MMM yyyy 'às' HH:mm",
+    "time": "Horário",
+    "hour": "Hora",
+    "minute": "Minuto",
+    "done": "Concluir"
+  },
+  "combobox": {
+    "select": "Selecionar",
+    "empty": "Nada encontrado",
+    "clear": "Limpar",
+    "search": "Buscar…",
+    "removeFilter": "Remover filtro"
+  },
+  "selectionBar": {
+    "selected_one": "{{count}} selecionado",
+    "selected_other": "{{count}} selecionados",
+    "selectAll": "Selecionar todos ({{total}})",
+    "clearSelection": "Limpar seleção"
+  },
+  "entitySelect": {
+    "project": "Campanha",
+    "client": "Cliente",
+    "assignee": "Responsável"
+  },
+  "richField": {
+    "edit": "Editar",
+    "write": "Escrever…",
+    "cancel": "Cancelar",
+    "save": "Salvar"
+  },
+  "richText": {
+    "linkPrompt": "URL do link",
+    "bold": "Negrito",
+    "italic": "Itálico",
+    "strike": "Tachado",
+    "heading": "Título",
+    "bulletList": "Lista",
+    "orderedList": "Lista numerada",
+    "quote": "Citação",
+    "write": "Escreva…"
+  },
+  "filterBar": {
+    "filters": "Filtros",
+    "clear": "Limpar",
+    "clearCount": "Limpar ({{count}})",
+    "viewResults": "Ver resultados",
+    "close": "Fechar"
+  },
+  "searchInput": {
+    "placeholder": "Buscar…",
+    "clear": "Limpar busca"
+  },
+  "copy": {
+    "copy": "Copiar",
+    "copied": "Copiado!"
+  },
+  "assignee": {
+    "labeled": "Responsável: {{name}}",
+    "assign": "Atribuir responsável",
+    "assignTo": "Atribuir a",
+    "unassigned": "Sem responsável"
+  },
+  "chipsInput": {
+    "remove": "Remover {{chip}}"
+  },
+  "charts": {
+    "noData": "Sem dados"
+  },
+  "apiErrors": {
+    "insufficientCreditsTitle": "Créditos insuficientes",
+    "insufficientCreditsDescription": "Compre créditos para continuar gerando vídeos e imagens.",
+    "buyCredits": "Comprar créditos",
+    "strategyChat": "Erro no chat de estratégia."
+  },
+  "aiFill": {
+    "timeout": "A IA está demorando mais que o normal. Tente atualizar novamente.",
+    "done": "IA atualizou o ticket ✨",
+    "failed": "A IA não conseguiu atualizar os campos. Tente novamente."
+  }
+}

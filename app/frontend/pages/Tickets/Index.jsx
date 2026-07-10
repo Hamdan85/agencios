@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { KanbanSquare, Plus } from 'lucide-react'
 import { useUrlFilters, useUrlParam } from '@/hooks/useUrlState'
 import { useBoardMutations } from '@/hooks/useBoard'
@@ -26,6 +27,7 @@ const FILTER_KEYS = ['q', 'project_id', 'client_id', 'assignee_id', 'status', 'c
 // shape between views — the title stays put, and the swap cross-fades — so the
 // tabs never move under the cursor and the filters don't appear to jump.
 export default function TicketsHub() {
+  const { t } = useTranslation('board')
   const [searchParams, setSearchParams] = useSearchParams()
   const visao = searchParams.get('visao') === 'lista' ? 'lista' : 'quadro'
   const isQuadro = visao === 'quadro'
@@ -70,23 +72,23 @@ export default function TicketsHub() {
         <PageHeader
           className="mb-0"
           actionsClassName="max-sm:w-full"
-          eyebrow="Operação"
-          title="Tickets"
+          eyebrow={t('hub.eyebrow')}
+          title={t('hub.title')}
           icon={KanbanSquare}
           color={BRAND}
-          description="O funil de produção da agência, da ideia ao arquivo."
+          description={t('hub.description')}
           actions={
             // Mobile: one continuous control row — the view tabs stretch to meet
             // the button instead of the two sitting at opposite screen edges.
             <div className="flex w-full items-center gap-2 sm:w-auto">
               <Tabs value={visao} onValueChange={setVisao} className="min-w-0 flex-1 sm:flex-none">
                 <TabsList className="w-full sm:w-auto">
-                  <TabsTrigger value="quadro" className="flex-1 sm:flex-none">Quadro</TabsTrigger>
-                  <TabsTrigger value="lista" className="flex-1 sm:flex-none">Lista</TabsTrigger>
+                  <TabsTrigger value="quadro" className="flex-1 sm:flex-none">{t('hub.tabs.board')}</TabsTrigger>
+                  <TabsTrigger value="lista" className="flex-1 sm:flex-none">{t('hub.tabs.list')}</TabsTrigger>
                 </TabsList>
               </Tabs>
               <Button onClick={() => setDialogOpen(true)} className="shrink-0">
-                <Plus size={18} /> Novo ticket
+                <Plus size={18} /> {t('newTicket')}
               </Button>
             </div>
           }

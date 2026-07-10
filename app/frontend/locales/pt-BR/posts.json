@@ -1,0 +1,95 @@
+{
+  "header": {
+    "title": "Publicações",
+    "description": "Tudo que foi agendado e publicado, com o desempenho de cada rede."
+  },
+  "tabs": {
+    "posts": "Publicações",
+    "performance": "Desempenho"
+  },
+  "loadMore": {
+    "loading": "Carregando…",
+    "button": "Carregar mais"
+  },
+  "show": {
+    "back": "Publicações",
+    "notFound": {
+      "title": "Publicação não encontrada",
+      "description": "Ela pode ter sido removida ou você não tem acesso a este workspace."
+    },
+    "noCreativePreview": "Sem prévia do criativo",
+    "caption": "Legenda"
+  },
+  "detail": {
+    "fallbackTitle": "Publicação",
+    "clientFallback": "Cliente",
+    "campaignFallback": "Campanha",
+    "viewTicket": "Ver ticket",
+    "viewOn": "Ver no {{network}}",
+    "scheduledFor": "Agendado para {{date}}",
+    "publishedAgo": "Publicado {{time}}",
+    "unpublishedAgo": "Despublicado {{time}}",
+    "failed": "A publicação falhou"
+  },
+  "metrics": {
+    "sharesShort": "Compart.",
+    "savesShort": "Salvos"
+  },
+  "performance": {
+    "noMetrics": {
+      "title": "Sem métricas ainda",
+      "description": "As métricas aparecem aqui assim que a publicação for ao ar e sincronizada com a rede."
+    },
+    "metricsTitle": "Métricas",
+    "syncedAgo": "Sincronizado {{time}}",
+    "engagementRate": "Taxa de engajamento",
+    "interactions": "{{value}} interações",
+    "overReach": "sobre {{value}} de alcance",
+    "engagementTitle": "Engajamento",
+    "engagementHint": "Como as pessoas interagiram",
+    "interactionsUnit": "interações",
+    "evolutionTitle": "Evolução",
+    "evolutionHint": "Visualizações, engajamento e alcance no tempo"
+  },
+  "list": {
+    "empty": {
+      "title": "Nenhuma publicação",
+      "description": "Nenhuma publicação neste filtro."
+    },
+    "scheduledAt": "Agendado · {{date}}",
+    "noCampaign": "Sem campanha",
+    "awaitingMetrics": "Aguardando métricas"
+  },
+  "filters": {
+    "client": "Cliente",
+    "campaign": "Campanha",
+    "network": "Rede",
+    "status": "Status",
+    "period": "Período",
+    "last7Days": "Últimos 7 dias",
+    "last30Days": "Últimos 30 dias",
+    "last90Days": "Últimos 90 dias"
+  },
+  "sort": {
+    "label": "Ordenar",
+    "recent": "Mais recentes",
+    "oldest": "Mais antigas",
+    "views": "Mais visualizações",
+    "engagement": "Maior engajamento"
+  },
+  "performanceTab": {
+    "empty": {
+      "title": "Sem dados de desempenho",
+      "description": "Publique conteúdo para começar a acompanhar alcance, visualizações e engajamento aqui."
+    },
+    "rateSub": "engajamento / alcance",
+    "trend": "Tendência",
+    "byNetwork": "Por rede",
+    "byFormat": "Por formato",
+    "byCampaign": "Por campanha",
+    "topPosts": "Melhores publicações",
+    "noPostsInPeriod": "Sem publicações no período",
+    "engagementShort": "{{value}} engaj.",
+    "openOnNetwork": "Abrir na rede"
+  }
+}

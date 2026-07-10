@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useTicket, useTicketMutations } from '@/hooks/useTicket'
 import { useTicketChannel } from '@/hooks/useRealtime'
 import { WORKFLOW, STATUS_META, statusMeta } from '@/lib/constants'
@@ -21,6 +22,7 @@ import {
 } from 'lucide-react'
 
 export default function Show() {
+  const { t } = useTranslation('tickets')
   const { id, tab } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
@@ -45,12 +47,12 @@ export default function Show() {
   // campaign); fall back to the tickets hub.
   const back = useMemo(() => {
     const from = location.state?.from
-    if (from?.startsWith('/campanhas/')) return { to: from, label: 'Voltar à campanha' }
-    if (from?.startsWith('/calendario') || from?.startsWith('/meu-calendario')) return { to: from, label: 'Voltar ao calendário' }
-    if (from?.startsWith('/tickets')) return { to: from, label: 'Voltar aos tickets' }
-    if (from) return { to: from, label: 'Voltar' }
-    return { to: '/tickets', label: 'Voltar aos tickets' }
-  }, [location.state])
+    if (from?.startsWith('/campanhas/')) return { to: from, label: t('back.toCampaign') }
+    if (from?.startsWith('/calendario') || from?.startsWith('/meu-calendario')) return { to: from, label: t('back.toCalendar') }
+    if (from?.startsWith('/tickets')) return { to: from, label: t('back.toTickets') }
+    if (from) return { to: from, label: t('back.default') }
+    return { to: '/tickets', label: t('back.toTickets') }
+  }, [location.state, t])
 
   if (isLoading) return <PageLoader />
   if (!ticket) {
@@ -58,8 +60,8 @@ export default function Show() {
       <Page>
         <EmptyState
           icon={Ghost}
-          title="Ticket não encontrado"
-          description="Este ticket pode ter sido removido ou você não tem acesso a ele."
+          title={t('notFound.title')}
+          description={t('notFound.description')}
           action={<Button asChild><Link to={back.to}>{back.label}</Link></Button>}
         />
       </Page>
@@ -111,12 +113,12 @@ export default function Show() {
               <StatusPill status={status} size="sm" />
               {ticket.archived && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-ink-muted">
-                  <Archive size={11} strokeWidth={2.4} /> Arquivado
+                  <Archive size={11} strokeWidth={2.4} /> {t('badges.archived')}
                 </span>
               )}
               {ticket.overdue && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-danger/12 px-2 py-0.5 text-[11px] font-bold text-danger">
-                  <AlertTriangle size={12} strokeWidth={2.4} /> Atrasado
+                  <AlertTriangle size={12} strokeWidth={2.4} /> {t('badges.overdue')}
                 </span>
               )}
             </div>
@@ -142,12 +144,12 @@ export default function Show() {
             {/* Status jump */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="default" disabled={mut.advance.isPending} className="shrink-0" aria-label="Mover etapa">
-                  <Layers size={15} /> <span className="hidden sm:inline">Mover etapa</span> <ChevronDown size={14} className="hidden sm:inline" />
+                <Button variant="outline" size="default" disabled={mut.advance.isPending} className="shrink-0" aria-label={t('stage.move')}>
+                  <Layers size={15} /> <span className="hidden sm:inline">{t('stage.move')}</span> <ChevronDown size={14} className="hidden sm:inline" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-52">
-                <DropdownMenuLabel>Ir para a etapa</DropdownMenuLabel>
+                <DropdownMenuLabel>{t('stage.goTo')}</DropdownMenuLabel>
                 {WORKFLOW.map((key) => {
                   const sm = STATUS_META[key]
                   const Icon = sm.icon
@@ -163,7 +165,7 @@ export default function Show() {
                         <Icon size={12} strokeWidth={2.5} />
                       </span>
                       <span className="font-semibold">{sm.label}</span>
-                      {active && <span className="ml-auto text-[10px] font-bold uppercase text-ink-faint">atual</span>}
+                      {active && <span className="ml-auto text-[10px] font-bold uppercase text-ink-faint">{t('stage.current')}</span>}
                     </DropdownMenuItem>
                   )
                 })}
@@ -194,7 +196,7 @@ export default function Show() {
                 style={{ background: `linear-gradient(135deg, ${nextMeta.color}, ${nextMeta.color}cc)` }}
                 className="min-w-0 flex-1 justify-center text-white shadow-[0_8px_20px_-8px_rgba(0,0,0,0.4)] hover:brightness-105 sm:flex-none"
               >
-                <span className="truncate">Avançar para {nextMeta.label}</span>
+                <span className="truncate">{t('stage.advanceTo', { label: nextMeta.label })}</span>
                 <ArrowRight size={15} className="shrink-0" />
               </Button>
             )}

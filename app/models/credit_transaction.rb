@@ -16,6 +16,14 @@ class CreditTransaction < ApplicationRecord
   validates :bucket, inclusion: { in: BUCKETS }
 
   scope :recent_first, -> { order(created_at: :desc) }
+
+  # Ledger copy stored as i18n key renders in the CURRENT locale; legacy rows
+  # (and custom admin descriptions) fall back to the stored text.
+  def display_description
+    return description if description_key.blank?
+
+    I18n.t(description_key, **description_params.symbolize_keys, default: description || description_key)
+  end
   scope :debits, -> { where(kind: 'debit') }
 
   def self.ransackable_attributes(_auth = nil)

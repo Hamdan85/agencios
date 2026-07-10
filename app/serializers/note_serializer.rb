@@ -5,6 +5,8 @@ class NoteSerializer < ActiveModel::Serializer
              :mentioned_user_ids, :mentions, :attachments, :created_at
 
   def created_at = object.created_at.iso8601
+  # System notes stored as i18n key render in the requester's locale.
+  def body = object.display_body
   def user_name = object.user&.display_name
 
   def user_avatar_url

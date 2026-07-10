@@ -1,4 +1,5 @@
 import { SquareCheck, Video } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { time } from '@/lib/formatters'
 import { channelMeta } from '@/lib/constants'
@@ -27,8 +28,9 @@ export function eventVisual(ev) {
 // Extra props (incl. `ref`) are forwarded to the button so the chip can sit
 // inside a Radix `asChild` trigger (the EventHoverCard).
 export function EventChip({ event, onClick, compact = false, showWorkspace = false, ...props }) {
+  const { t } = useTranslation('calendar')
   const { color, Icon } = eventVisual(event)
-  const label = event?.title || (event?.type === 'meeting' ? 'Reunião' : 'Post')
+  const label = event?.title || (event?.type === 'meeting' ? t('event.meeting') : t('event.post'))
   const ws = showWorkspace ? event?.workspace_name : null
   // "Previsto": a funnel ticket with a planned publish date but no scheduled post
   // yet. It's tentative, not committed — render it as a ghost (faint fill, dashed

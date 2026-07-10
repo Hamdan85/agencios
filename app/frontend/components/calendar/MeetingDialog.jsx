@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Video, Clock, Building2, ExternalLink, ArrowUpRight, CalendarDays } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -11,6 +12,7 @@ import { eventVisual } from './EventChip'
 // A small detail dialog for a clicked calendar event.
 // Meetings show the Meet link; posts offer a jump to the ticket.
 export function MeetingDialog({ event, open, onOpenChange }) {
+  const { t } = useTranslation('calendar')
   const navigate = useNavigate()
   if (!event) return null
 
@@ -26,19 +28,19 @@ export function MeetingDialog({ event, open, onOpenChange }) {
               {Icon ? <Icon size={22} strokeWidth={2.2} /> : <CalendarDays size={22} />}
             </div>
             <ColorBadge color={color} className="py-1 text-[11px] uppercase tracking-wide">
-              {isMeeting ? 'Reunião' : 'Post agendado'}
+              {isMeeting ? t('dialog.meeting') : t('dialog.scheduledPost')}
             </ColorBadge>
           </div>
-          <DialogTitle>{event.title || (isMeeting ? 'Reunião' : 'Publicação')}</DialogTitle>
+          <DialogTitle>{event.title || (isMeeting ? t('dialog.meeting') : t('dialog.publication'))}</DialogTitle>
           <DialogDescription>{dt(event.start)}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-2.5">
-          <DetailRow icon={Clock} label="Horário">
+          <DetailRow icon={Clock} label={t('dialog.timeLabel')}>
             {time(event.start)}{event.end ? ` – ${time(event.end)}` : ''}
           </DetailRow>
           {event.client_name && (
-            <DetailRow icon={Building2} label="Cliente">{event.client_name}</DetailRow>
+            <DetailRow icon={Building2} label={t('dialog.clientLabel')}>{event.client_name}</DetailRow>
           )}
         </div>
 
@@ -46,13 +48,13 @@ export function MeetingDialog({ event, open, onOpenChange }) {
           {isMeeting && event.meet_url && (
             <Button asChild>
               <a href={event.meet_url} target="_blank" rel="noreferrer">
-                <Video size={16} /> Entrar no Meet <ExternalLink size={14} className="opacity-70" />
+                <Video size={16} /> {t('dialog.joinMeet')} <ExternalLink size={14} className="opacity-70" />
               </a>
             </Button>
           )}
           {!isMeeting && event.ticket_id && (
             <Button onClick={() => { onOpenChange?.(false); navigate(`/tickets/${event.ticket_id}`) }}>
-              Abrir ticket <ArrowUpRight size={16} />
+              {t('dialog.openTicket')} <ArrowUpRight size={16} />
             </Button>
           )}
         </DialogFooter>

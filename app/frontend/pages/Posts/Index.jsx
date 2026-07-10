@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Megaphone } from 'lucide-react'
 import { Page } from '@/components/ui/page'
 import { PageHeader } from '@/components/ui/page-header'
@@ -21,6 +22,7 @@ import PostList from '@/components/posts/PostList'
 const PERF_PATH = '/publicacoes/desempenho'
 
 export default function PostsIndex() {
+  const { t } = useTranslation('posts')
   const location = useLocation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -44,10 +46,10 @@ export default function PostsIndex() {
   return (
     <Page>
       <PageHeader
-        title="Publicações"
+        title={t('header.title')}
         icon={Megaphone}
         color="#0EA5E9"
-        description="Tudo que foi agendado e publicado, com o desempenho de cada rede."
+        description={t('header.description')}
       />
 
       <Tabs value={tab} onValueChange={setTab}>
@@ -57,8 +59,8 @@ export default function PostsIndex() {
           leading={
             <div className="min-w-0 flex-1">
               <TabsList>
-                <TabsTrigger value="publicacoes">Publicações</TabsTrigger>
-                <TabsTrigger value="desempenho">Desempenho</TabsTrigger>
+                <TabsTrigger value="publicacoes">{t('tabs.posts')}</TabsTrigger>
+                <TabsTrigger value="desempenho">{t('tabs.performance')}</TabsTrigger>
               </TabsList>
             </div>
           }
@@ -75,7 +77,7 @@ export default function PostsIndex() {
           {hasNextPage && (
             <div className="mt-6 flex justify-center">
               <Button variant="outline" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
-                {isFetchingNextPage ? 'Carregando…' : 'Carregar mais'}
+                {isFetchingNextPage ? t('loadMore.loading') : t('loadMore.button')}
               </Button>
             </div>
           )}

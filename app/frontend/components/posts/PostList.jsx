@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Eye, Heart, MessageCircle, BarChart3, CalendarClock, Megaphone } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { MediaThumb } from '@/components/ui/media-thumb'
@@ -19,11 +20,12 @@ function Metric({ icon: Icon, value, label }) {
 // The date footer — "Agendado · {shortDt}" for queued posts, a relative day
 // (with tone tint) for everything already live.
 function DateLine({ post }) {
+  const { t } = useTranslation('posts')
   if (post.status === 'scheduled') {
     return (
       <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-ink-muted">
         <CalendarClock size={12} strokeWidth={2.2} />
-        Agendado · {shortDt(post.scheduled_at)}
+        {t('list.scheduledAt', { date: shortDt(post.scheduled_at) })}
       </span>
     )
   }
@@ -40,12 +42,13 @@ function DateLine({ post }) {
 // reading raw text — the network, lifecycle status, creative format, campaign and
 // a compact performance readout, then links to its detail page.
 export default function PostList({ posts = [] }) {
+  const { t } = useTranslation('posts')
   if (!posts.length) {
     return (
       <EmptyState
         icon={Megaphone}
-        title="Nenhuma publicação"
-        description="Nenhuma publicação neste filtro."
+        title={t('list.empty.title')}
+        description={t('list.empty.description')}
       />
     )
   }
@@ -93,7 +96,7 @@ export default function PostList({ posts = [] }) {
                       className="size-2 shrink-0 rounded-full"
                       style={{ background: p.campaign_color || '#8B86A3' }}
                     />
-                    <span className="truncate text-sm font-semibold text-ink">{p.campaign_name || 'Sem campanha'}</span>
+                    <span className="truncate text-sm font-semibold text-ink">{p.campaign_name || t('list.noCampaign')}</span>
                   </div>
                   {p.client_name && (
                     <p className="mt-0.5 truncate pl-3.5 text-xs text-ink-muted">{p.client_name}</p>
@@ -104,13 +107,13 @@ export default function PostList({ posts = [] }) {
                 <div className="mt-auto border-t border-border/60 pt-2.5">
                   {m ? (
                     <div className="grid grid-cols-4 gap-1">
-                      <Metric icon={BarChart3} value={m.views} label="Visualizações" />
-                      <Metric icon={Eye} value={m.reach} label="Alcance" />
-                      <Metric icon={Heart} value={m.likes} label="Curtidas" />
-                      <Metric icon={MessageCircle} value={m.comments} label="Comentários" />
+                      <Metric icon={BarChart3} value={m.views} label={t('common:series.views')} />
+                      <Metric icon={Eye} value={m.reach} label={t('common:series.reach')} />
+                      <Metric icon={Heart} value={m.likes} label={t('common:series.likes')} />
+                      <Metric icon={MessageCircle} value={m.comments} label={t('common:series.comments')} />
                     </div>
                   ) : (
-                    <p className="text-center text-[11px] font-semibold text-ink-muted">Aguardando métricas</p>
+                    <p className="text-center text-[11px] font-semibold text-ink-muted">{t('list.awaitingMetrics')}</p>
                   )}
                 </div>
 

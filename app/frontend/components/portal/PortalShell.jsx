@@ -1,3 +1,4 @@
+import { useTranslation, Trans } from 'react-i18next'
 import { readableOn, tint } from '@/lib/color'
 
 // The branded chrome of the client central: agency header (logo/name/colors) and
@@ -9,6 +10,7 @@ import { readableOn, tint } from '@/lib/color'
 // board columns can run full-bleed while lists stay centered. `--agency`
 // exposes the accent to descendants.
 export default function PortalShell({ agency = {}, children, subtitle }) {
+  const { t } = useTranslation('portal')
   const accent = agency.primary_color || '#7C3AED'
   const fg = readableOn(accent)
 
@@ -30,7 +32,7 @@ export default function PortalShell({ agency = {}, children, subtitle }) {
 
       <footer className="shrink-0 py-2 text-center">
         <a href="https://agencios.app" target="_blank" rel="noreferrer" className="text-[11px] font-medium text-ink-faint hover:text-ink-muted">
-          feito com <span style={{ color: '#7C3AED' }}>✳</span> Agencios
+          <Trans t={t} i18nKey="shell.madeWith" components={{ star: <span style={{ color: '#7C3AED' }} /> }} />
         </a>
       </footer>
     </div>

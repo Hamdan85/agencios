@@ -1,0 +1,189 @@
+{
+  "status": {
+    "draft": "Rascunho",
+    "active": "Ativa",
+    "paused": "Pausada",
+    "archived": "Arquivada",
+    "completed": "Finalizada"
+  },
+  "ticketsCount": "{{count}} tickets",
+  "index": {
+    "eyebrow": "Trabalho",
+    "title": "Campanhas",
+    "description": "Cada campanha agrupa os tickets de um cliente.",
+    "newProject": "Nova campanha",
+    "searchPlaceholder": "Buscar campanha…",
+    "filters": {
+      "clientLabel": "Cliente",
+      "statusLabel": "Status",
+      "allClients": "Todos os clientes",
+      "statusPlaceholder": "Status",
+      "allStatuses": "Todos os status"
+    },
+    "emptyState": {
+      "noneTitle": "Nenhuma campanha ainda",
+      "noneDescription": "Crie a primeira campanha para organizar o trabalho da agência.",
+      "filteredTitle": "Nada por aqui",
+      "filteredDescription": "Ajuste os filtros para ver campanhas."
+    }
+  },
+  "form": {
+    "createTitle": "Nova campanha",
+    "editTitle": "Editar campanha",
+    "description": "Agrupe tickets sob uma campanha de um cliente.",
+    "client": "Cliente",
+    "clientPlaceholder": "Selecione o cliente",
+    "name": "Nome",
+    "namePlaceholder": "Ex: Campanha de verão",
+    "descriptionLabel": "Descrição",
+    "descriptionPlaceholder": "Objetivo e escopo da campanha…",
+    "color": "Cor",
+    "colorAria": "Cor {{color}}",
+    "status": "Status",
+    "budget": "Orçamento (R$)",
+    "budgetPlaceholder": "0,00",
+    "startsOn": "Início",
+    "startsOnPlaceholder": "Data de início",
+    "endsOn": "Fim",
+    "endsOnPlaceholder": "Data de fim",
+    "settingsSection": "Configurações",
+    "cancel": "Cancelar",
+    "saving": "Salvando…",
+    "save": "Salvar",
+    "create": "Criar campanha"
+  },
+  "show": {
+    "back": "Campanhas",
+    "fallbackName": "Campanha",
+    "generatingAudit": "Gerando auditoria…",
+    "auditFailed": "Falha ao gerar auditoria",
+    "edit": "Editar",
+    "viewReport": "Ver relatório",
+    "start": "Iniciar campanha",
+    "finalize": "Finalizar campanha",
+    "startBilling": "Iniciar cobrança",
+    "moreActions": "Mais ações",
+    "reactivate": "Reativar",
+    "archive": "Arquivar",
+    "delete": "Excluir",
+    "score": "Nota {{score}}/10",
+    "views": "{{value}} visualizações",
+    "engagement": "{{value}} engajamento",
+    "tabTickets": "Tickets",
+    "tabSettings": "Configurações",
+    "ticketsHeading": "Tickets",
+    "newTicket": "Novo ticket",
+    "emptyFiltered": {
+      "title": "Nenhum ticket corresponde aos filtros",
+      "description": "Ajuste ou limpe os filtros para ver mais tickets desta campanha.",
+      "clear": "Limpar filtros"
+    },
+    "emptyNone": {
+      "title": "Sem tickets nesta campanha",
+      "description": "Crie o primeiro ticket desta campanha para começar a produção."
+    }
+  },
+  "autopilot": {
+    "inProgress": "Piloto automático em andamento",
+    "progress_one": "{{done}} de {{count}} ticket",
+    "progress_other": "{{done}} de {{count}} tickets",
+    "failedCount": "{{count}} com falha"
+  },
+  "plan": {
+    "opsToAdd": "{{count}} a adicionar",
+    "opsToEdit": "{{count}} a editar",
+    "opsToRemove": "{{count}} a remover",
+    "none": "nenhuma",
+    "proposedChanges": "Alterações propostas · {{summary}}",
+    "proposedReady": "Plano proposto pronto · {{count}} tickets",
+    "reviewOrApplyRemoval": "Revise no chat ou aplique — inclui remoção de ticket.",
+    "reviewOrApply": "Revise no chat ou aplique à campanha.",
+    "reviewOrApplyCreate": "Revise no chat ou aplique para criar os tickets.",
+    "discard": "Descartar",
+    "review": "Revisar",
+    "applying": "Aplicando…",
+    "apply": "Aplicar"
+  },
+  "strategy": {
+    "title": "Planejar conteúdo com IA",
+    "description": "Descreva a estratégia de conteúdo. O estrategista monta os tickets já agendados, com tarefas estimadas.",
+    "close": "Fechar",
+    "emptyHint": "Ex.: “1 reel e 2 carrosséis por semana, começando semana que vem.” Diga a cadência e o período (um mês, uma campanha, contínuo…) — o resto o estrategista puxa do contexto do cliente.",
+    "newTicketsToAdd": "{{count}} novo(s) ticket(s) a adicionar",
+    "planReady": "Plano pronto · {{count}} tickets",
+    "additiveHint": "Os novos tickets aparecem esmaecidos ao lado dos existentes na lista. Revise e adicione abaixo.",
+    "fullHint": "Os tickets propostos aparecem na lista da campanha (esmaecidos). Revise e clique em aprovar abaixo.",
+    "creatingTickets": "Criando tickets…",
+    "addTickets": "Adicionar {{count}} ticket(s)",
+    "approveAndCreate": "Aprovar e criar {{count}} tickets",
+    "applied": "Plano aplicado — veja os tickets aparecendo na campanha.",
+    "composerPlaceholder": "Responda ao estrategista…  (Enter envia · Shift+Enter quebra linha)"
+  },
+  "loader": {
+    "readingBrandContext": "Lendo o contexto da marca…",
+    "designingCadence": "Desenhando a cadência do mês…",
+    "choosingHooks": "Escolhendo os ganchos certos…",
+    "writingBriefs": "Escrevendo os briefings…",
+    "schedulingPosts": "Agendando as postagens…",
+    "estimatingTasks": "Estimando as tarefas de produção…",
+    "finishingTouches": "Dando os retoques finais…"
+  },
+  "settings": {
+    "weekdays": {
+      "mon": "Seg",
+      "tue": "Ter",
+      "wed": "Qua",
+      "thu": "Qui",
+      "fri": "Sex",
+      "sat": "Sáb",
+      "sun": "Dom"
+    },
+    "requireApproval": {
+      "title": "Exigir aprovação do cliente",
+      "description": "O GO para em Produção e o cliente recebe o link de aprovação por e-mail."
+    },
+    "autoPublish": {
+      "title": "Publicar após aprovação",
+      "description": "Quando todos os criativos forem aprovados, o post é agendado automaticamente."
+    },
+    "postingWindow": {
+      "title": "Janela de postagem",
+      "times": "Horários (separados por vírgula)",
+      "minGap": "Intervalo mínimo entre posts (min)"
+    },
+    "save": "Salvar configurações"
+  },
+  "scope": {
+    "title": "Enviar escopo ao cliente",
+    "description": "Envia por e-mail um resumo dos tickets da campanha (nomes, tipos e datas) — sem detalhes internos.",
+    "recipients": "Destinatários",
+    "recipientsPlaceholder": "email@cliente.com",
+    "recipientsHint": "Até 4 e-mails. Pressione Enter ou vírgula para adicionar.",
+    "sending": "Enviando…",
+    "send": "Enviar"
+  },
+  "toasts": {
+    "ticketCreated": "Ticket criado!",
+    "ticketCreateError": "Erro ao criar ticket.",
+    "reactivated": "Campanha reativada.",
+    "archived": "Campanha arquivada."
+  },
+  "confirm": {
+    "finalize": {
+      "title": "Finalizar campanha?",
+      "description": "Vamos encerrar a campanha e gerar o relatório de auditoria com o resumo da produção.",
+      "confirm": "Finalizar"
+    },
+    "delete": {
+      "title": "Excluir campanha?",
+      "description": "Isso remove a campanha e todos os seus tickets. Esta ação não pode ser desfeita.",
+      "confirm": "Excluir campanha"
+    },
+    "bulkDelete": {
+      "title_one": "Excluir ticket?",
+      "title_other": "Excluir {{count}} tickets?",
+      "description": "Esta ação é permanente e não pode ser desfeita. Os tickets e todo o seu conteúdo (subtarefas, criativos, posts) serão removidos.",
+      "confirm": "Excluir"
+    }
+  }
+}

@@ -34,7 +34,7 @@ module Operations
             amount: @amount, granted_delta: 0, purchased_delta: @amount,
             balance_after: wallet.granted_balance + wallet.purchased_balance,
             expires_at: @expires_at,
-            description: @description || 'Compra de créditos',
+            description: @description, description_key: (@description ? nil : 'credits.ledger.purchase'),
             metadata: { reference: @reference }
           )
           wallet

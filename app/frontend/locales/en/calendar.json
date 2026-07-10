@@ -1,0 +1,55 @@
+{
+  "header": {
+    "eyebrow": "Planning",
+    "eyebrowGlobal": "You",
+    "title": "Calendar",
+    "titleGlobal": "My calendar",
+    "description": "Scheduled posts and meetings, all in one place.",
+    "descriptionGlobal": "Scheduled posts and meetings from all your teams, all in one place."
+  },
+  "views": {
+    "day": "Day",
+    "week": "Week",
+    "month": "Month"
+  },
+  "nav": {
+    "previous": "Previous",
+    "next": "Next",
+    "today": "Today"
+  },
+  "legend": {
+    "title": "Legend",
+    "scheduledPosts": "Scheduled posts",
+    "meetings": "Meetings",
+    "tasks": "Tasks"
+  },
+  "moreCount": "+{{count}} more",
+  "event": {
+    "meeting": "Meeting",
+    "post": "Post",
+    "fallback": "Event",
+    "typePost": "Scheduled post",
+    "typePostWithNetwork": "Scheduled post · {{network}}",
+    "typeTicket": "Planned publication",
+    "typeMeeting": "Meeting",
+    "typeTask": "Task",
+    "allDayAt": "{{date}} · all day",
+    "plannedHint": "Planned · scheduled on publish",
+    "taskDone": "Done",
+    "taskOverdue": "Overdue"
+  },
+  "dialog": {
+    "meeting": "Meeting",
+    "scheduledPost": "Scheduled post",
+    "publication": "Publication",
+    "timeLabel": "Time",
+    "clientLabel": "Client",
+    "joinMeet": "Join Meet",
+    "openTicket": "Open ticket"
+  },
+  "timeGrid": {
+    "allDayGutter": "day",
+    "collapseTasks": "Collapse tasks",
+    "expandTasks": "Expand tasks"
+  }
+}

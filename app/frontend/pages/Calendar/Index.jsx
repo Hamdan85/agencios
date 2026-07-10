@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   CalendarDays, CalendarRange, ChevronLeft, ChevronRight, Radio, SquareCheck, Video,
 } from 'lucide-react'
@@ -41,6 +42,7 @@ function fromDateParam(s) {
 // merging scheduled posts + meetings from every team. Without it, the calendar is
 // scoped to the active workspace (/calendario).
 export default function CalendarIndex({ scope } = {}) {
+  const { t } = useTranslation('calendar')
   const global = scope === 'all_workspaces'
   const openTicket = useOpenTicket()
   const { data: me } = useCurrentUser()
@@ -119,19 +121,19 @@ export default function CalendarIndex({ scope } = {}) {
       <PageTitle className="pb-4">
         <PageHeader
           className="mb-0"
-          eyebrow={global ? 'Você' : 'Planejamento'}
-          title={global ? 'Meu calendário' : 'Calendário'}
+          eyebrow={global ? t('header.eyebrowGlobal') : t('header.eyebrow')}
+          title={global ? t('header.titleGlobal') : t('header.title')}
           icon={global ? CalendarRange : CalendarDays}
           color={BRAND}
           description={global
-            ? 'Posts agendados e reuniões de todos os seus times, num só lugar.'
-            : 'Posts agendados e reuniões, num só lugar.'}
+            ? t('header.descriptionGlobal')
+            : t('header.description')}
           actions={
             <Tabs value={view} onValueChange={setView}>
               <TabsList>
-                <TabsTrigger value="day">Dia</TabsTrigger>
-                <TabsTrigger value="week">Semana</TabsTrigger>
-                <TabsTrigger value="month">Mês</TabsTrigger>
+                <TabsTrigger value="day">{t('views.day')}</TabsTrigger>
+                <TabsTrigger value="week">{t('views.week')}</TabsTrigger>
+                <TabsTrigger value="month">{t('views.month')}</TabsTrigger>
               </TabsList>
             </Tabs>
           }
@@ -141,14 +143,14 @@ export default function CalendarIndex({ scope } = {}) {
         <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="flex items-center rounded-xl border border-border bg-surface p-1">
-              <Button variant="ghost" size="icon-sm" onClick={() => step(-1)} aria-label="Anterior">
+              <Button variant="ghost" size="icon-sm" onClick={() => step(-1)} aria-label={t('nav.previous')}>
                 <ChevronLeft size={18} />
               </Button>
-              <Button variant="ghost" size="icon-sm" onClick={() => step(1)} aria-label="Próximo">
+              <Button variant="ghost" size="icon-sm" onClick={() => step(1)} aria-label={t('nav.next')}>
                 <ChevronRight size={18} />
               </Button>
             </div>
-            <Button variant="outline" size="sm" onClick={goToday}>Hoje</Button>
+            <Button variant="outline" size="sm" onClick={goToday}>{t('nav.today')}</Button>
             <h2 className="ml-1 font-display text-lg font-extrabold capitalize tracking-tight text-ink">
               {label}
             </h2>
@@ -245,6 +247,7 @@ function MonthGrid({ cursor, today, byDay, showWorkspace, onEventClick }) {
 }
 
 function DayCell({ day, inMonth, isToday, events, showWorkspace, onEventClick }) {
+  const { t } = useTranslation('calendar')
   const shown = events.slice(0, MAX_CHIPS)
   const overflow = events.length - shown.length
   const weekend = day.getDay() === 0 || day.getDay() === 6
@@ -281,7 +284,7 @@ function DayCell({ day, inMonth, isToday, events, showWorkspace, onEventClick })
           </EventHoverCard>
         ))}
         {overflow > 0 && (
-          <span className="px-1.5 text-[10.5px] font-bold text-ink-muted">+{overflow} mais</span>
+          <span className="px-1.5 text-[10.5px] font-bold text-ink-muted">{t('moreCount', { count: overflow })}</span>
         )}
       </div>
     </div>
@@ -310,12 +313,13 @@ function TimeGridView({ view, cursor, today, byDay, showWorkspace, onEventClick 
 
 // ── Legend ─────────────────────────────────────────────────────────
 function Legend() {
+  const { t } = useTranslation('calendar')
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-surface px-3 py-2">
-      <span className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">Legenda</span>
-      <LegendItem icon={Radio} color="#7C3AED" label="Posts agendados" />
-      <LegendItem icon={Video} color="#14B8A6" label="Reuniões" />
-      <LegendItem icon={SquareCheck} color="#F59E0B" label="Tarefas" />
+      <span className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">{t('legend.title')}</span>
+      <LegendItem icon={Radio} color="#7C3AED" label={t('legend.scheduledPosts')} />
+      <LegendItem icon={Video} color="#14B8A6" label={t('legend.meetings')} />
+      <LegendItem icon={SquareCheck} color="#F59E0B" label={t('legend.tasks')} />
     </div>
   )
 }

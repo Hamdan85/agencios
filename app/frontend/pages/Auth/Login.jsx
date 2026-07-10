@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Mail, Lock, ArrowRight } from 'lucide-react'
 import AuthShell from './AuthShell'
 import GoogleAuth from './GoogleAuth'
@@ -16,12 +17,13 @@ function safeReturnTo(value) {
 }
 
 export default function Login() {
+  const { t } = useTranslation('auth')
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const login = useLogin()
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState(() =>
-    searchParams.get('error') === 'google' ? 'Não foi possível entrar com o Google. Tente novamente.' : null,
+    searchParams.get('error') === 'google' ? t('login.googleError') : null,
   )
   const returnTo = safeReturnTo(searchParams.get('return_to'))
 
@@ -35,28 +37,28 @@ export default function Login() {
         if (returnTo) window.location.href = returnTo
         else navigate('/painel')
       },
-      onError: (err) => setError(err.error || 'Não foi possível entrar.'),
+      onError: (err) => setError(err.error || t('login.error')),
     })
   }
 
   return (
     <AuthShell
-      title="Bem-vindo de volta"
-      subtitle="Entre para acessar o painel da sua agência."
-      footer={<>Ainda não tem conta? <Link to="/cadastro" className="font-bold text-brand hover:underline">Criar conta</Link></>}
+      title={t('login.title')}
+      subtitle={t('login.subtitle')}
+      footer={<>{t('login.noAccount')} <Link to="/cadastro" className="font-bold text-brand hover:underline">{t('login.signUpLink')}</Link></>}
     >
       <form onSubmit={submit} className="space-y-4">
         <div className="space-y-1.5">
-          <Label htmlFor="email">E-mail</Label>
+          <Label htmlFor="email">{t('fields.email')}</Label>
           <div className="relative">
             <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
-            <Input id="email" type="email" autoFocus required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="pl-9" placeholder="voce@agencia.com" />
+            <Input id="email" type="email" autoFocus required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="pl-9" placeholder={t('fields.emailPlaceholder')} />
           </div>
         </div>
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password">Senha</Label>
-            <Link to="/recuperar-senha" className="text-xs font-semibold text-ink-muted hover:text-brand hover:underline">Esqueci minha senha</Link>
+            <Label htmlFor="password">{t('fields.password')}</Label>
+            <Link to="/recuperar-senha" className="text-xs font-semibold text-ink-muted hover:text-brand hover:underline">{t('login.forgotPassword')}</Link>
           </div>
           <div className="relative">
             <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
@@ -65,9 +67,9 @@ export default function Login() {
         </div>
         {error && <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm font-medium text-danger">{error}</p>}
         <Button type="submit" size="lg" className="w-full" disabled={login.isPending}>
-          {login.isPending ? 'Entrando…' : <>Entrar <ArrowRight size={18} /></>}
+          {login.isPending ? t('login.submitting') : <>{t('login.submit')} <ArrowRight size={18} /></>}
         </Button>
-        <GoogleAuth label="Entrar com Google" returnTo={returnTo} />
+        <GoogleAuth label={t('login.withGoogle')} returnTo={returnTo} />
       </form>
     </AuthShell>
   )

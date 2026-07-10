@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslation } from 'react-i18next'
 import { Rows3, Archive, Ghost, Plus, Trash2 } from 'lucide-react'
 import {
   WORKFLOW, STATUS_META, CHANNEL_META, CREATIVE_TYPE_META, PRIORITY_META,
@@ -26,6 +27,7 @@ const BRAND = '#EC4899'
 // toolbar (view tabs + filter/selection bar) is portaled into `filtersSlot` — a
 // node in the hub's fixed title band — so filters stay pinned while rows scroll.
 export default function ListView({ filters, setFilters, filtersSlot, onOpenTicket, onNewTicket }) {
+  const { t } = useTranslation('board')
   // The list-only "view" tab (active | archived | all) defaults to active.
   const listFilters = useMemo(() => ({ view: 'active', ...filters }), [filters])
 
@@ -62,7 +64,7 @@ export default function ListView({ filters, setFilters, filtersSlot, onOpenTicke
       const { ids } = await ticketsApi.ids(listFilters)
       selection.set(ids)
     } catch {
-      toast.error('Não foi possível selecionar todos os tickets.')
+      toast.error(t('list.selectAllError'))
     }
   }
 
@@ -76,8 +78,8 @@ export default function ListView({ filters, setFilters, filtersSlot, onOpenTicke
   // offers the two non-default states — the pill still reads "Ativos" via its
   // placeholder.
   const situationOptions = [
-    { value: 'archived', label: 'Arquivados' },
-    { value: 'all', label: 'Todos' },
+    { value: 'archived', label: t('filters.situationArchived') },
+    { value: 'all', label: t('filters.situationAll') },
   ]
 
   // `view` (situação) is now the first filter — no separate tabs row that would
@@ -92,14 +94,14 @@ export default function ListView({ filters, setFilters, filtersSlot, onOpenTicke
   })
 
   const filterSpec = [
-    { key: 'view', type: 'options', label: 'Situação', placeholder: 'Ativos', options: situationOptions },
-    { key: 'project_id', type: 'project', label: 'Campanha' },
-    { key: 'client_id', type: 'client', label: 'Cliente' },
-    { key: 'assignee_id', type: 'assignee', label: 'Responsável' },
-    { key: 'status', type: 'options', label: 'Etapa', options: statusOptions },
-    { key: 'channel', type: 'options', label: 'Canal', options: channelOptions },
-    { key: 'creative_type', type: 'options', label: 'Tipo', options: creativeOptions },
-    { key: 'priority', type: 'options', label: 'Prioridade', options: priorityOptions },
+    { key: 'view', type: 'options', label: t('filters.situation'), placeholder: t('filters.situationActive'), options: situationOptions },
+    { key: 'project_id', type: 'project', label: t('filters.campaign') },
+    { key: 'client_id', type: 'client', label: t('filters.client') },
+    { key: 'assignee_id', type: 'assignee', label: t('filters.assignee') },
+    { key: 'status', type: 'options', label: t('filters.status'), options: statusOptions },
+    { key: 'channel', type: 'options', label: t('filters.channel'), options: channelOptions },
+    { key: 'creative_type', type: 'options', label: t('filters.type'), options: creativeOptions },
+    { key: 'priority', type: 'options', label: t('filters.priority'), options: priorityOptions },
   ]
 
   // The toolbar lives in the hub's fixed title band, not inline with the rows.
@@ -114,7 +116,7 @@ export default function ListView({ filters, setFilters, filtersSlot, onOpenTicke
       onClear={selection.clear}
     >
       <Button variant="destructive" size="sm" className="gap-1.5" onClick={() => setConfirmOpen(true)}>
-        <Trash2 size={15} /> Excluir
+        <Trash2 size={15} /> {t('list.delete')}
       </Button>
     </SelectionBar>
   ) : (
@@ -122,7 +124,7 @@ export default function ListView({ filters, setFilters, filtersSlot, onOpenTicke
       search
       searchValue={filters.q || ''}
       onSearch={(v) => setFilters((f) => ({ ...f, q: v }))}
-      searchPlaceholder="Buscar por título…"
+      searchPlaceholder={t('filters.searchPlaceholder')}
       filters={filterSpec}
       values={filters}
       onChange={(key, value) => set(key)(value)}
@@ -139,21 +141,21 @@ export default function ListView({ filters, setFilters, filtersSlot, onOpenTicke
       {isLoading ? (
         <div className="flex justify-center py-24"><Spinner size={30} /></div>
       ) : isError ? (
-        <EmptyState icon={Ghost} title="Erro ao carregar" description="Não foi possível carregar os tickets. Tente novamente." />
+        <EmptyState icon={Ghost} title={t('list.loadErrorTitle')} description={t('list.loadErrorDescription')} />
       ) : rows.length === 0 ? (
         <EmptyState
           icon={listFilters.view === 'archived' ? Archive : Rows3}
           color={BRAND}
-          title={listFilters.view === 'archived' ? 'Nenhum ticket arquivado' : 'Nenhum ticket encontrado'}
-          description={activeCount > 0 ? 'Ajuste os filtros para ver mais resultados.' : 'Crie o primeiro ticket e comece a mover o trabalho pelo funil.'}
+          title={listFilters.view === 'archived' ? t('list.emptyArchivedTitle') : t('list.emptyTitle')}
+          description={activeCount > 0 ? t('list.emptyFiltered') : t('list.emptyDescription')}
           action={listFilters.view !== 'archived' && activeCount === 0
-            ? <Button onClick={onNewTicket}><Plus size={18} /> Novo ticket</Button>
+            ? <Button onClick={onNewTicket}><Plus size={18} /> {t('newTicket')}</Button>
             : undefined}
         />
       ) : (
         <>
           <p className="mb-2 px-1 text-[12px] font-semibold text-ink-muted">
-            {total} ticket{total === 1 ? '' : 's'}
+            {t('list.ticketCount', { count: total })}
           </p>
           <div className="space-y-2">
             {rows.map((t) => (
@@ -174,7 +176,7 @@ export default function ListView({ filters, setFilters, filtersSlot, onOpenTicke
           <div ref={sentinelRef} aria-hidden className="h-1" />
           {isFetchingNextPage && <div className="flex justify-center py-5"><Spinner size={20} /></div>}
           {!hasNextPage && rows.length > 8 && (
-            <p className="py-5 text-center text-[12px] text-ink-faint">Fim da lista</p>
+            <p className="py-5 text-center text-[12px] text-ink-faint">{t('list.endOfList')}</p>
           )}
         </>
       )}
@@ -184,9 +186,9 @@ export default function ListView({ filters, setFilters, filtersSlot, onOpenTicke
         onOpenChange={setConfirmOpen}
         icon={Trash2}
         destructive
-        title={selection.count === 1 ? 'Excluir ticket?' : `Excluir ${selection.count} tickets?`}
-        description="Esta ação é permanente e não pode ser desfeita. Os tickets e todo o seu conteúdo (subtarefas, criativos, posts) serão removidos."
-        confirmLabel="Excluir"
+        title={t('list.deleteConfirm.title', { count: selection.count })}
+        description={t('list.deleteConfirm.description')}
+        confirmLabel={t('list.deleteConfirm.confirm')}
         loading={bulkDelete.isPending}
         onConfirm={confirmDelete}
       />

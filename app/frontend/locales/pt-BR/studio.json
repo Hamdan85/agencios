@@ -1,0 +1,177 @@
+{
+  "dialog": {
+    "carousel": {
+      "title": "Gerar Carrossel",
+      "description": "Um carrossel viral a partir de uma ideia, texto ou link — copy, slides e identidade da marca."
+    },
+    "video": {
+      "title": "Novo vídeo",
+      "description": "Diga o essencial e gere o rascunho — estilo, referências e ajustes você faz conversando no editor."
+    },
+    "image": {
+      "title": "Gerar Imagem",
+      "description": "Uma imagem original a partir do seu prompt criativo."
+    },
+    "clientLabel": "Cliente",
+    "clientPlaceholder": "Para qual cliente?",
+    "clientEmpty": "Crie um cliente primeiro.",
+    "brandLabel": "Marca",
+    "cancel": "Cancelar",
+    "submitVideo": "Continuar no editor",
+    "submitGenerate": "Gerar agora"
+  },
+  "carousel": {
+    "sourceLabel": "Fonte do conteúdo",
+    "source": {
+      "idea": "Ideia",
+      "text": "Texto",
+      "link": "Link"
+    },
+    "ideaLabel": "Ideia / tema",
+    "ideaPlaceholder": "Ex.: 5 erros ao começar no marketing de conteúdo",
+    "textLabel": "Texto base",
+    "textPlaceholder": "Cole o texto (artigo, roteiro, notas) que vira o carrossel…",
+    "linkLabel": "Link",
+    "linkPlaceholder": "https://exemplo.com/artigo",
+    "slidesLabel": "Nº de slides",
+    "slidesAuto": "Automático",
+    "slidesCount": "{{count}} slides",
+    "objectiveLabel": "Objetivo",
+    "objective": {
+      "engagement": "Engajamento",
+      "reach": "Alcance",
+      "conversion": "Conversão",
+      "education": "Educação"
+    }
+  },
+  "video": {
+    "briefLabel": "O que é o vídeo?",
+    "briefPlaceholder": "Descreva o vídeo: quem/o que aparece, o que deve dizer, o clima. Pode colar um roteiro. O resto você ajusta conversando no editor.",
+    "referencesLabel": "Referências (opcional)",
+    "referencesHint": "Até {{max}} — diga o que é cada arquivo para o vídeo usar do jeito certo.",
+    "formatLabel": "Formato",
+    "durationLabel": "Duração",
+    "duration": {
+      "short": "Curto",
+      "medium": "Médio",
+      "long": "Longo"
+    },
+    "soundLabel": "Som",
+    "sound": {
+      "on": "Com som",
+      "onHint": "fala + ambiente",
+      "off": "Sem som",
+      "offHint": "silencioso"
+    }
+  },
+  "image": {
+    "promptLabel": "Prompt",
+    "promptPlaceholder": "Descreva a imagem que você quer gerar — estilo, cena, cores, atmosfera…",
+    "referencesLabel": "Imagens de referência (opcional)",
+    "referencesHint": "Até {{max}} — estilo, objeto ou composição de referência."
+  },
+  "improve": {
+    "title": "Melhorar esse prompt",
+    "improving": "Melhorando…",
+    "typing": "Escrevendo…",
+    "cta": "Melhorar",
+    "error": "Não foi possível melhorar o prompt. Tente de novo."
+  },
+  "refs": {
+    "maxPhotos": "Máximo de {{max}} fotos.",
+    "uploadError": "Não foi possível enviar a foto. Tente outra imagem (JPG, PNG ou WEBP).",
+    "alt": "Referência",
+    "remove": "Remover",
+    "describePlaceholder": "O que é este arquivo? (ex.: foto do produto, personagem, estilo…)",
+    "add": "Adicionar referência",
+    "imageTile": "Imagem"
+  },
+  "generating": {
+    "openingEditor": "Abrindo o editor…",
+    "title": "Gerando {{kind}}…",
+    "videoBody": "Vou fazer algumas perguntas para acertar o vídeo.",
+    "body": "A IA está criando seu criativo. Isso leva alguns instantes."
+  },
+  "success": {
+    "title": "Geração enviada!",
+    "body": "Acompanhe o progresso em “Gerações recentes”."
+  },
+  "generatorCard": {
+    "cta": "Gerar com IA"
+  },
+  "page": {
+    "eyebrow": "Criação",
+    "title": "Estúdio",
+    "description": "Gere criativos com IA no padrão da marca do cliente e gerencie sua biblioteca."
+  },
+  "generators": {
+    "carousel": {
+      "title": "Carrossel",
+      "subtitle": "Viral · ideia, texto ou link"
+    },
+    "video": {
+      "title": "Vídeo",
+      "subtitle": "Avatar falando ou produto a partir de fotos"
+    },
+    "image": {
+      "title": "Imagem",
+      "subtitle": "Imagem original via prompt"
+    }
+  },
+  "gallery": {
+    "searchPlaceholder": "Buscar por nome ou legenda…",
+    "filterType": "Tipo",
+    "filterClient": "Cliente",
+    "empty": {
+      "title": "Nenhum criativo ainda",
+      "description": "Gere um carrossel, vídeo ou imagem com IA usando os geradores acima."
+    },
+    "status": {
+      "generating": "Gerando…",
+      "failed": "Falhou"
+    },
+    "view": "Ver {{type}}",
+    "aiBadge": "IA",
+    "remove": "Remover",
+    "deleteTitle": "Excluir criativo?",
+    "deleteDescription": "Esta ação não pode ser desfeita.",
+    "deleteConfirm": "Excluir"
+  },
+  "toasts": {
+    "generateStartedVideo": "Geração iniciada ✨",
+    "generateDone": "Geração concluída ✨",
+    "generateError": "Erro ao gerar criativo.",
+    "creativeUpdated": "Criativo atualizado.",
+    "creativeUpdateError": "Erro ao atualizar criativo.",
+    "creativeRemoved": "Criativo removido.",
+    "creativeRemoveError": "Erro ao remover criativo."
+  },
+  "videoEditor": {
+    "openError": "Não foi possível abrir o editor de vídeo.",
+    "sceneRedoing": "Refazendo a cena…",
+    "sceneUpdated": "Cena atualizada",
+    "sceneEditError": "Não foi possível editar a cena.",
+    "finalizeStarted": "Gerando em alta qualidade ✨",
+    "finalizeError": "Não foi possível iniciar o upgrade.",
+    "chatError": "Não foi possível conversar com o editor.",
+    "musicUpdated": "Trilha atualizada ✨",
+    "assetRegenerated": "Elemento regenerado ✨",
+    "assetRegenerateError": "Não foi possível regenerar o elemento.",
+    "assetAdded": "Elemento adicionado ✨",
+    "assetAddError": "Não foi possível adicionar o elemento.",
+    "assetRemoved": "Elemento removido",
+    "assetRemoveError": "Não foi possível remover o elemento."
+  },
+  "strategy": {
+    "startError": "Erro ao iniciar o planejamento.",
+    "applySuccess": "{{count}} ticket(s) criado(s) a partir da estratégia ✨",
+    "applySuccessNoTickets": "Alterações aplicadas à campanha ✨",
+    "applyError": "Erro ao aplicar o plano.",
+    "discarded": "Plano descartado.",
+    "discardError": "Erro ao descartar o plano.",
+    "buildFailed": "Não consegui montar o plano agora. Tente pedir novamente.",
+    "fallbackReply": "Certo! Deixa eu montar isso e já te trago a proposta.",
+    "chatError": "Erro no chat de estratégia.",
+    "errorBubble": "⚠️ Ocorreu um erro. Tente novamente."
+  }
+}

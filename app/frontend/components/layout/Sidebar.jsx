@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { NavLink, Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ChevronsUpDown, LogOut, Check, Plus, UserRound } from 'lucide-react'
 import { BrandMark } from '@/components/brand/BrandMark'
 import { PERSONAL_NAV, NAV_ITEMS, FOOTER_NAV } from './navItems'
@@ -46,6 +47,7 @@ function SectionLabel({ children }) {
 }
 
 export default function Sidebar({ me, onNavigate }) {
+  const { t } = useTranslation('layout')
   const logout = useLogout()
   const navigate = useNavigate()
   const { switch: switchWs } = useWorkspaceMutations()
@@ -68,7 +70,7 @@ export default function Sidebar({ me, onNavigate }) {
       {/* Nav */}
       <nav className="flex min-h-0 flex-1 flex-col space-y-0.5 overflow-hidden px-3 pb-2">
         {/* Você — the user's own views, across every team */}
-        <SectionLabel>Você</SectionLabel>
+        <SectionLabel>{t('sidebar.you')}</SectionLabel>
         {PERSONAL_NAV.map((item) => <NavRow key={item.to} {...item} onNavigate={onNavigate} />)}
 
         {/* Team — switcher + workspace-scoped nav, grouped in a frosted "glass" panel
@@ -82,12 +84,12 @@ export default function Sidebar({ me, onNavigate }) {
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-bold text-white">{workspace?.name || 'Workspace'}</span>
-                <span className="block truncate text-[11px] capitalize text-white/45">Plano {workspace?.plan || 'solo'}</span>
+                <span className="block truncate text-[11px] capitalize text-white/45">{t('sidebar.plan', { plan: workspace?.plan || 'solo' })}</span>
               </span>
               <ChevronsUpDown size={15} className="text-white/40" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-60">
-              <DropdownMenuLabel>Seus workspaces</DropdownMenuLabel>
+              <DropdownMenuLabel>{t('sidebar.yourWorkspaces')}</DropdownMenuLabel>
               {workspaces.map((ws) => (
                 <DropdownMenuItem key={ws.id} onSelect={() => ws.id !== workspace?.id && switchWs.mutate(ws.id)}>
                   <span className="flex size-6 items-center justify-center rounded-md bg-brand-soft text-[11px] font-black text-brand">{ws.name[0].toUpperCase()}</span>
@@ -100,7 +102,7 @@ export default function Sidebar({ me, onNavigate }) {
                 disabled={!canCreateWorkspace}
                 onSelect={() => canCreateWorkspace && setCreateOpen(true)}
               >
-                <Plus size={15} /> Novo workspace
+                <Plus size={15} /> {t('sidebar.newWorkspace')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -110,9 +112,9 @@ export default function Sidebar({ me, onNavigate }) {
           </div>
 
           <div className="mt-1 min-h-0 flex-1 space-y-0.5 overflow-y-auto no-scrollbar">
-            <SectionLabel>Operação</SectionLabel>
+            <SectionLabel>{t('sidebar.operation')}</SectionLabel>
             {NAV_ITEMS.map((item) => <NavRow key={item.to} {...item} onNavigate={onNavigate} />)}
-            <SectionLabel>Conta</SectionLabel>
+            <SectionLabel>{t('sidebar.account')}</SectionLabel>
             {FOOTER_NAV.map((item) => <NavRow key={item.to} {...item} onNavigate={onNavigate} />)}
           </div>
         </div>
@@ -124,17 +126,17 @@ export default function Sidebar({ me, onNavigate }) {
           <DropdownMenuTrigger className="flex w-full items-center gap-2.5 rounded-xl px-2 py-2 text-left transition hover:bg-white/[0.06]">
             <Avatar name={user?.name || user?.email} src={user?.avatar_url} size={34} />
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-bold text-white">{user?.name || 'Você'}</span>
+              <span className="block truncate text-sm font-bold text-white">{user?.name || t('sidebar.userFallback')}</span>
               <span className="block truncate text-[11px] text-white/45">{user?.email}</span>
             </span>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" side="top" className="w-56">
             <DropdownMenuItem onSelect={() => { navigate('/conta'); onNavigate?.() }}>
-              <UserRound size={15} /> Minha conta
+              <UserRound size={15} /> {t('sidebar.myAccount')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => logout.mutate()} className="text-danger data-[highlighted]:text-danger">
-              <LogOut size={15} /> Sair
+              <LogOut size={15} /> {t('sidebar.logout')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

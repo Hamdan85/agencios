@@ -30,7 +30,7 @@ module Operations
           workspace: @workspace,
           amount: @workspace.monthly_credit_limit,
           expires_at: Time.current.end_of_month,
-          description: 'Créditos mensais (cortesia godfathered)'
+          description_key: 'credits.ledger.godfathered_monthly'
         )
       end
     end

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Megaphone, Eye, Users, Heart, TrendingUp, ExternalLink, BarChart3 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { StatCard } from '@/components/ui/page-header'
@@ -32,6 +33,7 @@ function Panel({ title, color = '#7C3AED', className, children }) {
 // a KPI row, a trend line, network / format / campaign breakdowns and the top
 // performing posts.
 export default function PostsPerformance({ overview, loading }) {
+  const { t } = useTranslation('posts')
   if (loading) {
     return (
       <div className="flex flex-col gap-4">
@@ -50,8 +52,8 @@ export default function PostsPerformance({ overview, loading }) {
     return (
       <EmptyState
         icon={BarChart3}
-        title="Sem dados de desempenho"
-        description="Publique conteúdo para começar a acompanhar alcance, visualizações e engajamento aqui."
+        title={t('performanceTab.empty.title')}
+        description={t('performanceTab.empty.description')}
         color={BRAND}
       />
     )
@@ -82,37 +84,37 @@ export default function PostsPerformance({ overview, loading }) {
     <div className="flex flex-col gap-4">
       {/* KPI row */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        <StatCard label="Publicações" value={num(k.posts_count)} icon={Megaphone} color={BRAND} />
-        <StatCard label="Visualizações" value={compact(k.views)} icon={Eye} color="#7C3AED" />
-        <StatCard label="Alcance" value={compact(k.reach)} icon={Users} color="#6366F1" />
-        <StatCard label="Engajamento" value={compact(k.engagement)} icon={Heart} color="#EC4899" />
-        <StatCard label="Taxa de engajamento" value={`${num(Math.round(rate * 10) / 10)}%`} icon={TrendingUp} color="#10B981" sub="engajamento / alcance" />
+        <StatCard label={t('common:series.posts')} value={num(k.posts_count)} icon={Megaphone} color={BRAND} />
+        <StatCard label={t('common:series.views')} value={compact(k.views)} icon={Eye} color="#7C3AED" />
+        <StatCard label={t('common:series.reach')} value={compact(k.reach)} icon={Users} color="#6366F1" />
+        <StatCard label={t('common:series.engagement')} value={compact(k.engagement)} icon={Heart} color="#EC4899" />
+        <StatCard label={t('performance.engagementRate')} value={`${num(Math.round(rate * 10) / 10)}%`} icon={TrendingUp} color="#10B981" sub={t('performanceTab.rateSub')} />
       </div>
 
       {/* Trend + network split */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <Panel title="Tendência" color="#7C3AED" className="lg:col-span-2">
+        <Panel title={t('performanceTab.trend')} color="#7C3AED" className="lg:col-span-2">
           <LineTrend data={overview.timeseries || []} keys={['views', 'engagement', 'reach']} />
         </Panel>
-        <Panel title="Por rede" color={BRAND}>
-          <DonutBreakdown data={byNetwork} legend unit="Visualizações" />
+        <Panel title={t('performanceTab.byNetwork')} color={BRAND}>
+          <DonutBreakdown data={byNetwork} legend unit={t('common:series.views')} />
         </Panel>
       </div>
 
       {/* Format + campaign rankings */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Panel title="Por formato" color="#EC4899">
+        <Panel title={t('performanceTab.byFormat')} color="#EC4899">
           <RankBars data={byType} />
         </Panel>
-        <Panel title="Por campanha" color={BRAND}>
+        <Panel title={t('performanceTab.byCampaign')} color={BRAND}>
           <RankBars data={byCampaign} />
         </Panel>
       </div>
 
       {/* Top posts */}
-      <Panel title="Melhores publicações" color="#10B981">
+      <Panel title={t('performanceTab.topPosts')} color="#10B981">
         {topPosts.length === 0 ? (
-          <p className="rounded-xl bg-surface-muted/50 px-4 py-6 text-center text-sm text-ink-muted">Sem publicações no período</p>
+          <p className="rounded-xl bg-surface-muted/50 px-4 py-6 text-center text-sm text-ink-muted">{t('performanceTab.noPostsInPeriod')}</p>
         ) : (
           <ul className="divide-y divide-border">
             {topPosts.map((p, i) => (
@@ -130,10 +132,10 @@ export default function PostsPerformance({ overview, loading }) {
                 </div>
                 <div className="shrink-0 text-right">
                   <p className="font-display text-sm font-bold tabular-nums text-ink">{compact(p.views)}</p>
-                  <p className="text-[11px] font-medium text-ink-muted">{compact(p.engagement)} engaj.</p>
+                  <p className="text-[11px] font-medium text-ink-muted">{t('performanceTab.engagementShort', { value: compact(p.engagement) })}</p>
                 </div>
                 {p.permalink && (
-                  <a href={p.permalink} target="_blank" rel="noreferrer" className="shrink-0 text-ink-muted transition-colors hover:text-ink" title="Abrir na rede">
+                  <a href={p.permalink} target="_blank" rel="noreferrer" className="shrink-0 text-ink-muted transition-colors hover:text-ink" title={t('performanceTab.openOnNetwork')}>
                     <ExternalLink size={15} />
                   </a>
                 )}

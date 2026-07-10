@@ -1,0 +1,125 @@
+{
+  "shell": {
+    "linkInvalid": "Este link não é mais válido. Fale com sua agência para receber um novo.",
+    "centralOf": "Central de {{name}}",
+    "clientFallback": "cliente",
+    "madeWith": "feito com <star>✳</star> Agencios"
+  },
+  "progress": {
+    "counter": "Conteúdo {{position}} de {{total}}"
+  },
+  "terminal": {
+    "allApprovedTitle": "Tudo aprovado!",
+    "nothingPendingTitle": "Nada pendente por aqui",
+    "doneBody_one": "Você revisou {{count}} conteúdo. A equipe da {{agency}} já foi avisada. ✨",
+    "doneBody_other": "Você revisou {{count}} conteúdos. A equipe da {{agency}} já foi avisada. ✨",
+    "upToDate": "Tudo em dia! Avisaremos assim que houver algo novo para revisar."
+  },
+  "toasts": {
+    "approved": "Conteúdo aprovado ✓",
+    "undo": "Desfazer",
+    "undoError": "Não foi possível desfazer.",
+    "approveError": "Erro ao aprovar.",
+    "feedbackSent": "Enviamos seu feedback à equipe 👍",
+    "sendError": "Erro ao enviar."
+  },
+  "tabs": {
+    "board": "Quadro",
+    "approvals": "Aprovações",
+    "metrics": "Métricas",
+    "report": "Relatório"
+  },
+  "campaign": {
+    "backToCampaigns": "Voltar às campanhas",
+    "listTitle": "Suas campanhas",
+    "listSubtitle": "Acompanhe o andamento, aprove conteúdos e veja os resultados.",
+    "emptyTitle": "Nenhuma campanha por aqui ainda",
+    "emptyBody": "Assim que sua agência iniciar uma campanha, ela aparece aqui.",
+    "contentCount": "{{count}} conteúdo(s)",
+    "reportReady": "Relatório pronto",
+    "completedOn": "· concluída em {{date}}",
+    "pendingApproval": "{{count}} aguardando sua aprovação",
+    "open": "Abrir"
+  },
+  "campaignStatus": {
+    "active": "Em andamento",
+    "paused": "Pausada",
+    "completed": "Finalizada",
+    "archived": "Arquivada"
+  },
+  "labels": {
+    "formats": "Formatos",
+    "channels": "Canais",
+    "objective": "Objetivo",
+    "brief": "Briefing",
+    "progress": "Progresso"
+  },
+  "board": {
+    "untitled": "Sem título",
+    "sheetDescription": "Detalhes da tarefa",
+    "close": "Fechar",
+    "creativesPending": "Os criativos aparecem aqui assim que a equipe finalizar a produção.",
+    "emptyTitle": "Ainda não há conteúdo nesta campanha",
+    "emptyBody": "Assim que a equipe começar a produzir, os cards aparecem aqui."
+  },
+  "approvals": {
+    "emptyTitle": "Nada aguardando sua aprovação",
+    "emptyBody": "Avisaremos assim que houver conteúdo novo para revisar."
+  },
+  "metrics": {
+    "live": "ao vivo",
+    "emptyTitle": "Sem posts publicados nesta campanha ainda",
+    "emptyBody": "As métricas de alcance, visualizações e engajamento aparecem aqui assim que as publicações forem ao ar.",
+    "title": "Desempenho da campanha",
+    "engagementRate": "Taxa de engajamento",
+    "engagementRateSub": "engajamento / alcance",
+    "trend": "Tendência",
+    "byNetwork": "Por rede",
+    "byFormat": "Por formato",
+    "topPosts": "Melhores publicações",
+    "noPostsInPeriod": "Sem publicações no período",
+    "engagementShort": "{{value}} engaj.",
+    "openOnNetwork": "Abrir na rede"
+  },
+  "report": {
+    "generatingTitle": "Gerando o relatório…",
+    "generatingBody": "Estamos preparando o relatório desta campanha. Ele aparece aqui automaticamente.",
+    "notAvailableTitle": "Relatório ainda não disponível",
+    "notAvailableBody": "O relatório é gerado quando a campanha é finalizada.",
+    "filename": "relatorio-{{name}}.pdf",
+    "filenameFallback": "campanha"
+  },
+  "queue": {
+    "title": "Aguardando aprovação",
+    "searchPlaceholder": "Buscar conteúdo…",
+    "noResults": "Nada encontrado."
+  },
+  "card": {
+    "approve": "Aprovar",
+    "approveOption": "Aprovar Opção {{letter}}",
+    "approveSlot": "Aprovar {{slot}}",
+    "optionsCaption": "{{piece}} — {{total}} opções · toque para escolher",
+    "pieces": "Peças ({{total}})",
+    "optionsCount": "{{total}} opções",
+    "decision": "Decisão: {{slot}}",
+    "chooseOption": "Escolha uma opção ao lado para aprovar.",
+    "changesRequestedTitle": "Você pediu ajustes",
+    "changesRequestedBody": "A equipe está trabalhando nos ajustes e reenviará para aprovação.",
+    "approved": "✓ Aprovado",
+    "requestChanges": "Pedir ajustes"
+  },
+  "dialog": {
+    "whichOption": "Sobre qual opção?",
+    "whatToAdjust": "O que você gostaria de ajustar?",
+    "placeholder": "Descreva os ajustes que a equipe deve fazer…",
+    "quickPicks": {
+      "swapColors": "Trocar as cores",
+      "adjustText": "Ajustar o texto",
+      "changeImage": "Mudar a imagem",
+      "redoFromScratch": "Refazer do zero"
+    },
+    "cancel": "Cancelar",
+    "sending": "Enviando…",
+    "send": "Enviar ajuste"
+  }
+}

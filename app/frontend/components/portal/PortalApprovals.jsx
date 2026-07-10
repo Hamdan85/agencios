@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { CheckCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
@@ -16,6 +17,7 @@ import RequestChangesDialog from '@/components/approval/RequestChangesDialog'
 // card + change dialog, but scoped to one campaign (filters the client-wide queue
 // by project_id). Same optimistic reconcile + 6s undo as the standalone portal.
 export default function PortalApprovals({ token, campaignId, accent = '#7C3AED' }) {
+  const { t } = useTranslation('portal')
   const { data, isLoading } = usePublicApproval(token)
   const qc = useQueryClient()
   const [busy, setBusy] = useState(false)
@@ -37,8 +39,8 @@ export default function PortalApprovals({ token, campaignId, accent = '#7C3AED' 
       <div className="flex min-h-0 flex-1 items-center justify-center p-4">
         <div className="w-full max-w-md rounded-2xl border border-dashed border-border bg-surface py-16 text-center">
           <CheckCircle2 className="mx-auto mb-3" size={28} style={{ color: accent }} />
-          <p className="font-semibold text-ink">Nada aguardando sua aprovação</p>
-          <p className="mt-1 text-sm text-ink-muted">Avisaremos assim que houver conteúdo novo para revisar.</p>
+          <p className="font-semibold text-ink">{t('approvals.emptyTitle')}</p>
+          <p className="mt-1 text-sm text-ink-muted">{t('approvals.emptyBody')}</p>
         </div>
       </div>
     )
@@ -50,12 +52,12 @@ export default function PortalApprovals({ token, campaignId, accent = '#7C3AED' 
     if (!stillPending && celebrate) {
       burstConfetti(accent)
       if (navigator.vibrate) navigator.vibrate(15)
-      toast.success('Conteúdo aprovado ✓', {
+      toast.success(t('toasts.approved'), {
         action: {
-          label: 'Desfazer',
+          label: t('toasts.undo'),
           onClick: async () => {
             try { const undone = await approvalsApi.undo(token, ticketId); setFocusId(ticketId); setQueue(undone) }
-            catch (e) { toast.error(e?.error || 'Não foi possível desfazer.') }
+            catch (e) { toast.error(e?.error || t('toasts.undoError')) }
           },
         },
       })
@@ -68,7 +70,7 @@ export default function PortalApprovals({ token, campaignId, accent = '#7C3AED' 
     try {
       const res = await approvalsApi.approveSlot(token, ticketId, { creativeType, creativeId })
       reconcile(res, ticketId, { celebrate: true })
-    } catch (e) { toast.error(e?.error || 'Erro ao aprovar.') }
+    } catch (e) { toast.error(e?.error || t('toasts.approveError')) }
     finally { setBusy(false) }
   }
 
@@ -79,8 +81,8 @@ export default function PortalApprovals({ token, campaignId, accent = '#7C3AED' 
       const res = await approvalsApi.requestChanges(token, ticketId, { creativeId, feedback })
       setChangesFor(null)
       reconcile(res, ticketId)
-      toast.success('Enviamos seu feedback à equipe 👍')
-    } catch (e) { toast.error(e?.error || 'Erro ao enviar.') }
+      toast.success(t('toasts.feedbackSent'))
+    } catch (e) { toast.error(e?.error || t('toasts.sendError')) }
     finally { setBusy(false) }
   }
 

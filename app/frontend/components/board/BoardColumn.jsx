@@ -1,4 +1,5 @@
 import { useDroppable } from '@dnd-kit/core'
+import { useTranslation } from 'react-i18next'
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Inbox, MoreVertical, Archive } from 'lucide-react'
@@ -31,6 +32,7 @@ function SortableTicket({ ticket, onOpen }) {
 // One status column: accent header, count badge, tinted droppable body.
 // `onClear`, when provided, surfaces a column menu to bulk-archive its cards.
 export function BoardColumn({ status, label, tickets = [], onOpenTicket, onClear }) {
+  const { t } = useTranslation('board')
   const m = statusMeta(status)
   const Icon = m.icon
   const ids = tickets.map((t) => String(t.id))
@@ -71,7 +73,7 @@ export function BoardColumn({ status, label, tickets = [], onOpenTicket, onClear
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  aria-label="Ações da coluna"
+                  aria-label={t('column.actions')}
                   className="flex size-6 items-center justify-center rounded-md text-ink-muted transition hover:bg-surface-muted hover:text-ink focus:outline-none"
                 >
                   <MoreVertical size={15} />
@@ -79,7 +81,7 @@ export function BoardColumn({ status, label, tickets = [], onOpenTicket, onClear
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-52">
                 <DropdownMenuItem onClick={onClear} disabled={tickets.length === 0}>
-                  <Archive size={15} /> Arquivar concluídos
+                  <Archive size={15} /> {t('column.archiveDone')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -105,7 +107,7 @@ export function BoardColumn({ status, label, tickets = [], onOpenTicket, onClear
         {tickets.length === 0 && (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border/80 py-8 text-center">
             <Inbox size={20} className="text-ink-faint" strokeWidth={2} />
-            <p className="text-[11.5px] font-semibold text-ink-faint">Arraste cards para cá</p>
+            <p className="text-[11.5px] font-semibold text-ink-faint">{t('column.dropHere')}</p>
           </div>
         )}
       </div>

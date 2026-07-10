@@ -33,7 +33,7 @@ module Controllers
         workspace.credit_transactions.recent_first.limit(30).map do |tx|
           {
             id: tx.id, kind: tx.kind, amount: tx.amount,
-            balance_after: tx.balance_after, description: tx.description,
+            balance_after: tx.balance_after, description: tx.display_description,
             created_at: tx.created_at.iso8601
           }
         end

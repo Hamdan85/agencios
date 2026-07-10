@@ -1,0 +1,62 @@
+{
+  "compact": {
+    "millions": "{{value}}M",
+    "thousands": "{{value}}K"
+  },
+  "show": {
+    "notFound": "Report not found",
+    "back": "Back to campaign",
+    "generatingTitle": "Generating the audit…",
+    "generatingDescription": "We're aggregating the campaign's metrics and strategic analysis. This updates on its own.",
+    "failedTitle": "Could not generate the report",
+    "failedDescription": "Try finishing the campaign again.",
+    "pdfFilename": "report-{{name}}.pdf",
+    "pdfFallbackName": "campaign"
+  },
+  "send": {
+    "sentAt": "Sent on {{date}}",
+    "noEmail": "The client has no email on file.",
+    "resend": "Resend to client",
+    "send": "Send to client"
+  },
+  "toolbar": {
+    "print": "Print",
+    "downloadPdf": "Download PDF",
+    "printError": "Could not open the print dialog. Download the PDF and print it from there.",
+    "pdfError": "Could not generate the PDF."
+  },
+  "deck": {
+    "coverEyebrow": "Social media audit",
+    "aiUnavailable": "The written analysis couldn't be generated right now — the numbers below reflect the campaign's real data.",
+    "numbersTitle": "The numbers",
+    "kpis": {
+      "followers": "Followers",
+      "newFollowers": "New followers",
+      "accountsReached": "Accounts reached",
+      "views": "Views",
+      "postsReach": "Reach (posts)",
+      "reelShares": "Reel shares",
+      "storyReplies": "Story replies",
+      "engagement": "Engagement"
+    },
+    "accountDataNotice": "Profile metrics (followers, accounts reached, Story replies) start showing up as the snapshot history is collected.",
+    "overallTitle": "Overall score",
+    "outOfTen": "/ 10",
+    "toReach8": "To reach 8",
+    "toReach9": "To reach 9",
+    "winsTitle": "What's working",
+    "formatPerformanceTitle": "Performance by format",
+    "whatPerforms": "✅ What performs",
+    "whatDoesnt": "❌ What doesn't work",
+    "noData": "No data.",
+    "bottlenecksTitle": "Critical bottlenecks",
+    "opportunitiesTitle": "What needs to be explored",
+    "matrixTitle": "Performance matrix",
+    "actionPlanTitle": "Action plan",
+    "next7Days": "Next 7 days",
+    "next30Days": "Next 30 days",
+    "next90Days": "Next 90 days",
+    "projectionTitle": "12-month projection",
+    "growthFallbackTitle": "Growth vector"
+  }
+}

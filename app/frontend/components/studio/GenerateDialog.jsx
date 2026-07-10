@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Sparkles, CheckCircle2, Wand2, AtSign, Plus, X, MessageSquare } from 'lucide-react'
 import { studioApi, uploadsApi } from '@/api'
@@ -45,14 +46,14 @@ const VIDEO_FORMATS = [
   { value: '16:9', label: '16:9', hint: 'YouTube' },
 ]
 const VIDEO_DURATIONS = [
-  { value: 8, label: 'Curto', hint: '8s' },
-  { value: 16, label: 'Médio', hint: '16s' },
-  { value: 30, label: 'Longo', hint: '30s' },
+  { value: 8, labelKey: 'video.duration.short', hint: '8s' },
+  { value: 16, labelKey: 'video.duration.medium', hint: '16s' },
+  { value: 30, labelKey: 'video.duration.long', hint: '30s' },
 ]
 // Native model audio (Veo 3.1 generates speech/ambient). On by default.
 const SOUND_OPTIONS = [
-  { value: true, label: 'Com som', hint: 'fala + ambiente' },
-  { value: false, label: 'Sem som', hint: 'silencioso' },
+  { value: true, labelKey: 'video.sound.on', hintKey: 'video.sound.onHint' },
+  { value: false, labelKey: 'video.sound.off', hintKey: 'video.sound.offHint' },
 ]
 
 // Max input lengths per prompt field. Mirror the backend `copy_limits` where
@@ -67,28 +68,13 @@ const LIMITS = {
 }
 
 const SLIDE_OPTIONS = ['auto', 4, 5, 6, 7, 8, 10]
-const slideLabel = (n) => (n === 'auto' ? 'Automático' : `${n} slides`)
-
-const META = {
-  carousel: {
-    title: 'Gerar Carrossel',
-    description: 'Um carrossel viral a partir de uma ideia, texto ou link — copy, slides e identidade da marca.',
-  },
-  video: {
-    title: 'Novo vídeo',
-    description: 'Diga o essencial e gere o rascunho — estilo, referências e ajustes você faz conversando no editor.',
-  },
-  image: {
-    title: 'Gerar Imagem',
-    description: 'Uma imagem original a partir do seu prompt criativo.',
-  },
-}
+const slideLabel = (t, n) => (n === 'auto' ? t('carousel.slidesAuto') : t('carousel.slidesCount', { count: n }))
 
 // Carousel can be generated from three kinds of source.
 const CAROUSEL_SOURCES = [
-  { value: 'idea', label: 'Ideia' },
-  { value: 'text', label: 'Texto' },
-  { value: 'link', label: 'Link' },
+  { value: 'idea', labelKey: 'carousel.source.idea' },
+  { value: 'text', labelKey: 'carousel.source.text' },
+  { value: 'link', labelKey: 'carousel.source.link' },
 ]
 
 const emptyForm = () => ({
@@ -104,12 +90,14 @@ const emptyForm = () => ({
 const isHttpUrl = (v) => /^https?:\/\/\S+\.\S+/i.test(String(v || '').trim())
 
 export function GenerateDialog({ kind, open, onOpenChange, generate, startVideo, clients = [], onGenerated }) {
+  const { t } = useTranslation('studio')
   const [form, setForm] = useState(emptyForm)
   const [done, setDone] = useState(false)
   const [clientId, setClientId] = useState(null)
   const [improving, setImproving] = useState(false) // false | 'thinking' | 'typing'
   const typeTimer = useRef(null)
-  const meta = META[kind] || META.carousel
+  const metaKind = ['carousel', 'video', 'image'].includes(kind) ? kind : 'carousel'
+  const meta = { title: t(`dialog.${metaKind}.title`), description: t(`dialog.${metaKind}.description`) }
   const kindMeta = GENERATION_KIND_META[kind] || GENERATION_KIND_META.carousel
   const KindIcon = kindMeta.icon
   // Video opens an interview (startVideo); the other kinds generate directly.
@@ -165,7 +153,7 @@ export function GenerateDialog({ kind, open, onOpenChange, generate, startVideo,
     } catch {
       set(field)(original)
       setImproving(false)
-      toast.error('Não foi possível melhorar o prompt. Tente de novo.')
+      toast.error(t('improve.error'))
     }
   }
 
@@ -179,13 +167,13 @@ export function GenerateDialog({ kind, open, onOpenChange, generate, startVideo,
     e.target.value = ''
     if (!files.length) return
     const room = MAX_REFS - form.reference_urls.length
-    if (room <= 0) { toast.error(`Máximo de ${MAX_REFS} fotos.`); return }
+    if (room <= 0) { toast.error(t('refs.maxPhotos', { max: MAX_REFS })); return }
     setUploading(true)
     try {
       const { references: uploaded } = await uploadsApi.references(files.slice(0, room))
       setForm((f) => ({ ...f, reference_urls: [...f.reference_urls, ...uploaded].slice(0, MAX_REFS) }))
     } catch {
-      toast.error('Não foi possível enviar a foto. Tente outra imagem (JPG, PNG ou WEBP).')
+      toast.error(t('refs.uploadError'))
     } finally {
       setUploading(false)
     }
@@ -303,18 +291,18 @@ export function GenerateDialog({ kind, open, onOpenChange, generate, startVideo,
         ) : (
           <form onSubmit={submit} className="space-y-5">
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Cliente">
+              <Field label={t('dialog.clientLabel')}>
                 <ClientSelect
                   variant="field"
                   value={clientId || ''}
                   onChange={(v) => setClientId(v ? Number(v) : null)}
                   initialOption={clientOption}
-                  placeholder="Para qual cliente?"
-                  emptyMessage="Crie um cliente primeiro."
+                  placeholder={t('dialog.clientPlaceholder')}
+                  emptyMessage={t('dialog.clientEmpty')}
                 />
               </Field>
               {selectedClient && (
-                <Field label="Marca">
+                <Field label={t('dialog.brandLabel')}>
                   <BrandPreview client={selectedClient} className="w-full" />
                 </Field>
               )}
@@ -322,7 +310,7 @@ export function GenerateDialog({ kind, open, onOpenChange, generate, startVideo,
 
             {kind === 'carousel' && (
               <>
-                <Field label="Fonte do conteúdo">
+                <Field label={t('carousel.sourceLabel')}>
                   <div className="flex gap-1.5 rounded-xl bg-surface-muted/60 p-1">
                     {CAROUSEL_SOURCES.map((s) => (
                       <button
@@ -332,57 +320,57 @@ export function GenerateDialog({ kind, open, onOpenChange, generate, startVideo,
                           form.source_mode === s.value ? 'bg-white text-ink shadow-sm' : 'text-ink-muted hover:text-ink',
                         )}
                       >
-                        {s.label}
+                        {t(s.labelKey)}
                       </button>
                     ))}
                   </div>
                 </Field>
 
                 {form.source_mode === 'idea' && (
-                  <Field label="Ideia / tema" htmlFor="gen-idea" count={form.idea.length} max={LIMITS.carousel_idea}>
+                  <Field label={t('carousel.ideaLabel')} htmlFor="gen-idea" count={form.idea.length} max={LIMITS.carousel_idea}>
                     <Input
                       id="gen-idea" value={form.idea} onChange={(e) => set('idea')(e.target.value)}
-                      placeholder="Ex.: 5 erros ao começar no marketing de conteúdo" maxLength={LIMITS.carousel_idea} autoFocus
+                      placeholder={t('carousel.ideaPlaceholder')} maxLength={LIMITS.carousel_idea} autoFocus
                     />
                   </Field>
                 )}
                 {form.source_mode === 'text' && (
-                  <Field label="Texto base" htmlFor="gen-text" count={form.text.length} max={LIMITS.carousel_text}>
+                  <Field label={t('carousel.textLabel')} htmlFor="gen-text" count={form.text.length} max={LIMITS.carousel_text}>
                     <Textarea
                       id="gen-text" value={form.text} onChange={(e) => set('text')(e.target.value)}
-                      placeholder="Cole o texto (artigo, roteiro, notas) que vira o carrossel…"
+                      placeholder={t('carousel.textPlaceholder')}
                       rows={4} maxRows={6} maxLength={LIMITS.carousel_text} autoFocus className="min-h-24"
                     />
                   </Field>
                 )}
                 {form.source_mode === 'link' && (
-                  <Field label="Link" htmlFor="gen-url">
+                  <Field label={t('carousel.linkLabel')} htmlFor="gen-url">
                     <Input
                       id="gen-url" type="url" value={form.url} onChange={(e) => set('url')(e.target.value)}
-                      placeholder="https://exemplo.com/artigo" autoFocus
+                      placeholder={t('carousel.linkPlaceholder')} autoFocus
                     />
                   </Field>
                 )}
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Nº de slides">
+                  <Field label={t('carousel.slidesLabel')}>
                     <Select value={String(form.slides)} onValueChange={(v) => set('slides')(v === 'auto' ? 'auto' : Number(v))}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {SLIDE_OPTIONS.map((n) => (
-                          <SelectItem key={n} value={String(n)}>{slideLabel(n)}</SelectItem>
+                          <SelectItem key={n} value={String(n)}>{slideLabel(t, n)}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </Field>
-                  <Field label="Objetivo">
+                  <Field label={t('carousel.objectiveLabel')}>
                     <Select value={form.objective || 'engagement'} onValueChange={set('objective')}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="engagement">Engajamento</SelectItem>
-                        <SelectItem value="reach">Alcance</SelectItem>
-                        <SelectItem value="conversion">Conversão</SelectItem>
-                        <SelectItem value="education">Educação</SelectItem>
+                        <SelectItem value="engagement">{t('carousel.objective.engagement')}</SelectItem>
+                        <SelectItem value="reach">{t('carousel.objective.reach')}</SelectItem>
+                        <SelectItem value="conversion">{t('carousel.objective.conversion')}</SelectItem>
+                        <SelectItem value="education">{t('carousel.objective.education')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </Field>
@@ -395,13 +383,13 @@ export function GenerateDialog({ kind, open, onOpenChange, generate, startVideo,
                 {/* No "tipo" pick — the director infers avatar / product / scene /
                     character from what you describe (part of the interview). */}
                 <Field
-                  label="O que é o vídeo?" htmlFor="gen-vbrief" count={form.video_brief.length} max={LIMITS.video_brief}
+                  label={t('video.briefLabel')} htmlFor="gen-vbrief" count={form.video_brief.length} max={LIMITS.video_brief}
                   action={<ImproveWand onClick={improvePrompt} improving={improving} disabled={form.video_brief.trim().length < 2 || pending} />}
                 >
                   <div className="relative">
                     <Textarea
                       id="gen-vbrief" value={form.video_brief} onChange={(e) => set('video_brief')(e.target.value)}
-                      placeholder={improving ? '' : 'Descreva o vídeo: quem/o que aparece, o que deve dizer, o clima. Pode colar um roteiro. O resto você ajusta conversando no editor.'}
+                      placeholder={improving ? '' : t('video.briefPlaceholder')}
                       rows={4} maxRows={6} maxLength={LIMITS.video_brief} autoFocus className="min-h-24"
                       readOnly={!!improving}
                     />
@@ -415,19 +403,19 @@ export function GenerateDialog({ kind, open, onOpenChange, generate, startVideo,
                   urls={form.reference_urls} fileRef={fileRef} uploading={uploading}
                   onPick={() => fileRef.current?.click()} onRemove={removeRef} onFiles={pickRefs}
                   describe onDescribe={describeRef}
-                  label="Referências (opcional)"
-                  hint={`Até ${MAX_REFS} — diga o que é cada arquivo para o vídeo usar do jeito certo.`}
+                  label={t('video.referencesLabel')}
+                  hint={t('video.referencesHint', { max: MAX_REFS })}
                 />
 
                 <div className="grid gap-4 sm:grid-cols-3">
-                  <Field label="Formato">
+                  <Field label={t('video.formatLabel')}>
                     <PillGroup options={VIDEO_FORMATS} value={form.aspect_ratio} onChange={set('aspect_ratio')} />
                   </Field>
-                  <Field label="Duração">
-                    <PillGroup options={VIDEO_DURATIONS} value={form.duration} onChange={set('duration')} />
+                  <Field label={t('video.durationLabel')}>
+                    <PillGroup options={VIDEO_DURATIONS.map((o) => ({ ...o, label: t(o.labelKey) }))} value={form.duration} onChange={set('duration')} />
                   </Field>
-                  <Field label="Som">
-                    <PillGroup options={SOUND_OPTIONS} value={form.with_audio} onChange={set('with_audio')} />
+                  <Field label={t('video.soundLabel')}>
+                    <PillGroup options={SOUND_OPTIONS.map((o) => ({ ...o, label: t(o.labelKey), hint: t(o.hintKey) }))} value={form.with_audio} onChange={set('with_audio')} />
                   </Field>
                 </div>
               </>
@@ -435,29 +423,29 @@ export function GenerateDialog({ kind, open, onOpenChange, generate, startVideo,
 
             {kind === 'image' && (
               <>
-                <Field label="Prompt" htmlFor="gen-prompt" count={form.prompt.length} max={LIMITS.image_prompt}>
+                <Field label={t('image.promptLabel')} htmlFor="gen-prompt" count={form.prompt.length} max={LIMITS.image_prompt}>
                   <Textarea
                     id="gen-prompt" value={form.prompt} onChange={(e) => set('prompt')(e.target.value)}
-                    placeholder="Descreva a imagem que você quer gerar — estilo, cena, cores, atmosfera…"
+                    placeholder={t('image.promptPlaceholder')}
                     rows={5} maxRows={7} maxLength={LIMITS.image_prompt} autoFocus className="min-h-28"
                   />
                 </Field>
                 <RefUploader
                   urls={form.reference_urls} fileRef={fileRef} uploading={uploading}
                   onPick={() => fileRef.current?.click()} onRemove={removeRef} onFiles={pickRefs}
-                  label="Imagens de referência (opcional)"
-                  hint={`Até ${MAX_REFS} — estilo, objeto ou composição de referência.`}
+                  label={t('image.referencesLabel')}
+                  hint={t('image.referencesHint', { max: MAX_REFS })}
                 />
               </>
             )}
 
             <DialogFooter>
-              <Button type="button" variant="ghost" onClick={() => onOpenChange?.(false)}>Cancelar</Button>
+              <Button type="button" variant="ghost" onClick={() => onOpenChange?.(false)}>{t('dialog.cancel')}</Button>
               <Button type="submit" disabled={!isValid || !!improving}>
                 {/* Video doesn't generate here — it opens the chat editor to refine first. */}
                 {kind === 'video'
-                  ? <><MessageSquare size={16} /> Continuar no editor</>
-                  : <><Wand2 size={16} /> Gerar agora</>}
+                  ? <><MessageSquare size={16} /> {t('dialog.submitVideo')}</>
+                  : <><Wand2 size={16} /> {t('dialog.submitGenerate')}</>}
               </Button>
             </DialogFooter>
           </form>
@@ -497,6 +485,7 @@ function PillGroup({ options, value, onChange }) {
 // set (video), each reference asks "what is this file?" so the storyboard
 // director knows how to use it (its name + the user's words).
 function RefUploader({ urls, fileRef, uploading, onPick, onRemove, onFiles, onDescribe, describe = false, label, hint }) {
+  const { t } = useTranslation('studio')
   return (
     <Field label={label}>
       <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" multiple hidden onChange={onFiles} />
@@ -505,16 +494,16 @@ function RefUploader({ urls, fileRef, uploading, onPick, onRemove, onFiles, onDe
           {urls.map((r) => (
             <div key={r.url} className="flex items-center gap-2.5">
               <div className="relative size-14 shrink-0 overflow-hidden rounded-xl border border-border">
-                <img src={r.url} alt="Referência" className="size-full object-cover" />
+                <img src={r.url} alt={t('refs.alt')} className="size-full object-cover" />
               </div>
               <input
                 value={r.description || ''}
                 onChange={(e) => onDescribe?.(r.url, e.target.value)}
-                placeholder="O que é este arquivo? (ex.: foto do produto, personagem, estilo…)"
+                placeholder={t('refs.describePlaceholder')}
                 className="h-10 min-w-0 flex-1 rounded-xl border border-border bg-surface px-3 text-sm text-ink placeholder:text-ink-faint focus:border-brand focus:outline-none"
               />
               <button
-                type="button" onClick={() => onRemove(r.url)} aria-label="Remover"
+                type="button" onClick={() => onRemove(r.url)} aria-label={t('refs.remove')}
                 className="grid size-7 shrink-0 place-items-center rounded-lg text-ink-muted transition hover:text-danger"
               >
                 <X size={15} />
@@ -526,7 +515,7 @@ function RefUploader({ urls, fileRef, uploading, onPick, onRemove, onFiles, onDe
               type="button" onClick={onPick} disabled={uploading}
               className="flex h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-border-strong text-sm font-semibold text-ink-muted transition hover:border-brand hover:text-brand disabled:opacity-50"
             >
-              {uploading ? <InlineSpinner size={18} /> : <><Plus size={16} /> Adicionar referência</>}
+              {uploading ? <InlineSpinner size={18} /> : <><Plus size={16} /> {t('refs.add')}</>}
             </button>
           )}
           <p className="text-xs text-ink-muted">{hint}</p>
@@ -535,9 +524,9 @@ function RefUploader({ urls, fileRef, uploading, onPick, onRemove, onFiles, onDe
         <div className="flex flex-wrap items-center gap-2.5">
           {urls.map((r) => (
             <div key={r.url} className="relative size-16 overflow-hidden rounded-xl border border-border">
-              <img src={r.url} alt="Referência" className="size-full object-cover" />
+              <img src={r.url} alt={t('refs.alt')} className="size-full object-cover" />
               <button
-                type="button" onClick={() => onRemove(r.url)} aria-label="Remover"
+                type="button" onClick={() => onRemove(r.url)} aria-label={t('refs.remove')}
                 className="absolute right-1 top-1 grid size-5 place-items-center rounded-md bg-black/55 text-white backdrop-blur"
               >
                 <X size={12} />
@@ -550,7 +539,7 @@ function RefUploader({ urls, fileRef, uploading, onPick, onRemove, onFiles, onDe
               className="grid size-16 place-items-center gap-0.5 rounded-xl border border-dashed border-border-strong text-ink-muted transition hover:border-brand hover:text-brand disabled:opacity-50"
             >
               {uploading ? <InlineSpinner size={18} /> : <Plus size={18} />}
-              <span className="text-[10px] font-bold">Imagem</span>
+              <span className="text-[10px] font-bold">{t('refs.imageTile')}</span>
             </button>
           )}
           <p className="ml-1 text-xs text-ink-muted">{hint}</p>

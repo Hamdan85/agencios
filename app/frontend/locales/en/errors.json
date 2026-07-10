@@ -1,0 +1,28 @@
+{
+  "forbidden": {
+    "title": "You don't have access to this page",
+    "description": "Your account doesn't have permission to view this content. If you think this is a mistake, talk to one of your workspace's admins."
+  },
+  "notFound": {
+    "title": "This page doesn't exist",
+    "description": "The address may have changed or never existed at all. In the meantime, how about jumping some obstacles?"
+  },
+  "offline": {
+    "title": "You're offline",
+    "description": "We can't reach agencios right now. As soon as your internet is back, the page will recover on its own — or jump some obstacles while you wait."
+  },
+  "serverError": {
+    "description": "We've been notified and we're on it. Try reloading the page — or take the frustration out on the game below."
+  },
+  "actions": {
+    "backToDashboard": "Back to dashboard",
+    "back": "Go back"
+  },
+  "dino": {
+    "start": "Press space or tap to start",
+    "gameOver": "Game over — score {{score}}",
+    "retry": "Press space or tap to try again",
+    "hint": "Space, ↑ or tap the game to jump the obstacles",
+    "loading": "Loading the game…"
+  }
+}

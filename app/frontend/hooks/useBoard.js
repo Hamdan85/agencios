@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { boardApi, ticketsApi } from '@/api'
 import { keys } from '@/api/queryKeys'
 import { toast } from 'sonner'
@@ -17,13 +18,14 @@ export function useBoard(filters = {}) {
 }
 
 export function useBoardMutations(filters = {}) {
+  const { t } = useTranslation('board')
   const qc = useQueryClient()
   const invalidate = () => invalidateTicketSurfaces(qc)
 
   const advance = useMutation({
     mutationFn: ({ id, toStatus, position }) => ticketsApi.advance(id, toStatus, position),
     onError: (err) => {
-      toast.error(err.error || 'Não foi possível mover o ticket.')
+      toast.error(err.error || t('toasts.moveError'))
       invalidate()
     },
   })
@@ -39,9 +41,9 @@ export function useBoardMutations(filters = {}) {
       // The hub's list view reads the global tickets list, not just the board.
       invalidateTicketSurfaces(qc, { ticketsList: true })
       analytics.track(EVENTS.TICKET_CREATED)
-      toast.success('Ticket criado!')
+      toast.success(t('toasts.createSuccess'))
     },
-    onError: (err) => toast.error(err.error || 'Erro ao criar ticket.'),
+    onError: (err) => toast.error(err.error || t('toasts.createError')),
   })
 
   const clearColumn = useMutation({
@@ -49,9 +51,9 @@ export function useBoardMutations(filters = {}) {
     onSuccess: (res) => {
       invalidate()
       const n = res?.archived_count ?? 0
-      toast.success(n > 0 ? `${n} ticket(s) arquivado(s).` : 'Nada para arquivar.')
+      toast.success(n > 0 ? t('toasts.archivedCount', { count: n }) : t('toasts.nothingToArchive'))
     },
-    onError: (err) => toast.error(err.error || 'Não foi possível limpar a coluna.'),
+    onError: (err) => toast.error(err.error || t('toasts.clearColumnError')),
   })
 
   return { advance, reorder, create, clearColumn, invalidate }

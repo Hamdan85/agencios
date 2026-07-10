@@ -72,7 +72,7 @@ module Operations
           kind: 'expire', bucket: 'granted',
           amount: -expired, granted_delta: -expired, purchased_delta: 0,
           balance_after: wallet.purchased_balance,
-          description: 'Créditos mensais expirados'
+          description_key: 'credits.ledger.expired'
         )
       end
 
@@ -87,7 +87,7 @@ module Operations
           kind: 'debit', bucket: bucket,
           amount: -@amount, granted_delta: -from_granted, purchased_delta: -from_purchased,
           balance_after: wallet.granted_balance + wallet.purchased_balance,
-          description: @description || default_description
+          description: @description, description_key: (@description ? nil : default_description_key)
         )
       end
 
@@ -100,15 +100,15 @@ module Operations
           kind: 'debit', bucket: 'granted',
           amount: -@amount, granted_delta: 0, purchased_delta: 0,
           balance_after: 0,
-          description: @description || default_description
+          description: @description, description_key: (@description ? nil : default_description_key)
         )
       rescue StandardError => e
         Rails.logger.warn("[Credits::Debit] notional godfathered debit failed: #{e.message}")
       end
 
-      def default_description
+      def default_description_key
         kind = @generation&.kind
-        kind ? "Geração de #{kind}" : 'Débito de créditos'
+        kind ? "credits.ledger.debit_#{kind}" : 'credits.ledger.debit_generic'
       end
     end
   end

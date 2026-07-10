@@ -7,9 +7,14 @@ module Operations
     # Operations::Attachments::Create so the files appear in the ticket file list.
     # Mentioned members are emailed asynchronously via NotifyMentionsJob.
     class Create < Operations::Base
-      def initialize(ticket:, body:, user: nil, kind: :comment, mentioned_user_ids: [], files: [])
+      def initialize(ticket:, body: nil, i18n_key: nil, i18n_params: {}, user: nil, kind: :comment,
+                     mentioned_user_ids: [], files: [])
         @ticket = ticket
         @body = body
+        # System copy: store the key + params, render at read time in the
+        # reader's locale (Note#display_body). User comments never use this.
+        @i18n_key = i18n_key
+        @i18n_params = i18n_params
         @user = user
         @kind = kind
         @mentioned_user_ids = Array(mentioned_user_ids)
@@ -25,6 +30,8 @@ module Operations
           user: @user,
           kind: @kind,
           body: @body.presence,
+          i18n_key: @i18n_key,
+          i18n_params: @i18n_params.transform_values(&:to_s),
           mentioned_user_ids: allowed_mention_ids
         )
 
@@ -42,7 +49,7 @@ module Operations
         return unless @kind.to_sym == :comment
         return if @body.present? || @files.any?
 
-        raise Operations::Errors::Invalid, 'Comentário vazio.'
+        raise Operations::Errors::Invalid, I18n.t('operations.notes.empty_comment')
       end
 
       # ActiveStorage attach does blob I/O during save! — deliberately kept out

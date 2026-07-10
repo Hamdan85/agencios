@@ -1,0 +1,45 @@
+{
+  "nav": {
+    "myTasks": "My tasks",
+    "myCalendar": "My calendar",
+    "meetings": "Meetings",
+    "dashboard": "Dashboard",
+    "tickets": "Tickets",
+    "tasks": "Tasks",
+    "calendar": "Calendar",
+    "clients": "Clients",
+    "projects": "Campaigns",
+    "posts": "Posts",
+    "studio": "Studio",
+    "invoices": "Invoices",
+    "settings": "Settings",
+    "subscription": "Subscription"
+  },
+  "sidebar": {
+    "you": "You",
+    "plan": "{{plan}} plan",
+    "yourWorkspaces": "Your workspaces",
+    "newWorkspace": "New workspace",
+    "operation": "Operations",
+    "account": "Account",
+    "userFallback": "You",
+    "myAccount": "My account",
+    "logout": "Log out"
+  },
+  "credits": "Credits",
+  "banners": {
+    "installTitle": "Install agencios",
+    "installDescription": "Add the app to your home screen to open it like a native app.",
+    "notNow": "Not now",
+    "install": "Install",
+    "iosInstructions": "Tap <b>Share</b>, then <b>“Add to Home Screen”</b>.",
+    "notificationsTitle": "Enable notifications",
+    "notificationsDescription": "Get alerts about tickets, deadlines and posts.",
+    "allow": "Allow"
+  },
+  "seatOverage": {
+    "message": "This workspace has more members than the current plan allows — new tickets and campaigns are blocked.",
+    "managePlan": "Manage plan"
+  },
+  "openMenu": "Open menu"
+}

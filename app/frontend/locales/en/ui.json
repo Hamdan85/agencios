@@ -1,0 +1,98 @@
+{
+  "confirm": {
+    "title": "Are you sure?",
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
+  "feedback": {
+    "loading": "Loading",
+    "aiRewriting": "Rewriting with AI…"
+  },
+  "datePicker": {
+    "weekdays": "S,M,T,W,T,F,S",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "clearDate": "Clear date",
+    "selectDate": "Pick a date",
+    "selectDateTime": "Pick a date and time",
+    "dateFormat": "MMM d, yyyy",
+    "dateTimeFormat": "MMM d, yyyy 'at' HH:mm",
+    "time": "Time",
+    "hour": "Hour",
+    "minute": "Minute",
+    "done": "Done"
+  },
+  "combobox": {
+    "select": "Select",
+    "empty": "Nothing found",
+    "clear": "Clear",
+    "search": "Search…",
+    "removeFilter": "Remove filter"
+  },
+  "selectionBar": {
+    "selected_one": "{{count}} selected",
+    "selected_other": "{{count}} selected",
+    "selectAll": "Select all ({{total}})",
+    "clearSelection": "Clear selection"
+  },
+  "entitySelect": {
+    "project": "Campaign",
+    "client": "Client",
+    "assignee": "Assignee"
+  },
+  "richField": {
+    "edit": "Edit",
+    "write": "Write…",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "richText": {
+    "linkPrompt": "Link URL",
+    "bold": "Bold",
+    "italic": "Italic",
+    "strike": "Strikethrough",
+    "heading": "Heading",
+    "bulletList": "Bullet list",
+    "orderedList": "Numbered list",
+    "quote": "Quote",
+    "write": "Write…"
+  },
+  "filterBar": {
+    "filters": "Filters",
+    "clear": "Clear",
+    "clearCount": "Clear ({{count}})",
+    "viewResults": "See results",
+    "close": "Close"
+  },
+  "searchInput": {
+    "placeholder": "Search…",
+    "clear": "Clear search"
+  },
+  "copy": {
+    "copy": "Copy",
+    "copied": "Copied!"
+  },
+  "assignee": {
+    "labeled": "Assignee: {{name}}",
+    "assign": "Assign someone",
+    "assignTo": "Assign to",
+    "unassigned": "Unassigned"
+  },
+  "chipsInput": {
+    "remove": "Remove {{chip}}"
+  },
+  "charts": {
+    "noData": "No data"
+  },
+  "apiErrors": {
+    "insufficientCreditsTitle": "Not enough credits",
+    "insufficientCreditsDescription": "Buy credits to keep generating videos and images.",
+    "buyCredits": "Buy credits",
+    "strategyChat": "Something went wrong in the strategy chat."
+  },
+  "aiFill": {
+    "timeout": "The AI is taking longer than usual. Try refreshing again.",
+    "done": "AI updated the ticket ✨",
+    "failed": "The AI couldn't update the fields. Please try again."
+  }
+}

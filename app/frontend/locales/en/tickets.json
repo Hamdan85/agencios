@@ -1,0 +1,32 @@
+{
+  "back": {
+    "toCampaign": "Back to campaign",
+    "toCalendar": "Back to calendar",
+    "toTickets": "Back to tickets",
+    "default": "Back"
+  },
+  "notFound": {
+    "title": "Ticket not found",
+    "description": "This ticket may have been removed, or you don't have access to it."
+  },
+  "badges": {
+    "archived": "Archived",
+    "overdue": "Overdue"
+  },
+  "stage": {
+    "move": "Move stage",
+    "goTo": "Go to stage",
+    "current": "current",
+    "advanceTo": "Advance to {{label}}"
+  },
+  "toasts": {
+    "archived": "Ticket archived.",
+    "archiveError": "Failed to archive.",
+    "restored": "Ticket restored.",
+    "restoreError": "Failed to restore.",
+    "assignError": "Failed to assign the ticket.",
+    "deleted_one": "Ticket deleted.",
+    "deleted_other": "{{count}} tickets deleted.",
+    "deleteError": "Failed to delete the tickets."
+  }
+}

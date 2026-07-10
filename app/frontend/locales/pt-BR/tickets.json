@@ -1,0 +1,32 @@
+{
+  "back": {
+    "toCampaign": "Voltar à campanha",
+    "toCalendar": "Voltar ao calendário",
+    "toTickets": "Voltar aos tickets",
+    "default": "Voltar"
+  },
+  "notFound": {
+    "title": "Ticket não encontrado",
+    "description": "Este ticket pode ter sido removido ou você não tem acesso a ele."
+  },
+  "badges": {
+    "archived": "Arquivado",
+    "overdue": "Atrasado"
+  },
+  "stage": {
+    "move": "Mover etapa",
+    "goTo": "Ir para a etapa",
+    "current": "atual",
+    "advanceTo": "Avançar para {{label}}"
+  },
+  "toasts": {
+    "archived": "Ticket arquivado.",
+    "archiveError": "Erro ao arquivar.",
+    "restored": "Ticket restaurado.",
+    "restoreError": "Erro ao restaurar.",
+    "assignError": "Erro ao atribuir responsável.",
+    "deleted_one": "Ticket excluído.",
+    "deleted_other": "{{count}} tickets excluídos.",
+    "deleteError": "Erro ao excluir os tickets."
+  }
+}

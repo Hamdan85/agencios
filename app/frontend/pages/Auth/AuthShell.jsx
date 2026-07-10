@@ -1,14 +1,16 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Sparkles, KanbanSquare, CalendarDays, Wand2 } from 'lucide-react'
 import { BrandMark } from '@/components/brand/BrandMark'
 
 const HIGHLIGHTS = [
-  { icon: KanbanSquare, color: '#EC4899', text: 'Funil de produção de conteúdo em um quadro vivo' },
-  { icon: Wand2, color: '#7C3AED', text: 'Geração de criativos com IA — carrosséis, vídeos, imagens' },
-  { icon: CalendarDays, color: '#0EA5E9', text: 'Calendário unificado de posts e reuniões' },
+  { icon: KanbanSquare, color: '#EC4899', key: 'board' },
+  { icon: Wand2, color: '#7C3AED', key: 'creatives' },
+  { icon: CalendarDays, color: '#0EA5E9', key: 'calendar' },
 ]
 
 export default function AuthShell({ title, subtitle, children, footer }) {
+  const { t } = useTranslation('auth')
   return (
     <div className="flex min-h-screen">
       {/* Left — brand panel */}
@@ -22,18 +24,18 @@ export default function AuthShell({ title, subtitle, children, footer }) {
         </div>
         <div className="relative">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-white/80">
-            <Sparkles size={13} /> O SO da sua agência
+            <Sparkles size={13} /> {t('shell.tagline')}
           </span>
           <h2 className="mt-4 font-display text-4xl font-extrabold leading-tight text-white">
-            Clientes, campanhas e conteúdo viral — <span className="text-gradient-brand">num só lugar.</span>
+            {t('shell.headline')} <span className="text-gradient-brand">{t('shell.headlineHighlight')}</span>
           </h2>
           <div className="mt-8 space-y-4">
             {HIGHLIGHTS.map((h) => (
-              <div key={h.text} className="flex items-center gap-3">
+              <div key={h.key} className="flex items-center gap-3">
                 <span className="flex size-9 items-center justify-center rounded-xl" style={{ background: `${h.color}28`, color: h.color }}>
                   <h.icon size={18} strokeWidth={2.3} />
                 </span>
-                <span className="text-sm font-medium text-white/80">{h.text}</span>
+                <span className="text-sm font-medium text-white/80">{t(`shell.highlights.${h.key}`)}</span>
               </div>
             ))}
           </div>

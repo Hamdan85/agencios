@@ -57,7 +57,7 @@ module Operations
           kind: 'adjustment', bucket: bucket,
           amount: granted + purchased, granted_delta: granted, purchased_delta: purchased,
           balance_after: wallet.granted_balance + wallet.purchased_balance,
-          description: @description || 'Ajuste de créditos'
+          description: @description, description_key: (@description ? nil : 'credits.ledger.adjustment')
         )
       end
     end

@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Card } from '@/components/ui/card'
 import { IconTile } from '@/components/ui/icon-tile'
 import { SectionLabel } from '@/components/ui/section-label'
@@ -12,19 +13,19 @@ import {
 
 // Reach + views are the "how many saw it" pair; the four below compose engagement.
 const METRIC_TILES = [
-  { key: 'reach', label: 'Alcance', icon: Eye, color: '#0EA5E9' },
-  { key: 'views', label: 'Visualizações', icon: BarChart3, color: '#7C3AED' },
-  { key: 'likes', label: 'Curtidas', icon: Heart, color: '#EC4899' },
-  { key: 'comments', label: 'Comentários', icon: MessageCircle, color: '#F59E0B' },
-  { key: 'shares', label: 'Compart.', icon: Share2, color: '#10B981' },
-  { key: 'saves', label: 'Salvos', icon: Bookmark, color: '#6366F1' },
+  { key: 'reach', labelKey: 'common:series.reach', icon: Eye, color: '#0EA5E9' },
+  { key: 'views', labelKey: 'common:series.views', icon: BarChart3, color: '#7C3AED' },
+  { key: 'likes', labelKey: 'common:series.likes', icon: Heart, color: '#EC4899' },
+  { key: 'comments', labelKey: 'common:series.comments', icon: MessageCircle, color: '#F59E0B' },
+  { key: 'shares', labelKey: 'metrics.sharesShort', icon: Share2, color: '#10B981' },
+  { key: 'saves', labelKey: 'metrics.savesShort', icon: Bookmark, color: '#6366F1' },
 ]
 
 const ENGAGEMENT = [
-  { key: 'likes', label: 'Curtidas', color: '#EC4899' },
-  { key: 'comments', label: 'Comentários', color: '#F59E0B' },
-  { key: 'shares', label: 'Compart.', color: '#10B981' },
-  { key: 'saves', label: 'Salvos', color: '#6366F1' },
+  { key: 'likes', labelKey: 'common:series.likes', color: '#EC4899' },
+  { key: 'comments', labelKey: 'common:series.comments', color: '#F59E0B' },
+  { key: 'shares', labelKey: 'metrics.sharesShort', color: '#10B981' },
+  { key: 'saves', labelKey: 'metrics.savesShort', color: '#6366F1' },
 ]
 
 const fmt = (n) => (n != null ? num(n) : '—')
@@ -60,9 +61,10 @@ function SectionCard({ icon: Icon, color, title, hint, children }) {
 // with more than one history point — an evolution line chart. When metrics are
 // null: a friendly empty state (nothing is synced until the post is live).
 export default function PostDetailPerformance({ metrics, history = [] }) {
+  const { t } = useTranslation('posts')
   const engagementDonut = useMemo(
-    () => ENGAGEMENT.map((e) => ({ label: e.label, value: Number(metrics?.[e.key]) || 0, color: e.color })),
-    [metrics],
+    () => ENGAGEMENT.map((e) => ({ label: t(e.labelKey), value: Number(metrics?.[e.key]) || 0, color: e.color })),
+    [metrics, t],
   )
   const trend = useMemo(
     () => (history || []).map((h) => ({
@@ -79,8 +81,8 @@ export default function PostDetailPerformance({ metrics, history = [] }) {
       <EmptyState
         icon={LineChart}
         color="#7C3AED"
-        title="Sem métricas ainda"
-        description="As métricas aparecem aqui assim que a publicação for ao ar e sincronizada com a rede."
+        title={t('performance.noMetrics.title')}
+        description={t('performance.noMetrics.description')}
       />
     )
   }
@@ -94,12 +96,12 @@ export default function PostDetailPerformance({ metrics, history = [] }) {
       <SectionCard
         icon={BarChart3}
         color="#7C3AED"
-        title="Métricas"
-        hint={metrics.captured_at ? `Sincronizado ${timeAgo(metrics.captured_at)}` : null}
+        title={t('performance.metricsTitle')}
+        hint={metrics.captured_at ? t('performance.syncedAgo', { time: timeAgo(metrics.captured_at) }) : null}
       >
         <div className="grid grid-cols-3 gap-2.5">
-          {METRIC_TILES.map((t) => (
-            <MetricTile key={t.key} icon={t.icon} label={t.label} value={metrics[t.key]} color={t.color} />
+          {METRIC_TILES.map((tile) => (
+            <MetricTile key={tile.key} icon={tile.icon} label={t(tile.labelKey)} value={metrics[tile.key]} color={tile.color} />
           ))}
         </div>
 
@@ -107,24 +109,24 @@ export default function PostDetailPerformance({ metrics, history = [] }) {
           <div className="mt-3 flex items-center gap-3 rounded-xl border border-border bg-surface-muted/40 p-3.5">
             <IconTile icon={TrendingUp} color="#10B981" size="sm" tint="18" strokeWidth={2.4} />
             <div className="min-w-0">
-              <SectionLabel className="text-[10px] tracking-wide">Taxa de engajamento</SectionLabel>
+              <SectionLabel className="text-[10px] tracking-wide">{t('performance.engagementRate')}</SectionLabel>
               <p className="font-display text-xl font-extrabold text-ink">{`${num(Math.round(rate * 10) / 10)}%`}</p>
             </div>
             <p className="ml-auto text-right text-[11px] font-medium text-ink-muted">
-              {fmt(engagementTotal)} interações<br />sobre {fmt(reach)} de alcance
+              {t('performance.interactions', { value: fmt(engagementTotal) })}<br />{t('performance.overReach', { value: fmt(reach) })}
             </p>
           </div>
         )}
       </SectionCard>
 
       {engagementTotal > 0 && (
-        <SectionCard icon={Activity} color="#EC4899" title="Engajamento" hint="Como as pessoas interagiram">
-          <DonutBreakdown data={engagementDonut} total={engagementTotal} unit="interações" legend />
+        <SectionCard icon={Activity} color="#EC4899" title={t('performance.engagementTitle')} hint={t('performance.engagementHint')}>
+          <DonutBreakdown data={engagementDonut} total={engagementTotal} unit={t('performance.interactionsUnit')} legend />
         </SectionCard>
       )}
 
       {trend.length > 1 && (
-        <SectionCard icon={LineChart} color="#0EA5E9" title="Evolução" hint="Visualizações, engajamento e alcance no tempo">
+        <SectionCard icon={LineChart} color="#0EA5E9" title={t('performance.evolutionTitle')} hint={t('performance.evolutionHint')}>
           <div className="overflow-x-auto">
             <div className="min-w-[280px]">
               <LineTrend data={trend} keys={['views', 'engagement', 'reach']} />

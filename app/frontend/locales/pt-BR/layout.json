@@ -1,0 +1,45 @@
+{
+  "nav": {
+    "myTasks": "Minhas tarefas",
+    "myCalendar": "Meu calendário",
+    "meetings": "Reuniões",
+    "dashboard": "Painel",
+    "tickets": "Tickets",
+    "tasks": "Tarefas",
+    "calendar": "Calendário",
+    "clients": "Clientes",
+    "projects": "Campanhas",
+    "posts": "Publicações",
+    "studio": "Estúdio",
+    "invoices": "Cobranças",
+    "settings": "Configurações",
+    "subscription": "Assinatura"
+  },
+  "sidebar": {
+    "you": "Você",
+    "plan": "Plano {{plan}}",
+    "yourWorkspaces": "Seus workspaces",
+    "newWorkspace": "Novo workspace",
+    "operation": "Operação",
+    "account": "Conta",
+    "userFallback": "Você",
+    "myAccount": "Minha conta",
+    "logout": "Sair"
+  },
+  "credits": "Créditos",
+  "banners": {
+    "installTitle": "Instalar agencios",
+    "installDescription": "Adicione o app à tela inicial para abrir como aplicativo.",
+    "notNow": "Agora não",
+    "install": "Instalar",
+    "iosInstructions": "Toque em <b>Compartilhar</b> e depois em <b>“Adicionar à Tela de Início”</b>.",
+    "notificationsTitle": "Ativar notificações",
+    "notificationsDescription": "Receba avisos de tickets, prazos e publicações.",
+    "allow": "Permitir"
+  },
+  "seatOverage": {
+    "message": "Este workspace tem mais membros do que o plano atual permite — novos tickets e campanhas estão bloqueados.",
+    "managePlan": "Gerenciar plano"
+  },
+  "openMenu": "Abrir menu"
+}

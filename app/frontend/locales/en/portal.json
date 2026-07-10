@@ -1,0 +1,125 @@
+{
+  "shell": {
+    "linkInvalid": "This link is no longer valid. Contact your agency to get a new one.",
+    "centralOf": "{{name}}'s hub",
+    "clientFallback": "client",
+    "madeWith": "made with <star>✳</star> Agencios"
+  },
+  "progress": {
+    "counter": "Content {{position}} of {{total}}"
+  },
+  "terminal": {
+    "allApprovedTitle": "All approved!",
+    "nothingPendingTitle": "Nothing pending here",
+    "doneBody_one": "You reviewed {{count}} piece of content. The {{agency}} team has been notified. ✨",
+    "doneBody_other": "You reviewed {{count}} pieces of content. The {{agency}} team has been notified. ✨",
+    "upToDate": "All caught up! We'll let you know as soon as there's something new to review."
+  },
+  "toasts": {
+    "approved": "Content approved ✓",
+    "undo": "Undo",
+    "undoError": "Couldn't undo.",
+    "approveError": "Something went wrong while approving.",
+    "feedbackSent": "We've sent your feedback to the team 👍",
+    "sendError": "Something went wrong while sending."
+  },
+  "tabs": {
+    "board": "Board",
+    "approvals": "Approvals",
+    "metrics": "Metrics",
+    "report": "Report"
+  },
+  "campaign": {
+    "backToCampaigns": "Back to campaigns",
+    "listTitle": "Your campaigns",
+    "listSubtitle": "Follow the progress, approve content and see the results.",
+    "emptyTitle": "No campaigns here yet",
+    "emptyBody": "As soon as your agency starts a campaign, it shows up here.",
+    "contentCount": "{{count}} content piece(s)",
+    "reportReady": "Report ready",
+    "completedOn": "· completed on {{date}}",
+    "pendingApproval": "{{count}} awaiting your approval",
+    "open": "Open"
+  },
+  "campaignStatus": {
+    "active": "In progress",
+    "paused": "Paused",
+    "completed": "Completed",
+    "archived": "Archived"
+  },
+  "labels": {
+    "formats": "Formats",
+    "channels": "Channels",
+    "objective": "Objective",
+    "brief": "Brief",
+    "progress": "Progress"
+  },
+  "board": {
+    "untitled": "Untitled",
+    "sheetDescription": "Task details",
+    "close": "Close",
+    "creativesPending": "Creatives show up here as soon as the team finishes production.",
+    "emptyTitle": "No content in this campaign yet",
+    "emptyBody": "As soon as the team starts producing, the cards show up here."
+  },
+  "approvals": {
+    "emptyTitle": "Nothing awaiting your approval",
+    "emptyBody": "We'll let you know as soon as there's new content to review."
+  },
+  "metrics": {
+    "live": "live",
+    "emptyTitle": "No posts published in this campaign yet",
+    "emptyBody": "Reach, views and engagement metrics show up here as soon as the posts go live.",
+    "title": "Campaign performance",
+    "engagementRate": "Engagement rate",
+    "engagementRateSub": "engagement / reach",
+    "trend": "Trend",
+    "byNetwork": "By network",
+    "byFormat": "By format",
+    "topPosts": "Top posts",
+    "noPostsInPeriod": "No posts in this period",
+    "engagementShort": "{{value}} engag.",
+    "openOnNetwork": "Open on the network"
+  },
+  "report": {
+    "generatingTitle": "Generating the report…",
+    "generatingBody": "We're preparing this campaign's report. It shows up here automatically.",
+    "notAvailableTitle": "Report not available yet",
+    "notAvailableBody": "The report is generated when the campaign is completed.",
+    "filename": "report-{{name}}.pdf",
+    "filenameFallback": "campaign"
+  },
+  "queue": {
+    "title": "Awaiting approval",
+    "searchPlaceholder": "Search content…",
+    "noResults": "No results."
+  },
+  "card": {
+    "approve": "Approve",
+    "approveOption": "Approve Option {{letter}}",
+    "approveSlot": "Approve {{slot}}",
+    "optionsCaption": "{{piece}} — {{total}} options · tap to choose",
+    "pieces": "Pieces ({{total}})",
+    "optionsCount": "{{total}} options",
+    "decision": "Decision: {{slot}}",
+    "chooseOption": "Choose an option on the side to approve.",
+    "changesRequestedTitle": "You requested changes",
+    "changesRequestedBody": "The team is working on the changes and will resubmit for approval.",
+    "approved": "✓ Approved",
+    "requestChanges": "Request changes"
+  },
+  "dialog": {
+    "whichOption": "Which option is this about?",
+    "whatToAdjust": "What would you like to change?",
+    "placeholder": "Describe the changes the team should make…",
+    "quickPicks": {
+      "swapColors": "Swap the colors",
+      "adjustText": "Tweak the copy",
+      "changeImage": "Change the image",
+      "redoFromScratch": "Redo from scratch"
+    },
+    "cancel": "Cancel",
+    "sending": "Sending…",
+    "send": "Send request"
+  }
+}

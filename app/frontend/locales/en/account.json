@@ -1,0 +1,113 @@
+{
+  "header": {
+    "eyebrow": "You",
+    "title": "My account",
+    "description": "Your profile, security and personal connections."
+  },
+  "tabs": {
+    "profile": "Profile",
+    "security": "Security",
+    "connections": "Connections"
+  },
+  "profile": {
+    "title": "Your profile",
+    "description": "The photo and name your team sees.",
+    "avatarLabel": "Profile photo",
+    "avatarHint": "PNG or JPG, ideally square.",
+    "nameLabel": "Name",
+    "namePlaceholder": "Your name",
+    "save": "Save changes",
+    "saving": "Saving…"
+  },
+  "email": {
+    "title": "Email",
+    "description": "Used for login and notifications.",
+    "confirmed": "Confirmed",
+    "unconfirmed": "Not confirmed",
+    "pendingNotice": "Waiting for <strong>{{email}}</strong> to be confirmed. Check the new email's inbox.",
+    "newLabel": "New email",
+    "newPlaceholder": "new@email.com",
+    "currentPasswordLabel": "Current password",
+    "sendConfirmation": "Send confirmation",
+    "sending": "Sending…",
+    "cancel": "Cancel",
+    "confirmationHint": "We'll send a link to the new email. The change only happens after confirmation.",
+    "change": "Change email"
+  },
+  "security": {
+    "title": "Change password",
+    "description": "Use a strong password with at least 8 characters.",
+    "currentLabel": "Current password",
+    "newLabel": "New password",
+    "tooShort": "At least 8 characters.",
+    "confirmLabel": "Confirm new password",
+    "mismatch": "The passwords don't match.",
+    "submit": "Change password",
+    "saving": "Saving…"
+  },
+  "calendar": {
+    "description": "Your meetings are created on <strong>your</strong> Google Calendar, with a Meet link and invites for every attendee.",
+    "connected": "Connected",
+    "disconnect": "Disconnect",
+    "disconnecting": "Disconnecting…",
+    "notConnected": "No account connected.",
+    "connect": "Connect Google Calendar",
+    "opening": "Opening…",
+    "disconnectConfirm": {
+      "title": "Disconnect Google Calendar?",
+      "description": "New meetings will stop being created on your calendar until you reconnect.",
+      "confirm": "Disconnect"
+    }
+  },
+  "connector": {
+    "title": "Claude connector",
+    "description": "Your personal URL — it works across <strong>all of your workspaces</strong>. Add it in Claude under <strong>Settings → Connectors → Add custom connector</strong>. The URL already carries your credential — no login or OAuth needed.",
+    "lockedTitle": "Requires a workspace with an active subscription",
+    "lockedDescription": "The connector unlocks once you have at least one workspace on the Agência or Enterprise plan with an active subscription. Subscribe to run your workspaces from Claude.",
+    "seePlans": "See plans",
+    "urlLabel": "Connector URL",
+    "loading": "Loading…",
+    "hide": "Hide",
+    "reveal": "Reveal",
+    "copied": "Copied",
+    "copy": "Copy",
+    "secretHint": "The URL is a secret: anyone who has it can operate your workspaces with your permissions.",
+    "rotate": "Generate new URL",
+    "rotateConfirm": {
+      "title": "Generate a new URL?",
+      "description": "The current URL will stop working in Claude. You'll need to reconnect the connector with the new URL.",
+      "confirm": "Generate new URL"
+    }
+  },
+  "apps": {
+    "title": "Authorized apps",
+    "description": "Applications with OAuth access to your account.",
+    "loading": "Loading…",
+    "empty": "No apps connected yet.",
+    "revoke": "Revoke",
+    "revokeConfirm": {
+      "title": "Revoke access for {{name}}?",
+      "description": "The app loses access to your account immediately.",
+      "confirm": "Revoke"
+    }
+  },
+  "toasts": {
+    "profileUpdated": "Profile updated.",
+    "profileError": "Couldn't update your profile.",
+    "avatarUpdated": "Photo updated.",
+    "avatarError": "Couldn't upload the photo.",
+    "passwordUpdated": "Password changed.",
+    "passwordError": "Couldn't change the password.",
+    "emailChangeSent": "We've sent a confirmation link to the new email.",
+    "emailChangeError": "Couldn't request the email change."
+  },
+  "workspace": {
+    "createTitle": "New workspace",
+    "createDescription": "Create a new agency. You'll be the owner and switch into it automatically.",
+    "nameLabel": "Workspace name",
+    "namePlaceholder": "My Agency",
+    "cancel": "Cancel",
+    "create": "Create workspace",
+    "creating": "Creating…"
+  }
+}

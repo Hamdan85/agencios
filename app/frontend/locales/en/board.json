@@ -1,0 +1,86 @@
+{
+  "hub": {
+    "eyebrow": "Operations",
+    "title": "Tickets",
+    "description": "The agency's production funnel, from idea to archive.",
+    "tabs": {
+      "board": "Board",
+      "list": "List"
+    }
+  },
+  "newTicket": "New ticket",
+  "filters": {
+    "searchPlaceholder": "Search by title…",
+    "campaign": "Campaign",
+    "client": "Client",
+    "assignee": "Assignee",
+    "channel": "Channel",
+    "type": "Type",
+    "status": "Stage",
+    "priority": "Priority",
+    "situation": "State",
+    "situationActive": "Active",
+    "situationArchived": "Archived",
+    "situationAll": "All"
+  },
+  "empty": {
+    "title": "No tickets here yet",
+    "description": "Create the first card and start moving work through the production funnel."
+  },
+  "clearDialog": {
+    "title": "Archive done tickets?",
+    "description": "All {{count}} ticket(s) in the \"Done\" column will be archived and leave the board. You can still see them in the list view by filtering for archived.",
+    "confirm": "Archive all"
+  },
+  "column": {
+    "actions": "Column actions",
+    "archiveDone": "Archive done",
+    "dropHere": "Drag cards here"
+  },
+  "card": {
+    "untitled": "Untitled",
+    "noCampaign": "No campaign",
+    "overdue": "Overdue"
+  },
+  "list": {
+    "selectAllError": "Couldn't select all tickets.",
+    "delete": "Delete",
+    "loadErrorTitle": "Failed to load",
+    "loadErrorDescription": "We couldn't load the tickets. Try again.",
+    "emptyArchivedTitle": "No archived tickets",
+    "emptyTitle": "No tickets found",
+    "emptyFiltered": "Adjust the filters to see more results.",
+    "emptyDescription": "Create the first ticket and start moving work through the funnel.",
+    "ticketCount_one": "{{count}} ticket",
+    "ticketCount_other": "{{count}} tickets",
+    "endOfList": "End of list",
+    "deleteConfirm": {
+      "title_one": "Delete ticket?",
+      "title_other": "Delete {{count}} tickets?",
+      "description": "This action is permanent and cannot be undone. The tickets and all their content (subtasks, creatives, posts) will be removed.",
+      "confirm": "Delete"
+    }
+  },
+  "newDialog": {
+    "description": "Start with the context. Creative type, channels and due date come later, in the Scoping stage.",
+    "campaignLabel": "Campaign",
+    "campaignPlaceholder": "Select a campaign",
+    "campaignEmpty": "Create a campaign first to open tickets.",
+    "titleLabel": "Title",
+    "titlePlaceholder": "E.g.: Launch — winter collection",
+    "briefLabel": "Brief / context",
+    "briefPlaceholder": "Describe the context, message and desired tone… (optional — you can build on it in Ideation)",
+    "priorityLabel": "Priority",
+    "cancel": "Cancel",
+    "creating": "Creating…",
+    "create": "Create ticket"
+  },
+  "toasts": {
+    "moveError": "Couldn't move the ticket.",
+    "createSuccess": "Ticket created!",
+    "createError": "Failed to create the ticket.",
+    "archivedCount": "{{count}} ticket(s) archived.",
+    "nothingToArchive": "Nothing to archive.",
+    "clearColumnError": "Couldn't clear the column."
+  }
+}

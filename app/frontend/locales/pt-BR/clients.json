@@ -1,0 +1,367 @@
+{
+  "actions": {
+    "edit": "Editar",
+    "archive": "Arquivar",
+    "unarchive": "Reativar",
+    "back": "Voltar",
+    "close": "Fechar",
+    "remove": "Remover"
+  },
+  "status": {
+    "active": "Ativo",
+    "archived": "Arquivado"
+  },
+  "index": {
+    "eyebrow": "Carteira",
+    "title": "Clientes",
+    "description": "A carteira de clientes da sua agência.",
+    "newClient": "Novo cliente",
+    "searchPlaceholder": "Buscar por nome, empresa ou e-mail…",
+    "filters": {
+      "status": "Situação",
+      "active": "Ativos",
+      "archived": "Arquivados",
+      "all": "Todos"
+    },
+    "empty": {
+      "noneTitle": "Nenhum cliente ainda",
+      "noneDescription": "Adicione o primeiro cliente à carteira da agência.",
+      "filteredTitle": "Nada por aqui",
+      "filteredDescription": "Tente ajustar a busca ou o filtro de status."
+    }
+  },
+  "card": {
+    "campaigns_one": "{{count}} campanha",
+    "campaigns_other": "{{count}} campanhas",
+    "positioned": "Posicionado",
+    "positionedTitle": "Posicionamento definido"
+  },
+  "archiveConfirm": {
+    "title": "Arquivar {{name}}?",
+    "description": "O cliente sai da lista ativa. Você pode reativá-lo depois pelo filtro de arquivados."
+  },
+  "show": {
+    "clientFallback": "Cliente",
+    "editClient": "Editar cliente",
+    "viewPerformance": "Ver desempenho",
+    "stats": {
+      "campaigns": "Campanhas",
+      "invoices": "Faturas",
+      "billed": "Faturado"
+    },
+    "tabs": {
+      "branding": "Posicionamento & Marca",
+      "config": "Configurações",
+      "projects": "Campanhas",
+      "meetings": "Reuniões",
+      "invoices": "Faturas"
+    }
+  },
+  "projectStatus": {
+    "active": "Ativa",
+    "paused": "Pausada",
+    "archived": "Arquivada"
+  },
+  "invoiceStatus": {
+    "draft": "Rascunho",
+    "open": "Em aberto",
+    "paid": "Pago",
+    "overdue": "Vencida",
+    "canceled": "Cancelada"
+  },
+  "brand": {
+    "title": "Marca",
+    "emptyTitle": "Sem identidade de marca",
+    "emptyDescription": "Defina voz, @handle, cores e logo deste cliente — usados na geração de criativos e nos prompts da IA.",
+    "define": "Definir marca",
+    "ugcAvatar": "Avatar UGC",
+    "primaryColor": "Cor primária",
+    "secondaryColor": "Cor secundária",
+    "carousel": "Carrossel",
+    "carouselHint": "Assim os carrosséis deste cliente são gerados.",
+    "seeFullExample": "Ver exemplo completo",
+    "voice": "Voz da marca"
+  },
+  "positioningSection": {
+    "title": "Posicionamento",
+    "emptyTitle": "Sem posicionamento",
+    "emptyDescription": "Descreva a marca e deixe a IA montar o posicionamento — vira contexto da IA em todos os tickets das suas campanhas.",
+    "define": "Definir posicionamento"
+  },
+  "social": {
+    "title": "Redes sociais",
+    "connected": "Conectado",
+    "reauth": "Reautenticar",
+    "disconnected": "Desconectado",
+    "sessionExpired": "Sessão expirada — reconecte.",
+    "connectPrompt": "Conecte a conta deste cliente.",
+    "connect": "Conectar",
+    "reconnect": "Reconectar",
+    "disconnect": "Desconectar",
+    "disconnectConfirm": {
+      "title": "Desconectar {{network}}?",
+      "description": "Publicações agendadas nesta conta deixarão de ser postadas até você reconectar."
+    },
+    "selfServeTitle": "Deixe o cliente conectar sozinho",
+    "selfServeDescription": "Envie um link e o cliente conecta as próprias redes com o login dele — sem precisar de conta aqui.",
+    "copyConnectLink": "Copiar link de conexão",
+    "connectLinkCopied": "Link copiado! Envie ao cliente para ele conectar as próprias redes.",
+    "connectLinkError": "Não foi possível gerar o link.",
+    "manualHint": "Ou conecte as redes deste cliente você mesmo. Os tickets das campanhas publicam nestas contas."
+  },
+  "portal": {
+    "title": "Portal do cliente",
+    "linkTitle": "Link de acompanhamento do cliente",
+    "linkDescription": "Sem login: o cliente vê as campanhas, acompanha o quadro em tempo real, aprova os criativos e lê os relatórios.",
+    "copy": "Copiar",
+    "rotate": "Renovar",
+    "copySuccess": "Link copiado! Envie ao cliente para acompanhar campanhas e aprovar criativos.",
+    "copyError": "Não foi possível copiar o link.",
+    "rotateConfirm": {
+      "title": "Renovar link do portal?",
+      "description": "O link atual deixará de funcionar na hora. Quem tiver o link antigo perde o acesso e você precisará enviar o novo ao cliente.",
+      "confirm": "Renovar link"
+    }
+  },
+  "projects": {
+    "title": "Campanhas",
+    "emptyTitle": "Nenhuma campanha",
+    "emptyDescription": "Este cliente ainda não tem campanhas.",
+    "newProject": "Nova campanha"
+  },
+  "invoices": {
+    "title": "Faturas",
+    "emptyTitle": "Nenhuma fatura",
+    "emptyDescription": "Nenhuma cobrança foi emitida para este cliente.",
+    "newInvoice": "Nova cobrança",
+    "due": "Venc. {{date}}"
+  },
+  "meetings": {
+    "description": "Todas as reuniões do time com este cliente.",
+    "schedule": "Agendar reunião",
+    "loading": "Carregando…",
+    "emptyTitle": "Nenhuma reunião com este cliente",
+    "emptyDescription": "Agende a primeira — ela entra no seu Google Calendar com link do Meet.",
+    "cancelConfirm": {
+      "title": "Cancelar \"{{title}}\"?",
+      "description": "A reunião será removida da agenda e do Google Calendar.",
+      "confirm": "Cancelar reunião"
+    }
+  },
+  "wizard": {
+    "steps": {
+      "site": {
+        "title": "Site",
+        "description": "Importe tudo da landing page da marca."
+      },
+      "contact": {
+        "title": "Contato",
+        "description": "Quem é o cliente."
+      },
+      "brand": {
+        "title": "Marca",
+        "description": "Identidade visual e voz da marca."
+      },
+      "brief": {
+        "title": "Descrição",
+        "description": "Descreva a marca — a IA preenche o posicionamento."
+      },
+      "statement": {
+        "title": "Posicionamento",
+        "description": "Síntese final de marca."
+      }
+    },
+    "save": "Salvar",
+    "createDraft": "Criar rascunho",
+    "skip": "Pular",
+    "continue": "Continuar",
+    "saving": "Salvando…",
+    "saveClient": "Salvar cliente",
+    "createClient": "Criar cliente"
+  },
+  "editDialog": {
+    "sections": {
+      "contact": "Contato",
+      "brand": "Marca",
+      "positioning": "Posicionamento",
+      "content": "Conteúdo",
+      "statement": "Síntese"
+    },
+    "saveChanges": "Salvar alterações"
+  },
+  "fields": {
+    "name": "Nome",
+    "namePlaceholder": "Nome do contato",
+    "company": "Empresa",
+    "companyPlaceholder": "Nome da empresa",
+    "email": "E-mail",
+    "emailPlaceholder": "contato@empresa.com",
+    "phone": "Telefone",
+    "phonePlaceholder": "(11) 99999-9999",
+    "document": "Documento",
+    "documentPlaceholder": "CNPJ / CPF",
+    "notes": "Observações",
+    "notesPlaceholder": "Anotações sobre o cliente…",
+    "currentImage": "Imagem atual",
+    "chooseImage": "Escolher imagem",
+    "imageFormats": "PNG, JPG ou SVG"
+  },
+  "brandFields": {
+    "voicePlaceholder": "Personalidade e tom (ex.: próxima, divertida, especialista).",
+    "handleLabel": "@handle padrão",
+    "handlePlaceholder": "marca_oficial",
+    "creatorAvatar": "Avatar do criador (UGC)"
+  },
+  "carousel": {
+    "styles": {
+      "gradient": "Fundo gradiente",
+      "white": "Fundo branco",
+      "image": "Imagem de fundo"
+    },
+    "styleLabel": "Estilo do carrossel",
+    "styleHint": "Fundo usado quando a IA gera carrosséis para este cliente.",
+    "previewHeadline": "Sua headline aparece aqui",
+    "bgSet": "Imagem de fundo definida",
+    "bgChoose": "Escolha a imagem de fundo",
+    "bgHint": "Envie um arquivo ou selecione um criativo da plataforma.",
+    "uploadImage": "Enviar imagem",
+    "pickFromCreative": "Escolher de um criativo"
+  },
+  "palette": {
+    "title": "Cores do carrossel (da imagem)",
+    "reanalyze": "Reanalisar",
+    "accent": "Destaque",
+    "text": "Texto",
+    "scrim": "Escurecimento {{pct}}%",
+    "analyzing": "Analisando a imagem para escolher as cores…",
+    "noBackground": "Defina uma imagem de fundo — a IA escolhe as cores automaticamente.",
+    "note": "Cores exclusivas do fundo com imagem, separadas das cores da marca (usadas nos fundos gradiente e branco)."
+  },
+  "siteImport": {
+    "banner": "Cole o link do site / landing page da marca. A IA lê a página e preenche automaticamente nome, contato, identidade visual (logo e cores) e o posicionamento. Você revisa tudo antes de salvar.",
+    "label": "Site da marca",
+    "placeholder": "https://marca.com.br",
+    "reading": "Lendo…",
+    "import": "Importar",
+    "hint": "Preenche nome, e-mail, telefone, @, cores, logo e posicionamento — você pode pular e preencher manualmente."
+  },
+  "brief": {
+    "banner": "Descreva a marca com suas palavras — produtos, público, diferenciais, jeito de falar. A IA preenche o posicionamento estruturado e você revisa nas próximas etapas.",
+    "label": "Descrição da marca",
+    "placeholder": "Ex.: Somos uma confeitaria artesanal premium em SP. Vendemos bolos e doces sob encomenda para festas. Nosso público são mães de classe média-alta que valorizam ingredientes naturais. A gente fala de um jeito caloroso e próximo…",
+    "generating": "Gerando posicionamento…",
+    "generate": "Preencher posicionamento com IA"
+  },
+  "statement": {
+    "label": "Posicionamento (síntese)",
+    "placeholder": "O parágrafo de posicionamento aparece aqui. Gere com IA na etapa de descrição ou escreva manualmente.",
+    "generating": "Gerando…",
+    "regenerate": "Regerar com IA"
+  },
+  "backgroundPicker": {
+    "description": "Use a imagem de um criativo da plataforma como fundo do carrossel.",
+    "searchPlaceholder": "Buscar criativos…",
+    "emptyTitle": "Nenhum criativo com imagem",
+    "emptyDescription": "Gere ou envie um criativo de imagem para usá-lo como fundo."
+  },
+  "example": {
+    "dialogTitle": "Exemplo de carrossel",
+    "dialogDescription": "{{style}} · assim os carrosséis deste cliente são gerados. Conteúdo ilustrativo — a IA escreve o texto real a partir do posicionamento.",
+    "prevSlide": "Slide anterior",
+    "nextSlide": "Próximo slide",
+    "goToSlide": "Ir para o slide {{n}}",
+    "brandFallback": "Sua marca",
+    "nextStep": "Próximo passo",
+    "saveShare": "Salve e compartilhe",
+    "swipe": "Arraste →",
+    "theBrand": "a marca",
+    "point1": "Estratégia sob medida para a sua marca",
+    "point2": "Execução que economiza o seu tempo",
+    "point3": "Resultados que você acompanha de perto",
+    "hookHeadline": "Conheça a {{brand}}",
+    "hookBody": "Arraste para ver como podemos ajudar você.",
+    "ctaHeadline": "Bora começar?",
+    "ctaBodyHandle": "Siga @{{handle}} e fale com a gente.",
+    "ctaBody": "Fale com a gente e comece hoje."
+  },
+  "toasts": {
+    "genericError": "Erro.",
+    "create": {
+      "success": "Cliente criado!",
+      "error": "Erro ao criar cliente."
+    },
+    "update": {
+      "success": "Cliente atualizado!",
+      "error": "Erro ao atualizar."
+    },
+    "archive": {
+      "success": "Cliente arquivado."
+    },
+    "unarchive": {
+      "success": "Cliente reativado!",
+      "error": "Erro ao reativar."
+    },
+    "rotatePortalLink": {
+      "success": "Link do portal renovado. O link anterior deixou de funcionar.",
+      "error": "Erro ao renovar o link do portal."
+    },
+    "synthesize": {
+      "error": "Erro ao gerar posicionamento com IA."
+    },
+    "importFromUrl": {
+      "error": "Não foi possível ler a landing page."
+    },
+    "updatePositioning": {
+      "success": "Posicionamento atualizado!",
+      "error": "Erro ao salvar posicionamento."
+    },
+    "uploadBrandAssets": {
+      "error": "Erro ao enviar imagens da marca."
+    },
+    "setCarouselBackground": {
+      "success": "Fundo do carrossel definido!",
+      "error": "Erro ao definir o fundo do carrossel."
+    },
+    "reanalyzePalette": {
+      "success": "Analisando as cores da imagem…",
+      "error": "Erro ao analisar as cores da imagem."
+    },
+    "projects": {
+      "create": {
+        "success": "Campanha criada!",
+        "error": "Erro ao criar campanha."
+      },
+      "start": {
+        "success": "Campanha iniciada!",
+        "error": "Erro ao iniciar a campanha."
+      },
+      "finalize": {
+        "success": "Campanha finalizada! Gerando o relatório…",
+        "error": "Erro ao finalizar a campanha."
+      },
+      "sendScope": {
+        "success": "Escopo enviado ao cliente!",
+        "error": "Erro ao enviar o escopo."
+      },
+      "destroy": {
+        "success": "Campanha excluída.",
+        "error": "Erro ao excluir a campanha."
+      },
+      "autopilotEstimate": {
+        "error": "Erro ao estimar os créditos."
+      },
+      "autopilot": {
+        "success": "Piloto automático iniciado 🚀",
+        "error": "Erro ao iniciar o piloto automático."
+      },
+      "updateSettings": {
+        "success": "Configurações da campanha salvas!",
+        "error": "Erro ao salvar as configurações."
+      }
+    },
+    "report": {
+      "sent": "Relatório enviado ao cliente por e-mail 📧",
+      "error": "Não foi possível enviar o relatório."
+    }
+  }
+}

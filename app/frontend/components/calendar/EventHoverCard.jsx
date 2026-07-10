@@ -1,24 +1,27 @@
 import { Building2, CalendarClock, CircleCheck, CircleDashed, Clock, Ticket, UserRound, Users } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { time, date } from '@/lib/formatters'
 import { channelMeta } from '@/lib/constants'
 import { eventVisual } from './EventChip'
 import { parseEventStart } from './calendarUtils'
 
-const TYPE_LABEL = { post: 'Post agendado', ticket: 'Publicação prevista', meeting: 'Reunião', task: 'Tarefa' }
+const TYPE_KEY = { post: 'event.typePost', ticket: 'event.typeTicket', meeting: 'event.typeMeeting', task: 'event.typeTask' }
 
 // Rich hover card for any calendar event — replaces the native `title` tooltip
 // with a designed preview: type, title, time and the context lines that matter
 // per event kind. Desktop-only by nature (hover); click behavior is untouched.
 export function EventHoverCard({ event, showWorkspace = false, children }) {
+  const { t } = useTranslation('calendar')
   if (!event) return children
   const { color, Icon } = eventVisual(event)
-  const title = event.title || TYPE_LABEL[event.type] || 'Evento'
+  const typeLabel = t(TYPE_KEY[event.type] || 'event.fallback')
+  const title = event.title || typeLabel
   const network = event.type === 'post' ? channelMeta(event.provider)?.label : null
   const planned = event.type === 'ticket'
 
   const when = event.all_day
-    ? `${date(parseEventStart(event).toISOString())} · dia inteiro`
+    ? t('event.allDayAt', { date: date(parseEventStart(event).toISOString()) })
     : event.end
       ? `${time(event.start)} – ${time(event.end)}`
       : time(event.start)
@@ -41,7 +44,7 @@ export function EventHoverCard({ event, showWorkspace = false, children }) {
             {Icon ? <Icon size={11} strokeWidth={2.6} /> : <span className="size-1.5 rounded-full" style={{ background: planned ? color : '#fff' }} />}
           </span>
           <span className="text-[10px] font-bold uppercase tracking-[0.12em]">
-            {network ? `${TYPE_LABEL.post} · ${network}` : TYPE_LABEL[event.type] || 'Evento'}
+            {network ? t('event.typePostWithNetwork', { network }) : typeLabel}
           </span>
           {event.type === 'task' && (
             <TaskState done={event.done} overdue={event.overdue} />
@@ -54,7 +57,7 @@ export function EventHoverCard({ event, showWorkspace = false, children }) {
 
         <div className="flex flex-col gap-1 px-3 pb-2.5 pt-2">
           <DetailRow icon={Clock}>{when}</DetailRow>
-          {planned && <DetailRow icon={CalendarClock}>Prevista · agenda ao publicar</DetailRow>}
+          {planned && <DetailRow icon={CalendarClock}>{t('event.plannedHint')}</DetailRow>}
           {event.type === 'task' && event.ticket_title && <DetailRow icon={Ticket}>{event.ticket_title}</DetailRow>}
           {event.type === 'task' && event.assignee_name && <DetailRow icon={UserRound}>{event.assignee_name}</DetailRow>}
           {event.client_name && <DetailRow icon={Building2}>{event.client_name}</DetailRow>}
@@ -66,17 +69,18 @@ export function EventHoverCard({ event, showWorkspace = false, children }) {
 }
 
 function TaskState({ done, overdue }) {
+  const { t } = useTranslation('calendar')
   if (done) {
     return (
       <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600">
-        <CircleCheck size={11} strokeWidth={2.6} /> Feita
+        <CircleCheck size={11} strokeWidth={2.6} /> {t('event.taskDone')}
       </span>
     )
   }
   if (overdue) {
     return (
       <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-bold text-rose-500">
-        <CircleDashed size={11} strokeWidth={2.6} /> Atrasada
+        <CircleDashed size={11} strokeWidth={2.6} /> {t('event.taskOverdue')}
       </span>
     )
   }

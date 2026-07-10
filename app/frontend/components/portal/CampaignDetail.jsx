@@ -1,14 +1,16 @@
 import { LayoutGrid, CheckSquare, BarChart3, FileBarChart, ArrowLeft } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import PortalBoard from './PortalBoard'
 import PortalApprovals from './PortalApprovals'
 import PortalMetrics from './PortalMetrics'
 import PortalReportTab from './PortalReportTab'
 
+// Keys are the server's tab identifiers (`available_tabs`); labels resolve via i18n.
 const TAB_META = {
-  quadro: { label: 'Quadro', icon: LayoutGrid },
-  aprovacoes: { label: 'Aprovações', icon: CheckSquare },
-  metricas: { label: 'Métricas', icon: BarChart3 },
-  relatorio: { label: 'Relatório', icon: FileBarChart },
+  quadro: { labelKey: 'tabs.board', icon: LayoutGrid },
+  aprovacoes: { labelKey: 'tabs.approvals', icon: CheckSquare },
+  metricas: { labelKey: 'tabs.metrics', icon: BarChart3 },
+  relatorio: { labelKey: 'tabs.report', icon: FileBarChart },
 }
 
 // A centered, self-scrolling band for the non-board tabs (métricas, relatório).
@@ -27,6 +29,7 @@ function ScrollBand({ children }) {
 // tabs exist (`available_tabs`): active/paused → quadro + (aprovações) +
 // métricas; completed/archived → quadro (all tickets) + relatório.
 export default function CampaignDetail({ campaign, token, activeTab, onTab, accent = '#7C3AED', onBack }) {
+  const { t } = useTranslation('portal')
   const tabs = campaign.available_tabs || ['quadro']
   const active = tabs.includes(activeTab) ? activeTab : tabs[0]
   const pending = campaign.counts?.pending_approval || 0
@@ -41,7 +44,7 @@ export default function CampaignDetail({ campaign, token, activeTab, onTab, acce
               onClick={onBack}
               className="mb-3 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-muted transition hover:text-ink"
             >
-              <ArrowLeft size={16} /> Voltar às campanhas
+              <ArrowLeft size={16} /> {t('campaign.backToCampaigns')}
             </button>
           )}
           <div className="flex items-center gap-2.5">
@@ -61,7 +64,7 @@ export default function CampaignDetail({ campaign, token, activeTab, onTab, acce
                   <button key={key} onClick={() => onTab(key)}
                     className={`-mb-px flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-sm font-semibold transition ${on ? '' : 'border-transparent text-ink-muted hover:text-ink'}`}
                     style={on ? { borderColor: accent, color: accent } : undefined}>
-                    <Icon size={15} /> {meta.label}
+                    <Icon size={15} /> {t(meta.labelKey)}
                     {key === 'aprovacoes' && pending > 0 && (
                       <span className="ml-0.5 rounded-full bg-amber/20 px-1.5 text-[11px] font-bold text-[#B45309]">{pending}</span>
                     )}

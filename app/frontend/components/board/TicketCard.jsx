@@ -1,4 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { CheckSquare, ImageIcon, CalendarClock, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { relativeDay } from '@/lib/formatters'
@@ -13,6 +14,7 @@ import { DUE_TONE, AUTOPILOT_RING, ALERT_RING, projectAccent } from '@/component
 // Lifts on hover; clicking (when not dragging) opens the ticket — in the side
 // drawer when an `onOpen` handler is provided, otherwise the full detail page.
 export function TicketCard({ ticket, dragging = false, overlay = false, onOpen }) {
+  const { t } = useTranslation('board')
   const navigate = useNavigate()
   const location = useLocation()
   if (!ticket) return null
@@ -25,7 +27,7 @@ export function TicketCard({ ticket, dragging = false, overlay = false, onOpen }
   const progress = subtasksCount > 0 ? Math.round((subtasksDone / subtasksCount) * 100) : 0
   const creatives = Number(ticket.creatives_count) || 0
   const channels = ticket.channels || []
-  const title = ticket.display_title || ticket.title || 'Sem título'
+  const title = ticket.display_title || ticket.title || t('card.untitled')
 
   const open = () => {
     if (dragging) return
@@ -62,7 +64,7 @@ export function TicketCard({ ticket, dragging = false, overlay = false, onOpen }
             <span className="truncate">{project.name}</span>
           </ColorBadge>
         ) : (
-          <span className="text-[11px] font-bold text-ink-faint">Sem campanha</span>
+          <span className="text-[11px] font-bold text-ink-faint">{t('card.noCampaign')}</span>
         )}
         <PriorityDot priority={ticket.priority} />
       </div>
@@ -105,7 +107,7 @@ export function TicketCard({ ticket, dragging = false, overlay = false, onOpen }
           {ticket.overdue && (
             <span className="inline-flex items-center gap-1 rounded-md bg-danger/12 px-1.5 py-0.5 text-[10.5px] font-bold text-danger">
               <AlertTriangle size={11} strokeWidth={2.4} />
-              Atrasado
+              {t('card.overdue')}
             </span>
           )}
           {due && !ticket.overdue && (

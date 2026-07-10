@@ -1,0 +1,611 @@
+{
+  "actions": {
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "delete": "Excluir",
+    "remove": "Remover",
+    "download": "Baixar",
+    "close": "Fechar",
+    "rename": "Renomear",
+    "archive": "Arquivar",
+    "restore": "Restaurar",
+    "edit": "Editar"
+  },
+  "ai": "IA",
+  "alertBadge": "Em alerta",
+  "workingBadge": "Executando",
+  "activity": {
+    "title": "Atividade",
+    "member": "Membro",
+    "empty": {
+      "title": "Sem atividade ainda",
+      "description": "Comentários e o histórico do ticket aparecem aqui."
+    }
+  },
+  "aiFill": {
+    "button": "Atualizar campos com IA",
+    "tooltip": "Regera os campos desta etapa com IA, a partir de tudo o que foi feito nas etapas anteriores.",
+    "title": "Atualizar campos com IA",
+    "description": "A IA regenera os campos desta etapa com base em tudo o que foi feito nas etapas anteriores. Diga o que deve ser mudado — ou deixe em branco para uma atualização direta.",
+    "instructionLabel": "O que deve ser mudado?",
+    "optional": "(opcional)",
+    "placeholder": "Ex.: deixe a legenda mais curta e com um CTA mais forte…",
+    "updating": "Atualizando…",
+    "submit": "Atualizar com IA"
+  },
+  "approval": {
+    "resendConfirmTitle": "Reenviar link de aprovação?",
+    "resendConfirmDescription": "O cliente receberá o link por e-mail novamente.",
+    "resendConfirmLabel": "Reenviar",
+    "resendSuccess": "Link reenviado ao cliente!",
+    "resendError": "Erro ao reenviar.",
+    "approveConfirmTitle": "Aprovar em nome do cliente?",
+    "approveConfirmDescription": "Marca todos os criativos como aprovados.",
+    "approveConfirmLabel": "Aprovar",
+    "approveSuccess": "Conteúdo aprovado!",
+    "approveError": "Erro ao aprovar.",
+    "approved": "Aprovado",
+    "approvedBy": "Aprovado por {{name}}",
+    "changesTitle": "O cliente solicitou alterações",
+    "changesHelp": "Faça os ajustes pedidos e reenvie o link para o cliente aprovar.",
+    "noDetails": "Sem detalhes — o cliente apenas pediu ajustes.",
+    "resendLink": "Reenviar link",
+    "awaiting": "Aguardando aprovação do cliente",
+    "sentAt": "Link enviado em {{date}}",
+    "approve": "Aprovar"
+  },
+  "attachments": {
+    "title": "Arquivos",
+    "count_one": "{{count}} arquivo neste ticket",
+    "count_other": "{{count}} arquivos neste ticket",
+    "hint": "Anexe vídeos, imagens, PDFs e documentos.",
+    "upload": "Enviar arquivo",
+    "open": "Abrir {{name}}",
+    "fileActions": "Ações do arquivo",
+    "dropToUpload": "Solte para enviar",
+    "empty": {
+      "title": "Nenhum arquivo ainda",
+      "description": "Arraste arquivos para cá ou clique para enviar — vídeos, imagens, PDFs, planilhas e documentos."
+    },
+    "dropMorePrefix": "Arraste mais arquivos para cá ou",
+    "dropMoreAction": "selecione",
+    "renameTitle": "Renomear arquivo",
+    "renameDescription": "Defina um nome de exibição e uma descrição opcional.",
+    "displayName": "Nome de exibição",
+    "descriptionOptional": "Descrição (opcional)",
+    "deleteTitle": "Excluir arquivo",
+    "deleteDescription": "Remover <strong>{{name}}</strong>? Esta ação não pode ser desfeita."
+  },
+  "autopilot": {
+    "runState": {
+      "pending": "Preparando…",
+      "scoping": "Escrevendo o escopo…",
+      "generating": "Gerando criativos…",
+      "awaiting_generation": "Renderizando vídeo…",
+      "publishing": "Agendando posts…",
+      "running": "No piloto automático…"
+    },
+    "title": "Iniciar no piloto automático?",
+    "description": "O agente vai preencher o briefing, gerar todos os criativos e agendar os posts em todas as redes. Uma vez iniciado, os créditos são consumidos mesmo que você ajuste o agendamento depois.",
+    "alreadyGenerated": "já gerado",
+    "included": "incluso",
+    "credits": "{{count}} créditos",
+    "total": "Total",
+    "balance": "Saldo disponível",
+    "unlimited": "Ilimitado",
+    "blocked": "Alguns tickets exigem criativos manuais e não podem rodar no modo GO: {{titles}}.",
+    "shortfall": "Faltam {{count}} créditos para este planejamento. Compre mais para continuar.",
+    "pendingVideo": "Os vídeos <strong>não são gerados automaticamente</strong> no modo GO — eles ficam aguardando na fase de Produção para você gerar manualmente.",
+    "buyCredits": "Comprar créditos",
+    "start": "Iniciar agora"
+  },
+  "comment": {
+    "placeholder": "Escreva um comentário… use @ para mencionar (⌘+Enter para enviar)",
+    "removeFile": "Remover {{name}}",
+    "attach": "Anexar arquivo",
+    "submit": "Comentar"
+  },
+  "creatives": {
+    "title": "Criativos",
+    "count_one": "{{count}} criativo",
+    "count_other": "{{count}} criativos",
+    "hint": "Gere, envie ou use uma peça do estúdio.",
+    "add": "Adicionar criativo",
+    "generateWithAi": "Gerar com IA",
+    "uploadFile": "Enviar arquivo",
+    "useFromStudio": "Usar do estúdio",
+    "generating": "Gerando…",
+    "failed": "Falhou",
+    "view": "Ver",
+    "scenes": "Cenas",
+    "deleteAria": "Excluir criativo",
+    "editScenesAria": "Editar cenas",
+    "empty": {
+      "title": "Nenhum criativo ainda",
+      "description": "Gere com IA, envie um arquivo ou use uma peça já gerada no estúdio."
+    },
+    "kinds": {
+      "carousel": {
+        "label": "Carrossel",
+        "desc": "Padrão viral com marca + @handle"
+      },
+      "video": {
+        "label": "Vídeo",
+        "desc": "Avatar falando ou produto a partir de fotos"
+      },
+      "image": {
+        "label": "Imagem",
+        "desc": "Imagem única para o feed"
+      }
+    },
+    "creditBadge_one": "{{count}} crédito",
+    "creditBadge_other": "{{count}} créditos",
+    "creditBadgeEstimate_one": "~{{count}} crédito",
+    "creditBadgeEstimate_other": "~{{count}} créditos",
+    "metered": "Metrado",
+    "free": "Grátis",
+    "generateTitle": "Gerar criativo",
+    "generateDescription": "Escolha o tipo de peça e confirme — a geração consome créditos.",
+    "nothingGeneratable": "Nenhum tipo de peça gerável para os canais e tipos deste ticket. Envie um arquivo ou ajuste o escopo.",
+    "generate": "Gerar",
+    "upload": {
+      "title": "Enviar arquivo",
+      "description": "Envie uma peça já pronta — imagem ou vídeo.",
+      "typeLabel": "Tipo de criativo",
+      "fileLabel": "Arquivo",
+      "incompatible": "Arquivo incompatível: {{label}} não aceita esse formato.",
+      "thatType": "esse tipo",
+      "selected_one": "{{count}} arquivo selecionado",
+      "selected_other": "{{count}} arquivos selecionados",
+      "select": "Selecionar imagem ou vídeo",
+      "captionLabel": "Legenda (opcional)",
+      "captionPlaceholder": "Uma nota sobre esta peça…",
+      "submit": "Enviar"
+    },
+    "picker": {
+      "title": "Usar criativo do estúdio",
+      "description": "Anexe a este ticket uma peça já gerada no estúdio (apenas dos tipos que este ticket aceita).",
+      "searchPlaceholder": "Buscar por nome ou legenda…",
+      "emptySearchTitle": "Nada encontrado",
+      "emptyTitle": "Nada disponível",
+      "emptySearchDescription": "Nenhuma peça do estúdio (dos tipos aceitos) corresponde à busca.",
+      "emptyDescription": "Nenhum criativo livre dos tipos que este ticket aceita — gere um no estúdio ou ajuste o escopo."
+    },
+    "deleteTitle": "Excluir criativo",
+    "deleteDescription": "Esta ação não pode ser desfeita. O criativo “{{name}}” será removido permanentemente."
+  },
+  "metrics": {
+    "reach": "Alcance",
+    "views": "Views",
+    "likes": "Curtidas",
+    "comments": "Comentários",
+    "shares": "Compart.",
+    "saves": "Salvos"
+  },
+  "repeatMeta": {
+    "repeat": {
+      "label": "Repetir",
+      "hint": "Vale rodar de novo como está"
+    },
+    "iterate": {
+      "label": "Iterar",
+      "hint": "Vale repetir com ajustes"
+    },
+    "retire": {
+      "label": "Aposentar",
+      "hint": "Não vale repetir"
+    }
+  },
+  "done": {
+    "headline": "Concluído",
+    "subtitle": "Retrospecto completo deste ticket",
+    "daysInFunnel": "Dias no funil",
+    "publications": "Publicações",
+    "subtasks": "Subtarefas",
+    "totalReach": "Alcance total",
+    "aiSummary": "Resumo da IA",
+    "aggregatePerformance": "Desempenho consolidado",
+    "noPosts": "Nenhuma publicação registrada para este ticket.",
+    "engagementMix": "Composição do engajamento",
+    "interactions": "{{value}} interações",
+    "perPost": "Por publicação",
+    "content": "O conteúdo",
+    "objective": "Objetivo",
+    "targetPersona": "Persona-alvo",
+    "publishedCaption": "Legenda publicada",
+    "retrospective": "Retrospectiva",
+    "wins": "Vitórias",
+    "improvements": "Melhorias",
+    "lessons": "Lições aprendidas",
+    "relatedTickets": "Tickets relacionados"
+  },
+  "post": {
+    "fallback": "Publicação",
+    "view": "Ver post",
+    "unpublished": "Despublicado",
+    "unpublish": "Despublicar"
+  },
+  "schema": {
+    "ideation": {
+      "title": "Brief & Ideação",
+      "helper": "O coração da ideia: para quem, por quê e em que formato.",
+      "brief": {
+        "label": "Brief",
+        "placeholder": "Descreva o contexto, a mensagem e o tom desejado…"
+      },
+      "objective": {
+        "label": "Objetivo",
+        "placeholder": "Ex.: gerar awareness do lançamento"
+      },
+      "target_persona": {
+        "label": "Persona-alvo",
+        "placeholder": "Quem queremos impactar?"
+      },
+      "content_pillar": {
+        "label": "Pilar de conteúdo",
+        "placeholder": "Ex.: bastidores, educacional…"
+      },
+      "format_hypothesis": {
+        "label": "Hipótese de formato",
+        "placeholder": "Ex.: Reel narrativo de 30s"
+      },
+      "references": {
+        "label": "Referências",
+        "placeholder": "Uma URL por linha…",
+        "hint": "Uma referência por linha"
+      }
+    },
+    "scoping": {
+      "title": "Escopo & Entregáveis",
+      "helper": "Defina o tipo de criativo, os canais e o que será entregue.",
+      "channels": {
+        "label": "Canais",
+        "hint": "Onde este conteúdo vai ao ar"
+      },
+      "creative_types": {
+        "label": "Tipos de criativo",
+        "hint": "Habilitados pelos canais escolhidos — os demais ficam desativados"
+      },
+      "copy_brief": {
+        "label": "Briefing de copy",
+        "placeholder": "Direção de mensagem para a legenda…"
+      },
+      "script": {
+        "label": "Roteiro",
+        "placeholder": "Roteiro / storyboard…"
+      },
+      "deliverables": {
+        "label": "Entregáveis",
+        "placeholder": "Um entregável por linha…",
+        "hint": "Pelo menos um entregável (um por linha). Na postagem você escolhe qual vai ao ar."
+      },
+      "due_date": {
+        "label": "Prazo"
+      },
+      "effort_estimate": {
+        "label": "Estimativa de esforço",
+        "placeholder": "Ex.: 4h, 2 dias…"
+      }
+    },
+    "production": {
+      "title": "Produção & Legenda",
+      "helper": "A copy final e as hashtags. A aprovação do cliente vira ações abaixo.",
+      "caption": {
+        "label": "Legenda",
+        "placeholder": "Escreva ou gere a legenda final…"
+      },
+      "hashtags": {
+        "label": "Hashtags",
+        "placeholder": "Digite e tecle Enter…",
+        "hint": "Enter ou vírgula adiciona; clique no × para remover"
+      },
+      "production_scope": {
+        "label": "Escopo de Produção",
+        "placeholder": "Direções de produção — orientam a geração dos criativos (referências, o que mostrar/evitar, elementos obrigatórios)…"
+      }
+    },
+    "scheduled": {
+      "title": "Postagem",
+      "helper": "Escolha o criativo e publique — imediatamente ou agendado.",
+      "scheduled_at": {
+        "label": "Publicar em"
+      },
+      "first_comment": {
+        "label": "Primeiro comentário",
+        "placeholder": "Comentário fixado no post…"
+      },
+      "link_in_bio": {
+        "label": "Link na bio",
+        "placeholder": "https://…"
+      },
+      "auto_publish": {
+        "label": "Publicação automática",
+        "hint": "Publicar sem revisão manual"
+      }
+    },
+    "retrospective": {
+      "title": "Retrospectiva",
+      "helper": "O que funcionou, o que melhorar e a recomendação para o futuro.",
+      "wins": {
+        "label": "Vitórias",
+        "placeholder": "O que deu certo? Uma por linha…",
+        "hint": "Uma por linha"
+      },
+      "improvements": {
+        "label": "Melhorias",
+        "placeholder": "O que pode melhorar? Uma por linha…",
+        "hint": "Uma por linha"
+      },
+      "repeat_recommendation": {
+        "label": "Recomendação"
+      },
+      "lessons_learned": {
+        "label": "Lições aprendidas",
+        "placeholder": "O aprendizado consolidado…"
+      }
+    }
+  },
+  "fieldGroup": {
+    "finalMetrics": "Métricas finais",
+    "monitoring": "No ar — monitorando",
+    "perPostPerformance": "Desempenho por publicação.",
+    "noPostsYet": "Nenhuma publicação registrada ainda.",
+    "selectPlaceholder": "Selecione…",
+    "notConnectedClick": "{{label}} não está conectado neste cliente — clique para conectar",
+    "notConnected": "{{label}} não está conectado",
+    "pickChannelsFirst": "Escolha os canais primeiro",
+    "unavailableForChannels": "Indisponível para os canais escolhidos",
+    "switchOn": "Ativada",
+    "switchOff": "Desativada"
+  },
+  "viewer": {
+    "pdfError": "Não foi possível pré-visualizar este PDF.",
+    "loadingPdf": "Carregando PDF…",
+    "noPreview": "{{label}} — pré-visualização indisponível neste formato.",
+    "downloadFile": "Baixar arquivo",
+    "previous": "Anterior",
+    "next": "Próximo"
+  },
+  "meta": {
+    "title": "Detalhes",
+    "assignee": "Responsável",
+    "assign": "Atribuir…",
+    "assignTo": "Atribuir a",
+    "unassigned": "Sem responsável",
+    "priority": "Prioridade",
+    "dueDate": "Prazo",
+    "scheduled": "Agendado",
+    "schedulePlaceholder": "Agendar…",
+    "channels": "Canais",
+    "creative": "Criativo",
+    "relations": "Relações"
+  },
+  "posting": {
+    "media": {
+      "image": "imagem",
+      "carousel": "carrossel",
+      "video": "vídeo",
+      "text": "texto",
+      "post": "post"
+    },
+    "withCover": "{{media}} + capa",
+    "status": {
+      "scheduled": "Agendado",
+      "publishing": "Publicando…",
+      "published": "No ar",
+      "failed": "Falhou",
+      "unpublished": "Despublicado"
+    },
+    "title": "Postagem",
+    "hint": "Escolha um criativo por tipo e publique — agora ou agendado.",
+    "creativesToPost": "Criativos a postar",
+    "noTypes": {
+      "title": "Nenhum tipo definido",
+      "description": "Volte ao Escopo e escolha os tipos de criativo deste ticket."
+    },
+    "coverHint": "— vira capa do vídeo, ou post se não houver vídeo",
+    "noneReady": "Nenhum {{type}} pronto — gere ou anexe um na Produção.",
+    "previewAria": "Visualizar criativo",
+    "routingTitle": "O que vai para cada canal",
+    "noCompatible": "nenhum criativo compatível",
+    "captionPerChannel": "Legenda por canal",
+    "collapse": "Recolher",
+    "expand": "Expandir",
+    "captionPlaceholder": "Legenda deste post…",
+    "when": "Quando publicar",
+    "immediate": "Imediato",
+    "schedule": "Agendar",
+    "firstComment": "Primeiro comentário",
+    "firstCommentPlaceholder": "Comentário fixado no post…",
+    "linkInBio": "Link na bio",
+    "goesLiveNote": "O ticket vai para “No ar” quando a publicação for concluída.",
+    "publishNow": "Publicar agora",
+    "schedulePublish": "Agendar publicação"
+  },
+  "subtasksPanel": {
+    "title": "Subtarefas",
+    "generateTooltip": "Gerar a checklist de produção com IA a partir do brief e do escopo",
+    "empty": "Nenhuma subtarefa ainda.",
+    "titlePlaceholder": "Título da subtarefa",
+    "duePlaceholder": "Prazo",
+    "editAria": "Editar subtarefa",
+    "addPlaceholder": "Adicionar subtarefa…"
+  },
+  "actionsMenu": {
+    "aria": "Mais ações",
+    "deleteTitle": "Excluir ticket?",
+    "deleteWithLive": "Este ticket tem posts NO AR — excluir apaga o histórico e as métricas dessas publicações (o conteúdo continua na rede; para tirá-lo do ar, despublique antes). Também remove tarefas, criativos e agendamentos. Esta ação não pode ser desfeita.",
+    "deleteDefault": "Isso remove o ticket com suas tarefas, criativos e publicações agendadas. Esta ação não pode ser desfeita.",
+    "deleteConfirm": "Excluir ticket",
+    "archiveTitle": "Arquivar ticket?",
+    "archiveDescription": "Este ticket tem publicações agendadas — arquivar cancela esses agendamentos. Você pode restaurar e reagendar depois.",
+    "archiveConfirm": "Arquivar e cancelar"
+  },
+  "body": {
+    "cancelScheduleTitle": "Cancelar agendamento?",
+    "cancelScheduleDescription": "O post não será publicado nesta rede. Você pode agendar de novo quando quiser.",
+    "cancelScheduleConfirm": "Cancelar agendamento",
+    "tabDetails": "Detalhes",
+    "tabActivity": "Atividade"
+  },
+  "drawer": {
+    "openFull": "Abrir tela cheia",
+    "loading": "Carregando ticket…",
+    "notFound": "Ticket não encontrado",
+    "notFoundDescription": "Este ticket pode ter sido removido ou você não tem acesso a ele.",
+    "moveStage": "Mover etapa",
+    "goToStage": "Ir para a etapa",
+    "current": "atual",
+    "advanceTo": "Avançar para {{label}}"
+  },
+  "filters": {
+    "status": "Status",
+    "assignee": "Responsável",
+    "channel": "Canal",
+    "type": "Tipo",
+    "searchPlaceholder": "Buscar por título…"
+  },
+  "row": {
+    "approval": {
+      "pending": "Aguardando cliente",
+      "approved": "Aprovado",
+      "changes_requested": "Ajustes pedidos"
+    },
+    "archived": "Arquivado",
+    "ghost": {
+      "create": "Proposto",
+      "update": "Editar",
+      "remove": "Remover"
+    },
+    "pending": {
+      "edit": "A editar",
+      "remove": "A remover"
+    },
+    "select": "Selecionar {{title}}",
+    "actionsAria": "Ações do ticket"
+  },
+  "video": {
+    "state": {
+      "ready": "Pronta",
+      "rendering": "Renderizando",
+      "queued": "Na fila",
+      "failed": "Falhou"
+    },
+    "sceneOne": "cena {{num}}",
+    "sceneMany": "cenas {{head}} e {{last}}",
+    "play": "Tocar",
+    "fullscreenTitle": "Ver o vídeo em tela cheia",
+    "fullscreen": "Tela cheia",
+    "downloadTitle": "Baixar o vídeo",
+    "sceneCounter": "Cena {{current}}/{{total}}",
+    "generationFailed": "A geração falhou",
+    "generationFailedHint": "Peça no chat para refazer, ou gere o vídeo de novo.",
+    "planning": "Planejando as cenas…",
+    "rendering": "Renderizando o vídeo…",
+    "sceneTileTitle": "Cena {{num}} — anotar",
+    "attachError": "Não foi possível anexar. Use JPG, PNG, WEBP ou vídeo MP4/MOV/WEBM (máx. 50 MB).",
+    "annotateScene": "Anotar a cena {{num}}",
+    "annotatePlaceholder": "O que mudar nesta cena? (ex.: mais close, trocar o texto…)",
+    "referenceAlt": "Referência",
+    "whatIsThisFile": "O que é este arquivo?",
+    "attachReference": "Anexar referência",
+    "attachReferenceScene": "Anexar referência a esta cena",
+    "openReference": "Abrir referência",
+    "creditsSpent_one": "−{{count}} crédito",
+    "creditsSpent_other": "−{{count}} créditos",
+    "maxRefs": "Máximo de {{count}} referências.",
+    "uploadError": "Não foi possível enviar. Use JPG, PNG, WEBP ou vídeo MP4/MOV/WEBM (máx. 50 MB).",
+    "chatTitle": "Converse com o vídeo",
+    "chatHint": "Diga o que quer mudar — no vídeo todo ou numa cena. Clique numa cena para anotar algo específico dela; as anotações vão junto com a mensagem.",
+    "workingChat_one": "Trabalhando na {{scenes}}… leva 1–2 min .",
+    "workingChat_other": "Trabalhando nas {{scenes}}… leva 1–2 min cada.",
+    "sceneNote": "Cena {{num}}: {{text}}",
+    "sceneNoteWithRefs": "Cena {{num}}: {{text}} ({{count}})",
+    "referenceAttached": "referência anexada",
+    "removeNoteAria": "Remover nota",
+    "whatIsFileExample": "O que é este arquivo? (ex.: logo, personagem…)",
+    "attachRefTitle": "Anexar referência (imagem ou vídeo)",
+    "composerRef": "Diga como usar a referência…",
+    "composerNotes": "Escreva ou envie só as anotações…",
+    "composerDefault": "O que você quer mudar no vídeo?",
+    "creditsBalance": "{{value}} créditos",
+    "applying": "Aplicando o que você pediu…",
+    "finalizing": "Renderizando em alta qualidade ({{scenes}}) — a prévia continua tocando abaixo.",
+    "workingBanner_one": "Trabalhando na {{scenes}}… leva 1–2 min por cena.",
+    "workingBanner_other": "Trabalhando nas {{scenes}}… leva 1–2 min cada.",
+    "interviewTitle": "Entendendo seu vídeo",
+    "interviewHint": "Responda as perguntas no chat. Quando eu tiver o suficiente, gero o rascunho aqui — ou é só pedir “pode gerar”.",
+    "tabEdit": "Edição",
+    "tabAssets": "Elementos",
+    "viewFullscreen": "Ver em tela cheia",
+    "noDescription": "Sem descrição — descreva ao regenerar.",
+    "videoReference": "Referência do vídeo.",
+    "regenerate": "Regenerar",
+    "generateImage": "Gerar imagem",
+    "characterPlaceholder": "Descreva o personagem (aparência, roupa, estilo)…",
+    "scenarioPlaceholder": "Descreva o cenário (lugar, luz, clima)…",
+    "regenCost": "−1 crédito · não refaz as cenas atuais",
+    "generate": "Gerar",
+    "characters": "Personagens",
+    "scenarios": "Cenários",
+    "references": "Referências",
+    "soundtrack": "Trilha sonora",
+    "currentTrack": "Trilha atual",
+    "swap": "Trocar",
+    "musicPlaceholder": "Que trilha você quer? (ex.: algo mais animado, lo-fi calmo, épico…)",
+    "musicFree": "Grátis · re-mixa o vídeo",
+    "swapTrack": "Trocar trilha",
+    "roles": {
+      "character": "Personagem",
+      "scene": "Cenário",
+      "product": "Produto",
+      "style": "Estilo",
+      "logo": "Logo",
+      "reference": "Referência"
+    },
+    "addElement": "Adicionar elemento",
+    "upload": "Upload",
+    "library": "Biblioteca",
+    "elementType": "Tipo do elemento",
+    "uploadFile": "Enviar arquivo",
+    "uploadHint": "Imagem ou vídeo curto de referência. Não refaz as cenas.",
+    "libraryEmpty": "Nada na biblioteca ainda. Faça upload ou gere elementos.",
+    "addTitle": "{{label}} — adicionar",
+    "element": "elemento",
+    "elementCap": "Elemento",
+    "removeElementTitle": "Remover elemento?",
+    "removeElementDescription": "Ele deixa de ser usado nas próximas gerações de cena.",
+    "noElements": "Sem elementos",
+    "noElementsDescription": "Adicione um personagem, cenário ou referência acima.",
+    "editorTitle": "Editor de vídeo",
+    "interviewDescription": "Me conta sobre o vídeo no chat. Quando eu tiver contexto suficiente eu gero — ou peça pra gerar quando quiser.",
+    "editDescription": "Converse para editar. Clique numa cena para anotar; as anotações vão juntas na próxima mensagem.",
+    "noScenes": "Sem cenas",
+    "noScenesDescription": "Este vídeo não tem cenas editáveis.",
+    "quickPreview": "Prévia rápida.",
+    "quickPreviewHint": "Gostou? Gere a versão final — aqui ou pedindo no chat.",
+    "highQuality": "Alta qualidade",
+    "scenesLabel": "Cenas · clique para anotar",
+    "videoName": "Vídeo",
+    "applyNotes": "Aplique as anotações das cenas.",
+    "useReference": "Use esta referência."
+  },
+  "toasts": {
+    "genericError": "Algo deu errado.",
+    "statusUpdated": "Status atualizado!",
+    "checklistGenerated": "Checklist gerada com IA ✨",
+    "generationStarted": "Geração iniciada!",
+    "creativeRemoved": "Criativo removido.",
+    "creativeUploaded": "Criativo enviado!",
+    "creativeAttached": "Criativo adicionado ao ticket!",
+    "autopilotStarted": "Piloto automático iniciado 🚀",
+    "postUnpublished": "Post despublicado.",
+    "scheduleCanceled": "Agendamento cancelado.",
+    "ticketArchived": "Ticket arquivado.",
+    "ticketRestored": "Ticket restaurado.",
+    "ticketDeleted": "Ticket excluído.",
+    "filesUploaded": "Arquivo(s) enviado(s)!",
+    "attachmentUpdated": "Arquivo atualizado!",
+    "attachmentRemoved": "Arquivo removido."
+  }
+}

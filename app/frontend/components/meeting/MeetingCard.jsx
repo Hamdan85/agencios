@@ -2,6 +2,7 @@ import {
   Video, CalendarClock, Users2, ExternalLink, MoreHorizontal,
   Pencil, Trash2, StickyNote, Building2,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -22,6 +23,7 @@ function attendeeCount(attendees) {
 // personal: `canEdit` gates the edit/cancel menu to the owner; `showOwner`
 // surfaces who scheduled it on shared listings.
 export function MeetingCard({ meeting, past, canEdit = true, showOwner = false, onEdit, onCancel }) {
+  const { t } = useTranslation('meetings')
   const count = attendeeCount(meeting.attendees)
   return (
     <Card className="group flex flex-col overflow-hidden lift animate-rise">
@@ -49,9 +51,9 @@ export function MeetingCard({ meeting, past, canEdit = true, showOwner = false, 
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onSelect={() => onEdit(meeting)}><Pencil /> Editar</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => onEdit(meeting)}><Pencil /> {t('card.edit')}</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => onCancel(meeting)} className="text-danger data-[highlighted]:text-danger">
-                  <Trash2 /> Cancelar
+                  <Trash2 /> {t('card.cancel')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -76,7 +78,7 @@ export function MeetingCard({ meeting, past, canEdit = true, showOwner = false, 
           )}
           {count > 0 && (
             <Badge variant="muted" className="gap-1.5 py-1 tracking-normal">
-              <Users2 size={12} /> {count} {count === 1 ? 'participante' : 'participantes'}
+              <Users2 size={12} /> {t('card.attendees', { count })}
             </Badge>
           )}
         </div>
@@ -93,7 +95,7 @@ export function MeetingCard({ meeting, past, canEdit = true, showOwner = false, 
             {past ? (
               <Button asChild variant="outline" size="sm">
                 <a href={meeting.meet_url} target="_blank" rel="noopener noreferrer">
-                  <Video size={16} /> Abrir gravação <ExternalLink size={14} />
+                  <Video size={16} /> {t('card.openRecording')} <ExternalLink size={14} />
                 </a>
               </Button>
             ) : (
@@ -104,7 +106,7 @@ export function MeetingCard({ meeting, past, canEdit = true, showOwner = false, 
                 style={{ background: `linear-gradient(135deg, ${MEETING_COLOR}, #0EA5E9)` }}
               >
                 <a href={meeting.meet_url} target="_blank" rel="noopener noreferrer">
-                  <Video size={16} /> Entrar no Meet <ExternalLink size={14} />
+                  <Video size={16} /> {t('card.joinMeet')} <ExternalLink size={14} />
                 </a>
               </Button>
             )}

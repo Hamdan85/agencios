@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslation } from 'react-i18next'
 import {
   DndContext, DragOverlay, PointerSensor, KeyboardSensor,
   useSensor, useSensors, pointerWithin,
@@ -42,6 +43,7 @@ const findStatusOf = (map, id) =>
 // cards drag between them. Filters, the drawer and the new-ticket dialog live
 // in the hub (pages/Tickets/Index) — this view only renders the board itself.
 export default function BoardView({ filters, onOpenTicket, onNewTicket }) {
+  const { t } = useTranslation('board')
   const boardFilters = useMemo(() => {
     const f = {}
     BOARD_FILTER_KEYS.forEach((k) => { if (filters?.[k]) f[k] = filters[k] })
@@ -173,9 +175,9 @@ export default function BoardView({ filters, onOpenTicket, onNewTicket }) {
         <EmptyState
           icon={LayoutGrid}
           color={BRAND}
-          title="Nenhum ticket por aqui"
-          description="Crie o primeiro card e comece a mover o trabalho pelo funil de produção."
-          action={<Button onClick={onNewTicket}><Plus size={18} /> Novo ticket</Button>}
+          title={t('empty.title')}
+          description={t('empty.description')}
+          action={<Button onClick={onNewTicket}><Plus size={18} /> {t('newTicket')}</Button>}
         />
       </div>
     )
@@ -224,9 +226,9 @@ export default function BoardView({ filters, onOpenTicket, onNewTicket }) {
         onOpenChange={(o) => { if (!o) setClearStatus(null) }}
         icon={Archive}
         tone={statusMeta('done').color}
-        title="Arquivar concluídos?"
-        description={`Todos os ${board.done?.length || 0} ticket(s) da coluna "Concluído" serão arquivados e sairão do quadro. Você ainda poderá vê-los na visão de lista, filtrando por arquivados.`}
-        confirmLabel="Arquivar todos"
+        title={t('clearDialog.title')}
+        description={t('clearDialog.description', { count: board.done?.length || 0 })}
+        confirmLabel={t('clearDialog.confirm')}
         loading={clearColumn.isPending}
         onConfirm={() => clearColumn.mutate(clearStatus, { onSuccess: () => setClearStatus(null) })}
       />

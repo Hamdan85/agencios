@@ -1,0 +1,55 @@
+{
+  "header": {
+    "eyebrow": "Planejamento",
+    "eyebrowGlobal": "Você",
+    "title": "Calendário",
+    "titleGlobal": "Meu calendário",
+    "description": "Posts agendados e reuniões, num só lugar.",
+    "descriptionGlobal": "Posts agendados e reuniões de todos os seus times, num só lugar."
+  },
+  "views": {
+    "day": "Dia",
+    "week": "Semana",
+    "month": "Mês"
+  },
+  "nav": {
+    "previous": "Anterior",
+    "next": "Próximo",
+    "today": "Hoje"
+  },
+  "legend": {
+    "title": "Legenda",
+    "scheduledPosts": "Posts agendados",
+    "meetings": "Reuniões",
+    "tasks": "Tarefas"
+  },
+  "moreCount": "+{{count}} mais",
+  "event": {
+    "meeting": "Reunião",
+    "post": "Post",
+    "fallback": "Evento",
+    "typePost": "Post agendado",
+    "typePostWithNetwork": "Post agendado · {{network}}",
+    "typeTicket": "Publicação prevista",
+    "typeMeeting": "Reunião",
+    "typeTask": "Tarefa",
+    "allDayAt": "{{date}} · dia inteiro",
+    "plannedHint": "Prevista · agenda ao publicar",
+    "taskDone": "Feita",
+    "taskOverdue": "Atrasada"
+  },
+  "dialog": {
+    "meeting": "Reunião",
+    "scheduledPost": "Post agendado",
+    "publication": "Publicação",
+    "timeLabel": "Horário",
+    "clientLabel": "Cliente",
+    "joinMeet": "Entrar no Meet",
+    "openTicket": "Abrir ticket"
+  },
+  "timeGrid": {
+    "allDayGutter": "dia",
+    "collapseTasks": "Recolher tarefas",
+    "expandTasks": "Expandir tarefas"
+  }
+}

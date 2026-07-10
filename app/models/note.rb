@@ -12,9 +12,10 @@ class Note < ApplicationRecord
 
   enum :kind, { comment: 0, system: 1, ai: 2 }, prefix: true
 
-  # System/AI notes always carry a body. A comment may instead be files-only
-  # (the "body present OR files attached" rule is enforced in Notes::Create).
-  validates :body, presence: true, unless: :kind_comment?
+  # System/AI notes always carry a body OR an i18n key (system copy is stored as
+  # key + params and rendered at read time in the reader's locale). A comment may
+  # instead be files-only (enforced in Notes::Create).
+  validates :body, presence: true, unless: -> { kind_comment? || i18n_key.present? }
 
   scope :chronological, -> { order(:created_at) }
 
@@ -30,6 +31,14 @@ class Note < ApplicationRecord
   MENTION_TOKEN = /@\[([^\]]+)\]\((\d+)\)/
 
   def plain_body
-    body.to_s.gsub(MENTION_TOKEN, '@\1')
+    display_body.to_s.gsub(MENTION_TOKEN, '@\1')
+  end
+
+  # System copy renders from its i18n key in the CURRENT locale; legacy rows
+  # (and user comments) fall back to the stored body.
+  def display_body
+    return body if i18n_key.blank?
+
+    I18n.t(i18n_key, **i18n_params.symbolize_keys, default: body || i18n_key)
   end
 end
