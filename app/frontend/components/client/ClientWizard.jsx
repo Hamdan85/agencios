@@ -2,14 +2,12 @@ import { useState } from 'react'
 import { Check, UserPlus, ArrowRight, ArrowLeft } from 'lucide-react'
 import { POSITIONING_STEPS, EMPTY_POSITIONING, EMPTY_BRAND } from '@/lib/constants'
 import { Button } from '@/components/ui/button'
-import { Input, Textarea } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import { maskPhone, maskDocument } from '@/lib/formatters'
-import { PositioningStepFields, BrandIdentityFields, SiteImportPanel, BriefPanel, StatementPanel } from './positioningFields'
+import { ContactFields, PositioningStepFields, BrandIdentityFields, SiteImportPanel, BriefPanel, StatementPanel } from './positioningFields'
 
 const ACCENT = '#6366F1'
 const EMPTY_CONTACT = { name: '', company: '', email: '', phone: '', document: '', notes: '' }
@@ -85,9 +83,7 @@ export default function ClientWizard({ open, onOpenChange, editing, mutations })
   const [url, setUrl] = useState('')
   const [positioning, setPositioning] = useState(EMPTY_POSITIONING)
 
-  const setC = (k) => (e) => setContact((c) => ({ ...c, [k]: e.target.value }))
-  // Same as setC, but runs the typed value through a mask first.
-  const setMaskedC = (k, mask) => (e) => setContact((c) => ({ ...c, [k]: mask(e.target.value) }))
+  const setContactField = (k, v) => setContact((c) => ({ ...c, [k]: v }))
   const setBrandField = (k, v) => setBrand((b) => ({ ...b, [k]: v }))
   const setAsset = (k, v) => setAssets((a) => ({ ...a, [k]: v }))
   const setField = (k, v) => setPositioning((p) => ({ ...p, [k]: v }))
@@ -228,36 +224,7 @@ export default function ClientWizard({ open, onOpenChange, editing, mutations })
             />
           )}
 
-          {isContact && (
-            <div className="space-y-3.5">
-              <div className="space-y-1.5">
-                <Label htmlFor="cl-name">Nome</Label>
-                <Input id="cl-name" autoFocus required value={contact.name} onChange={setC('name')} placeholder="Nome do contato" />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="cl-company">Empresa</Label>
-                <Input id="cl-company" value={contact.company} onChange={setC('company')} placeholder="Nome da empresa" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="cl-email">E-mail</Label>
-                  <Input id="cl-email" type="email" value={contact.email} onChange={setC('email')} placeholder="contato@empresa.com" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="cl-phone">Telefone</Label>
-                  <Input id="cl-phone" type="tel" inputMode="numeric" value={contact.phone} onChange={setMaskedC('phone', maskPhone)} placeholder="(11) 99999-9999" />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="cl-document">Documento</Label>
-                <Input id="cl-document" inputMode="numeric" value={contact.document} onChange={setMaskedC('document', maskDocument)} placeholder="CNPJ / CPF" />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="cl-notes">Observações</Label>
-                <Textarea id="cl-notes" value={contact.notes} onChange={setC('notes')} placeholder="Anotações sobre o cliente…" />
-              </div>
-            </div>
-          )}
+          {isContact && <ContactFields contact={contact} onField={setContactField} />}
 
           {isBrand && (
             <BrandIdentityFields

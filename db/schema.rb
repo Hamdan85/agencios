@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_09_201528) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_10_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -196,6 +196,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_201528) do
     t.string "brand_primary_color", default: "#7C3AED", null: false
     t.string "brand_secondary_color", default: "#F59E0B", null: false
     t.text "brand_voice"
+    t.jsonb "carousel_image_palette", default: {}, null: false
     t.string "carousel_style", default: "gradient", null: false
     t.string "company"
     t.datetime "created_at", null: false

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'base64'
+
 module Vendors
   module Anthropic
     # Anthropic Messages API client (https://api.anthropic.com/v1/messages).
@@ -64,14 +66,19 @@ module Vendors
       # instead of asking the model to print JSON as text and parsing it.
       # `reasoning:` is accepted for cross-provider signature parity (Claude's
       # extended thinking is configured separately) and ignored here.
-      def generate(system:, prompt:, max_tokens: 1024, web_fetch: false, tool: nil, reasoning: false)
+      #
+      # `image:` (optional `{ bytes:, content_type: }`) attaches one image the model
+      # SEES alongside the prompt — for vision analysis (carousel-palette). When
+      # absent the user message is the plain prompt string, so text-only callers are
+      # byte-identical.
+      def generate(system:, prompt:, max_tokens: 1024, web_fetch: false, tool: nil, reasoning: false, image: nil)
         _ = reasoning
         target = web_fetch ? fetch_model : @model
         if @api_key.blank?
           return Result.new(text: stub(system: system, prompt: prompt), usage: {}, model: target, tool_input: nil)
         end
 
-        messages = [{ role: 'user', content: prompt.to_s }]
+        messages = [{ role: 'user', content: user_content(prompt, image) }]
         body  = request(model: target, system: system, messages: messages, max_tokens: max_tokens,
                         web_fetch: web_fetch, tool: tool)
         usage = usage_acc(body)
@@ -140,6 +147,20 @@ module Vendors
       end
 
       private
+
+      # The user message content: the plain prompt string, or — when an image is
+      # attached — an [image, text] content-block array (Anthropic vision shape).
+      def user_content(prompt, image)
+        return prompt.to_s if image.nil?
+
+        [
+          { 'type' => 'image',
+            'source' => { 'type' => 'base64',
+                          'media_type' => image[:content_type].presence || 'image/png',
+                          'data' => Base64.strict_encode64(image[:bytes]) } },
+          { 'type' => 'text', 'text' => prompt.to_s }
+        ]
+      end
 
       # Parse one SSE block (a `\n\n`-delimited group of lines) and fold its data
       # event into the running stream `state`, yielding text deltas as they land.

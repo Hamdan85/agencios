@@ -14,8 +14,11 @@ module Creatives
     def self.render(...) = new(...).render
 
     # slide: { "role", "headline", "body" } from Prompts::CarouselCopy
+    # image_palette: the AI-derived palette for the `image` style (accent/on_accent/
+    #   text_color/scrim_color/scrim_opacity). Ignored for gradient/white, and when
+    #   empty the image style falls back to the brand colors (@secondary/#fff).
     def initialize(slide:, index:, total:, width:, height:, primary:, secondary:,
-                   carousel_style: 'gradient', handle: nil, brand_name: nil,
+                   carousel_style: 'gradient', image_palette: nil, handle: nil, brand_name: nil,
                    avatar_uri: nil, logo_uri: nil, image_uri: nil)
       @slide      = slide || {}
       @index      = index
@@ -25,6 +28,7 @@ module Creatives
       @primary    = primary
       @secondary  = secondary
       @style      = carousel_style.to_s
+      @palette    = (image_palette || {}).to_h
       @handle     = handle
       @brand_name = brand_name
       @avatar_uri = avatar_uri
@@ -105,10 +109,22 @@ module Creatives
       %(<img class="logo" src="#{@logo_uri}" alt="">)
     end
 
-    # Image style shows the picked photo CLEAN — no darkening lens. Copy stays
-    # legible via per-element text-shadows (see `.has-image` rules), not a scrim.
+    # Image style shows the picked photo CLEAN by default — copy stays legible via
+    # per-element text-shadows (see `.has-image` rules). The AI-derived palette may
+    # add a scrim (scrim_opacity > 0) when the photo is too light/busy for readable
+    # text; opacity 0 keeps the clean look (and is always the case for gradient/white
+    # slides that happen to carry a per-slide image).
     def image_layer
-      %(<div class="image" style="background-image:url('#{@image_uri}')"></div>)
+      scrim = scrim_html
+      %(<div class="image" style="background-image:url('#{@image_uri}')"></div>#{scrim})
+    end
+
+    def scrim_html
+      opacity = @palette['scrim_opacity'].to_f
+      return '' unless opacity.positive?
+
+      color = @palette['scrim_color'].presence || '#000000'
+      %(<div class="scrim" style="position:absolute;inset:0;background:#{color};opacity:#{opacity}"></div>)
     end
 
     def css
@@ -163,8 +179,36 @@ module Creatives
         .plain .headline::after { content:""; display:block; width:140px; height:10px;
           margin-top:28px; border-radius:999px; background:#{@secondary}; }
         #{white_css}
+        #{image_css}
       CSS
     end
+
+    # Image-style overrides: recolor the accent (kicker / swipe underline / avatar
+    # initials chip) and text from the AI-derived palette instead of the brand
+    # colors. Scoped to `.has-image`, emitted last, so gradient/white output stays
+    # byte-identical. Empty unless the image style has a derived palette — an image
+    # slide without a palette keeps the brand `@secondary`/white look.
+    def image_css
+      return '' unless image? && palette?
+
+      accent    = @palette['accent'].presence
+      on_accent = @palette['on_accent'].presence || '#fff'
+      text      = @palette['text_color'].presence || '#fff'
+
+      rules = []
+      if accent
+        rules << ".has-image .kicker { color:#{accent}; }"
+        rules << ".has-image .swipe { border-top-color:#{accent}; }"
+        rules << ".has-image .avatar.initials { background:#{accent}; color:#{on_accent}; }"
+      end
+      rules << ".has-image .name, .has-image .handle, .has-image .counter, " \
+               ".has-image .text, .has-image .headline { color:#{text}; }"
+      rules.join("\n        ")
+    end
+
+    # True when a real derived palette is present (has actual color fields, not just
+    # bookkeeping like source_signature).
+    def palette? = @palette['accent'].present? || @palette['text_color'].present?
 
     # White-background variant: only the typographic (`.plain`) slides flip to a
     # white background with dark ink; full-bleed image slides keep their dark scrim

@@ -1,10 +1,13 @@
 import { FileBarChart } from 'lucide-react'
 import { usePortalReport } from '@/hooks/useData'
+import { portalApi } from '@/api'
 import { InlineSpinner, EmptyState } from '@/components/ui/feedback'
 import ReportDeck from '@/components/report/ReportDeck'
+import ReportToolbar from '@/components/report/ReportToolbar'
 
 // The finalized campaign report for the client. Renders the same deck the agency
-// sees (shared ReportDeck), with honest generating / absent states.
+// sees (shared ReportDeck), with honest generating / absent states, plus the
+// export/print toolbar (branded PDF download + print).
 export default function PortalReportTab({ token, projectId, accent = '#7C3AED' }) {
   const { data, isLoading } = usePortalReport(token, projectId)
 
@@ -27,5 +30,16 @@ export default function PortalReportTab({ token, projectId, accent = '#7C3AED' }
       description="O relatório é gerado quando a campanha é finalizada." />
   }
 
-  return <ReportDeck report={data.report} />
+  return (
+    <div>
+      <div className="mb-4 flex justify-end">
+        <ReportToolbar
+          pdfUrl={portalApi.reportPdfUrl(token, projectId)}
+          filename={`relatorio-${data.report.project_name || 'campanha'}.pdf`}
+          accent={accent}
+        />
+      </div>
+      <ReportDeck report={data.report} />
+    </div>
+  )
 }

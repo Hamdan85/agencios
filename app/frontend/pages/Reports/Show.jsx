@@ -11,7 +11,9 @@ import { Button } from '@/components/ui/button'
 import { InlineSpinner as Spinner } from '@/components/ui/feedback'
 import { PageLoader, EmptyState, InlineSpinner } from '@/components/ui/feedback'
 import { dt } from '@/lib/formatters'
+import { reportsApi } from '@/api'
 import ReportDeck from '@/components/report/ReportDeck'
+import ReportToolbar from '@/components/report/ReportToolbar'
 
 export default function ReportShow() {
   const { id } = useParams()
@@ -48,7 +50,10 @@ export default function ReportShow() {
     <Page>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <BackLink to={back} />
-        <SendToClientButton report={report} />
+        <div className="flex flex-wrap items-center gap-3">
+          <ReportToolbar pdfUrl={reportsApi.pdfUrl(report.id)} filename={`relatorio-${report.project_name || 'campanha'}.pdf`} />
+          <SendToClientButton report={report} />
+        </div>
       </div>
 
       <ReportDeck report={report} />

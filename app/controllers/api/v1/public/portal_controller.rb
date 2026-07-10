@@ -19,6 +19,11 @@ module Api
         def metrics = render_ok(Controllers::Public::Portal::Metrics.call(client: @client, params:))
         def report  = render_ok(Controllers::Public::Portal::Report.call(client: @client, params:))
 
+        def report_pdf
+          result = Controllers::Public::Portal::ReportPdf.call(client: @client, params:)
+          send_data result[:bytes], filename: result[:filename], type: 'application/pdf', disposition: 'inline'
+        end
+
         private
 
         def resolve_client!

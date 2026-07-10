@@ -253,6 +253,7 @@ module Operations
             primary: @ctx.brand_primary,
             secondary: @ctx.brand_secondary,
             carousel_style: @ctx.carousel_style,
+            image_palette: @ctx.carousel_image_palette,
             handle: @ctx.brand_handle,
             brand_name: @ctx.brand_name,
             avatar_uri: avatar_uri,

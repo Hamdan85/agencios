@@ -18,6 +18,7 @@ import {
 import { Page } from '@/components/ui/page'
 import { cn } from '@/lib/utils'
 import ClientWizard from '@/components/client/ClientWizard'
+import ClientEditDialog from '@/components/client/ClientEditDialog'
 
 function ClientCard({ client, onEdit, onArchive, onUnarchive }) {
   const navigate = useNavigate()
@@ -106,8 +107,9 @@ function ClientCard({ client, onEdit, onArchive, onUnarchive }) {
 
 export default function ClientsIndex() {
   const { data: clients, isLoading } = useClients()
-  const { create, update, archive, unarchive, synthesize, importFromUrl, uploadBrandAssets } = useClientMutations()
-  const [dialogOpen, setDialogOpen] = useState(false)
+  const mutations = useClientMutations()
+  const { archive, unarchive } = mutations
+  const [createOpen, setCreateOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('active')
@@ -125,8 +127,10 @@ export default function ClientsIndex() {
   }, [list, search, statusFilter])
 
   const confirm = useConfirm()
-  const openCreate = () => { setEditing(null); setDialogOpen(true) }
-  const onEdit = (client) => { setEditing(client); setDialogOpen(true) }
+  // Creating a new client uses the guided wizard; editing an existing one uses the
+  // tabbed edit dialog (jump straight to the section you want).
+  const openCreate = () => setCreateOpen(true)
+  const onEdit = (client) => setEditing(client)
   const onArchive = async (client) => {
     const ok = await confirm({
       title: `Arquivar ${client.name}?`,
@@ -200,10 +204,16 @@ export default function ClientsIndex() {
       )}
 
       <ClientWizard
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        editing={editing}
-        mutations={{ create, update, synthesize, importFromUrl, uploadBrandAssets }}
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        editing={null}
+        mutations={mutations}
+      />
+      <ClientEditDialog
+        open={!!editing}
+        onOpenChange={(v) => { if (!v) setEditing(null) }}
+        client={editing}
+        mutations={mutations}
       />
     </Page>
   )

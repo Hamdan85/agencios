@@ -9,8 +9,8 @@ import { keys } from '@/api/queryKeys'
 import { readableOn, tint } from '@/lib/color'
 import { burstConfetti } from '@/lib/confetti'
 import { InlineSpinner } from '@/components/ui/feedback'
-import { SectionLabel } from '@/components/ui/section-label'
 import ApprovalTicketCard from '@/components/approval/ApprovalTicketCard'
+import ApprovalQueue from '@/components/approval/ApprovalQueue'
 import RequestChangesDialog from '@/components/approval/RequestChangesDialog'
 
 // Per-client approval portal. Mobile: a no-scroll deck (one ticket at a time).
@@ -109,12 +109,11 @@ export default function ApprovalShow() {
     <Shell accent={accent} fg={fg} agency={agency} progress={current ? { position, total: totalRef.current } : null}>
       {current ? (
         <div className="flex min-h-0 flex-1">
-          {/* Desktop: queue index */}
+          {/* Desktop: the searchable, board-style approval queue */}
           {tickets.length > 1 && (
-            <aside className="hidden w-72 shrink-0 overflow-y-auto border-r border-border/60 p-3 lg:block">
-              <SectionLabel className="mb-2 px-1 text-xs tracking-wide text-ink-faint">Fila ({tickets.length})</SectionLabel>
-              <QueueList tickets={tickets} currentId={current.id} accent={accent} onPick={setFocusId} />
-            </aside>
+            <div className="hidden w-72 shrink-0 p-3 pr-0 lg:block">
+              <ApprovalQueue className="h-full" tickets={tickets} currentId={current.id} accent={accent} onPick={setFocusId} />
+            </div>
           )}
           <div className="flex min-h-0 flex-1 items-stretch justify-center p-3">
             <div className="flex h-full w-full max-w-5xl flex-col">{card}</div>
@@ -133,26 +132,6 @@ export default function ApprovalShow() {
         onSubmit={submitChanges}
       />
     </Shell>
-  )
-}
-
-function QueueList({ tickets, currentId, accent, onPick }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      {tickets.map((t) => {
-        const on = t.id === currentId
-        const pending = (t.slots || []).filter((s) => s.state === 'pending').length
-        return (
-          <button key={t.id} onClick={() => onPick(t.id)}
-            className={`rounded-xl border p-2.5 text-left transition ${on ? 'bg-surface-muted' : 'border-transparent hover:bg-surface-muted/60'}`}
-            style={on ? { borderColor: accent } : undefined}>
-            <p className="truncate text-sm font-semibold text-ink">{t.title}</p>
-            <p className="truncate text-xs text-ink-muted">{t.campaign} · {(t.slots || []).length} peça(s)</p>
-            {pending > 0 && <p className="mt-0.5 text-[11px] font-medium" style={{ color: accent }}>{pending} pendente(s)</p>}
-          </button>
-        )
-      })}
-    </div>
   )
 }
 

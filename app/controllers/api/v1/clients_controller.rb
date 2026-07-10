@@ -38,6 +38,10 @@ module Api
       # POST /api/v1/clients/:id/carousel_background — set the carousel background
       # from an existing platform creative (copies its image). Uploads use #brand_assets.
       def carousel_background = render_ok(Controllers::Clients::SetCarouselBackground.call(params:))
+
+      # POST /api/v1/clients/:id/reanalyze_carousel_palette — re-derive the image-
+      # style carousel palette from the current background photo (async).
+      def reanalyze_carousel_palette = render_ok(Controllers::Clients::ReanalyzeCarouselPalette.call(params:))
     end
   end
 end

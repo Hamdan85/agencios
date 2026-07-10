@@ -21,7 +21,7 @@ import { Avatar } from '@/components/ui/avatar'
 import { Card } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Page } from '@/components/ui/page'
-import ClientWizard from '@/components/client/ClientWizard'
+import ClientEditDialog from '@/components/client/ClientEditDialog'
 import { CAROUSEL_STYLE_LABEL } from '@/components/client/positioningFields'
 import { CarouselSlide, CarouselExampleDialog, buildExampleSlides } from '@/components/client/CarouselExample'
 import { MeetingCard } from '@/components/meeting/MeetingCard'
@@ -612,7 +612,8 @@ export default function ClientShow() {
   const { id, tab: seg } = useParams()
   const navigate = useNavigate()
   const { data, isLoading } = useClient(id)
-  const { create, update, synthesize, importFromUrl, uploadBrandAssets, setCarouselBackground, rotatePortalLink } = useClientMutations()
+  const mutations = useClientMutations()
+  const { rotatePortalLink } = mutations
   const [editorOpen, setEditorOpen] = useState(false)
 
   const tab = SEG_TO_TAB[seg] || 'branding'
@@ -684,11 +685,11 @@ export default function ClientShow() {
         </Tabs>
       </div>
 
-      <ClientWizard
+      <ClientEditDialog
         open={editorOpen}
         onOpenChange={setEditorOpen}
-        editing={client}
-        mutations={{ create, update, synthesize, importFromUrl, uploadBrandAssets, setCarouselBackground }}
+        client={client}
+        mutations={mutations}
       />
     </Page>
   )

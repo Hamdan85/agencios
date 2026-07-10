@@ -29,17 +29,24 @@ class AiAdapter
   # schema: name/description/input_schema) and returns its structured input as a
   # Hash — never freeform text to be parsed. Use for any AI output that must land
   # in a specific JSON shape (see Prompts::FieldFill / Operations::Ai::FillFields).
-  def self.complete_tool(prompt_builder, tool:, max_tokens: 1024, operation: 'ai_complete', subject: nil)
-    new.complete_tool(prompt_builder, tool: tool, max_tokens: max_tokens, operation: operation, subject: subject)
+  #
+  # `image:` (optional) attaches ONE image the model can SEE while it answers —
+  # `{ bytes:, content_type: }`. Used for vision analysis that returns JSON (the
+  # carousel-palette derivation). Callers without an image pass nothing and hit
+  # the identical string-only path.
+  def self.complete_tool(prompt_builder, tool:, image: nil, max_tokens: 1024, operation: 'ai_complete', subject: nil)
+    new.complete_tool(prompt_builder, tool: tool, image: image, max_tokens: max_tokens, operation: operation,
+                                      subject: subject)
   end
 
-  def complete_tool(prompt_builder, tool:, max_tokens: 1024, operation: 'ai_complete', subject: nil)
-    generate(prompt_builder, max_tokens: max_tokens, operation: operation, subject: subject, tool: tool).tool_input
+  def complete_tool(prompt_builder, tool:, image: nil, max_tokens: 1024, operation: 'ai_complete', subject: nil)
+    generate(prompt_builder, max_tokens: max_tokens, operation: operation, subject: subject, tool: tool,
+                             image: image).tool_input
   end
 
   private
 
-  def generate(prompt_builder, max_tokens:, operation:, subject:, web_fetch: false, tool: nil)
+  def generate(prompt_builder, max_tokens:, operation:, subject:, web_fetch: false, tool: nil, image: nil)
     client = Vendors::Ai.client(model: Vendors::Ai.model_for(operation))
     system = prompt_builder.system
     prompt = prompt_builder.respond_to?(:user_prompt) ? prompt_builder.user_prompt : ''
@@ -51,7 +58,8 @@ class AiAdapter
       web_fetch = false
     end
 
-    result = client.generate(system: system, prompt: prompt, max_tokens: max_tokens, web_fetch: web_fetch, tool: tool)
+    result = client.generate(system: system, prompt: prompt, max_tokens: max_tokens, web_fetch: web_fetch,
+                             tool: tool, image: image)
 
     Operations::Ai::LogUsage.call(
       provider: client.provider_key,

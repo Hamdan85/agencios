@@ -5,7 +5,46 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { InlineSpinner } from '@/components/ui/feedback'
 import { cn } from '@/lib/utils'
+import { maskPhone, maskDocument } from '@/lib/formatters'
 import CarouselBackgroundPicker from './CarouselBackgroundPicker'
+
+// Client contact fields — shared by the creation wizard and the edit dialog so the
+// fields have ONE source of truth. Owns the phone/document input masks; `onField`
+// receives the already-masked value.
+export function ContactFields({ contact, onField }) {
+  const set = (k) => (e) => onField(k, e.target.value)
+  const masked = (k, mask) => (e) => onField(k, mask(e.target.value))
+  return (
+    <div className="space-y-3.5">
+      <div className="space-y-1.5">
+        <Label htmlFor="cl-name">Nome</Label>
+        <Input id="cl-name" required value={contact.name || ''} onChange={set('name')} placeholder="Nome do contato" />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="cl-company">Empresa</Label>
+        <Input id="cl-company" value={contact.company || ''} onChange={set('company')} placeholder="Nome da empresa" />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label htmlFor="cl-email">E-mail</Label>
+          <Input id="cl-email" type="email" value={contact.email || ''} onChange={set('email')} placeholder="contato@empresa.com" />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="cl-phone">Telefone</Label>
+          <Input id="cl-phone" type="tel" inputMode="numeric" value={contact.phone || ''} onChange={masked('phone', maskPhone)} placeholder="(11) 99999-9999" />
+        </div>
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="cl-document">Documento</Label>
+        <Input id="cl-document" inputMode="numeric" value={contact.document || ''} onChange={masked('document', maskDocument)} placeholder="CNPJ / CPF" />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="cl-notes">Observações</Label>
+        <Textarea id="cl-notes" value={contact.notes || ''} onChange={set('notes')} placeholder="Anotações sobre o cliente…" />
+      </div>
+    </div>
+  )
+}
 
 // content_pillars is stored as an array; the textarea edits one pillar per line.
 export const pillarsToText = (arr) => (Array.isArray(arr) ? arr.join('\n') : arr || '')
@@ -216,8 +255,75 @@ function CarouselBackgroundChooser({ bgPreview, onFile, bgCreative, onBgCreative
   )
 }
 
+// A single derived-color swatch with its label.
+function PaletteSwatch({ color, label }) {
+  if (!color) return null
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="size-6 rounded-md ring-1 ring-border" style={{ background: color }} />
+      <div className="leading-tight">
+        <span className="block text-[11px] font-semibold text-ink-secondary">{label}</span>
+        <span className="block font-mono text-[10px] uppercase text-ink-faint">{color}</span>
+      </div>
+    </div>
+  )
+}
+
+// The image-style carousel palette the AI derived from the background photo. This
+// is READ-ONLY and intentionally SEPARATE from the brand colors — the image
+// background has its own colors, distinct from the gradient/white backgrounds that
+// use the brand palette. Only rendered by the edit dialog (which can re-analyze);
+// the wizard omits the `palette` prop (analysis runs after the image is saved).
+export function CarouselPaletteSwatches({ palette, hasBackground, onReanalyze, analyzing }) {
+  const accent = palette?.accent
+  const hasColors = !!(accent || palette?.text_color)
+  return (
+    <div className="space-y-2 rounded-xl border border-border bg-surface-muted/40 p-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5">
+          <Sparkles size={13} className="text-brand" />
+          <Label className="mb-0">Cores do carrossel (da imagem)</Label>
+        </div>
+        {hasBackground && onReanalyze && (
+          <button
+            type="button"
+            onClick={onReanalyze}
+            disabled={analyzing}
+            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-ink-secondary transition hover:bg-surface disabled:opacity-50"
+          >
+            {analyzing ? <InlineSpinner size={12} /> : <Wand2 size={12} />} Reanalisar
+          </button>
+        )}
+      </div>
+      {hasColors ? (
+        <div className="flex flex-wrap items-center gap-4">
+          <PaletteSwatch color={accent} label="Destaque" />
+          <PaletteSwatch color={palette.text_color} label="Texto" />
+          {palette.scrim_opacity > 0 && (
+            <span className="text-xs text-ink-faint">Escurecimento {Math.round(palette.scrim_opacity * 100)}%</span>
+          )}
+        </div>
+      ) : (
+        <p className="text-xs text-ink-faint">
+          {hasBackground
+            ? 'Analisando a imagem para escolher as cores…'
+            : 'Defina uma imagem de fundo — a IA escolhe as cores automaticamente.'}
+        </p>
+      )}
+      <p className="text-[11px] leading-snug text-ink-faint">
+        Cores exclusivas do fundo com imagem, separadas das cores da marca (usadas nos fundos gradiente e branco).
+      </p>
+    </div>
+  )
+}
+
 // Brand identity step: voice + @handle + colors + carousel style + logo/avatar uploads.
-export function BrandIdentityFields({ brand, onBrand, assets, onAsset, logoUrl, avatarUrl, bgUrl, bgCreative, onBgCreative }) {
+// `palette`/`onReanalyzePalette`/`analyzingPalette` are passed only by the edit
+// dialog to surface the image-style derived palette; the wizard omits them.
+export function BrandIdentityFields({
+  brand, onBrand, assets, onAsset, logoUrl, avatarUrl, bgUrl, bgCreative, onBgCreative,
+  palette, onReanalyzePalette, analyzingPalette,
+}) {
   const carouselStyle = brand.carousel_style || 'gradient'
   const bgFileUrl = assets.carouselBackground ? URL.createObjectURL(assets.carouselBackground) : null
   const bgPreview = bgCreative?.url || bgFileUrl || bgUrl || null
@@ -258,12 +364,22 @@ export function BrandIdentityFields({ brand, onBrand, assets, onAsset, logoUrl, 
         imageUrl={bgPreview}
       />
       {carouselStyle === 'image' && (
-        <CarouselBackgroundChooser
-          bgPreview={bgPreview}
-          onFile={setBgFile}
-          bgCreative={bgCreative}
-          onBgCreative={setBgCreative}
-        />
+        <>
+          <CarouselBackgroundChooser
+            bgPreview={bgPreview}
+            onFile={setBgFile}
+            bgCreative={bgCreative}
+            onBgCreative={setBgCreative}
+          />
+          {palette !== undefined && (
+            <CarouselPaletteSwatches
+              palette={palette}
+              hasBackground={!!bgPreview}
+              onReanalyze={onReanalyzePalette}
+              analyzing={analyzingPalette}
+            />
+          )}
+        </>
       )}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <ImageField label="Logo" icon={ImageIcon} file={assets.logo} currentUrl={logoUrl} onFile={(f) => onAsset('logo', f)} />

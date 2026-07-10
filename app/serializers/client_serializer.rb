@@ -4,7 +4,7 @@ class ClientSerializer < ActiveModel::Serializer
   attributes :id, :name, :company, :email, :phone, :document, :notes,
              :status, :attribution, :positioning, :has_positioning,
              :brand_voice, :default_handle, :brand_primary_color, :brand_secondary_color,
-             :carousel_style,
+             :carousel_style, :carousel_image_palette,
              :logo_url, :default_creator_avatar_url, :carousel_background_url, :has_brand,
              :portal_url, :projects_count, :created_at, :updated_at
 

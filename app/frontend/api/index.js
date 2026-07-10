@@ -168,6 +168,8 @@ export const clientsApi = {
   },
   // Set the carousel background by copying an existing platform creative's image.
   setCarouselBackground: (id, creativeId) => api.post(`/clients/${id}/carousel_background`, { creative_id: creativeId }),
+  // Re-derive the image-style carousel palette from the current background (async).
+  reanalyzeCarouselPalette: (id) => api.post(`/clients/${id}/reanalyze_carousel_palette`),
 }
 
 export const projectsApi = {
@@ -214,6 +216,8 @@ export const portalApi = {
   board: (token, projectId) => api.get(`/public/portal/${token}/campaigns/${projectId}/board`),
   metrics: (token, projectId) => api.get(`/public/portal/${token}/campaigns/${projectId}/metrics`),
   report: (token, projectId) => api.get(`/public/portal/${token}/campaigns/${projectId}/report`),
+  // Direct URL to the branded report PDF (same-origin — cookies/token carry auth).
+  reportPdfUrl: (token, projectId) => `/api/v1/public/portal/${token}/campaigns/${projectId}/report/pdf`,
 }
 
 // The posts hub: workspace-wide filterable list, a single post detail, and the
@@ -229,6 +233,8 @@ export const reportsApi = {
   listByProject: (projectId) => api.get(`/projects/${projectId}/reports`),
   get: (id) => api.get(`/reports/${id}`),
   sendToClient: (id) => api.post(`/reports/${id}/send`),
+  // Direct URL to the branded report PDF (same-origin — session cookie carries auth).
+  pdfUrl: (id) => `/api/v1/reports/${id}/pdf`,
 }
 
 export const studioApi = {

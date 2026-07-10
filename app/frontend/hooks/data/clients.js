@@ -8,8 +8,15 @@ import { onErr } from './shared'
 // ── Clients ────────────────────────────────────────────────────
 export const useClients = (filters = {}) =>
   useQuery({ queryKey: keys.clients(filters), queryFn: () => clientsApi.list(filters), select: (d) => d.clients })
-export const useClient = (id) =>
-  useQuery({ queryKey: keys.client(id), queryFn: () => clientsApi.get(id), enabled: !!id })
+// `poll` (ms) keeps refetching while set — used by the edit dialog to pick up the
+// async image-palette once its background job lands it.
+export const useClient = (id, { poll = false } = {}) =>
+  useQuery({
+    queryKey: keys.client(id),
+    queryFn: () => clientsApi.get(id),
+    enabled: !!id,
+    refetchInterval: poll || false,
+  })
 
 export function useClientMutations() {
   const qc = useQueryClient()
@@ -25,6 +32,7 @@ export function useClientMutations() {
     updatePositioning: useMutation({ mutationFn: ({ id, positioning }) => clientsApi.updatePositioning(id, positioning), onSuccess: () => { inv(); toast.success('Posicionamento atualizado!') }, onError: onErr('Erro ao salvar posicionamento.') }),
     uploadBrandAssets: useMutation({ mutationFn: ({ id, assets }) => clientsApi.uploadBrandAssets(id, assets), onSuccess: () => inv(), onError: onErr('Erro ao enviar imagens da marca.') }),
     setCarouselBackground: useMutation({ mutationFn: ({ id, creativeId }) => clientsApi.setCarouselBackground(id, creativeId), onSuccess: () => { inv(); toast.success('Fundo do carrossel definido!') }, onError: onErr('Erro ao definir o fundo do carrossel.') }),
+    reanalyzeCarouselPalette: useMutation({ mutationFn: ({ id }) => clientsApi.reanalyzeCarouselPalette(id), onSuccess: () => { inv(); toast.success('Analisando as cores da imagem…') }, onError: onErr('Erro ao analisar as cores da imagem.') }),
   }
 }
 

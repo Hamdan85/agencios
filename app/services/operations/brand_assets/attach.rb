@@ -19,6 +19,9 @@ module Operations
         @owner.default_creator_avatar.attach(@avatar) if @avatar.present?
         if @carousel_background.present? && @owner.respond_to?(:carousel_background)
           @owner.carousel_background.attach(@carousel_background)
+          # Re-derive the image-style palette from the new background (async — the
+          # vision call must not block this upload). Idempotent on the blob checksum.
+          Creatives::DeriveCarouselPaletteJob.perform_later(@owner.id) if @owner.is_a?(Client)
         end
         @owner
       end

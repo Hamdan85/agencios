@@ -328,7 +328,7 @@ export default function PortalBoard({ token, projectId, accent = '#7C3AED' }) {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[40vh] items-center justify-center">
+      <div className="flex min-h-0 flex-1 items-center justify-center">
         <InlineSpinner size={26} className="text-brand" />
       </div>
     )
@@ -343,18 +343,20 @@ export default function PortalBoard({ token, projectId, accent = '#7C3AED' }) {
 
   if (ordered.length === 0) {
     return (
-      <EmptyState
-        icon={Inbox}
-        title="Ainda não há conteúdo nesta campanha"
-        description="Assim que a equipe começar a produzir, os cards aparecem aqui."
-        color={accent}
-      />
+      <div className="flex min-h-0 flex-1 items-center justify-center p-4">
+        <EmptyState
+          icon={Inbox}
+          title="Ainda não há conteúdo nesta campanha"
+          description="Assim que a equipe começar a produzir, os cards aparecem aqui."
+          color={accent}
+        />
+      </div>
     )
   }
 
   return (
     <>
-      <div className="scrollbar-subtle flex snap-x gap-3 overflow-x-auto pb-3" style={{ minHeight: '60vh' }}>
+      <div className="scrollbar-subtle flex min-h-0 flex-1 snap-x items-stretch gap-3 overflow-x-auto overflow-y-hidden px-4 pb-4 pt-3 sm:px-6">
         {ordered.map((col) => (
           <PortalColumn
             key={col.status}

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'base64'
+
 module Vendors
   module OpenRouter
     # OpenRouter chat-completions client (https://openrouter.ai/api/v1). OpenAI-
@@ -56,14 +58,17 @@ module Vendors
       # `reasoning: true` lets the model reason (omits the disable flag) — use it
       # for non-streamed calls where the reasoning improves output quality and the
       # reset risk doesn't apply (there's no long chunked read to reset).
-      def generate(system:, prompt:, max_tokens: 1024, web_fetch: false, tool: nil, reasoning: false)
+      # `image:` (optional `{ bytes:, content_type: }`) attaches one image the model
+      # SEES alongside the prompt (OpenAI multimodal `image_url` shape) — for vision
+      # analysis. Absent → the user message is the plain prompt string.
+      def generate(system:, prompt:, max_tokens: 1024, web_fetch: false, tool: nil, reasoning: false, image: nil)
         _ = web_fetch
         if @api_key.blank?
           warn_missing_key
           return Result.new(text: stub(system: system, prompt: prompt), usage: {}, model: @model, tool_input: nil)
         end
 
-        msgs = [{ role: 'system', content: system.to_s }, { role: 'user', content: prompt.to_s }]
+        msgs = [{ role: 'system', content: system.to_s }, { role: 'user', content: user_content(prompt, image) }]
         reasoning_enabled = reasoning
         begin
           payload = base_payload(messages: msgs, max_tokens: max_tokens, tool: tool, reasoning_enabled: reasoning_enabled)
@@ -142,6 +147,19 @@ module Vendors
           payload[:tool_choice] = { type: 'function', function: { name: tool['name'] } } if tool
         end
         payload
+      end
+
+      # The user message content: the plain prompt string, or — when an image is
+      # attached — an [text, image_url] content-part array (OpenAI multimodal shape,
+      # data URI). Text-only callers stay byte-identical.
+      def user_content(prompt, image)
+        return prompt.to_s if image.nil?
+
+        data_uri = "data:#{image[:content_type].presence || 'image/png'};base64,#{Base64.strict_encode64(image[:bytes])}"
+        [
+          { 'type' => 'text', 'text' => prompt.to_s },
+          { 'type' => 'image_url', 'image_url' => { 'url' => data_uri } }
+        ]
       end
 
       # Anthropic tool schema → OpenAI `function` tool.

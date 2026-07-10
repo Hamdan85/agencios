@@ -113,6 +113,7 @@ Rails.application.routes.draw do
         get 'portal/:token/campaigns/:project_id/board',   to: 'portal#board'
         get 'portal/:token/campaigns/:project_id/metrics', to: 'portal#metrics'
         get 'portal/:token/campaigns/:project_id/report',  to: 'portal#report'
+        get 'portal/:token/campaigns/:project_id/report/pdf', to: 'portal#report_pdf'
       end
 
       # Auth & identity
@@ -155,6 +156,7 @@ Rails.application.routes.draw do
           post  :unarchive
           post  :rotate_portal_link
           post  :carousel_background
+          post  :reanalyze_carousel_palette
           patch :positioning, action: :update_positioning
           patch :brand_assets
         end
@@ -188,7 +190,10 @@ Rails.application.routes.draw do
         resource :strategy_session, only: %i[show create], controller: 'strategy_sessions'
       end
       resources :reports, only: %i[show] do
-        member { post :send, action: :send_to_client } # e-mail the deck (PDF) to the client
+        member do
+          post :send, action: :send_to_client # e-mail the deck (PDF) to the client
+          get  :pdf                            # download the branded deck as a PDF
+        end
       end
 
       # Global posts hub — workspace-wide, filterable list + a single post detail.

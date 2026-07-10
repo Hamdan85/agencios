@@ -19,20 +19,25 @@ function StatusPill({ status, label }) {
   )
 }
 
-// The central's landing: every campaign the client has, as a tappable card.
+// The central's landing: every campaign the client has, as a tappable card. The
+// list owns its own vertical scroll (the shell stays fixed) and centers on a
+// max-w-6xl column.
 export default function CampaignList({ campaigns = [], onOpen, accent = '#7C3AED' }) {
   if (!campaigns.length) {
     return (
-      <div className="rounded-2xl border border-dashed border-border bg-surface py-16 text-center">
-        <LayoutGrid className="mx-auto mb-3 text-ink-muted" size={28} />
-        <p className="font-semibold text-ink">Nenhuma campanha por aqui ainda</p>
-        <p className="mt-1 text-sm text-ink-muted">Assim que sua agência iniciar uma campanha, ela aparece aqui.</p>
+      <div className="flex min-h-0 flex-1 items-center justify-center px-4">
+        <div className="w-full max-w-md rounded-2xl border border-dashed border-border bg-surface py-16 text-center">
+          <LayoutGrid className="mx-auto mb-3 text-ink-muted" size={28} />
+          <p className="font-semibold text-ink">Nenhuma campanha por aqui ainda</p>
+          <p className="mt-1 text-sm text-ink-muted">Assim que sua agência iniciar uma campanha, ela aparece aqui.</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div>
+    <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto">
+      <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
       <h1 className="mb-1 font-display text-2xl font-extrabold tracking-tight text-ink">Suas campanhas</h1>
       <p className="mb-5 text-sm text-ink-muted">Acompanhe o andamento, aprove conteúdos e veja os resultados.</p>
 
@@ -78,6 +83,7 @@ export default function CampaignList({ campaigns = [], onOpen, accent = '#7C3AED
             </Card>
           )
         })}
+      </div>
       </div>
     </div>
   )

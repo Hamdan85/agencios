@@ -34,7 +34,7 @@ export default function PortalShow() {
   if (isLoading) {
     return (
       <PortalShell agency={agency}>
-        <div className="flex justify-center py-24"><InlineSpinner size={28} style={{ color: accent }} /></div>
+        <div className="flex flex-1 items-center justify-center"><InlineSpinner size={28} style={{ color: accent }} /></div>
       </PortalShell>
     )
   }
@@ -42,7 +42,7 @@ export default function PortalShow() {
   if (isError || !data) {
     return (
       <PortalShell agency={agency}>
-        <div className="py-24 text-center text-ink-muted">
+        <div className="flex flex-1 items-center justify-center px-6 text-center text-ink-muted">
           Este link não é mais válido. Fale com sua agência para receber um novo.
         </div>
       </PortalShell>

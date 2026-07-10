@@ -167,6 +167,16 @@ module Tickets
     # Falls back to the current gradient look when unset.
     def carousel_style = client&.carousel_style.presence || 'gradient'
 
+    # AI-derived palette for the `image` carousel style ONLY — accent/text/scrim
+    # chosen from the background photo. Empty ({}) for gradient/white (which keep
+    # using brand_primary/brand_secondary) and when the image hasn't been analyzed
+    # yet, in which case the template falls back to the brand colors.
+    def carousel_image_palette
+      return {} unless carousel_style == 'image'
+
+      (client&.carousel_image_palette).presence || {}
+    end
+
     def logo   = attachment(:logo)
     def avatar = attachment(:default_creator_avatar)
 
