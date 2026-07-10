@@ -105,8 +105,10 @@ module Creatives
       %(<img class="logo" src="#{@logo_uri}" alt="">)
     end
 
+    # Image style shows the picked photo CLEAN — no darkening lens. Copy stays
+    # legible via per-element text-shadows (see `.has-image` rules), not a scrim.
     def image_layer
-      %(<div class="image" style="background-image:url('#{@image_uri}')"></div><div class="scrim"></div>)
+      %(<div class="image" style="background-image:url('#{@image_uri}')"></div>)
     end
 
     def css
@@ -128,8 +130,6 @@ module Creatives
         .image {
           position:absolute; inset:0; background-size:cover; background-position:center;
         }
-        .scrim { position:absolute; inset:0;
-          background:linear-gradient(180deg, rgba(0,0,0,.35) 0%, rgba(0,0,0,.72) 100%); }
         .overlay {
           position:absolute; inset:0; display:flex; flex-direction:column;
           padding:120px 64px 160px;
@@ -155,7 +155,11 @@ module Creatives
         .swipe { font-size:30px; font-weight:700; opacity:.85;
           border-top:4px solid #{@secondary}; padding-top:16px; }
         .logo { height:64px; width:auto; object-fit:contain; opacity:.95; }
-        .has-image .headline { text-shadow:0 4px 24px rgba(0,0,0,.5); }
+        /* No scrim on image slides — keep copy readable with text-shadows alone. */
+        .has-image .name, .has-image .handle, .has-image .counter,
+        .has-image .kicker, .has-image .text, .has-image .swipe {
+          text-shadow:0 2px 12px rgba(0,0,0,.55); }
+        .has-image .headline { text-shadow:0 4px 24px rgba(0,0,0,.65); }
         .plain .headline::after { content:""; display:block; width:140px; height:10px;
           margin-top:28px; border-radius:999px; background:#{@secondary}; }
         #{white_css}

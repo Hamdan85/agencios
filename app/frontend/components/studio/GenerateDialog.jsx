@@ -265,20 +265,16 @@ export function GenerateDialog({ kind, open, onOpenChange, generate, startVideo,
       return
     }
 
+    // Image/carousel: close the dialog right away and let the gallery show the
+    // "Gerando…" card (the op broadcasts `generation_progress` on start). The
+    // mutation keeps running in the background — its success/error toast lands
+    // whenever it finishes. This is what makes creations appear as processing
+    // immediately instead of blocking behind the dialog spinner.
     generate.mutate(
       { kind, params: buildParams() },
-      {
-        onSuccess: (data) => {
-          if (onGenerated && data?.generation) {
-            onOpenChange?.(false)
-            onGenerated(data.generation)
-            return
-          }
-          setDone(true)
-          setTimeout(() => onOpenChange?.(false), 1100)
-        },
-      },
+      { onSuccess: (data) => { if (onGenerated && data?.generation) onGenerated(data.generation) } },
     )
+    onOpenChange?.(false)
   }
 
   return (

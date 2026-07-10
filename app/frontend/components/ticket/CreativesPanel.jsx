@@ -285,6 +285,7 @@ function StudioPickerDialog({ open, onOpenChange, onAttach, attaching, supported
     unassigned: true,
     q: q.trim() || undefined,
     types: supportedTypes.length ? supportedTypes : undefined,
+    per: 200,
   }
   const { data, isLoading } = useWorkspaceCreatives(filters, { enabled: open })
   const items = data?.creatives || []

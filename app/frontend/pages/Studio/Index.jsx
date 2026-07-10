@@ -4,9 +4,10 @@ import {
   Sparkles, GalleryHorizontalEnd, Video, Image as ImageIcon,
   Images, Trash2,
 } from 'lucide-react'
-import { useStudio, useGenerate, useStartVideo, useWorkspaceCreatives, useCreativeMutations } from '@/hooks/useData'
+import { useStudio, useGenerate, useStartVideo, useWorkspaceCreativesInfinite, useCreativeMutations } from '@/hooks/useData'
 import { useCurrentUser } from '@/hooks/useAuth'
 import { useGenerationsChannel } from '@/hooks/useRealtime'
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll'
 import { PageHeader } from '@/components/ui/page-header'
 import { PageLoader, EmptyState, Spinner, InlineSpinner } from '@/components/ui/feedback'
 import { IconTile } from '@/components/ui/icon-tile'
@@ -132,11 +133,17 @@ function CreativesGallery() {
     client_id: clientFilter || undefined,
   }), [q, typeFilter, clientFilter])
 
-  const { data, isLoading } = useWorkspaceCreatives(filters)
+  const {
+    data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage,
+  } = useWorkspaceCreativesInfinite(filters)
   const mutations = useCreativeMutations()
   const confirm = useConfirm()
-  const creatives = data?.creatives || []
-  const clients = data?.clients || []
+  const pages = data?.pages || []
+  const creatives = pages.flatMap((p) => p.creatives || [])
+  const clients = pages[0]?.clients || []
+  const sentinelRef = useInfiniteScroll({
+    hasNextPage, isFetchingNextPage, fetchNextPage, deps: [creatives.length],
+  })
 
   const handleDelete = async (creative) => {
     const ok = await confirm({
@@ -197,16 +204,23 @@ function CreativesGallery() {
           description="Gere um carrossel, vídeo ou imagem com IA usando os geradores acima."
         />
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {creatives.map((c) => (
-            <GalleryCard
-              key={c.id}
-              creative={c}
-              onClick={() => (isSceneEditable(c) ? setEditorCreative(c) : openViewer(c))}
-              onDelete={() => handleDelete(c)}
-            />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            {creatives.map((c) => (
+              <GalleryCard
+                key={c.id}
+                creative={c}
+                onClick={() => (isSceneEditable(c) ? setEditorCreative(c) : openViewer(c))}
+                onDelete={() => handleDelete(c)}
+              />
+            ))}
+          </div>
+          {/* Infinite-scroll sentinel — loads the next page as it nears view. */}
+          <div ref={sentinelRef} className="h-1" />
+          {isFetchingNextPage && (
+            <div className="flex justify-center py-6"><Spinner size={22} /></div>
+          )}
+        </>
       )}
 
       {/* MediaViewer lightbox */}

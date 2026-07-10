@@ -16,7 +16,7 @@ const IMAGE_TYPES = ['feed_image', 'ad', 'thumbnail', 'cover', 'carousel', 'stor
 // image to use as the carousel background. Fetches lazily (only when open).
 export default function CarouselBackgroundPicker({ open, onOpenChange, onSelect }) {
   const [q, setQ] = useState('')
-  const { data, isLoading } = useWorkspaceCreatives({ q, types: IMAGE_TYPES }, { enabled: open })
+  const { data, isLoading } = useWorkspaceCreatives({ q, types: IMAGE_TYPES, per: 200 }, { enabled: open })
   const creatives = (data?.creatives || [])
     .map((c) => ({ ...c, image: c.asset_urls?.find((u) => !isVideoUrl(u)) }))
     .filter((c) => c.image)

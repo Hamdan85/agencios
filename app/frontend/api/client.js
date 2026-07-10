@@ -24,13 +24,26 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+// Login-less / public pages authenticate by a token in the path — a background
+// 401 there (e.g. the analytics bridge probing `/me`) must NEVER bounce the
+// visitor to /login, or the whole point of a shareable link is defeated.
+const PUBLIC_PREFIXES = [
+  '/portal/', '/aprovar/', '/conectar/', '/confirmar-troca-email/',
+  '/redefinir-senha/', '/recuperar-senha', '/erro/',
+]
+const isPublicPath = (path) => PUBLIC_PREFIXES.some((p) => path.startsWith(p))
+
 api.interceptors.response.use(
   (res) => res.data,
   (err) => {
     const status = err.response?.status
     const data = err.response?.data
     const path = window.location.pathname
-    if (status === 401 && !path.startsWith('/login') && !path.startsWith('/cadastro') && path !== '/') {
+    if (
+      status === 401 &&
+      !path.startsWith('/login') && !path.startsWith('/cadastro') &&
+      path !== '/' && !isPublicPath(path)
+    ) {
       window.location.href = '/login'
     }
     // Billing / credit gates. A 402 means either the workspace lost access

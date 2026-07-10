@@ -1,15 +1,39 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { X, CheckSquare, ImageIcon, Inbox, CalendarClock } from 'lucide-react'
 import { usePortalBoard } from '@/hooks/useData'
 import { cn } from '@/lib/utils'
 import { shortDt } from '@/lib/formatters'
-import { WORKFLOW, statusMeta } from '@/lib/constants'
+import { isVideoUrl } from '@/lib/media'
+import { WORKFLOW, statusMeta, creativeMeta } from '@/lib/constants'
 import { ChannelIcons, CreativeTypeChip } from '@/components/ui/iconography'
 import { SectionLabel } from '@/components/ui/section-label'
+import { MediaThumb } from '@/components/ui/media-thumb'
 import { InlineSpinner, EmptyState } from '@/components/ui/feedback'
 import {
   Sheet, SheetContent, SheetClose, SheetTitle, SheetDescription,
 } from '@/components/ui/sheet'
+
+const MediaViewer = lazy(() => import('@/components/ticket/MediaViewer'))
+
+// One creative → its slide attachments for the lightbox. A carousel's slides
+// share the creative's name; a single image/video is one item.
+function creativeToAttachments(creative) {
+  const m = creativeMeta(creative.creative_type)
+  const urls = creative.asset_urls || []
+  const isCarousel = creative.creative_type === 'carousel' || urls.length > 1
+  return urls.map((url, i) => {
+    const video = isVideoUrl(url)
+    return {
+      id: `${creative.id}-${i}`,
+      url,
+      filename: isCarousel ? `${m.label}-${creative.id}-slide-${i + 1}` : `${m.label}-${creative.id}`,
+      display_name: creative.name || m.label,
+      kind: video ? 'video' : 'image',
+      content_type: video ? 'video/mp4' : 'image/jpeg',
+      description: creative.caption || undefined,
+    }
+  })
+}
 
 // Read-only status pill echoing StatusPill's look, but honoring the server's
 // `status_label` text (the source of truth for the client-facing wording).
@@ -154,11 +178,63 @@ function DetailBlock({ label, children }) {
   )
 }
 
-// The read-only detail sheet: purely informational scope of one ticket.
+// A read-only grid of the ticket's finished creatives — thumbnails that open a
+// fullscreen viewer. Videos and carousels are handled by the shared viewer.
+function CreativesGrid({ creatives }) {
+  const [viewerItems, setViewerItems] = useState([])
+  const [viewerOpen, setViewerOpen] = useState(false)
+
+  const openViewer = (creative) => {
+    const atts = creativeToAttachments(creative)
+    if (!atts.length) return
+    setViewerItems(atts)
+    setViewerOpen(true)
+  }
+
+  return (
+    <>
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+        {creatives.map((c) => {
+          const m = creativeMeta(c.creative_type)
+          const thumb = (c.asset_urls || [])[0] || c.preview_url
+          return (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => openViewer(c)}
+              className="group relative block overflow-hidden rounded-xl border border-border bg-surface-muted text-left transition hover:border-strong"
+              title={c.name || m.label}
+            >
+              <div className="relative w-full" style={{ paddingBottom: '100%' }}>
+                <div className="absolute inset-0 overflow-hidden" style={{ background: `${m.color}12` }}>
+                  {thumb
+                    ? <MediaThumb url={thumb} alt={c.name || m.label} className="transition-transform group-hover:scale-105" />
+                    : <div className="grid size-full place-items-center"><ImageIcon size={20} style={{ color: m.color }} /></div>}
+                </div>
+              </div>
+              <div className="p-2">
+                <p className="truncate text-[12px] font-semibold text-ink">{c.name || m.label}</p>
+                <p className="truncate text-[11px] text-ink-muted">{m.label}</p>
+              </div>
+            </button>
+          )
+        })}
+      </div>
+
+      <Suspense fallback={null}>
+        <MediaViewer attachments={viewerItems} index={0} open={viewerOpen} onClose={() => setViewerOpen(false)} />
+      </Suspense>
+    </>
+  )
+}
+
+// The read-only detail sheet: purely informational scope of one ticket, plus a
+// preview of every finished creative (what the client actually receives).
 function PortalTicketSheet({ ticket, accent, open, onOpenChange }) {
   const t = ticket || {}
   const channels = t.channels || []
   const creativeTypes = t.creative_types || []
+  const creatives = t.creatives || []
   const objective = (t.objective || '').trim()
   const brief = (t.brief || '').trim()
 
@@ -214,12 +290,9 @@ function PortalTicketSheet({ ticket, accent, open, onOpenChange }) {
             </DetailBlock>
           )}
 
-          {Number(t.creatives_count) > 0 && (
-            <DetailBlock label="Criativos">
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-surface-muted px-2.5 py-1 text-sm font-bold text-ink-muted">
-                <ImageIcon size={15} strokeWidth={2.4} />
-                {t.creatives_count}
-              </span>
+          {creatives.length > 0 && (
+            <DetailBlock label={`Criativos (${creatives.length})`}>
+              <CreativesGrid creatives={creatives} />
             </DetailBlock>
           )}
 
