@@ -1,0 +1,6 @@
+en:
+  vendors:
+    delete_unsupported:
+      instagram: "Instagram's API doesn't allow deleting posts — remove it manually on Instagram."
+      tiktok: "TikTok's API doesn't allow deleting published videos — remove it manually on TikTok."
+      threads: "Threads' API doesn't support deleting posts — remove it manually on Threads."

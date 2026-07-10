@@ -17,7 +17,7 @@ module Vendors
 
         def call
           raise Vendors::Base::NotSupportedError,
-                'A API do TikTok não permite excluir vídeos publicados — remova manualmente no TikTok.'
+                I18n.t('vendors.delete_unsupported.tiktok')
         end
       end
     end

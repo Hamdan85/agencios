@@ -27,7 +27,7 @@ module Vendors
         def call
           context = Exchange.call(code: @code, redirect_uri: @redirect_uri, client: @client)
           page = pick_page(context[:pages])
-          raise Vendors::Base::Error, 'Nenhuma Página do Facebook encontrada.' if page.nil?
+          raise Vendors::Base::Error, I18n.t('api.auth.no_facebook_page') if page.nil?
 
           AccountAttrsForPage.call(context: context, page: page)
         end

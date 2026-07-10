@@ -23,7 +23,7 @@ module Vendors
         def call
           if @social_account.provider_instagram?
             raise Vendors::Base::NotSupportedError,
-                  'A API do Instagram não permite excluir publicações — remova manualmente no Instagram.'
+                  I18n.t('vendors.delete_unsupported.instagram')
           end
 
           raise Vendors::Base::Error, 'Post sem external_post_id.' if @post.external_post_id.blank?

@@ -1,0 +1,6 @@
+pt-BR:
+  vendors:
+    delete_unsupported:
+      instagram: "A API do Instagram não permite excluir publicações — remova manualmente no Instagram."
+      tiktok: "A API do TikTok não permite excluir vídeos publicados — remova manualmente no TikTok."
+      threads: "A API do Threads não suporta excluir publicações — remova manualmente no Threads."

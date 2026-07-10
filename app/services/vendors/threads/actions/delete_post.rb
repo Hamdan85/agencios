@@ -17,7 +17,7 @@ module Vendors
 
         def call
           raise Vendors::Base::NotSupportedError,
-                'A API do Threads não suporta excluir publicações — remova manualmente no Threads.'
+                I18n.t('vendors.delete_unsupported.threads')
         end
       end
     end
