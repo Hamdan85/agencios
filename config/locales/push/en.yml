@@ -1,0 +1,9 @@
+en:
+  push:
+    mention:
+      title: "%{author} mentioned you"
+      title_anonymous: "Someone mentioned you"
+    insufficient_credits:
+      title: "Insufficient credits ⚠️"
+      body: "Not enough credits to generate the content."
+      body_with_context: "Not enough credits to generate the content (%{context})."

@@ -1,0 +1,9 @@
+pt-BR:
+  push:
+    mention:
+      title: "%{author} mencionou você"
+      title_anonymous: "Alguém mencionou você"
+    insufficient_credits:
+      title: "Créditos insuficientes ⚠️"
+      body: "Faltam créditos para gerar o conteúdo."
+      body_with_context: "Faltam créditos para gerar o conteúdo (%{context})."

@@ -35,11 +35,11 @@ module Api
 
         write_sse('done', status: session.reload.status)
       rescue Pundit::NotAuthorizedError
-        write_sse('error', message: 'Você não tem permissão para planejar esta campanha.')
+        write_sse('error', message: I18n.t('api.strategy.not_allowed'))
       rescue Operations::Errors::Invalid => e
         write_sse('error', message: e.message)
       rescue ActiveRecord::RecordNotFound
-        write_sse('error', message: 'Sessão não encontrada.')
+        write_sse('error', message: I18n.t('api.strategy.session_not_found'))
       rescue StandardError => e
         Rails.logger.error("[StrategyMessages] #{e.class}: #{e.message}")
         write_sse('error', message: 'Erro ao processar a mensagem.')

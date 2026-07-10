@@ -20,13 +20,26 @@ module Api
 
         private
 
-        def resolve_client!
+        # The portal serves the CLIENT — its language comes from the client
+        # record, not a signed-in user. The around_action runs before
+        # resolve_client!, so resolve from the token here (memoized by @client).
+        def current_locale
+          client = @client || client_from_token
+          normalize_locale(client&.locale || client&.workspace&.locale)
+        end
+
+        def client_from_token
           token = params[:token].to_s
-          # Per-client token (current). Fall back to a legacy per-TICKET token so
-          # links sent before the per-client migration still open the client portal.
-          @client = Client.find_by(approval_token: token) ||
-                    Ticket.find_by(approval_token: token)&.project&.client
-          raise ActiveRecord::RecordNotFound, 'Link inválido ou expirado.' unless @client
+          Client.find_by(approval_token: token) ||
+            Ticket.find_by(approval_token: token)&.project&.client
+        end
+
+        def resolve_client!
+          # Per-client token (current). client_from_token also falls back to a
+          # legacy per-TICKET token so links sent before the per-client migration
+          # still open the client portal.
+          @client = client_from_token
+          raise ActiveRecord::RecordNotFound, I18n.t('api.public.invalid_link') unless @client
 
           Current.workspace = @client.workspace
         end

@@ -10,3 +10,13 @@ en:
       billing_required: "An active subscription is required to access this workspace."
       manager_required: "Restricted to workspace managers."
       staff_only: "Restricted to platform staff."
+    credits:
+      invalid_pack: "Invalid credit pack."
+    public:
+      invalid_link: "Invalid or expired link."
+    auth:
+      invalid_credentials: "Invalid email or password."
+      signed_out: "Signed out."
+    strategy:
+      not_allowed: "You don't have permission to plan this campaign."
+      session_not_found: "Session not found."

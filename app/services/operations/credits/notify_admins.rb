@@ -22,8 +22,9 @@ module Operations
             workspace: @workspace, recipient: user, required: @required, context: @context
           ).deliver_later
           Operations::Push::Notify.call(
-            user: user, title: 'Créditos insuficientes ⚠️',
-            body: "Faltam créditos para gerar o conteúdo#{@context ? " (#{@context})" : ''}.",
+            user: user, title_key: 'push.insufficient_credits.title',
+            body_key: @context ? 'push.insufficient_credits.body_with_context' : 'push.insufficient_credits.body',
+            params: { context: @context.to_s },
             path: '/assinatura'
           )
         end

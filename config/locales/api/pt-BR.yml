@@ -10,3 +10,13 @@ pt-BR:
       billing_required: "Assinatura necessária para acessar o workspace."
       manager_required: "Acesso restrito a gestores do workspace."
       staff_only: "Acesso restrito à equipe da plataforma."
+    credits:
+      invalid_pack: "Pacote de créditos inválido."
+    public:
+      invalid_link: "Link inválido ou expirado."
+    auth:
+      invalid_credentials: "E-mail ou senha inválidos."
+      signed_out: "Sessão encerrada."
+    strategy:
+      not_allowed: "Você não tem permissão para planejar esta campanha."
+      session_not_found: "Sessão não encontrada."

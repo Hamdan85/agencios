@@ -12,7 +12,7 @@ module Controllers
       def call
         require_manager!
         pack = Pricing.credit_pack(@params[:pack])
-        raise Operations::Errors::Invalid, 'Pacote de créditos inválido.' unless pack
+        raise Operations::Errors::Invalid, I18n.t('api.credits.invalid_pack') unless pack
 
         session = Vendors::Stripe::Actions::CreateCreditCheckoutSession.call(
           workspace: workspace,
