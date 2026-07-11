@@ -4,3 +4,806 @@ pt-BR:
       title: "agencios — o sistema operacional da sua agência"
     pwa:
       description: "O sistema operacional da sua agência."
+
+    layout:
+      default_title: "agencios — o sistema operacional da sua agência"
+      default_description: "Do brief ao post no ar: um funil de produção com IA, publicação multi-rede, métricas e cobrança. Tudo que sua agência de social media precisa para escalar."
+
+    nav:
+      how_it_works: "Como funciona"
+      features: "Funcionalidades"
+      pricing: "Preços"
+      login: "Entrar"
+      start_free: "Começar grátis"
+      open_menu: "Abrir menu"
+      close_menu: "Fechar menu"
+      create_account: "Criar conta"
+      product: "Produto"
+      account: "Conta"
+      footer_tagline: "O sistema operacional da sua agência criativa. Do brief ao post no ar, num só lugar."
+      copyright: "© %{year} agencios — o SO da sua agência criativa."
+      privacy: "Privacidade"
+      terms: "Termos de uso"
+      cookie_prefs: "Preferências de cookies"
+
+    cta:
+      title: "Pronto para escalar sua agência?"
+      subtitle: "Comece grátis hoje. Seu primeiro post viral está a poucos cliques."
+      primary_label: "Criar minha agência"
+      view_plans: "Ver planos"
+      trial_note: "%{days} dias de teste · cartão obrigatório · cancele quando quiser"
+
+    cookie:
+      aria: "Aviso de cookies"
+      text_html: "Usamos cookies essenciais para o funcionamento do site e, com seu consentimento, cookies de análise para melhorar sua experiência. Veja a"
+      privacy_link: "Política de Privacidade"
+      reject: "Rejeitar"
+      accept_all: "Aceitar todos"
+
+    plans:
+      most_popular: "Mais popular"
+      per_month: "/mês"
+      seats:
+        single: "1 assento"
+        unlimited: "Assentos ilimitados"
+        up_to: "Até %{seats} assentos"
+      presentation:
+        default:
+          cta: "Começar agora"
+        solo:
+          tagline: "Para o criador ou freelancer solo."
+          cta: "Começar agora"
+        agencia:
+          tagline: "Para a agência em crescimento."
+          cta: "Começar agora"
+        enterprise:
+          tagline: "Para operações em escala."
+          cta: "Falar com vendas"
+
+    seo:
+      organization_description: "O sistema operacional da agência criativa: funil de produção com IA, publicação multi-rede, métricas e cobrança."
+      app_description: "Funil de produção com IA, estrategista de conteúdo, estúdio de criativos, publicação em 7 redes, métricas em tempo real e cobrança via Pix."
+
+    funnel:
+      ideation:
+        label: "Ideação"
+        summary: "O brief vira ângulos."
+        desc: "Capture o brief, o objetivo e a persona. A IA sintetiza ganchos e ideias de conteúdo prontas para escopar."
+      scoping:
+        label: "Escopo"
+        summary: "A ideia vira plano."
+        desc: "Transforme a ideia escolhida num escopo concreto, com um checklist de subtarefas gerado automaticamente."
+      production:
+        label: "Produção"
+        summary: "O plano vira criativo."
+        desc: "Gere carrosséis, vídeos UGC e imagens com a identidade da marca — direto no estúdio, sem trocar de ferramenta."
+      scheduled:
+        label: "Agendado"
+        summary: "O criativo entra na fila."
+        desc: "Escreva legendas por rede, escolha o melhor horário e agende a publicação em cada canal."
+      published:
+        label: "Postado"
+        summary: "Está no ar, monitorando."
+        desc: "Publicação multi-rede e coleta de métricas em tempo real assim que o post vai ao ar."
+      retrospective:
+        label: "Retrô"
+        summary: "O dado vira aprendizado."
+        desc: "Uma retrospectiva automática lê as métricas e o histórico e propõe o que repetir no próximo ciclo."
+      done:
+        label: "Concluído"
+        summary: "Arquivado com contexto."
+        desc: "O ticket é arquivado com todo o histórico, criativos e aprendizados preservados."
+
+    steps:
+      capture:
+        title: "Capture a ideia"
+        desc: "Brief, objetivo e persona em segundos. A IA sintetiza ângulos e ganchos prontos para produzir."
+      produce:
+        title: "Produza com IA"
+        desc: "Gere o criativo, escreva legendas por rede e aprove com o cliente — tudo no mesmo lugar."
+      publish:
+        title: "Publique e meça"
+        desc: "Agende, publique em todas as redes e acompanhe as métricas em tempo real."
+
+    stats:
+      funnel_stages: "etapas no funil"
+      social_networks: "redes sociais"
+      ai_actions: "ações via IA"
+      metrics_per_post: "métricas por post"
+
+    context_states:
+      ideation:
+        label: "Ideação"
+        summary: "O brief pede autoridade + prova social. Sugiro 3 ganchos de “bastidores” — o cliente responde bem a transparência."
+        fields:
+          - "Brief"
+          - "Objetivo"
+          - "Persona-alvo"
+          - "Referências"
+      scoping:
+        label: "Escopo"
+        summary: "Escopo montado: carrossel de 6 slides para Instagram + LinkedIn. Criei 5 subtarefas com estimativa de esforço."
+        fields:
+          - "Tipo de criativo"
+          - "Canais"
+          - "Roteiro"
+          - "Subtarefas"
+          - "Prazo"
+      production:
+        label: "Produção"
+        summary: "Legenda alinhada ao brief e ao tom da marca. Variação A tem o gancho mais forte para o feed."
+        fields:
+          - "Criativo"
+          - "Legenda"
+          - "Hashtags"
+          - "Aprovação"
+      scheduled:
+        label: "Agendado"
+        summary: "Melhor janela para esta conta: ter/qui 19h. Agendei o carrossel e adaptei a legenda por rede."
+        fields:
+          - "Horário por rede"
+          - "Primeiro comentário"
+          - "Link na bio"
+      published:
+        label: "No ar"
+        summary: "No ar há 2 dias: +38% de alcance vs. a média da campanha. Salvamentos acima da meta."
+        fields:
+          - "Posts ao vivo"
+          - "Alcance"
+          - "Salvamentos"
+          - "Alertas"
+      retrospective:
+        label: "Retrô"
+        summary: "Rascunho da retro pronto: o gancho de bastidores puxou o alcance. Repetir o formato no próximo ciclo."
+        fields:
+          - "Métricas finais"
+          - "Acertos"
+          - "Melhorias"
+          - "Lições"
+      done:
+        label: "Concluído"
+        summary: "Arquivado com o histórico completo, os criativos e os aprendizados — pronto para virar case."
+        fields:
+          - "Snapshot final"
+          - "Histórico"
+          - "Criativos"
+
+    strategist:
+      prompt: "2 reels e 1 carrossel por semana para o lançamento da Bloom, focados em prova social."
+      reply: "Fechado. Montei um plano de 4 semanas — 12 tickets, cada um com brief, canais e subtarefas. Quer aplicar no quadro?"
+      tickets:
+        t1: "Reel — bastidores do produto"
+        t2: "Carrossel — 5 mitos do nicho"
+        t3: "Reel — depoimento de cliente"
+        t4: "Reel — antes e depois"
+        t5: "Carrossel — passo a passo"
+        t6: "Reel — respondendo dúvidas"
+
+    faqs:
+      trial:
+        q: "Como funciona o período de teste?"
+        a: "Você tem %{days} dias de teste em qualquer plano. É preciso cadastrar um cartão para começar — só cobramos ao fim do teste, e você pode cancelar antes quando quiser."
+      credits:
+        q: "O que são os créditos?"
+        a: "A geração de vídeos, imagens e carrosséis consome créditos pré-pagos da sua carteira. Cada plano já inclui uma cota mensal de créditos, e você pode comprar mais a qualquer momento. 1 crédito = R$ 1. Textos e legendas com IA são inclusos, sem gastar créditos."
+      free_plan:
+        q: "Existe plano gratuito?"
+        a: "Não há plano gratuito permanente — todo workspace começa com %{days} dias de teste (com cartão). Depois disso, é necessário um plano ativo para usar o app."
+      multiple_agencies:
+        q: "Posso gerenciar mais de uma agência?"
+        a: "Sim. Você pode ter vários workspaces — cada agência fica isolada, com seu próprio time, clientes e dados."
+      networks:
+        q: "Quais redes sociais são suportadas?"
+        a: "Instagram, Facebook, Threads, TikTok, YouTube, LinkedIn e X — com publicação direta e integração nativa em cada rede."
+      client_billing:
+        q: "Como recebo dos meus clientes?"
+        a: "Pelo Mercado Pago: Pix (com QR code), boleto ou cartão, com conciliação automática do pagamento."
+      change_plan:
+        q: "Posso trocar de plano depois?"
+        a: "Sim, a qualquer momento. O preço acompanha o tamanho da sua operação."
+
+    catalog:
+      quadro:
+        name: "Quadro de produção"
+        eyebrow: "O funil"
+        card: "Kanban de 7 etapas com arrastar-e-soltar, chips por campanha e filtros poderosos."
+        headline: "Seu conteúdo, do insight ao impacto — num quadro vivo."
+        subhead: "Um Kanban de sete etapas onde cada ticket é uma peça de conteúdo. Arraste entre as colunas e a etapa muda; o resto da operação acompanha sozinho."
+        points:
+          p1:
+            title: "Sete etapas coloridas"
+            desc: "Ideação, Escopo, Produção, Agendado, Postado, Retrô e Concluído — cada uma com sua cor e seus campos."
+          p2:
+            title: "Chips por campanha"
+            desc: "Cada card mostra a campanha e o cliente. Filtre por campanha, cliente, responsável, rede ou tipo de criativo."
+          p3:
+            title: "Arrastar é uma ação"
+            desc: "Mover um card dispara a transição de status, registra o histórico e atualiza o resumo de IA — automaticamente."
+          p4:
+            title: "Subtarefas e responsáveis"
+            desc: "Quebre o trabalho em subtarefas atribuíveis que se agregam na tela 'Minhas tarefas' de cada pessoa."
+        highlights:
+          - "Drag-and-drop fluido"
+          - "Filtros combináveis"
+          - "Histórico de cada transição"
+          - "Tempo real entre o time"
+      estudio:
+        name: "Estúdio criativo"
+        eyebrow: "Geração com IA"
+        card: "Gere carrosséis virais, vídeos UGC e imagens com a identidade da marca, sem sair do app."
+        headline: "Um estúdio de criação com IA dentro da sua operação."
+        subhead: "Carrosséis, vídeos UGC e imagens gerados com a identidade da marca, o @handle e o avatar do criador. Da ideia ao arquivo final sem trocar de ferramenta."
+        points:
+          p1:
+            title: "Carrosséis virais"
+            desc: "Geração com padrões de viralização: identidade da marca, @handle, avatar do criador e imagens de apoio — inclusos, sem gastar créditos."
+          p2:
+            title: "Vídeos UGC"
+            desc: "Vídeos com avatar e voz realistas gerados por IA cena a cena, renderizados de forma assíncrona."
+          p3:
+            title: "Identidade aplicada"
+            desc: "Cores, logo, tom de voz e avatar padrão da marca aplicados automaticamente em cada peça."
+          p4:
+            title: "Legendas por rede"
+            desc: "Variações de legenda com as regras de tamanho e hashtags específicas de cada rede social."
+        highlights:
+          - "Carrossel, vídeo e imagem"
+          - "Identidade da marca aplicada"
+          - "Renderização assíncrona"
+          - "Vídeo e imagem por créditos"
+      inteligencia:
+        name: "Inteligência artificial"
+        eyebrow: "IA em cada etapa"
+        card: "Resumos contextuais, síntese de ideias, escopo automático, legendas e retrospectivas."
+        headline: "A IA que entende o contexto de cada peça de conteúdo."
+        subhead: "A IA trabalha em cada etapa do funil: sintetiza o brief, monta o escopo, escreve legendas por rede e transforma métricas em aprendizado."
+        points:
+          p1:
+            title: "Resumo contextual"
+            desc: "Cada etapa do ticket ganha um resumo gerado pela IA que evolui junto com o conteúdo."
+          p2:
+            title: "Síntese de ideias"
+            desc: "O brief vira ângulos e ganchos concretos, prontos para virar escopo."
+          p3:
+            title: "Escopo automático"
+            desc: "Uma ideia vira um escopo com checklist de subtarefas, criado em segundos."
+          p4:
+            title: "Retrospectiva automática"
+            desc: "As métricas do post e o histórico viram uma retro com aprendizados para o próximo ciclo."
+        highlights:
+          - "Resumos por etapa"
+          - "Ideias e escopo"
+          - "Legendas por rede"
+          - "Retrospectiva de performance"
+      publicacao:
+        name: "Publicação & analytics"
+        eyebrow: "Multi-rede"
+        card: "Instagram, Facebook, Threads, TikTok, YouTube, LinkedIn e X — com integração direta."
+        headline: "Publique em todas as redes e meça tudo num lugar só."
+        subhead: "Agende e publique em cada rede social com integração direta e nativa, e acompanhe as métricas de cada post em tempo real."
+        points:
+          p1:
+            title: "Sete redes"
+            desc: "Instagram, Facebook, Threads, TikTok, YouTube, LinkedIn e X, com integração direta e nativa em cada uma."
+          p2:
+            title: "Agendamento"
+            desc: "Programe a publicação no melhor horário e deixe o sistema publicar por você."
+          p3:
+            title: "Métricas por post"
+            desc: "Alcance, visualizações, curtidas, comentários, compartilhamentos e salvamentos, sincronizados automaticamente."
+          p4:
+            title: "Monitoramento"
+            desc: "Snapshots datados das métricas acompanham a evolução de cada conteúdo no ar."
+        highlights:
+          - "7 redes sociais"
+          - "Integração direta e nativa"
+          - "Métricas sincronizadas"
+          - "Histórico de performance"
+      estrategista:
+        name: "Estrategista de IA"
+        eyebrow: "Planejamento com IA"
+        card: "Converse com o estrategista e transforme uma cadência em um mês inteiro de tickets prontos."
+        headline: "Um estrategista de conteúdo que preenche seu quadro por você."
+        subhead: "Diga a cadência e o objetivo — “2 reels e 1 carrossel por semana” — e o estrategista propõe um plano completo, com datas, briefs e subtarefas, pronto para aplicar em um clique."
+        points:
+          p1:
+            title: "Conversa que planeja"
+            desc: "Uma conversa multi-turno com um estrategista sênior que entende o contexto da campanha e da marca."
+          p2:
+            title: "Um mês em segundos"
+            desc: "O plano vira dezenas de tickets agendados — cada um já em Ideação, com brief e canais definidos."
+          p3:
+            title: "Subtarefas incluídas"
+            desc: "Cada ticket proposto já traz o checklist de subtarefas com estimativa de esforço."
+          p4:
+            title: "Edite e aplique"
+            desc: "Ajuste a proposta, aplique de uma vez ou descarte — a sessão fica salva para retomar depois."
+        highlights:
+          - "Conversa multi-turno"
+          - "Plano de semanas em 1 clique"
+          - "Briefs + subtarefas prontos"
+          - "Baseado na marca e no histórico"
+      relatorios:
+        name: "Relatórios de campanha"
+        eyebrow: "Auditoria com IA"
+        card: "Um deck de auditoria de fim de campanha: KPIs, acertos, gargalos e plano de ação, gerado pela IA."
+        headline: "O fechamento da campanha vira um relatório que impressiona o cliente."
+        subhead: "Ao concluir uma campanha, a IA lê as métricas dos posts, o histórico dos tickets e as lições aprendidas e monta um relatório de performance com acertos, gargalos e próximos passos."
+        points:
+          p1:
+            title: "KPIs consolidados"
+            desc: "Alcance, engajamento e evolução da campanha reunidos em uma visão executiva."
+          p2:
+            title: "Acertos e gargalos"
+            desc: "A IA identifica o que funcionou e onde a operação travou, com base nos dados reais."
+          p3:
+            title: "Plano de ação"
+            desc: "Recomendações concretas do que repetir e do que ajustar no próximo ciclo."
+          p4:
+            title: "Pronto para o cliente"
+            desc: "Um deck editável que a agência revisa e apresenta — sem montar relatório na mão."
+        highlights:
+          - "KPIs automáticos"
+          - "Análise de IA"
+          - "Acertos + gargalos"
+          - "Deck pronto para apresentar"
+      calendario:
+        name: "Calendário & reuniões"
+        eyebrow: "Agenda unificada"
+        card: "Posts agendados e reuniões no mesmo lugar, com arrastar para reagendar."
+        headline: "Posts e reuniões na mesma agenda — sem surpresas."
+        subhead: "Veja tudo que está agendado num calendário único: publicações e reuniões com o cliente, com visão de mês e semana e arrastar para reagendar."
+        points:
+          p1:
+            title: "Visão de mês e semana"
+            desc: "Posts agendados e reuniões lado a lado, com arrastar-e-soltar para reagendar."
+          p2:
+            title: "Reuniões com o cliente"
+            desc: "Crie reuniões no Google Calendar com link do Google Meet direto do app."
+          p3:
+            title: "Reagende arrastando"
+            desc: "Mude a data de um post ou reunião só arrastando o card no calendário."
+          p4:
+            title: "Melhor horário"
+            desc: "Sugestões de melhor horário para publicar com base no histórico de performance."
+        highlights:
+          - "Posts + reuniões juntos"
+          - "Google Calendar & Meet"
+          - "Arrastar para reagendar"
+          - "Visão mês / semana"
+      cobrancas:
+        name: "Cobranças"
+        eyebrow: "Financeiro"
+        card: "Fature seus clientes via Mercado Pago (Pix, boleto, cartão) com conciliação automática."
+        headline: "Fature seus clientes e receba via Pix — sem planilha."
+        subhead: "Crie faturas ligadas a campanhas, cobre por Pix, boleto ou cartão pelo Mercado Pago e deixe a conciliação acontecer sozinha."
+        points:
+          p1:
+            title: "Faturas por campanha"
+            desc: "Uma fatura pode cobrir uma campanha, várias ou nenhuma — com status claro do rascunho ao pago."
+          p2:
+            title: "Pix em primeiro lugar"
+            desc: "Cobrança Pix com QR code, além de boleto e cartão, tudo via Mercado Pago."
+          p3:
+            title: "Conciliação automática"
+            desc: "Webhooks e uma varredura agendada confirmam o pagamento e atualizam o status sozinhos."
+          p4:
+            title: "Status confiável"
+            desc: "O pagamento só é dado como pago após a reconciliação direta com o Mercado Pago."
+        highlights:
+          - "Pix, boleto e cartão"
+          - "Conciliação automática"
+          - "Faturas multi-campanha"
+          - "Mercado Pago nativo"
+
+    home:
+      title: "agencios — o sistema operacional da sua agência"
+      description: "Do brief ao post no ar: funil de produção com IA, estrategista que planeja o mês, estúdio de criativos, publicação em 7 redes, métricas em tempo real e cobrança via Pix. Tudo que sua agência de social media precisa."
+      hero_badge: "O sistema operacional da sua agência"
+      hero_title_1: "Do brief ao post viral —"
+      hero_title_2: "num só lugar."
+      hero_sub: "Um funil de produção com IA, um estrategista que planeja o mês inteiro, estúdio de criativos, publicação em 7 redes, métricas em tempo real e cobrança via Pix. A operação inteira da sua agência, integrada e viva."
+      cta_start_free: "Começar grátis"
+      cta_see_how: "Ver como funciona"
+      trial_note: "%{days} dias de teste · cartão obrigatório · cancele quando quiser"
+      marquee: "A operação inteira da agência, integrada"
+      funnel_eyebrow: "O funil"
+      funnel_title: "Sete etapas, do insight ao impacto"
+      funnel_sub: "Cada ticket é uma peça de conteúdo que caminha por um funil colorido e auto-explicativo. Arraste o card e a etapa muda — o resto da operação acompanha sozinho."
+      funnel_link: "Ver o funil em detalhe"
+      strategist_badge: "Estrategista de IA"
+      strategist_title_1: "Descreva a cadência."
+      strategist_title_2: "Ele preenche o mês."
+      strategist_sub: "Converse com um estrategista sênior de conteúdo. Diga o objetivo e o ritmo — ele propõe um plano completo, com datas, briefs e subtarefas, pronto para aplicar no quadro em um clique."
+      strategist_bullets:
+        - "Uma conversa multi-turno que entende a marca e a campanha"
+        - "Um mês de tickets criados de uma vez, cada um já em Ideação"
+        - "Briefs e subtarefas com estimativa de esforço, prontos"
+      strategist_link: "Conhecer o estrategista"
+      strategist_name: "Estrategista"
+      strategist_online: "online"
+      strategist_tickets_ready: "12 tickets prontos para aplicar"
+      strategist_apply: "Aplicar no quadro"
+      context_eyebrow: "Ticket contextual"
+      context_title: "Cada etapa mostra o que importa — e nada mais"
+      context_sub: "O ticket muda de cara conforme avança: campos próprios de cada etapa e um resumo da IA que evolui junto com o conteúdo."
+      ai_summary: "Resumo da IA"
+      context_updated: "atualizado a cada mudança de etapa"
+      studio_badge: "Estúdio criativo"
+      studio_title: "Criativos gerados com a cara da marca"
+      studio_sub: "Carrosséis virais, vídeos UGC com avatar e imagens — gerados dentro do app com o logo, as cores, o @handle e o avatar do criador. Da ideia ao arquivo final sem trocar de ferramenta."
+      studio_handle: "@marca"
+      studio_carousel_title: "5 mitos que te travam"
+      studio_swipe: "deslize →"
+      studio_video: "Vídeo UGC"
+      studio_rendering: "renderizando…"
+      studio_image: "Imagem"
+      studio_brand_applied: "Identidade da marca aplicada automaticamente"
+      studio_cards:
+        carousel:
+          title: "Carrossel"
+          tag: "Viral com IA"
+        video:
+          title: "Vídeo UGC"
+          tag: "IA generativa"
+        image:
+          title: "Imagem"
+          tag: "Google Banana"
+      publish_eyebrow: "Publicação & analytics"
+      publish_title: "Publique em 7 redes. Meça tudo num lugar."
+      publish_sub: "Agende e publique com integração direta e nativa em cada rede, e acompanhe as métricas de cada post em tempo real."
+      network_direct: "direto"
+      perf_title: "Desempenho · últimos 14 dias"
+      perf_sub: "sincronizado automaticamente por rede"
+      kpi_reach: "Alcance"
+      kpi_likes: "Curtidas"
+      kpi_saves: "Salvos"
+      kpi_comments: "Comentários"
+      realtime_title: "Tempo real, de verdade"
+      realtime_desc: "Cards se movem, resumos ficam prontos e métricas chegam — sem recarregar. O time inteiro vê a mesma tela, viva."
+      roles_title: "Papéis e permissões"
+      roles_desc: "Owner, admin, gerente, membro e convidado — cada um vê e faz exatamente o que deve. O cliente aprova; o time produz."
+      workspaces_title: "Várias agências, isoladas"
+      workspaces_desc: "Cada workspace é uma agência com seu time, clientes e dados. Gerencie todas de uma conta, sem misturar nada."
+      mcp_badge: "Novo — Conector de IA"
+      mcp_title_1: "Opere a agência"
+      mcp_title_2: "conversando com a IA"
+      mcp_body_html: "Adicione o agencios como <strong class=\"text-white\">conector (MCP)</strong> no seu assistente de IA e comande tudo por linguagem natural — crie e mova tickets, gere criativos, agende posts e cobranças, sem sair da conversa."
+      mcp_bullets:
+        - "Cola uma URL — sem login, sem OAuth"
+        - "Respeita seu papel e permissões em cada workspace"
+        - "Mais de 70 ações da plataforma à disposição"
+      mcp_chat_prompt: "No workspace estúdio-pulse, crie um ticket na campanha Bloom: “Reel de lançamento”."
+      mcp_chat_reply: "Pronto ✅ — ticket #214 criado em Ideação, atribuído a você. Quer que eu já gere um carrossel?"
+      reports_badge: "Relatórios de campanha"
+      reports_title: "O fechamento vira um deck que impressiona"
+      reports_desc: "A IA lê as métricas, o histórico e as lições e monta um relatório com KPIs, acertos, gargalos e plano de ação — pronto para apresentar ao cliente."
+      reports_kpi_reach: "Alcance"
+      reports_kpi_posts: "Posts"
+      reports_kpi_goal: "Meta"
+      reports_win: "Acerto: bastidores puxaram o alcance"
+      reports_adjust: "Ajuste: publicar mais cedo às terças"
+      reports_link: "Ver relatórios"
+      billing_badge: "Cobranças"
+      billing_title: "Fature seus clientes e receba via Pix"
+      billing_desc: "Crie faturas ligadas a campanhas, cobre por Pix, boleto ou cartão pelo Mercado Pago e deixe a conciliação acontecer sozinha."
+      billing_invoice: "Fatura #0182"
+      billing_paid: "Pago"
+      billing_reconciled: "Pix conciliado automaticamente"
+      billing_tags:
+        - "Pix"
+        - "Boleto"
+        - "Cartão"
+        - "Multi-campanha"
+      billing_link: "Ver cobranças"
+      all_features_eyebrow: "Tudo incluso"
+      all_features_title: "Uma plataforma, a operação inteira"
+      all_features_sub: "Oito frentes que normalmente exigem oito ferramentas — reunidas e conversando entre si."
+      pricing_eyebrow: "Planos"
+      pricing_title: "Preço que cresce com a agência"
+      pricing_sub: "Comece com %{days} dias de teste. Vídeos, imagens e carrosséis usam créditos."
+      pricing_annual: "ou %{price}/mês no anual · -%{pct}%"
+      pricing_link: "Ver planos e perguntas frequentes"
+
+    how_it_works:
+      title: "Como funciona — agencios"
+      description: "Do brief ao post no ar em sete etapas. Veja como o funil de produção da agencios conduz cada peça de conteúdo, com IA em cada passo."
+      hero_badge: "Como funciona"
+      hero_title_1: "Do brief ao post no ar,"
+      hero_title_2: "sem perder o fio."
+      hero_sub: "Cada peça de conteúdo é um ticket que caminha por um funil de sete etapas. A etapa atual decide o que aparece na tela e o que a IA faz por você."
+      steps_eyebrow: "Em resumo"
+      steps_title: "Três passos, na prática"
+      strategist_eyebrow: "Antes de tudo"
+      strategist_title: "Ou deixe o estrategista preencher o mês por você"
+      strategist_desc: "Diga a cadência e o objetivo e a IA cria dezenas de tickets já em Ideação — cada um com brief, canais e subtarefas. Você começa o funil com o quadro cheio."
+      strategist_link: "Ver o estrategista"
+      funnel_eyebrow: "O funil completo"
+      funnel_title: "As sete etapas, uma a uma"
+      funnel_sub: "A vista do ticket é contextual: cada etapa mostra seus próprios campos e um resumo da IA que evolui com o conteúdo."
+      ai_eyebrow: "IA em cada etapa"
+      ai_title: "A IA trabalha junto com o time"
+      ai_desc: "A inteligência artificial não é um botão isolado — ela acompanha o ticket pelo funil, do primeiro brief à retrospectiva final."
+      ai_items:
+        summary:
+          title: "Resumo contextual"
+          desc: "A cada mudança de etapa, um resumo da IA é gerado e fica visível no ticket."
+        ideas:
+          title: "Ideias & escopo"
+          desc: "O brief vira ângulos; a ideia escolhida vira um escopo com subtarefas."
+        creatives:
+          title: "Criativos & legendas"
+          desc: "Carrosséis, vídeos e imagens gerados, com legendas adaptadas a cada rede."
+        retro:
+          title: "Retrospectiva"
+          desc: "As métricas do post viram aprendizado para o próximo ciclo."
+      ai_mockup_title: "Resumo da IA · Produção"
+      ai_mockup_chips:
+        - "3 criativos prontos"
+        - "Legenda IG ✓"
+        - "Aguardando aprovação"
+      ai_mockup_subtasks: "Subtarefas"
+      cta_title: "Veja o funil rodando na sua agência"
+      cta_subtitle: "Crie sua conta e leve seu primeiro conteúdo da ideia ao ar."
+
+    features:
+      title: "Funcionalidades — agencios"
+      description: "Quadro de produção, estrategista de IA, estúdio criativo, publicação em 7 redes, calendário, reuniões, relatórios e cobranças. Conheça todas as funcionalidades da agencios."
+      hero_badge: "Funcionalidades"
+      hero_title_1: "Tudo que sua agência faz,"
+      hero_title_2: "num só sistema."
+      hero_sub: "Oito frentes que normalmente exigem oito ferramentas — reunidas, integradas e conversando entre si. Clique em cada uma para ver em detalhe."
+      cta_title: "Experimente todas as funcionalidades"
+      cta_subtitle: "%{days} dias de teste, com cartão. Monte sua agência em minutos."
+
+    feature:
+      title: "%{name} — agencios"
+      breadcrumb: "Funcionalidades"
+      cta_start_free: "Começar grátis"
+      cta_view_plans: "Ver planos"
+      detail_eyebrow: "Por dentro"
+      detail_title: "O que você ganha com %{name}"
+      related_eyebrow: "Combina com"
+      related_title: "Outras funcionalidades"
+      related_see_all: "Ver todas"
+
+    pricing:
+      title: "Preços — agencios"
+      description: "Planos que crescem com a sua agência: Solo, Agência e Enterprise. %{days} dias de teste (com cartão). Vídeos, imagens e carrosséis por créditos pré-pagos."
+      hero_badge: "Planos"
+      hero_title_1: "Preço que cresce"
+      hero_title_2: "com a agência."
+      hero_sub: "%{days} dias de teste em qualquer plano — com cartão. Vídeos, imagens e carrosséis usam créditos pré-pagos."
+      billing_cycle: "Ciclo de cobrança"
+      monthly: "Mensal"
+      annual: "Anual"
+      annual_caption: "%{price}/ano · economize %{pct}%"
+      all_plans_note: "Todos os planos incluem %{days} dias de teste · cartão obrigatório para iniciar · cancele quando quiser."
+      credits_badge: "Créditos pré-pagos"
+      credits_title: "Geração por créditos"
+      credits_desc_html: "A assinatura cobre a plataforma, os assentos e uma cota mensal de créditos. Vídeos, imagens e carrosséis consomem créditos da sua carteira. <strong class=\"text-ink\">1 crédito = R$ 1.</strong>"
+      credits_carousel_title: "Carrosséis"
+      credits_carousel_desc:
+        one: "%{count} crédito por carrossel."
+        other: "%{count} créditos por carrossel."
+      credits_image_title: "Imagens"
+      credits_image_desc:
+        one: "%{count} crédito por imagem."
+        other: "%{count} créditos por imagem."
+      credits_video_title: "Vídeos UGC"
+      credits_video_desc: "A partir de %{count} créditos por 15s."
+      packs_title: "Pacotes de créditos"
+      packs_desc: "Precisou de mais? Compre créditos quando quiser — eles não expiram por 12 meses."
+      packs_credits_unit: "créditos"
+      faq_eyebrow: "Dúvidas"
+      faq_title: "Perguntas frequentes"
+      cta_title: "Pronto quando você estiver"
+      cta_subtitle: "Crie sua conta grátis e comece a produzir hoje."
+
+    feature_mockup:
+      quadro_columns:
+        - "Ideação"
+        - "Produção"
+        - "Agendado"
+      studio_generating: "Gerando…"
+      intel_ai_summary: "Resumo da IA"
+      intel_chips:
+        - "Gancho 1"
+        - "Gancho 2"
+        - "Ângulo viral"
+        - "+3 ideias"
+      intel_scope_generated: "Escopo gerado"
+      publish_reach: "Alcance"
+      publish_engagement: "Engajamento"
+      publish_metrics:
+        - "Curtidas"
+        - "Salvos"
+        - "Comentários"
+      calendar_weekdays:
+        - "S"
+        - "T"
+        - "Q"
+        - "Q"
+        - "S"
+        - "S"
+        - "D"
+      calendar_post: "Post agendado"
+      calendar_meeting: "Reunião"
+      billing_invoice: "Fatura #0042"
+      billing_paid: "Pago"
+      billing_pix: "Pix · Mercado Pago"
+      billing_reconcile: "Conciliação automática a cada sincronização."
+      strategist_prompt: "2 reels e 1 carrossel por semana, foco em prova social."
+      strategist_reply: "Montei um plano de 4 semanas — 12 tickets prontos. Aplicar?"
+      strategist_proposed: "12 tickets propostos"
+      strategist_tickets:
+        - "Reel — bastidores"
+        - "Carrossel — 5 mitos"
+        - "Reel — depoimento"
+        - "Carrossel — passo a passo"
+      strategist_apply: "Aplicar no quadro"
+      reports_title: "Relatório · Campanha Bloom"
+      reports_period: "90 dias"
+      reports_kpis:
+        - "Alcance"
+        - "Posts"
+        - "Meta"
+      reports_win: "Acerto: bastidores puxaram o alcance"
+      reports_adjust: "Ajuste: publicar mais cedo às terças"
+      reports_ai: "Gerado e revisado com IA"
+
+    board_preview:
+      chrome: "quadro · produção"
+      realtime: "tempo real"
+      ai_summary_label: "IA · resumo"
+      ai_summary_text: "O gancho de bastidores puxou +38% de alcance. Repetir no próximo ciclo."
+      reach_vs_avg: "alcance vs. média"
+      carousel_generated: "Carrossel gerado"
+      carousel_brand: "com a identidade da marca"
+
+    public_connect:
+      title: "Conectar redes — %{agency}"
+      heading: "Conecte suas redes"
+      intro_html: "Conecte as redes sociais de <strong>%{client}</strong> para que a equipe possa publicar por você. Leva menos de um minuto."
+      connected: "Conectado ✓"
+      connect: "Conectar →"
+      footer: "Você usa o login da sua própria conta. %{agency} nunca vê sua senha."
+      networks:
+        instagram:
+          label: "Instagram"
+          sub: "Entre com sua conta do Instagram"
+        facebook:
+          label: "Facebook"
+          sub: "Conecte sua Página do Facebook"
+        threads:
+          label: "Threads"
+          sub: "Entre com sua conta do Threads"
+        tiktok:
+          label: "TikTok"
+          sub: "Entre com sua conta do TikTok"
+        youtube:
+          label: "YouTube"
+          sub: "Conecte seu canal do YouTube"
+        linkedin:
+          label: "LinkedIn"
+          sub: "Conecte sua página do LinkedIn"
+        x:
+          label: "X"
+          sub: "Entre com sua conta do X"
+      invalid:
+        title: "Link inválido"
+        heading: "Link inválido ou expirado"
+        body: "Peça à sua agência um novo link de conexão."
+
+    data_deletion:
+      title: "Exclusão de dados"
+      heading: "Seus dados foram excluídos"
+      body: "Removemos as informações da sua conta conectada (tokens e perfil) dos nossos sistemas."
+      code_label: "Código do pedido:"
+
+    legal:
+      updated_on: "29 de junho de 2026"
+      eyebrow: "Legal"
+      updated_label: "Última atualização: %{date}"
+
+    terms:
+      title: "Termos de Uso — agencios"
+      description: "Os termos e condições de uso da plataforma agencios."
+      heading: "Termos de Uso"
+      sections:
+        s1:
+          h: "1. Aceitação"
+          body: "<p>Ao criar uma conta ou usar o agencios (\"Serviço\"), operado por <strong>Gabriel Hamdan Ferreira Tecnologia - ME</strong>, CNPJ <strong>23.858.108/0001-15</strong> (\"agencios\", \"nós\"), você concorda com estes Termos de Uso e com a <a href=\"/privacidade\">Política de Privacidade</a>. Se não concordar, não use o Serviço.</p>"
+        s2:
+          h: "2. O Serviço"
+          body: "<p>O agencios é uma plataforma SaaS para agências de social media e conteúdo, com quadro de produção, estúdio criativo com IA, publicação em redes sociais, calendário, reuniões e cobranças. Podemos evoluir, alterar ou descontinuar funcionalidades a qualquer momento.</p>"
+        s3:
+          h: "3. Conta e elegibilidade"
+          body: "<ul><li>Você deve ter ao menos 18 anos e fornecer informações verídicas e atualizadas;</li><li>Você é responsável por manter a confidencialidade das credenciais e por toda atividade na sua conta;</li><li>Avise-nos imediatamente sobre uso não autorizado.</li></ul>"
+        s4:
+          h: "4. Planos, pagamento e teste grátis"
+          body: "<ul><li>Os planos e preços vigentes estão na página de <a href=\"/precos\">Preços</a>;</li><li>A assinatura é cobrada via <strong>Stripe</strong>, de forma recorrente, conforme o plano;</li><li>A geração de <strong>vídeos, imagens e carrosséis</strong> consome <strong>créditos pré-pagos</strong> da carteira do workspace (1 crédito = R$ 1); textos e legendas com IA são inclusos no plano;</li><li>Créditos podem ser adquiridos avulsos em pacotes, além da cota mensal incluída em cada plano;</li><li>O período de teste <strong>exige um cartão de crédito</strong> para iniciar e converte em assinatura ao fim, salvo cancelamento;</li><li>Você pode cancelar quando quiser; o acesso permanece até o fim do ciclo pago. Tributos podem incidir conforme a legislação.</li></ul>"
+        s5:
+          h: "5. Uso aceitável"
+          body: "<p>Você concorda em não:</p><ul><li>Usar o Serviço para fins ilegais, enganosos, difamatórios ou que violem direitos de terceiros;</li><li>Enviar spam, malware ou conteúdo que viole as políticas das redes sociais integradas;</li><li>Tentar acessar indevidamente, sobrecarregar, fazer engenharia reversa ou contornar limites e segurança;</li><li>Revender ou sublicenciar o Serviço sem autorização.</li></ul>"
+        s6:
+          h: "6. Seu conteúdo"
+          body: "<p>Você mantém todos os direitos sobre o conteúdo e os dados que inserir (clientes, criativos, textos, mídias). Você nos concede uma licença limitada para hospedar, processar e exibir esse conteúdo apenas para operar o Serviço. Você declara ter os direitos necessários sobre o material de seus clientes e sobre as contas de redes sociais que conectar.</p>"
+        s7:
+          h: "7. Conteúdo gerado por IA"
+          body: "<p>Resultados de IA podem conter imprecisões e devem ser <strong>revisados por você</strong> antes do uso ou publicação. Você é responsável pelo conteúdo final, pela conformidade com direitos de terceiros e pelas regras de cada rede social.</p>"
+        s8:
+          h: "8. Integrações de terceiros"
+          body: "<p>O Serviço integra plataformas de terceiros (redes sociais, Google, Stripe, Mercado Pago, provedores de IA) e pode ser conectado a assistentes de IA compatíveis via conector (MCP). O uso dessas integrações também está sujeito aos termos e políticas dos respectivos provedores. Não respondemos por indisponibilidade ou mudanças desses serviços.</p>"
+        s9:
+          h: "9. Propriedade intelectual"
+          body: "<p>O software, a marca, o design e os conteúdos do agencios são de nossa propriedade ou licenciados, protegidos por lei. Estes Termos não transferem qualquer direito sobre nossa propriedade intelectual.</p>"
+        s10:
+          h: "10. Disponibilidade e garantias"
+          body: "<p>Empenhamo-nos para manter o Serviço disponível, mas ele é fornecido <strong>\"no estado em que se encontra\"</strong>, sem garantias de operação ininterrupta ou livre de erros. Podemos realizar manutenções e atualizações.</p>"
+        s11:
+          h: "11. Limitação de responsabilidade"
+          body: "<p>Na máxima extensão permitida em lei, não nos responsabilizamos por danos indiretos, lucros cessantes ou perda de dados. Nossa responsabilidade total, quando cabível, limita-se ao valor pago por você nos 12 meses anteriores ao evento.</p>"
+        s12:
+          h: "12. Indenização"
+          body: "<p>Você concorda em nos indenizar por reclamações de terceiros decorrentes do seu uso do Serviço, do seu conteúdo ou da violação destes Termos.</p>"
+        s13:
+          h: "13. Suspensão e encerramento"
+          body: "<p>Podemos suspender ou encerrar o acesso em caso de violação destes Termos, risco à segurança ou exigência legal. Você pode encerrar sua conta a qualquer momento; após o encerramento, tratamos seus dados conforme a <a href=\"/privacidade\">Política de Privacidade</a>.</p>"
+        s14:
+          h: "14. Alterações nos Termos"
+          body: "<p>Podemos atualizar estes Termos. Mudanças relevantes serão comunicadas; o uso continuado após a vigência implica concordância.</p>"
+        s15:
+          h: "15. Lei aplicável e foro"
+          body: "<p>Estes Termos são regidos pelas leis do Brasil. Fica eleito o foro da comarca de <strong>Belo Horizonte/MG</strong>, salvo disposição legal em contrário.</p>"
+        s16:
+          h: "16. Contato"
+          body: "<p>Dúvidas: <a href=\"mailto:suporte@agencios.app\">suporte@agencios.app</a>.</p>"
+
+    privacy:
+      title: "Política de Privacidade — agencios"
+      description: "Como a agencios coleta, usa, compartilha e protege dados pessoais, em conformidade com a LGPD."
+      heading: "Política de Privacidade"
+      sections:
+        s1:
+          h: "1. Quem somos (Controlador)"
+          body: "<p>O agencios é operado por <strong>Gabriel Hamdan Ferreira Tecnologia - ME</strong>, inscrita no CNPJ <strong>23.858.108/0001-15</strong>, com sede na <strong>Rua Sebastião de Barros, 166, Belo Horizonte - MG</strong> (\"agencios\", \"nós\"). Para fins da LGPD, somos o <strong>Controlador</strong> dos dados pessoais tratados em nossa plataforma, exceto quanto ao conteúdo que você insere sobre seus próprios clientes (veja a seção 3.3), em que atuamos como <strong>Operador</strong>.</p><p><strong>Encarregado pelo Tratamento de Dados (DPO):</strong> <a href=\"mailto:privacidade@agencios.app\">privacidade@agencios.app</a>.</p>"
+        s2:
+          h: "2. A quem esta política se aplica"
+          body: "<p>Aplica-se a visitantes do nosso site, titulares de conta (usuários das agências) e às pessoas cujos dados são inseridos por nossos clientes no uso da plataforma.</p>"
+        s3:
+          h: "3. Dados que tratamos"
+          body: "<h3>3.1. Dados de cadastro e conta</h3><ul><li>Nome, e-mail e senha (armazenada de forma criptografada — nunca em texto puro);</li><li>Foto de avatar, workspace(s), papel e preferências.</li></ul><h3>3.2. Dados de uso e técnicos</h3><ul><li>Endereço IP, tipo de dispositivo/navegador, páginas e ações realizadas, datas e horários;</li><li>Cookies e identificadores (veja a seção 6).</li></ul><h3>3.3. Conteúdo do workspace (você como Controlador)</h3><p>Dados de clientes, campanhas, tickets, criativos, reuniões e faturas que você insere. Esses dados pertencem à sua agência; tratamos como <strong>Operador</strong>, seguindo suas instruções e apenas para prestar o serviço.</p><h3>3.4. Dados de integrações</h3><ul><li>Tokens de acesso a redes sociais, Google Calendar e Mercado Pago, armazenados de forma criptografada;</li><li>Dados de pagamento processados pelos provedores (não armazenamos números de cartão).</li></ul>"
+        s4:
+          h: "4. Para que usamos e com qual base legal"
+          body: "<p>Tratamos dados pessoais com fundamento no art. 7º da LGPD, conforme a finalidade:</p><ul><li><strong>Execução do contrato</strong> (art. 7º, V): criar e operar sua conta, prestar as funcionalidades, processar pagamentos e dar suporte;</li><li><strong>Cumprimento de obrigação legal/regulatória</strong> (art. 7º, II): fiscal, contábil e atendimento a autoridades;</li><li><strong>Legítimo interesse</strong> (art. 7º, IX): segurança, prevenção a fraudes, métricas de produto e melhoria do serviço, sempre com avaliação de impacto e respeito aos seus direitos;</li><li><strong>Consentimento</strong> (art. 7º, I): cookies de análise/marketing e comunicações opcionais — você pode revogar a qualquer momento.</li></ul>"
+        s5:
+          h: "5. Inteligência artificial"
+          body: "<p>Funcionalidades de IA (resumos, ideias, escopo, legendas, retrospectivas e geração de criativos) enviam o conteúdo necessário a provedores de modelos (ex.: Anthropic, OpenRouter, Google). Esse conteúdo é usado para gerar o resultado solicitado e não para treinar modelos de terceiros sem base legal.</p>"
+        s6:
+          h: "6. Cookies e tecnologias semelhantes"
+          body: "<p>Usamos duas categorias de cookies:</p><ul><li><strong>Essenciais</strong>: necessários para login, segurança (CSRF) e funcionamento. Não dependem de consentimento.</li><li><strong>Análise/marketing</strong>: ajudam a entender o uso (ex.: Google Analytics via <em>Consent Mode</em>). Só são ativados após o seu consentimento.</li></ul><p>Por padrão, cookies não essenciais ficam <strong>desativados</strong> até você aceitar no banner. Você pode mudar sua escolha a qualquer momento em <strong>\"Preferências de cookies\"</strong> no rodapé.</p>"
+        s7:
+          h: "7. Com quem compartilhamos"
+          body: "<p>Compartilhamos dados apenas com operadores que viabilizam o serviço, sob contrato:</p><ul><li><strong>Pagamentos:</strong> Stripe (assinatura) e Mercado Pago (cobrança aos seus clientes);</li><li><strong>Infraestrutura:</strong> provedores de nuvem e armazenamento (ex.: AWS S3) e envio de e-mail;</li><li><strong>IA e mídia:</strong> Anthropic, OpenRouter, Google (imagem), Cartesia (voz) e provedores de mídia de apoio;</li><li><strong>Redes e produtividade:</strong> Meta (Instagram/Facebook), TikTok, YouTube, LinkedIn, X e Google (Calendar/Meet, Analytics);</li><li><strong>Autoridades</strong>, quando exigido por lei ou ordem judicial.</li></ul><p>Não vendemos dados pessoais.</p>"
+        s8:
+          h: "8. Transferência internacional"
+          body: "<p>Alguns provedores processam dados fora do Brasil (ex.: Estados Unidos). Nesses casos adotamos salvaguardas adequadas, conforme os arts. 33 a 36 da LGPD.</p>"
+        s9:
+          h: "9. Por quanto tempo guardamos"
+          body: "<p>Mantemos os dados enquanto sua conta estiver ativa e pelos prazos legais aplicáveis após o encerramento. Depois disso, os dados são eliminados ou anonimizados, salvo obrigação legal de retenção.</p>"
+        s10:
+          h: "10. Seus direitos (art. 18 da LGPD)"
+          body: "<p>Como titular, você pode solicitar a qualquer momento:</p><ul><li>Confirmação da existência de tratamento e <strong>acesso</strong> aos dados;</li><li><strong>Correção</strong> de dados incompletos, inexatos ou desatualizados;</li><li><strong>Anonimização, bloqueio ou eliminação</strong> de dados desnecessários ou tratados em desconformidade;</li><li><strong>Portabilidade</strong> a outro fornecedor;</li><li><strong>Eliminação</strong> dos dados tratados com base no consentimento;</li><li>Informação sobre <strong>compartilhamento</strong> e sobre a possibilidade de <strong>não consentir</strong>;</li><li><strong>Revogação do consentimento</strong> e <strong>revisão de decisões automatizadas</strong>.</li></ul><p>Para exercer, escreva para <a href=\"mailto:privacidade@agencios.app\">privacidade@agencios.app</a>. Responderemos nos prazos da LGPD. Você também pode reclamar à <a href=\"https://www.gov.br/anpd\" target=\"_blank\" rel=\"noreferrer\">ANPD</a>.</p>"
+        s11:
+          h: "11. Segurança"
+          body: "<p>Adotamos medidas técnicas e organizacionais como criptografia em trânsito (HTTPS) e em repouso para segredos, controle de acesso por papel, isolamento por workspace e registro de auditoria. Nenhum sistema é 100% imune; em caso de incidente relevante, comunicaremos você e a ANPD conforme a lei.</p>"
+        s12:
+          h: "12. Crianças e adolescentes"
+          body: "<p>O agencios é destinado a maiores de 18 anos e não coleta intencionalmente dados de menores.</p>"
+        s13:
+          h: "13. Alterações"
+          body: "<p>Podemos atualizar esta política. Mudanças relevantes serão comunicadas no site ou por e-mail. A data no topo indica a última revisão.</p>"
+        s14:
+          h: "14. Contato"
+          body: "<p>Dúvidas sobre privacidade: <a href=\"mailto:privacidade@agencios.app\">privacidade@agencios.app</a>. Veja também nossos <a href=\"/termos\">Termos de Uso</a>.</p>"

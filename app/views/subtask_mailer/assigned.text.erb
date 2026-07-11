@@ -1,8 +1,8 @@
-Olá, <%= @assignee.display_name %>!
+<%= t('mailers.common.hello') %>, <%= @assignee.display_name %>!
 
-<% if @actor_name %><%= @actor_name %> atribuiu<% else %>Foi atribuída<% end %> uma tarefa a você no ticket "<%= @ticket.display_title %>":
+<% if @actor_name %><%= t('mailers.subtask.assigned.text_assigned_by', name: @actor_name) %><% else %><%= t('mailers.subtask.assigned.text_assigned_generic') %><% end %> <%= t('mailers.subtask.assigned.text_body_suffix', title: @ticket.display_title) %>
 
 ✓ <%= @subtask.title %>
-<% if @subtask.due_date %>Prazo: <%= email_date(@subtask.due_date) %>
+<% if @subtask.due_date %><%= t('mailers.subtask.assigned.text_due') %> <%= email_date(@subtask.due_date) %>
 <% end %>
-Ver no ticket: <%= @ticket_url %>
+<%= t('mailers.subtask.assigned.text_view') %> <%= @ticket_url %>

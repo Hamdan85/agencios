@@ -1,28 +1,28 @@
-<% content_for :preheader do %><%= @meeting.title %> — <%= email_datetime(@meeting.starts_at) %>.<% end %>
-<% content_for :eyebrow do %>Reunião<% end %>
+<% content_for :preheader do %><%= t('mailers.meeting.invitation.preheader', title: @meeting.title, datetime: email_datetime(@meeting.starts_at)) %><% end %>
+<% content_for :eyebrow do %><%= t('mailers.meeting.invitation.eyebrow') %><% end %>
 
 <h1 style="margin:0 0 16px;font-family:'Sora','Inter',Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#18122B;">
-  Reunião agendada
+  <%= t('mailers.meeting.invitation.heading') %>
 </h1>
 
 <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#564F6F;">
-  Olá<%= @recipient_name.present? ? ", #{@recipient_name}" : "" %>. A <strong><%= @workspace.name %></strong> agendou uma reunião com você.
+  <%= t('mailers.common.hello') %><%= @recipient_name.present? ? ", #{@recipient_name}" : "" %>. <%= t('mailers.meeting.invitation.body_html', workspace: @workspace.name) %>
 </p>
 
 <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="margin:8px 0 20px;background-color:#F5F4FB;border-radius:14px;">
   <tr><td style="padding:18px 20px;">
     <p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#18122B;"><%= @meeting.title %></p>
     <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
-      <%= email_detail_row("Início", email_datetime(@meeting.starts_at)) %>
-      <% if @meeting.ends_at %><%= email_detail_row("Término", email_datetime(@meeting.ends_at)) %><% end %>
+      <%= email_detail_row(t('mailers.meeting.invitation.field_start'), email_datetime(@meeting.starts_at)) %>
+      <% if @meeting.ends_at %><%= email_detail_row(t('mailers.meeting.invitation.field_end'), email_datetime(@meeting.ends_at)) %><% end %>
     </table>
   </td></tr>
 </table>
 
 <% if @meet_url.present? %>
-  <%= email_button("Entrar no Google Meet", @meet_url) %>
+  <%= email_button(t('mailers.meeting.invitation.button'), @meet_url) %>
 <% end %>
 
 <% if @meeting.notes.present? %>
-  <p style="margin:20px 0 0;font-size:14px;line-height:1.6;color:#564F6F;"><strong>Pauta:</strong> <%= @meeting.notes %></p>
+  <p style="margin:20px 0 0;font-size:14px;line-height:1.6;color:#564F6F;"><%= t('mailers.meeting.invitation.agenda_html', notes: @meeting.notes) %></p>
 <% end %>

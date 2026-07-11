@@ -1,12 +1,12 @@
-<% content_for :preheader do %>Seu <%= @kind_label.downcase %> gerado está pronto.<% end %>
-<% content_for :eyebrow do %>Estúdio<% end %>
+<% content_for :preheader do %><%= t('mailers.creative.ready.preheader', kind: @kind_label.downcase) %><% end %>
+<% content_for :eyebrow do %><%= t('mailers.creative.ready.eyebrow') %><% end %>
 
 <h1 style="margin:0 0 16px;font-family:'Sora','Inter',Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#18122B;">
-  <%= @kind_label %> pronto ✨
+  <%= t('mailers.creative.ready.heading', kind: @kind_label) %>
 </h1>
 
 <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#564F6F;">
-  Olá, <%= @user.display_name %>. A geração que você iniciou foi concluída e seu <strong><%= @kind_label.downcase %></strong> já está disponível.
+  <%= t('mailers.common.hello') %>, <%= @user.display_name %>. <%= t('mailers.creative.ready.body_html', kind: @kind_label.downcase) %>
 </p>
 
-<%= email_button("Ver criativo", @url) %>
+<%= email_button(t('mailers.creative.ready.button'), @url) %>

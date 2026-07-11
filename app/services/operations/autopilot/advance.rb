@@ -26,10 +26,19 @@ module Operations
         @run
       rescue Operations::Errors::InsufficientCredits => e
         shortfall = e.required.to_i - e.available.to_i
-        Fail.call(run: @run, reason: "Créditos insuficientes durante a geração (faltam #{shortfall}).")
+        reason = I18n.with_locale(workspace_locale(@run.workspace)) do
+          I18n.t('operations.autopilot.reason.insufficient_credits', shortfall: shortfall)
+        end
+        Fail.call(run: @run, reason: reason)
       rescue StandardError => e
         Rails.logger.error("[Autopilot::Advance] run #{@run.id} (#{@run.state}) failed: #{e.message}")
         Fail.call(run: @run, reason: e.message.to_s.truncate(480))
+      end
+
+      private
+
+      def workspace_locale(ws)
+        I18n.available_locales.find { |l| l.to_s == ws&.locale.to_s } || I18n.default_locale
       end
     end
   end

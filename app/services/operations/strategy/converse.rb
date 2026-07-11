@@ -26,7 +26,7 @@ module Operations
       end
 
       def call
-        raise Operations::Errors::Invalid, 'Mensagem vazia.' if @content.blank?
+        raise Operations::Errors::Invalid, I18n.t('operations.strategy.converse.empty_message') if @content.blank?
 
         @session.push_message(role: :user, content: @content)
         @session.save!
@@ -76,7 +76,7 @@ module Operations
         # No streamed text means the model went straight for a tool call — leave a
         # neutral holding line so the turn is never silent; the plan lands via cable.
         assistant_text = result.text.presence ||
-                         'Certo! Deixa eu montar isso e já te trago a proposta.'
+                         I18n.t('operations.strategy.converse.holding_line')
         @session.push_message(role: :assistant, content: assistant_text)
         @session.save!
       end

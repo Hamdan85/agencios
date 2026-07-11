@@ -11,6 +11,12 @@ class MeetingMailer < ApplicationMailer
     @workspace = meeting.workspace
     @brand_workspace = @workspace
     @meet_url = meeting.meet_url
-    mail(to: recipient_email, subject: "Reunião agendada: #{meeting.title} — #{email_datetime(meeting.starts_at)}")
+    # Recipient is an email string (a client or an external attendee); render in
+    # the meeting's client locale when there is one, otherwise the workspace's.
+    with_recipient_locale(meeting.client || @workspace) do
+      mail(to: recipient_email,
+           subject: I18n.t('mailers.meeting.invitation.subject',
+                           title: meeting.title, datetime: email_datetime(meeting.starts_at)))
+    end
   end
 end

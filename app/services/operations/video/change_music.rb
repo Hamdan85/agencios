@@ -25,8 +25,8 @@ module Operations
 
       def call
         generation = @creative.generation
-        raise Operations::Errors::Invalid, 'Vídeo sem geração associada' unless generation
-        raise Operations::Errors::Invalid, 'Este vídeo é silencioso — não leva música' if silent?(generation)
+        raise Operations::Errors::Invalid, I18n.t('operations.video.errors.change_music.no_generation') unless generation
+        raise Operations::Errors::Invalid, I18n.t('operations.video.errors.change_music.silent') if silent?(generation)
 
         params = generation.params || {}
         generation.update!(params: params.except(*MUSIC_KEYS).merge(resolved_music(params)))

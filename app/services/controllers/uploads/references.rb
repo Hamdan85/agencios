@@ -22,7 +22,7 @@ module Controllers
       def call
         deny_guests!
         files = Array(@params[:files]).compact.first(MAX_FILES)
-        raise Operations::Errors::Invalid, 'Envie ao menos um arquivo.' if files.empty?
+        raise Operations::Errors::Invalid, I18n.t('api.uploads.at_least_one_file') if files.empty?
 
         { references: files.map { |f| store(f) } }
       end
@@ -43,12 +43,12 @@ module Controllers
         if ACCEPTED_VIDEOS.include?(ct)
           return if file.size.to_i <= MAX_VIDEO_BYTES
 
-          raise Operations::Errors::Invalid, 'Vídeo de referência muito grande (máx. 50 MB).'
+          raise Operations::Errors::Invalid, I18n.t('api.uploads.video_too_large')
         end
         return if ACCEPTED_IMAGES.include?(ct)
 
         raise Operations::Errors::Invalid,
-              'Formato não suportado. Envie JPG, PNG, WEBP ou um vídeo MP4/MOV/WEBM.'
+              I18n.t('api.uploads.unsupported_format')
       end
 
       # A public URL served by the app (redirects to S3 in prod) so the async

@@ -1,11 +1,11 @@
-Olá<%= @client.name.present? ? ", #{@client.name}" : "" %>!
+<%= t('mailers.common.hello') %><%= @client.name.present? ? ", #{@client.name}" : "" %>!
 
-A cobrança abaixo, emitida pela <%= @workspace.name %>, está em aberto após o vencimento.
+<%= t('mailers.invoice.overdue.text_body', workspace: @workspace.name) %>
 
-Referência: <%= @invoice.external_reference %>
-<% if @invoice.due_date %>Venceu em: <%= email_date(@invoice.due_date) %>
-<% end %>Total: <%= email_brl(@invoice.amount_cents) %>
+<%= t('mailers.invoice.fields.reference') %>: <%= @invoice.external_reference %>
+<% if @invoice.due_date %><%= t('mailers.invoice.fields.due_on') %>: <%= email_date(@invoice.due_date) %>
+<% end %><%= t('mailers.invoice.fields.total') %>: <%= email_brl(@invoice.amount_cents) %>
 <% if @payment_url.present? %>
-Regularizar pagamento: <%= @payment_url %>
+<%= t('mailers.invoice.overdue.button') %>: <%= @payment_url %>
 <% end %>
-Se você já pagou, por favor desconsidere este aviso.
+<%= t('mailers.invoice.overdue.text_note') %>

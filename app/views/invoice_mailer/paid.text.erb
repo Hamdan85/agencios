@@ -1,9 +1,9 @@
-Olá<%= @client.name.present? ? ", #{@client.name}" : "" %>!
+<%= t('mailers.common.hello') %><%= @client.name.present? ? ", #{@client.name}" : "" %>!
 
-Recebemos seu pagamento. Obrigado por contar com a <%= @workspace.name %>!
+<%= t('mailers.invoice.paid.text_body', workspace: @workspace.name) %>
 
-Referência: <%= @invoice.external_reference %>
-<% if @invoice.description.present? %>Descrição: <%= @invoice.description %>
-<% end %>Valor pago: <%= email_brl(@invoice.amount_cents) %>
+<%= t('mailers.invoice.fields.reference') %>: <%= @invoice.external_reference %>
+<% if @invoice.description.present? %><%= t('mailers.invoice.fields.description') %>: <%= @invoice.description %>
+<% end %><%= t('mailers.invoice.fields.amount_paid') %>: <%= email_brl(@invoice.amount_cents) %>
 
-Guarde este e-mail como comprovante.
+<%= t('mailers.invoice.paid.keep_receipt') %>

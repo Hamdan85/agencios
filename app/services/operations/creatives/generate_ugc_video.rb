@@ -94,10 +94,11 @@ module Operations
 
         # Hold a credit estimate for the requested duration BEFORE the paid render.
         # Compose reconciles to the real total. Raises InsufficientCredits (402).
+        estimate_desc = I18n.with_locale(workspace_locale(workspace)) { I18n.t('operations.creatives.video_estimate') }
         Operations::Credits::Debit.call(
           workspace: workspace,
           amount: Pricing.credits_for(kind: :video, seconds: duration),
-          generation: generation, description: 'Geração de vídeo (estimativa)'
+          generation: generation, description: estimate_desc
         )
 
         # The slow half (storyboard AI + vendor submit) runs off-request.
@@ -117,6 +118,10 @@ module Operations
         return nil if @client_id.blank?
 
         workspace.clients.find_by(id: @client_id)
+      end
+
+      def workspace_locale(ws)
+        I18n.available_locales.find { |l| l.to_s == ws&.locale.to_s } || I18n.default_locale
       end
 
       def clamp_duration(seconds)

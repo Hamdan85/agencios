@@ -95,19 +95,28 @@ module Operations
         session = @ticket.strategy_session
         return [] unless session
 
-        turns = Array(session.messages).filter_map do |m|
-          content = m['content'].to_s.strip
-          next if content.blank?
+        # AI-prompt context — build it in the workspace language (runs off-request).
+        I18n.with_locale(workspace_locale(@ticket.workspace)) do
+          role_strategist = I18n.t('operations.ai.strategy_context.role_strategist')
+          role_user = I18n.t('operations.ai.strategy_context.role_user')
+          turns = Array(session.messages).filter_map do |m|
+            content = m['content'].to_s.strip
+            next if content.blank?
 
-          "  #{m['role'] == 'assistant' ? 'ESTRATEGISTA' : 'USUÁRIO'}: #{content}"
+            "  #{m['role'] == 'assistant' ? role_strategist : role_user}: #{content}"
+          end
+          next [] if turns.empty?
+
+          out = [I18n.t('operations.ai.strategy_context.header')]
+          summary = session.proposed_plan.is_a?(Hash) ? session.proposed_plan['summary'].to_s.strip : ''
+          out << "  #{I18n.t('operations.ai.strategy_context.plan_summary', summary: summary)}" if summary.present?
+          out.concat(turns)
+          out
         end
-        return [] if turns.empty?
+      end
 
-        out = ['[Conversa de estratégia que originou este ticket — respeite o tom e as diretrizes combinados]']
-        summary = session.proposed_plan.is_a?(Hash) ? session.proposed_plan['summary'].to_s.strip : ''
-        out << "  Resumo do plano: #{summary}" if summary.present?
-        out.concat(turns)
-        out
+      def workspace_locale(ws)
+        I18n.available_locales.find { |l| l.to_s == ws&.locale.to_s } || I18n.default_locale
       end
 
       # Light type coercion so the persisted shape matches the field contracts —

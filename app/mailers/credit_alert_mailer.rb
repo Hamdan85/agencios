@@ -8,6 +8,8 @@ class CreditAlertMailer < ApplicationMailer
     @required = required
     @context = context
     @url = app_url('/assinatura')
-    mail(to: recipient.email, subject: 'Créditos insuficientes — ação pendente')
+    with_recipient_locale(recipient) do
+      mail(to: recipient.email, subject: I18n.t('mailers.credit_alert.insufficient.subject'))
+    end
   end
 end

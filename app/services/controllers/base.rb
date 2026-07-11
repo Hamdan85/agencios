@@ -33,13 +33,13 @@ module Controllers
     def require_manager!
       return if membership&.can_manage?
 
-      raise Operations::Errors::Forbidden, 'Acesso restrito a gestores do workspace.'
+      raise Operations::Errors::Forbidden, I18n.t('api.errors.manager_required')
     end
 
     def require_owner!
       return if membership&.owner?
 
-      raise Operations::Errors::Forbidden, 'Acesso restrito ao owner do workspace.'
+      raise Operations::Errors::Forbidden, I18n.t('api.errors.owner_required')
     end
 
     def deny_guests!
@@ -63,9 +63,7 @@ module Controllers
     def require_seat_compliance!
       return unless workspace&.over_seat_limit?
 
-      raise Operations::Errors::SeatLimitReached,
-            'O workspace tem mais membros do que o plano atual permite. ' \
-              'Remova membros ou faça upgrade para continuar criando tickets e campanhas.'
+      raise Operations::Errors::SeatLimitReached, I18n.t('api.errors.seat_limit_over_plan')
     end
 
     # Preflight prepaid-credit check for a metered generation (video/image).

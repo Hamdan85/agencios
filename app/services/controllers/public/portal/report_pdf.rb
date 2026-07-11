@@ -10,7 +10,7 @@ module Controllers
         def call
           project = project!
           report = project.latest_report
-          raise ActiveRecord::RecordNotFound, 'Relatório indisponível.' unless report&.status_ready?
+          raise ActiveRecord::RecordNotFound, I18n.t('api.reports.report_unavailable') unless report&.status_ready?
 
           {
             bytes: Operations::Reports::RenderPdf.call(report:),

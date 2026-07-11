@@ -1,21 +1,21 @@
-<% content_for :preheader do %>Sua cobrança de <%= email_brl(@invoice.amount_cents) %> está em atraso.<% end %>
-<% content_for :eyebrow do %>Cobrança<% end %>
+<% content_for :preheader do %><%= t('mailers.invoice.overdue.preheader', amount: email_brl(@invoice.amount_cents)) %><% end %>
+<% content_for :eyebrow do %><%= t('mailers.invoice.overdue.eyebrow') %><% end %>
 
 <h1 style="margin:0 0 16px;font-family:'Sora','Inter',Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#18122B;">
-  Cobrança em atraso
+  <%= t('mailers.invoice.overdue.heading') %>
 </h1>
 
 <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#564F6F;">
-  Olá<%= @client.name.present? ? ", #{@client.name}" : "" %>. Identificamos que a cobrança abaixo, emitida pela <strong><%= @workspace.name %></strong>, está em aberto após o vencimento.
+  <%= t('mailers.common.hello') %><%= @client.name.present? ? ", #{@client.name}" : "" %>. <%= t('mailers.invoice.overdue.body_html', workspace: @workspace.name) %>
 </p>
 
 <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="margin:8px 0 20px;background-color:#FFF7ED;border-radius:14px;">
   <tr><td style="padding:18px 20px;">
     <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
-      <%= email_detail_row("Referência", @invoice.external_reference.to_s) %>
-      <% if @invoice.due_date %><%= email_detail_row("Venceu em", email_date(@invoice.due_date)) %><% end %>
+      <%= email_detail_row(t('mailers.invoice.fields.reference'), @invoice.external_reference.to_s) %>
+      <% if @invoice.due_date %><%= email_detail_row(t('mailers.invoice.fields.due_on'), email_date(@invoice.due_date)) %><% end %>
       <tr>
-        <td style="padding:12px 0 0;font-size:15px;font-weight:700;color:#18122B;border-top:1px solid #FCE7C8;">Total</td>
+        <td style="padding:12px 0 0;font-size:15px;font-weight:700;color:#18122B;border-top:1px solid #FCE7C8;"><%= t('mailers.invoice.fields.total') %></td>
         <td align="right" style="padding:12px 0 0;font-size:18px;font-weight:800;color:#F59E0B;border-top:1px solid #FCE7C8;"><%= email_brl(@invoice.amount_cents) %></td>
       </tr>
     </table>
@@ -23,9 +23,9 @@
 </table>
 
 <% if @payment_url.present? %>
-  <%= email_button("Regularizar pagamento", @payment_url, color: "#F59E0B") %>
+  <%= email_button(t('mailers.invoice.overdue.button'), @payment_url, color: "#F59E0B") %>
 <% end %>
 
 <p style="margin:20px 0 0;font-size:13px;line-height:1.5;color:#8B86A3;">
-  Se você já efetuou o pagamento, por favor desconsidere este aviso.
+  <%= t('mailers.invoice.overdue.note') %>
 </p>

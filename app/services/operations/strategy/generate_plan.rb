@@ -51,9 +51,12 @@ module Operations
       # (no briefs/subtasks) keeps this cheap and fast.
       def build_plan
         client = ai_client('strategy_plan')
+        prompt = I18n.with_locale(workspace_locale(@session.workspace)) do
+          "#{conversation(@session)}\n\n#{I18n.t('operations.strategy.generate_plan.instruction')}"
+        end
         result = client.generate(
           system: planner(@session).system,
-          prompt: "#{conversation(@session)}\n\nGere o plano de conteúdo agora, chamando a ferramenta.",
+          prompt: prompt,
           tool: Prompts::StrategyPlanner.plan_tool,
           max_tokens: PLAN_MAX_TOKENS
         )

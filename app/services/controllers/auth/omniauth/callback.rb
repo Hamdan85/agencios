@@ -45,7 +45,7 @@ module Controllers
         def connect_facebook(client, network)
           context = Vendors::Meta::Actions::Exchange.call(code: @code, redirect_uri: redirect_uri)
           pages = context[:pages]
-          raise Vendors::Base::Error, 'Nenhuma Página do Facebook encontrada.' if pages.empty?
+          raise Vendors::Base::Error, I18n.t('api.auth.no_facebook_page') if pages.empty?
 
           if pages.one?
             persist_page!(client: client, network: network, context: context, page: pages.first)

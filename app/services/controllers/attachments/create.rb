@@ -14,7 +14,7 @@ module Controllers
         deny_guests!
         ticket = workspace.tickets.find(@params[:ticket_id])
         files = uploaded_files
-        raise Operations::Errors::Invalid, 'Nenhum arquivo enviado.' if files.empty?
+        raise Operations::Errors::Invalid, I18n.t('api.attachments.none_uploaded') if files.empty?
 
         created = files.map { |file| create_one(ticket, file) }
         { attachments: serialize_collection(created, AttachmentSerializer) }

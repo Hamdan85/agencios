@@ -22,7 +22,7 @@ module Operations
 
       def call
         tickets = eligible_tickets
-        raise Operations::Errors::Invalid, 'Nenhum ticket elegível para iniciar.' if tickets.empty?
+        raise Operations::Errors::Invalid, I18n.t('operations.autopilot.none_eligible') if tickets.empty?
 
         # Clicking GO is an explicit user action — the "GO mode": it starts a draft
         # project (→ active) and executes its tickets. Planning alone never does this.

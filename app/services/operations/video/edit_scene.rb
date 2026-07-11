@@ -72,6 +72,16 @@ module Operations
 
       private
 
+      # Persisted to the workspace credit ledger (a team-shared artifact), so it
+      # is rendered once in the workspace language at write time.
+      def ledger_description
+        I18n.with_locale(workspace_locale(@scene.workspace)) do
+          I18n.t('operations.video.ledger.redo_scene', n: @scene.position + 1)
+        end
+      end
+
+      def workspace_locale(ws) = I18n.available_locales.find { |l| l.to_s == ws&.locale.to_s } || I18n.default_locale
+
       def render_requested?
         @prompt.present? || @camera_given || @dialogue_given || @sfx_given || @text_given ||
           restyle_requested? || refs_added?
@@ -128,7 +138,7 @@ module Operations
         Operations::Credits::Debit.call(
           workspace: @scene.workspace,
           amount: Pricing.credits_for(kind: :video, seconds: @scene.duration_seconds),
-          generation: generation, description: "Refazer cena #{@scene.position + 1} do vídeo"
+          generation: generation, description: ledger_description
         )
 
         # Reopen the generation so Compose runs again once the scene is ready.

@@ -16,7 +16,7 @@ module Operations
       end
 
       def call
-        raise Operations::Errors::Invalid, 'Elemento inválido.' if @key.blank?
+        raise Operations::Errors::Invalid, I18n.t('operations.video.errors.remove_reference.invalid_element') if @key.blank?
 
         if (field = @key[IDENTITY_KEY, 1])
           clear_identity_field!(field)

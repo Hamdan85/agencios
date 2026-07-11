@@ -1,10 +1,10 @@
-<%= @recipient.display_name.present? ? "Olá, #{@recipient.display_name}!" : "Olá!" %>
+<%= @recipient.display_name.present? ? "#{t('mailers.common.hello')}, #{@recipient.display_name}!" : "#{t('mailers.common.hello')}!" %>
 
-<%= @author_name %> mencionou você em um comentário no ticket "<%= @ticket.display_title %>":
+<%= t('mailers.note.mention.text_body', author: @author_name, title: @ticket.display_title) %>
 
 <%= @note.plain_body %>
 
-Abrir ticket: <%= @ticket_url %>
+<%= t('mailers.common.open_ticket') %>: <%= @ticket_url %>
 
 —
-Você recebeu este e-mail porque foi mencionado neste ticket.
+<%= t('mailers.note.mention.text_note') %>

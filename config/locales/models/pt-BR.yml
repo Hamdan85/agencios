@@ -18,6 +18,14 @@ pt-BR:
       file_required: "é obrigatório"
     creative_fallback: "Criativo"
     pricing:
+      names:
+        solo: "Solo"
+        agencia: "Agência"
+        enterprise: "Enterprise"
+        starter: "Inicial"
+        pro: "Pro"
+        studio: "Studio"
+        scale: "Scale"
       features:
         solo:
           seats: "2 assentos"

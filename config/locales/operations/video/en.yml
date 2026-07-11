@@ -1,0 +1,107 @@
+en:
+  operations:
+    video:
+      errors:
+        set_voice:
+          no_generation: "This video has no associated generation"
+          voice_not_found: "Voice not found"
+          no_scenes: "This video has no scenes"
+          busy: "Wait for the scenes to finish before changing the voice"
+        set_identity:
+          no_generation: "This video has no associated generation"
+          no_scenes: "This video has no scenes"
+          busy: "Wait for the scenes to finish before changing the identity"
+        upgrade_quality:
+          no_generation: "This video has no associated generation"
+          processing: "The video is still processing"
+          already_final: "This video is already in high quality"
+          no_scenes: "This video has no scenes"
+        change_music:
+          no_generation: "This video has no associated generation"
+          silent: "This video is silent — it doesn't carry music"
+        remove_scene:
+          needs_one: "The video needs at least one scene"
+        remove_reference:
+          invalid_element: "Invalid element."
+        add_reference:
+          invalid_reference: "Invalid reference."
+        add_scene:
+          needs_description: "The new scene needs a description"
+          max_scenes: "The video already has the maximum of %{max} scenes"
+        cancel_render:
+          nothing: "Nothing to cancel — the video isn't processing"
+        regenerate_reference:
+          describe: "Describe what to generate."
+          no_generation: "This video has no associated generation."
+          failed: "I couldn't generate the image right now. Try again."
+      ledger:
+        add_scene: "Add scene %{n} to the video"
+        relink_follower: "Redo video scene (continuity)"
+        redo_scene: "Redo scene %{n} of the video"
+        set_voice: "Change the video's voice (redo scenes)"
+        set_identity: "Adjust the video's identity (redo scenes)"
+        upgrade_hold: "High-quality video (upgrade)"
+        generate_reference: "Reference generated for the video (%{role})"
+        reconcile: "Video credit adjustment (%{seconds}s)"
+      cancel:
+        reason: "Canceled by the user"
+      default_voice: "professional, warm and creative tone"
+      roles:
+        character: "Character"
+        avatar: "Presenter"
+        scene: "Setting"
+        product: "Product"
+        logo: "Logo"
+        style: "Style"
+        camera: "Camera"
+        motion: "Motion"
+        reference: "Reference"
+      library:
+        brand_avatar: "Brand avatar"
+        brand_logo: "Brand logo"
+      voice_options:
+        catalog_tag: "(catalog)"
+      beats:
+        hook: "Attention-grabbing opening"
+        feature: "Product spotlight"
+        cta: "Call to action"
+      push:
+        ready:
+          title: "Video ready ✨"
+          body: "Your generation is complete and now available."
+      failure_note:
+        header: "⚠️ I couldn't generate scene %{n}: %{explanation}"
+        copyright: "the generator blocked the video for **copyright** — the scene probably resembles well-known characters or brands (e.g. animals/characters that evoke movies). It's worth swapping the concept for something original: real people, your own mascot, or a focus on the product. Tell me how you'd like to redo it and I'll adjust."
+        audio: "the generator blocked the **audio** for sensitive content — usually it's the speech. I can rewrite the spoken text in a more neutral way, or leave the scene without a voice. Which do you prefer?"
+        content_rule: "the generator blocked the scene for a **content rule**. Tell me what you want to show and I'll rewrite it in a way that passes."
+        timeout: "the generation **took too long** and timed out. It may be generator instability — want me to try again?"
+        generic: "the generator refused this scene. Want to try again or change its idea? If you can, describe it another way and I'll redo it."
+      chat:
+        insufficient_credits:
+          one: "You have %{count} credit — not enough to redo this scene. Buy more credits in your subscription and we'll keep going. 😉"
+          other: "You have %{count} credits — not enough to redo this scene. Buy more credits in your subscription and we'll keep going. 😉"
+        needs_description_reply: "To create this scene I need to know what should appear in it. Tell me what to show (setting, action, characters) and I'll add it."
+        apply_error_single: "%{message} Tell me how you'd like to adjust it."
+        apply_error_multiple: "I couldn't apply some changes: %{messages}."
+        generate_reply: "Got it! I have what I need — building your video now. ✨"
+        generate_error: "I can't generate yet: %{error}"
+        already_generating: "The video is already being built — tell me what you'd like to adjust in the scenes."
+        original_request_separator: "--- Original user request (keep every detail) ---"
+        cancel_reply: "Alright, I canceled the generation. The scenes stay as they are — tell me what you'd like to do with them."
+        cancel_error: "I couldn't cancel: %{error}"
+        music_removed: "Done, I removed the music."
+        music_changed: "Alright, I swapped the track!"
+        music_error: "I couldn't change the music: %{error}"
+        voice_reply: "Alright, changing the voice and redoing the scenes with the new voice…"
+        voice_error: "I couldn't change the voice: %{error}"
+        identity_reply: "Alright, adjusting the whole video's look and redoing the scenes…"
+        identity_error: "I couldn't adjust it: %{error}"
+        finalize_reply: "Got it! Generating the final high-quality version — I'll let you know when it's ready."
+        finalize_error: "I can't finalize yet: %{error}"
+        scene_note: "Scene %{n}: %{note}"
+        reference_attached: "reference attached"
+        per_scene_notes_header: "Per-scene notes:"
+        fallback: "I couldn't process that right now — could you rephrase what you'd like to change?"
+        default_redo_one: "Redoing scene %{scenes}…"
+        default_redo_many: "Redoing scenes %{scenes}…"
+        default_ack: "Got it."

@@ -1,7 +1,8 @@
-<% page_title = content_for?(:title) ? yield(:title) : "agencios — o sistema operacional da sua agência" %>
-<% page_description = content_for?(:description) ? yield(:description) : "Do brief ao post no ar: um funil de produção com IA, publicação multi-rede, métricas e cobrança. Tudo que sua agência de social media precisa para escalar." %>
+<% page_title = content_for?(:title) ? yield(:title) : t('pages.layout.default_title') %>
+<% page_description = content_for?(:description) ? yield(:description) : t('pages.layout.default_description') %>
+<% og_locale = I18n.locale.to_s == 'en' ? 'en_US' : 'pt_BR' %>
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="<%= I18n.locale %>">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -11,6 +12,11 @@
     <title><%= page_title %></title>
     <meta name="description" content="<%= page_description %>" />
     <link rel="canonical" href="<%= request.original_url %>" />
+    <% if @alternate_urls %>
+      <link rel="alternate" hreflang="pt-BR" href="<%= @alternate_urls['pt-BR'] %>" />
+      <link rel="alternate" hreflang="en" href="<%= @alternate_urls['en'] %>" />
+      <link rel="alternate" hreflang="x-default" href="<%= @alternate_urls['pt-BR'] %>" />
+    <% end %>
 
     <!-- Open Graph / social -->
     <meta property="og:type" content="website" />
@@ -18,7 +24,7 @@
     <meta property="og:title" content="<%= page_title %>" />
     <meta property="og:description" content="<%= page_description %>" />
     <meta property="og:url" content="<%= request.original_url %>" />
-    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:locale" content="<%= og_locale %>" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="<%= page_title %>" />
     <meta name="twitter:description" content="<%= page_description %>" />

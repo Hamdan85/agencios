@@ -1,5 +1,5 @@
-Olá<%= @client.name.present? ? ", #{@client.name}" : "" %>!
+<%= t('mailers.common.hello') %><%= @client.name.present? ? ", #{@client.name}" : "" %>!
 
-A cobrança <%= @invoice.external_reference %> no valor de <%= email_brl(@invoice.amount_cents) %>, emitida pela <%= @workspace.name %>, foi cancelada. Nenhum pagamento é necessário.
+<%= t('mailers.invoice.canceled.text_body', reference: @invoice.external_reference, amount: email_brl(@invoice.amount_cents), workspace: @workspace.name) %>
 
-Em caso de dúvida, fale diretamente com a <%= @workspace.name %>.
+<%= t('mailers.invoice.canceled.text_note', workspace: @workspace.name) %>

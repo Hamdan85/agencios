@@ -1,8 +1,8 @@
-Olá, <%= @recipient.display_name %>!
+<%= t('mailers.common.hello') %>, <%= @recipient.display_name %>!
 
-O post do ticket "<%= @ticket.display_title %>" foi publicado com sucesso em <%= @provider %>.
-As métricas começam a ser monitoradas automaticamente.
+<%= t('mailers.post.published.text_body', title: @ticket.display_title, provider: @provider) %>
+<%= t('mailers.post.published.text_monitoring') %>
 <% if @post.permalink.present? %>
-Ver publicação: <%= @post.permalink %>
+<%= t('mailers.post.published.text_view') %> <%= @post.permalink %>
 <% end %>
-Abrir ticket: <%= @ticket_url %>
+<%= t('mailers.common.open_ticket') %>: <%= @ticket_url %>

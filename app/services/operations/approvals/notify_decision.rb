@@ -18,7 +18,7 @@ module Operations
       def call
         # `history: false` when the caller already wrote a granular note (e.g. a
         # per-slot approval) and only needs the responsible-user notification.
-        Operations::Notes::Create.call(ticket: @ticket, user: nil, kind: :system, body: note_body) if @history
+        write_history_note if @history
         notify_responsible
         @ticket
       end
@@ -29,18 +29,28 @@ module Operations
 
       def actor_name
         name = @actor.respond_to?(:name) ? @actor.name.to_s : ''
-        name.presence || 'Cliente'
+        name.presence || I18n.t('notes.approval.default_actor')
       end
 
       def subject_label
-        @creative ? "o criativo (#{@creative.creative_type})" : 'o conteúdo'
+        return I18n.t('notes.approval.subject_content') unless @creative
+
+        I18n.t('notes.approval.subject_creative', type: @creative.creative_type)
       end
 
-      def note_body
+      def write_history_note
         if approved?
-          "#{actor_name} aprovou #{subject_label}."
+          Operations::Notes::Create.call(
+            ticket: @ticket, user: nil, kind: :system,
+            i18n_key: 'notes.approval.approved',
+            i18n_params: { actor: actor_name, subject: subject_label }
+          )
         else
-          "#{actor_name} pediu ajustes em #{subject_label}: #{@feedback.to_s.truncate(200)}"
+          Operations::Notes::Create.call(
+            ticket: @ticket, user: nil, kind: :system,
+            i18n_key: 'notes.approval.changes_requested',
+            i18n_params: { actor: actor_name, subject: subject_label, feedback: @feedback.to_s.truncate(200) }
+          )
         end
       end
 
@@ -55,8 +65,9 @@ module Operations
 
         Operations::Push::Notify.call(
           user: recipient,
-          title: approved? ? 'Conteúdo aprovado ✅' : 'Cliente pediu ajustes ✍️',
-          body: "#{@ticket.display_title}: #{approved? ? 'aprovado pelo cliente.' : @feedback.to_s.truncate(120)}",
+          title_key: approved? ? 'push.approval.approved.title' : 'push.approval.changes_requested.title',
+          body_key: approved? ? 'push.approval.approved.body' : 'push.approval.changes_requested.body',
+          params: { title: @ticket.display_title, feedback: @feedback.to_s.truncate(120) },
           path: "/tickets/#{@ticket.id}"
         )
       end

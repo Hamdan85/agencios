@@ -15,13 +15,6 @@ module Operations
         references: %w[product logo style camera motion reference]
       }.freeze
 
-      # User-facing role labels (PT — this is display copy).
-      ROLE_LABELS = {
-        'character' => 'Personagem', 'avatar' => 'Apresentador', 'scene' => 'Cenário',
-        'product' => 'Produto', 'logo' => 'Logo', 'style' => 'Estilo',
-        'camera' => 'Câmera', 'motion' => 'Movimento', 'reference' => 'Referência'
-      }.freeze
-
       # Roles that carry a locked-identity TEXT description (so an image-less video
       # still lists a regeneratable character/scenario).
       IDENTITY_FIELD = { 'character' => 'character', 'scene' => 'scenario' }.freeze
@@ -79,9 +72,16 @@ module Operations
 
       def asset(key:, role:, image_url:, kind:)
         {
-          key: key, role: role, role_label: ROLE_LABELS.fetch(role, role),
+          key: key, role: role, role_label: role_label(role),
           image_url: image_url, kind: kind, description: description_for(key, role)
         }
+      end
+
+      # User-facing role label (display copy). Runs in-request, so the requester's
+      # locale is already set. Falls back to the raw role for unknown keys.
+      def role_label(role)
+        key = "operations.video.roles.#{role}"
+        I18n.exists?(key) ? I18n.t(key) : role
       end
 
       # A stored PT description wins; else the locked-identity text for the role.

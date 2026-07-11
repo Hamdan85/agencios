@@ -13,10 +13,10 @@
         <span class="size-2.5 rounded-full bg-rose/80"></span>
         <span class="size-2.5 rounded-full bg-amber/80"></span>
         <span class="size-2.5 rounded-full bg-emerald/80"></span>
-        <span class="ml-3 font-mono text-[11px] text-white/40">quadro · produção</span>
+        <span class="ml-3 font-mono text-[11px] text-white/40"><%= t('pages.board_preview.chrome') %></span>
         <span class="ml-auto inline-flex items-center gap-1.5 rounded-full bg-emerald/15 px-2 py-1 text-[10px] font-bold text-emerald">
           <span class="pulse-ring relative flex size-1.5 rounded-full bg-emerald text-emerald"></span>
-          tempo real
+          <%= t('pages.board_preview.realtime') %>
         </span>
       </div>
 
@@ -50,24 +50,24 @@
     <%# floating context chips (desktop only) %>
     <div class="anim-float pointer-events-none absolute -right-5 -top-5 hidden w-52 rounded-2xl border border-white/10 bg-brand-ink2/90 p-3 shadow-xl backdrop-blur lg:block" style="transform-style: preserve-3d;">
       <div class="flex items-center gap-1.5 text-[11px] font-bold text-amber">
-        <%= icon "sparkles", size: 13 %> IA · resumo
+        <%= icon "sparkles", size: 13 %> <%= t('pages.board_preview.ai_summary_label') %>
       </div>
-      <p class="mt-1 text-[11px] leading-snug text-white/70">O gancho de bastidores puxou +38% de alcance. Repetir no próximo ciclo.</p>
+      <p class="mt-1 text-[11px] leading-snug text-white/70"><%= t('pages.board_preview.ai_summary_text') %></p>
     </div>
 
     <div class="anim-float-sm pointer-events-none absolute -bottom-6 -left-6 hidden items-center gap-2 rounded-2xl border border-white/10 bg-brand-ink2/90 px-3.5 py-2.5 shadow-xl backdrop-blur lg:flex">
       <span class="flex size-8 items-center justify-center rounded-xl bg-emerald/15 text-emerald"><%= icon "trending-up", size: 16, stroke: 2.5 %></span>
       <div>
         <p class="font-display text-sm font-extrabold leading-none text-white">+38%</p>
-        <p class="mt-0.5 text-[10px] text-white/50">alcance vs. média</p>
+        <p class="mt-0.5 text-[10px] text-white/50"><%= t('pages.board_preview.reach_vs_avg') %></p>
       </div>
     </div>
 
     <div class="anim-float-slow pointer-events-none absolute -bottom-8 right-8 hidden items-center gap-2 rounded-2xl border border-white/10 bg-brand-ink2/90 px-3.5 py-2.5 shadow-xl backdrop-blur lg:flex">
       <span class="flex size-8 items-center justify-center rounded-xl bg-pink/15 text-pink"><%= icon "wand-sparkles", size: 16, stroke: 2.3 %></span>
       <div>
-        <p class="font-display text-xs font-bold leading-none text-white">Carrossel gerado</p>
-        <p class="mt-0.5 text-[10px] text-white/50">com a identidade da marca</p>
+        <p class="font-display text-xs font-bold leading-none text-white"><%= t('pages.board_preview.carousel_generated') %></p>
+        <p class="mt-0.5 text-[10px] text-white/50"><%= t('pages.board_preview.carousel_brand') %></p>
       </div>
     </div>
   </div>

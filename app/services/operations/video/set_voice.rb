@@ -18,14 +18,14 @@ module Operations
 
       def call
         generation = @creative.generation
-        raise Operations::Errors::Invalid, 'Vídeo sem geração associada' unless generation
+        raise Operations::Errors::Invalid, I18n.t('operations.video.errors.set_voice.no_generation') unless generation
 
         voice_id = VoiceOptions.resolve(@voice)
-        raise Operations::Errors::Invalid, 'Voz não encontrada' if voice_id.blank?
+        raise Operations::Errors::Invalid, I18n.t('operations.video.errors.set_voice.voice_not_found') if voice_id.blank?
 
         scenes = @creative.video_scenes.ordered.to_a
-        raise Operations::Errors::Invalid, 'Vídeo sem cenas' if scenes.empty?
-        raise Operations::Errors::Invalid, 'Espere as cenas terminarem para trocar a voz' if busy?(scenes)
+        raise Operations::Errors::Invalid, I18n.t('operations.video.errors.set_voice.no_scenes') if scenes.empty?
+        raise Operations::Errors::Invalid, I18n.t('operations.video.errors.set_voice.busy') if busy?(scenes)
 
         generation.update!(params: (generation.params || {}).merge(
           'voice_id' => voice_id, 'voice_label' => @voice.presence
@@ -34,7 +34,7 @@ module Operations
         Operations::Credits::Debit.call(
           workspace: @creative.workspace,
           amount: Pricing.credits_for(kind: :video, seconds: scenes.sum { |s| s.duration_seconds.to_i }),
-          generation: generation, description: 'Trocar a voz do vídeo (refazer cenas)'
+          generation: generation, description: ledger_description
         )
         generation.update!(status: :processing)
         @creative.update!(status: :generating) unless @creative.status_generating?
@@ -50,6 +50,16 @@ module Operations
       end
 
       private
+
+      # Persisted to the workspace credit ledger (a team-shared artifact), so it
+      # is rendered once in the workspace language at write time.
+      def ledger_description
+        I18n.with_locale(workspace_locale(@creative.workspace)) do
+          I18n.t('operations.video.ledger.set_voice')
+        end
+      end
+
+      def workspace_locale(ws) = I18n.available_locales.find { |l| l.to_s == ws&.locale.to_s } || I18n.default_locale
 
       def busy?(scenes)
         scenes.any? { |s| %w[rendering fresh].include?(s.render_state) }

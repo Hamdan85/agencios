@@ -8,7 +8,9 @@ class PostMailer < ApplicationMailer
     @ticket = post.ticket
     @provider = post.social_account.provider.to_s.titleize
     @ticket_url = "#{SystemConfig.app_host}/tickets/#{@ticket.id}"
-    mail(to: recipient.email, subject: "Post publicado em #{@provider} ✅")
+    with_recipient_locale(recipient) do
+      mail(to: recipient.email, subject: I18n.t('mailers.post.published.subject', provider: @provider))
+    end
   end
 
   def failed(post:, recipient:, reason: nil)
@@ -18,6 +20,8 @@ class PostMailer < ApplicationMailer
     @provider = post.social_account.provider.to_s.titleize
     @reason = reason || post.failure_reason
     @ticket_url = "#{SystemConfig.app_host}/tickets/#{@ticket.id}"
-    mail(to: recipient.email, subject: "Falha ao publicar em #{@provider}")
+    with_recipient_locale(recipient) do
+      mail(to: recipient.email, subject: I18n.t('mailers.post.failed.subject', provider: @provider))
+    end
   end
 end

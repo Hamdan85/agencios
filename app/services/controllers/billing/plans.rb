@@ -13,6 +13,7 @@ module Controllers
           annual = Pricing.annual_price_cents_for(p[:key])
           p.slice(:key, :name, :price_cents, :seats, :features)
            .merge(
+             name: Pricing.localize_name(p[:key], p[:name]),
              features: Pricing.localize_features(p[:features]),
              included_credits: p[:included_credits],
              annual_price_cents: annual,

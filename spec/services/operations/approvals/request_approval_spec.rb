@@ -44,6 +44,6 @@ RSpec.describe Operations::Approvals::RequestApproval do
     end
 
     expect(ActionMailer::Base.deliveries).to be_empty
-    expect(ticket.reload.notes.last.body).to include('sem e-mail')
+    expect(ticket.reload.notes.last.display_body).to include('sem e-mail')
   end
 end

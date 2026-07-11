@@ -28,7 +28,7 @@ module Operations
         # caller catches to simply skip the anchor rather than fail the video).
         Operations::Credits::Debit.call(
           workspace: @generation.workspace, amount: Pricing.credits_for(kind: :image),
-          generation: @generation, description: "Referência gerada do vídeo (#{@role})"
+          generation: @generation, description: ledger_description
         )
 
         result = begin
@@ -47,6 +47,17 @@ module Operations
       end
 
       private
+
+      # Persisted to the workspace credit ledger (a team-shared artifact), so it
+      # is rendered once in the workspace language at write time. @role is a code
+      # token (character/scene), passed as data.
+      def ledger_description
+        I18n.with_locale(workspace_locale(@generation.workspace)) do
+          I18n.t('operations.video.ledger.generate_reference', role: @role)
+        end
+      end
+
+      def workspace_locale(ws) = I18n.available_locales.find { |l| l.to_s == ws&.locale.to_s } || I18n.default_locale
 
       # A clean reference plate: the subject fully in frame on a neutral ground,
       # no lettering/logo (those come from the actual scenes/refs).

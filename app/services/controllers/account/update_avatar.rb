@@ -10,7 +10,7 @@ module Controllers
 
       def call
         file = @params[:avatar]
-        raise Operations::Errors::Invalid, 'Nenhuma imagem enviada.' if file.blank?
+        raise Operations::Errors::Invalid, I18n.t('api.account.no_image_uploaded') if file.blank?
 
         user.avatar.attach(file)
         Controllers::Me::Show.call

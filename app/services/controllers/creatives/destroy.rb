@@ -11,7 +11,7 @@ module Controllers
         require_manager!
         ticket = workspace.tickets.find(@params[:ticket_id])
         ticket.creatives.find(@params[:id]).destroy!
-        { message: 'Criativo removido.' }
+        { message: I18n.t('api.creatives.removed') }
       end
     end
   end

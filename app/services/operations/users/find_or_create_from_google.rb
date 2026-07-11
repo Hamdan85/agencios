@@ -46,7 +46,7 @@ module Operations
       end
 
       def create_new
-        raise Operations::Errors::Invalid, 'E-mail do Google não verificado.' unless @email_verified
+        raise Operations::Errors::Invalid, I18n.t('operations.users.google_email_unverified') unless @email_verified
 
         user = User.create!(
           email: @email,

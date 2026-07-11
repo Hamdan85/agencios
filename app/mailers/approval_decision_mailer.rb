@@ -13,7 +13,10 @@ class ApprovalDecisionMailer < ApplicationMailer
     @client = ticket.project.client
     @brand_workspace = ticket.workspace
     @url = app_url("/tickets/#{ticket.id}")
-    subject = @approved ? "Cliente aprovou — #{@project.name}" : "Cliente pediu ajustes — #{@project.name}"
-    mail(to: recipient.email, subject: subject)
+    with_recipient_locale(recipient) do
+      subject = @approved ? I18n.t('mailers.approval_decision.decided.subject_approved', project: @project.name) :
+                            I18n.t('mailers.approval_decision.decided.subject_changes', project: @project.name)
+      mail(to: recipient.email, subject: subject)
+    end
   end
 end

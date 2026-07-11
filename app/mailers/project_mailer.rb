@@ -2,15 +2,6 @@
 
 # Client-facing project notifications (the agency looping its client in).
 class ProjectMailer < ApplicationMailer
-  # PT-BR labels for creative types, mirroring the frontend's CREATIVE_TYPE_META
-  # (app/frontend/lib/constants.js) — this email is the one place that renders
-  # them server-side.
-  CREATIVE_TYPE_LABELS = {
-    'reel' => 'Reel', 'feed_image' => 'Imagem', 'carousel' => 'Carrossel',
-    'story' => 'Story', 'ugc_video' => 'Vídeo UGC', 'ad' => 'Anúncio',
-    'thumbnail' => 'Thumbnail', 'cover' => 'Capa'
-  }.freeze
-
   # A read-only snapshot of the project's planned/produced content, sent to
   # whichever addresses the manager typed in (not necessarily the client's
   # registered email). One row per ticket: name, type(s), and target date —
@@ -20,12 +11,17 @@ class ProjectMailer < ApplicationMailer
     @client = project.client
     @tickets = project.tickets.active.board_ordered
     @brand_workspace = project.workspace
-    mail(to: recipients, subject: "Escopo de conteúdo — #{@project.name}")
+    with_recipient_locale(@client) do
+      mail(to: recipients, subject: I18n.t('mailers.project.scope_summary.subject', project: @project.name))
+    end
   end
 
   helper_method :creative_type_label
 
+  # Creative-type labels mirror the frontend's CREATIVE_TYPE_META
+  # (app/frontend/lib/constants.js) — this email is the one place that renders
+  # them server-side.
   def creative_type_label(key)
-    CREATIVE_TYPE_LABELS[key.to_s] || key.to_s.humanize
+    I18n.t("mailers.project.creative_types.#{key}", default: key.to_s.humanize)
   end
 end

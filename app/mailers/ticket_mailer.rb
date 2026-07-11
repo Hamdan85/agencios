@@ -9,6 +9,8 @@ class TicketMailer < ApplicationMailer
     @actor_name = actor&.display_name
     @project = ticket.project
     @ticket_url = "#{SystemConfig.app_host}/tickets/#{ticket.id}"
-    mail(to: assignee.email, subject: "Novo ticket atribuído a você: #{ticket.display_title}")
+    with_recipient_locale(assignee) do
+      mail(to: assignee.email, subject: I18n.t('mailers.ticket.assigned.subject', title: ticket.display_title))
+    end
   end
 end

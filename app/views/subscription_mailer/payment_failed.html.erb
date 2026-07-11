@@ -1,17 +1,16 @@
-<% content_for :preheader do %>Não conseguimos processar o pagamento da sua assinatura.<% end %>
-<% content_for :eyebrow do %>Assinatura<% end %>
+<% content_for :preheader do %><%= t('mailers.subscription.payment_failed.preheader') %><% end %>
+<% content_for :eyebrow do %><%= t('mailers.subscription.payment_failed.eyebrow') %><% end %>
 
 <h1 style="margin:0 0 16px;font-family:'Sora','Inter',Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#18122B;">
-  Falha no pagamento
+  <%= t('mailers.subscription.payment_failed.heading') %>
 </h1>
 
 <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#564F6F;">
-  Olá<%= @owner&.display_name.present? ? ", #{@owner.display_name}" : "" %>. Não conseguimos processar o pagamento da assinatura
-  <strong><%= @plan_label %></strong> da <strong><%= @workspace.name %></strong>.
+  <%= t('mailers.common.hello') %><%= @owner&.display_name.present? ? ", #{@owner.display_name}" : "" %>. <%= t('mailers.subscription.payment_failed.body_html', plan: @plan_label, workspace: @workspace.name) %>
 </p>
 
 <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#564F6F;">
-  Para evitar a suspensão do acesso, atualize sua forma de pagamento. Faremos uma nova tentativa automaticamente nos próximos dias.
+  <%= t('mailers.subscription.payment_failed.body2') %>
 </p>
 
-<%= email_button("Atualizar pagamento", @billing_url, color: "#F43F5E") %>
+<%= email_button(t('mailers.subscription.payment_failed.button'), @billing_url, color: "#F43F5E") %>

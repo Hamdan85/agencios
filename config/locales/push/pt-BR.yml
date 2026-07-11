@@ -7,3 +7,30 @@ pt-BR:
       title: "Créditos insuficientes ⚠️"
       body: "Faltam créditos para gerar o conteúdo."
       body_with_context: "Faltam créditos para gerar o conteúdo (%{context})."
+    ticket_assigned:
+      title: "Novo ticket atribuído a você"
+    ticket_reassigned:
+      title: "Ticket atribuído a você"
+    subtask_assigned:
+      title: "Nova tarefa atribuída a você"
+    invoice_paid:
+      title: "Cobrança paga 💸"
+    approval:
+      approved:
+        title: "Conteúdo aprovado ✅"
+        body: "%{title}: aprovado pelo cliente."
+      changes_requested:
+        title: "Cliente pediu ajustes ✍️"
+        body: "%{title}: %{feedback}"
+    autopilot:
+      completed:
+        title: "Campanha no piloto automático ✅"
+        body: "%{title}: criativos gerados e prontos para aprovação."
+      failed:
+        title: "Piloto automático interrompido"
+        body: "%{title}: %{reason}"
+    post:
+      published:
+        title: "Post publicado em %{provider} ✅"
+      failed:
+        title: "Falha ao publicar em %{provider}"

@@ -39,10 +39,12 @@ module Operations
       # (named characters, must-shows, exact lines) instead of truncating them.
       STORYBOARD_MAX_TOKENS = 4000
 
+      # caption is resolved from operations.video.beats.<key> at use time (in the
+      # workspace language, since it is stored on the scene as display copy).
       PRODUCT_BEATS = [
-        { key: 'hook',    caption: 'Abertura que prende a atenção', hint: 'attention-grabbing opening shot of the product' },
-        { key: 'feature', caption: 'Produto em destaque',          hint: 'the product in dynamic close-up, hero framing' },
-        { key: 'cta',     caption: 'Chamada para ação',            hint: 'closing call-to-action beat' }
+        { key: 'hook',    hint: 'attention-grabbing opening shot of the product' },
+        { key: 'feature', hint: 'the product in dynamic close-up, hero framing' },
+        { key: 'cta',     hint: 'closing call-to-action beat' }
       ].freeze
 
       def initialize(ctx:, mode:, script: nil, brief: nil, total_duration:, aspect_ratio:,
@@ -355,9 +357,17 @@ module Operations
                        'same product, setting, lighting and look; advance the action forward, never ' \
                        'restart or re-establish the shot'
                    end
-          { caption: beat[:caption], prompt: prompt }
+          { caption: beat_caption(beat[:key]), prompt: prompt }
         end
       end
+
+      # The deterministic beat's display caption, in the workspace language (it is
+      # stored on the scene, a team-shared artifact, at generation time).
+      def beat_caption(key)
+        I18n.with_locale(workspace_locale(@ctx.workspace)) { I18n.t("operations.video.beats.#{key}") }
+      end
+
+      def workspace_locale(ws) = I18n.available_locales.find { |l| l.to_s == ws&.locale.to_s } || I18n.default_locale
 
       def fallback_beat
         { prompt: @ctx.topic.to_s, caption: @ctx.topic.to_s[0, 90] }

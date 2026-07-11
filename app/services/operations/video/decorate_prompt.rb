@@ -357,11 +357,16 @@ module Operations
       end
 
       # The generic default voice carries no real direction — skip it rather than
-      # inject boilerplate a literal model might read as content.
-      DEFAULT_VOICE = 'tom profissional, próximo e criativo'
+      # inject boilerplate a literal model might read as content. This is a
+      # comparison SENTINEL, not emitted copy: it must byte-match the default that
+      # Tickets::CreativeContext#brand_voice falls back to, which is a fixed
+      # pt-BR string, so it is rendered in the default locale (not the UI locale).
+      def default_voice
+        I18n.t('operations.video.default_voice', locale: I18n.default_locale)
+      end
 
       def brand_voice_meaningful?
-        @ctx.brand_voice.present? && @ctx.brand_voice != DEFAULT_VOICE
+        @ctx.brand_voice.present? && @ctx.brand_voice != default_voice
       end
     end
   end

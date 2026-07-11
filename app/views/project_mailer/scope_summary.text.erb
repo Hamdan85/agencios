@@ -1,13 +1,13 @@
-Olá<%= @client&.name.present? ? ", #{@client.name}" : "" %>!
+<%= t('mailers.common.hello') %><%= @client&.name.present? ? ", #{@client.name}" : "" %>!
 
-Segue o panorama do conteúdo planejado para <%= @project.name %>.
+<%= t('mailers.project.scope_summary.text_body', project: @project.name) %>
 
 <% if @tickets.any? %>
 <% @tickets.each do |ticket| %>
 - <%= ticket.display_title %>
-  <%= ticket.creative_types_list.map { |t| creative_type_label(t) }.join(" · ").presence || "—" %> · <%= status_label(ticket.status) %> · <%= ticket.scheduled_at ? email_date(ticket.scheduled_at) : "Data a definir" %>
+  <%= ticket.creative_types_list.map { |type| creative_type_label(type) }.join(" · ").presence || "—" %> · <%= status_label(ticket.status) %> · <%= ticket.scheduled_at ? email_date(ticket.scheduled_at) : t('mailers.project.scope_summary.date_tbd') %>
 <% end %>
 <% else %>
-Nenhum ticket criado nesta campanha ainda.
+<%= t('mailers.project.scope_summary.empty') %>
 <% end %>
-Datas sujeitas a ajustes durante a produção.
+<%= t('mailers.project.scope_summary.footer') %>

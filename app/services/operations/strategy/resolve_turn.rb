@@ -49,10 +49,9 @@ module Operations
       def generate_plan
         return GeneratePlan.call(session: @session) unless @session.project.tickets.exists?
 
-        note = 'Esta campanha já tem tickets em andamento, então não vou refazer o plano do zero ' \
-               '(isso apagaria o trabalho existente). Posso **adicionar** peças novas, **editar** ' \
-               'ou **remover** tickets específicos — me diga o que ajustar. Se quiser mesmo um plano ' \
-               'novo, crie uma nova campanha.'
+        note = I18n.with_locale(workspace_locale(@session.workspace)) do
+          I18n.t('operations.strategy.resolve_turn.replan_refused')
+        end
         @session.push_message(role: :assistant, content: note)
         @session.save!
         Broadcaster.strategy_session(@session, 'assistant_note', content: note)
@@ -74,11 +73,16 @@ module Operations
 
       def decide
         client = ai_client('strategy_action')
+        system, prompt = I18n.with_locale(workspace_locale(@session.workspace)) do
+          [
+            I18n.t('operations.strategy.resolve_turn.decide_system'),
+            "#{conversation(@session)}\n\n#{cards_context(@session)}\n\n" \
+              "#{project_tickets_context(@session)}\n\n#{I18n.t('operations.strategy.resolve_turn.decide_instruction')}"
+          ]
+        end
         result = client.generate(
-          system: 'Você decide a próxima ação do planejamento de conteúdo a partir da conversa, ' \
-                  'do plano proposto e dos tickets que a campanha já tem.',
-          prompt: "#{conversation(@session)}\n\n#{cards_context(@session)}\n\n" \
-                  "#{project_tickets_context(@session)}\n\nDecida a ação chamando a ferramenta.",
+          system: system,
+          prompt: prompt,
           tool: Prompts::StrategyPlanner.action_tool,
           max_tokens: ACTION_MAX_TOKENS
         )

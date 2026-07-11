@@ -1,11 +1,11 @@
-Olá<%= @client.name.present? ? ", #{@client.name}" : "" %>!
+<%= t('mailers.common.hello') %><%= @client.name.present? ? ", #{@client.name}" : "" %>!
 
-Segue o link para pagar sua cobrança com a <%= @workspace.name %>.
+<%= t('mailers.invoice.payment_link.text_body', workspace: @workspace.name) %>
 
-Referência: <%= @invoice.external_reference %>
-<% if @invoice.description.present? %>Descrição: <%= @invoice.description %>
-<% end %><% if @invoice.due_date %>Vencimento: <%= email_date(@invoice.due_date) %>
-<% end %>Total: <%= email_brl(@invoice.amount_cents) %>
+<%= t('mailers.invoice.fields.reference') %>: <%= @invoice.external_reference %>
+<% if @invoice.description.present? %><%= t('mailers.invoice.fields.description') %>: <%= @invoice.description %>
+<% end %><% if @invoice.due_date %><%= t('mailers.invoice.fields.due_date') %>: <%= email_date(@invoice.due_date) %>
+<% end %><%= t('mailers.invoice.fields.total') %>: <%= email_brl(@invoice.amount_cents) %>
 
-Pagar agora: <%= @payment_url %>
-(Mercado Pago — Pix, boleto ou cartão)
+<%= t('mailers.invoice.pay_now') %>: <%= @payment_url %>
+<%= t('mailers.invoice.mercadopago_short') %>

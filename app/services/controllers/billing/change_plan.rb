@@ -18,7 +18,7 @@ module Controllers
       def call
         require_owner!
         plan_meta = Plans.find(@params[:plan])
-        raise Operations::Errors::Invalid, 'Plano inválido.' unless plan_meta
+        raise Operations::Errors::Invalid, I18n.t('api.billing.invalid_plan') unless plan_meta
         raise Operations::Errors::SeatLimitReached, seat_overage_message(plan_meta) if seat_overage?(plan_meta)
 
         interval = @params[:interval].presence || 'month'
@@ -45,8 +45,12 @@ module Controllers
       def seat_overage?(plan_meta) = workspace.memberships.count > plan_meta[:seats].to_i
 
       def seat_overage_message(plan_meta)
-        "O plano #{plan_meta[:name]} permite até #{plan_meta[:seats]} assentos, mas o workspace " \
-          "tem #{workspace.memberships.count} membros. Remova membros antes de trocar de plano."
+        I18n.t(
+          'api.billing.seat_overage',
+          plan: plan_meta[:name],
+          seats: plan_meta[:seats],
+          members: workspace.memberships.count
+        )
       end
 
       def update_via_stripe(subscription, plan_meta, interval)

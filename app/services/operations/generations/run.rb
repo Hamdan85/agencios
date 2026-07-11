@@ -43,7 +43,7 @@ module Operations
             client_id: @params[:client_id]
           )
         else
-          raise Operations::Errors::Invalid, "Tipo de geração desconhecido: #{@kind}"
+          raise Operations::Errors::Invalid, I18n.t('operations.generations.unknown_kind', kind: @kind)
         end
       end
 

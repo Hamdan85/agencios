@@ -8,6 +8,8 @@ class SubtaskMailer < ApplicationMailer
     @actor_name = actor&.display_name
     @ticket = subtask.ticket
     @ticket_url = "#{SystemConfig.app_host}/tickets/#{@ticket.id}"
-    mail(to: assignee.email, subject: "Nova tarefa atribuída a você: #{subtask.title}")
+    with_recipient_locale(assignee) do
+      mail(to: assignee.email, subject: I18n.t('mailers.subtask.assigned.subject', title: subtask.title))
+    end
   end
 end

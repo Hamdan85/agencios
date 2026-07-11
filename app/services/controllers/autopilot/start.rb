@@ -27,7 +27,7 @@ module Controllers
       def start_ticket
         ticket = workspace.tickets.find(@params[:id])
         unless Operations::Autopilot::Eligibility.call(ticket: ticket)[:eligible]
-          raise Operations::Errors::Invalid, 'Este ticket exige criativos manuais e não pode rodar no modo GO.'
+          raise Operations::Errors::Invalid, I18n.t('api.autopilot.ticket_requires_manual_creatives')
         end
 
         ensure_credits!([ticket])
@@ -43,7 +43,7 @@ module Controllers
         estimate = Operations::Autopilot::Estimate.call(tickets: tickets, workspace: workspace)
         unless estimate[:eligible]
           raise Operations::Errors::Invalid,
-                'Há tickets que exigem criativos manuais. Resolva-os antes de iniciar a campanha.'
+                I18n.t('api.autopilot.project_requires_manual_creatives')
         end
 
         ensure_credits!(tickets)

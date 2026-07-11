@@ -21,7 +21,9 @@ module Operations
         # AiUsageLog. Build a report/metric of platform loss = SUM(AiUsageLog.cost_cents)
         # for generations that ended `failed` (and were refunded), sliced by kind +
         # provider + workspace, so we can see how much failures actually cost us.
-        Operations::Credits::Refund.call(generation: @generation, description: 'Estorno — geração falhou')
+        # description omitted → Credits::Refund records it via the localized
+        # ledger key `credits.ledger.refund_failed_generation` (rendered per reader).
+        Operations::Credits::Refund.call(generation: @generation)
 
         @generation.update!(status: :failed, failure_reason: @reason)
         @generation.creative&.update!(status: :failed)

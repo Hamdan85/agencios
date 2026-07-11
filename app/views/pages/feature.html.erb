@@ -1,4 +1,4 @@
-<% content_for :title, "#{@feature[:name]} — agencios" %>
+<% content_for :title, t('pages.feature.title', name: @feature[:name]) %>
 <% content_for :description, @feature[:subhead] %>
 <% c = @feature[:color] %>
 
@@ -7,7 +7,7 @@
   <div class="absolute inset-0 bg-aurora opacity-70"></div>
   <div class="relative mx-auto max-w-6xl px-5 pb-20 pt-28 sm:px-8 sm:pt-36">
     <nav class="mb-8 flex items-center gap-1.5 text-xs font-semibold text-white/50">
-      <%= link_to "Funcionalidades", features_path, class: "transition hover:text-white" %>
+      <%= link_to t('pages.feature.breadcrumb'), features_path, class: "transition hover:text-white" %>
       <%= icon "chevron-right", size: 13 %>
       <span class="text-white/80"><%= @feature[:name] %></span>
     </nav>
@@ -23,9 +23,9 @@
         <p class="mt-5 max-w-lg text-lg text-white/70"><%= @feature[:subhead] %></p>
         <div class="mt-8 flex flex-wrap items-center gap-3">
           <%= link_to "/cadastro", class: "inline-flex h-12 items-center gap-2 rounded-xl bg-brand-gradient px-6 text-base font-semibold text-white shadow-[0_10px_28px_-8px_rgba(124,58,237,0.7)] transition hover:brightness-105" do %>
-            Começar grátis <%= icon "arrow-right", size: 18 %>
+            <%= t('pages.feature.cta_start_free') %> <%= icon "arrow-right", size: 18 %>
           <% end %>
-          <%= link_to "Ver planos", pricing_path, class: "inline-flex h-12 items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 text-base font-semibold text-white transition hover:bg-white/10" %>
+          <%= link_to t('pages.feature.cta_view_plans'), pricing_path, class: "inline-flex h-12 items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 text-base font-semibold text-white transition hover:bg-white/10" %>
         </div>
         <ul class="mt-8 flex flex-wrap gap-x-5 gap-y-2">
           <% @feature[:highlights].each do |h| %>
@@ -46,8 +46,8 @@
 <%# ── Detail points ─────────────────────────────────────────────── %>
 <section class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24">
   <div class="max-w-2xl reveal">
-    <p class="text-xs font-bold uppercase tracking-[0.16em]" style="color: <%= c %>;">Por dentro</p>
-    <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">O que você ganha com <%= @feature[:name] %></h2>
+    <p class="text-xs font-bold uppercase tracking-[0.16em]" style="color: <%= c %>;"><%= t('pages.feature.detail_eyebrow') %></p>
+    <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl"><%= t('pages.feature.detail_title', name: @feature[:name]) %></h2>
   </div>
   <div class="mt-12 grid gap-6 sm:grid-cols-2" data-reveal-group data-reveal-step="80">
     <% @feature[:points].each do |p| %>
@@ -67,10 +67,10 @@
   <div class="mx-auto max-w-6xl px-5 sm:px-8">
     <div class="flex items-end justify-between reveal">
       <div>
-        <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand">Combina com</p>
-        <h2 class="mt-2 font-display text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">Outras funcionalidades</h2>
+        <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand"><%= t('pages.feature.related_eyebrow') %></p>
+        <h2 class="mt-2 font-display text-2xl font-extrabold tracking-tight text-ink sm:text-3xl"><%= t('pages.feature.related_title') %></h2>
       </div>
-      <%= link_to "Ver todas", features_path, class: "hidden items-center gap-1.5 text-sm font-semibold text-brand transition hover:gap-2.5 sm:inline-flex" %>
+      <%= link_to t('pages.feature.related_see_all'), features_path, class: "hidden items-center gap-1.5 text-sm font-semibold text-brand transition hover:gap-2.5 sm:inline-flex" %>
     </div>
     <div class="mt-10 grid gap-6 md:grid-cols-3">
       <% @related.each do |f| %>

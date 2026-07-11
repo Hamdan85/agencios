@@ -29,7 +29,7 @@ RSpec.describe Operations::Approvals::RequestChanges do
 
     expect(c.reload.approval_state).to eq('changes_requested')
     expect(c.client_feedback).to eq('Mais contraste')
-    expect(ticket.notes.where(kind: 'system').last.body).to include('ajustes')
+    expect(ticket.notes.where(kind: 'system').last.display_body).to include('ajustes')
   end
 
   it 'starts a regeneration for a non-video creative under GO' do

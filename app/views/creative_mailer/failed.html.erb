@@ -1,13 +1,12 @@
-<% content_for :preheader do %>Não foi possível concluir a geração do seu <%= @kind_label.downcase %>.<% end %>
-<% content_for :eyebrow do %>Estúdio<% end %>
+<% content_for :preheader do %><%= t('mailers.creative.failed.preheader', kind: @kind_label.downcase) %><% end %>
+<% content_for :eyebrow do %><%= t('mailers.creative.failed.eyebrow') %><% end %>
 
 <h1 style="margin:0 0 16px;font-family:'Sora','Inter',Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#18122B;">
-  Geração não concluída
+  <%= t('mailers.creative.failed.heading') %>
 </h1>
 
 <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#564F6F;">
-  Olá, <%= @user.display_name %>. Infelizmente não conseguimos concluir a geração do seu <strong><%= @kind_label.downcase %></strong>.
-  Nenhuma cobrança de uso foi registrada por esta tentativa.
+  <%= t('mailers.common.hello') %>, <%= @user.display_name %>. <%= t('mailers.creative.failed.body_html', kind: @kind_label.downcase) %>
 </p>
 
 <% if @reason.present? %>
@@ -18,4 +17,4 @@
   </table>
 <% end %>
 
-<%= email_button("Tentar novamente", @url) %>
+<%= email_button(t('mailers.creative.failed.button'), @url) %>

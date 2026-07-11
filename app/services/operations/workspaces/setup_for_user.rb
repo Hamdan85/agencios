@@ -52,7 +52,7 @@ module Operations
       end
 
       def workspace_name
-        @name.presence || "Agência de #{@user.display_name}"
+        @name.presence || I18n.t('operations.workspaces.default_agency_name', name: @user.display_name)
       end
 
       def default_handle

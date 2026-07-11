@@ -29,7 +29,7 @@ module Operations
       def validate_status!
         return if Ticket::WORKFLOW.map(&:to_s).include?(@status)
 
-        raise Operations::Errors::Invalid, "Status inválido: #{@status}"
+        raise Operations::Errors::Invalid, I18n.t('operations.tickets.invalid_status', status: @status)
       end
     end
   end

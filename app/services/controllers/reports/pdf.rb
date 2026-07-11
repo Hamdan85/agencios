@@ -15,7 +15,7 @@ module Controllers
                               .where(projects: { workspace_id: workspace.id })
                               .find(@params[:id])
         authorize!(report.project, :show?)
-        raise ActiveRecord::RecordNotFound, 'Relatório ainda não está pronto.' unless report.status_ready?
+        raise ActiveRecord::RecordNotFound, I18n.t('api.reports.report_not_ready') unless report.status_ready?
 
         {
           bytes: Operations::Reports::RenderPdf.call(report:),

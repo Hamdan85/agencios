@@ -1,0 +1,107 @@
+pt-BR:
+  operations:
+    video:
+      errors:
+        set_voice:
+          no_generation: "Vídeo sem geração associada"
+          voice_not_found: "Voz não encontrada"
+          no_scenes: "Vídeo sem cenas"
+          busy: "Espere as cenas terminarem para trocar a voz"
+        set_identity:
+          no_generation: "Vídeo sem geração associada"
+          no_scenes: "Vídeo sem cenas"
+          busy: "Espere as cenas terminarem para mudar a identidade"
+        upgrade_quality:
+          no_generation: "Vídeo sem geração associada"
+          processing: "O vídeo ainda está em processamento"
+          already_final: "Este vídeo já está em alta qualidade"
+          no_scenes: "Vídeo sem cenas"
+        change_music:
+          no_generation: "Vídeo sem geração associada"
+          silent: "Este vídeo é silencioso — não leva música"
+        remove_scene:
+          needs_one: "O vídeo precisa de pelo menos uma cena"
+        remove_reference:
+          invalid_element: "Elemento inválido."
+        add_reference:
+          invalid_reference: "Referência inválida."
+        add_scene:
+          needs_description: "A nova cena precisa de uma descrição"
+          max_scenes: "O vídeo já tem o máximo de %{max} cenas"
+        cancel_render:
+          nothing: "Nada para cancelar — o vídeo não está em processamento"
+        regenerate_reference:
+          describe: "Descreva o que gerar."
+          no_generation: "Vídeo sem geração associada."
+          failed: "Não consegui gerar a imagem agora. Tente de novo."
+      ledger:
+        add_scene: "Adicionar cena %{n} do vídeo"
+        relink_follower: "Refazer cena do vídeo (continuidade)"
+        redo_scene: "Refazer cena %{n} do vídeo"
+        set_voice: "Trocar a voz do vídeo (refazer cenas)"
+        set_identity: "Ajustar identidade do vídeo (refazer cenas)"
+        upgrade_hold: "Vídeo em alta qualidade (upgrade)"
+        generate_reference: "Referência gerada do vídeo (%{role})"
+        reconcile: "Ajuste de créditos do vídeo (%{seconds}s)"
+      cancel:
+        reason: "Cancelado pelo usuário"
+      default_voice: "tom profissional, próximo e criativo"
+      roles:
+        character: "Personagem"
+        avatar: "Apresentador"
+        scene: "Cenário"
+        product: "Produto"
+        logo: "Logo"
+        style: "Estilo"
+        camera: "Câmera"
+        motion: "Movimento"
+        reference: "Referência"
+      library:
+        brand_avatar: "Avatar da marca"
+        brand_logo: "Logo da marca"
+      voice_options:
+        catalog_tag: "(catálogo)"
+      beats:
+        hook: "Abertura que prende a atenção"
+        feature: "Produto em destaque"
+        cta: "Chamada para ação"
+      push:
+        ready:
+          title: "Vídeo pronto ✨"
+          body: "Sua geração foi concluída e já está disponível."
+      failure_note:
+        header: "⚠️ Não consegui gerar a cena %{n}: %{explanation}"
+        copyright: "o gerador bloqueou o vídeo por **direitos autorais** — provavelmente a cena lembra personagens ou marcas conhecidas (ex.: animais/personagens que remetem a filmes). Vale trocar o conceito por algo original: pessoas reais, um mascote próprio ou foco no produto. Me diga como quer refazer que eu ajusto."
+        audio: "o gerador bloqueou o **áudio** por conteúdo sensível — costuma ser a fala. Posso reescrever o texto falado de um jeito mais neutro, ou deixar a cena sem voz. Como prefere?"
+        content_rule: "o gerador bloqueou a cena por uma **regra de conteúdo**. Me diga o que quer mostrar que eu reescrevo de um jeito que passe."
+        timeout: "a geração **demorou demais** e expirou. Pode ser instabilidade do gerador — quer que eu tente de novo?"
+        generic: "o gerador recusou essa cena. Quer tentar de novo ou mudar a ideia dela? Se puder, descreva de outro jeito que eu refaço."
+      chat:
+        insufficient_credits:
+          one: "Você tem %{count} crédito — não é suficiente para refazer essa cena. Compre mais créditos na sua assinatura e a gente continua. 😉"
+          other: "Você tem %{count} créditos — não é suficiente para refazer essa cena. Compre mais créditos na sua assinatura e a gente continua. 😉"
+        needs_description_reply: "Para criar essa cena eu preciso saber o que deve aparecer nela. Me diga o que mostrar (cenário, ação, personagens) que eu já adiciono."
+        apply_error_single: "%{message} Me diga como quer ajustar."
+        apply_error_multiple: "Não consegui aplicar algumas mudanças: %{messages}."
+        generate_reply: "Fechado! Já tenho o que preciso — montando seu vídeo agora. ✨"
+        generate_error: "Ainda não consigo gerar: %{error}"
+        already_generating: "O vídeo já está sendo montado — me diga o que quer ajustar nas cenas."
+        original_request_separator: "--- Pedido original do usuário (mantenha todos os detalhes) ---"
+        cancel_reply: "Beleza, cancelei a geração. As cenas ficam como estão — me diga o que quer fazer com elas."
+        cancel_error: "Não deu para cancelar: %{error}"
+        music_removed: "Pronto, tirei a música."
+        music_changed: "Beleza, troquei a trilha!"
+        music_error: "Não deu para trocar a música: %{error}"
+        voice_reply: "Beleza, trocando a voz e refazendo as cenas com a nova voz…"
+        voice_error: "Não deu para trocar a voz: %{error}"
+        identity_reply: "Beleza, ajustando o visual do vídeo inteiro e refazendo as cenas…"
+        identity_error: "Não deu para ajustar: %{error}"
+        finalize_reply: "Fechado! Gerando a versão final em alta qualidade — te aviso quando estiver pronta."
+        finalize_error: "Ainda não dá para finalizar: %{error}"
+        scene_note: "Cena %{n}: %{note}"
+        reference_attached: "referência anexada"
+        per_scene_notes_header: "Notas por cena:"
+        fallback: "Não consegui processar agora — pode reformular o que quer mudar?"
+        default_redo_one: "Refazendo a cena %{scenes}…"
+        default_redo_many: "Refazendo as cenas %{scenes}…"
+        default_ack: "Certo."

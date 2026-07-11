@@ -10,10 +10,12 @@ class ReportMailer < ApplicationMailer
     @brand_workspace = report.workspace
     @url = app_url("/portal/#{@client.approval_token!}")
 
-    attachments["relatorio-#{@project.name.parameterize}.pdf"] = {
-      mime_type: 'application/pdf',
-      content: pdf_bytes
-    }
-    mail(to: recipients, subject: "Relatório da campanha — #{@project.name}")
+    with_recipient_locale(@client) do
+      attachments[I18n.t('api.reports.filename', project: @project.name.parameterize)] = {
+        mime_type: 'application/pdf',
+        content: pdf_bytes
+      }
+      mail(to: recipients, subject: I18n.t('mailers.report.deck.subject', project: @project.name))
+    end
   end
 end

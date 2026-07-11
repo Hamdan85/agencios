@@ -41,14 +41,21 @@ module Operations
       def notify_owner
         return if @run.user.nil? || @run.ticket.nil?
 
+        reason = @reason.presence ||
+                 I18n.with_locale(workspace_locale(@run.workspace)) { I18n.t('operations.autopilot.reason.generic_failure') }
         Operations::Push::Notify.call(
           user: @run.user,
-          title: 'Piloto automático interrompido',
-          body: "#{@run.ticket.display_title}: #{@reason || 'a geração não pôde ser concluída.'}",
+          title_key: 'push.autopilot.failed.title',
+          body_key: 'push.autopilot.failed.body',
+          params: { title: @run.ticket.display_title, reason: reason },
           path: "/tickets/#{@run.ticket_id}"
         )
       rescue StandardError => e
         Rails.logger.warn("[Autopilot::Fail] notify failed: #{e.message}")
+      end
+
+      def workspace_locale(ws)
+        I18n.available_locales.find { |l| l.to_s == ws&.locale.to_s } || I18n.default_locale
       end
     end
   end

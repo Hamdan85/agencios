@@ -7,3 +7,30 @@ en:
       title: "Insufficient credits ⚠️"
       body: "Not enough credits to generate the content."
       body_with_context: "Not enough credits to generate the content (%{context})."
+    ticket_assigned:
+      title: "New ticket assigned to you"
+    ticket_reassigned:
+      title: "Ticket assigned to you"
+    subtask_assigned:
+      title: "New task assigned to you"
+    invoice_paid:
+      title: "Invoice paid 💸"
+    approval:
+      approved:
+        title: "Content approved ✅"
+        body: "%{title}: approved by the client."
+      changes_requested:
+        title: "Client requested changes ✍️"
+        body: "%{title}: %{feedback}"
+    autopilot:
+      completed:
+        title: "Campaign on autopilot ✅"
+        body: "%{title}: creatives generated and ready for approval."
+      failed:
+        title: "Autopilot halted"
+        body: "%{title}: %{reason}"
+    post:
+      published:
+        title: "Post published on %{provider} ✅"
+      failed:
+        title: "Failed to publish on %{provider}"

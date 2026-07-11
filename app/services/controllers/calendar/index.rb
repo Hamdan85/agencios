@@ -115,7 +115,7 @@ module Controllers
         {
           id: "post-#{post.id}",
           type: 'post',
-          title: post.ticket&.display_title || 'Publicação',
+          title: post.ticket&.display_title || I18n.t('api.calendar.post_fallback_title'),
           start: post.scheduled_at&.iso8601,
           status: post.status,
           provider: post.social_account&.provider,

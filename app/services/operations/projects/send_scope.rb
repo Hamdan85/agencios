@@ -12,7 +12,7 @@ module Operations
       end
 
       def call
-        raise Operations::Errors::Invalid, 'Informe pelo menos um destinatário.' if @recipients.empty?
+        raise Operations::Errors::Invalid, I18n.t('operations.projects.recipients_required') if @recipients.empty?
 
         ProjectMailer.scope_summary(project: @project, recipients: @recipients).deliver_later
       end

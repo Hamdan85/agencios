@@ -12,7 +12,7 @@ module Operations
       end
 
       def call
-        raise Operations::Errors::Invalid, 'A aprovação já foi concluída.' unless @ticket.production?
+        raise Operations::Errors::Invalid, I18n.t('operations.approvals.already_completed') unless @ticket.production?
 
         # Revert BOTH the approved winners and the not_selected losers so every slot
         # re-opens exactly as it was before the decision. (approvable_creatives hides
@@ -21,7 +21,7 @@ module Operations
           creative.update!(approval_state: 'pending', decided_at: nil, reviewed_by: nil)
         end
         Broadcaster.ticket(@ticket, 'approval_updated', decision: 'undone')
-        Operations::Notes::Create.call(ticket: @ticket, user: nil, kind: :system, body: 'Aprovação desfeita pelo cliente.')
+        Operations::Notes::Create.call(ticket: @ticket, user: nil, kind: :system, i18n_key: 'notes.approval.undone')
         @ticket
       end
     end

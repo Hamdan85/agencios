@@ -61,8 +61,9 @@ module Operations
 
         Operations::Push::Notify.call(
           user: @run.user,
-          title: 'Campanha no piloto automático ✅',
-          body: "#{@ticket.display_title}: criativos gerados e prontos para aprovação.",
+          title_key: 'push.autopilot.completed.title',
+          body_key: 'push.autopilot.completed.body',
+          params: { title: @ticket.display_title },
           path: "/tickets/#{@ticket.id}"
         )
       rescue StandardError => e

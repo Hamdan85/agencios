@@ -26,7 +26,10 @@ module Operations
 
         Broadcaster.strategy_session(@session, 'ticket_revising', key: @key)
 
-        card = build_card(cards_context(@session), "Revise SOMENTE o ticket #{@key} conforme o pedido")
+        card = I18n.with_locale(workspace_locale(@session.workspace)) do
+          build_card(cards_context(@session),
+                     I18n.t('operations.strategy.revise_ticket.directive_proposed', key: @key, instruction: @instruction))
+        end
         return Broadcaster.strategy_session(@session, 'plan_failed') unless card
 
         merged = card.merge('key' => @key, 'state' => 'ready')
@@ -46,7 +49,10 @@ module Operations
         ticket = @session.project.tickets.find_by(id: ticket_id)
         return unless ticket
 
-        card = build_card(ticket_context(ticket), "Ajuste este ticket já existente conforme o pedido")
+        card = I18n.with_locale(workspace_locale(@session.workspace)) do
+          build_card(ticket_context(ticket),
+                     I18n.t('operations.strategy.revise_ticket.directive_existing', instruction: @instruction))
+        end
         return Broadcaster.strategy_session(@session, 'plan_failed') unless card
 
         stage_op_card(@session, card.merge(
@@ -55,23 +61,21 @@ module Operations
       end
 
       def ticket_context(ticket)
-        "Ticket atual a editar (#{@key}):\n" \
-          "título: #{ticket.display_title}\nformato: #{ticket.creative_type}\n" \
-          "canais: #{Array(ticket.channels).join('/')}\nprioridade: #{ticket.priority}\n" \
-          "data: #{ticket.scheduled_at&.iso8601}"
+        I18n.t('operations.strategy.revise_ticket.ticket_context',
+               key: @key, title: ticket.display_title, creative_type: ticket.creative_type,
+               channels: Array(ticket.channels).join('/'), priority: ticket.priority,
+               date: ticket.scheduled_at&.iso8601)
       end
 
       def target_card
         Array(@session.proposed_plan&.dig('tickets')).find { |c| c['key'] == @key }
       end
 
-      def build_card(context, directive)
+      def build_card(context, directive_line)
         client = ai_client('strategy_revise')
         result = client.generate(
           system: planner(@session).system,
-          prompt: "#{conversation(@session)}\n\n#{context}\n\n" \
-                  "#{directive}: #{@instruction}\n" \
-                  'Chame a ferramenta com o card atualizado (mantendo o mesmo formato de card).',
+          prompt: "#{conversation(@session)}\n\n#{context}\n\n#{directive_line}",
           tool: Prompts::StrategyPlanner.card_tool,
           max_tokens: CARD_MAX_TOKENS
         )

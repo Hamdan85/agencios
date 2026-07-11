@@ -16,7 +16,7 @@ module Operations
       def call
         unless @post.status_scheduled? || @post.status_failed?
           raise Operations::Errors::Invalid,
-                'Só é possível cancelar publicações agendadas ou com falha. Para tirar um post do ar, despublique-o.'
+                I18n.t('operations.posts.cancel_only_scheduled_or_failed')
         end
 
         @post.destroy!

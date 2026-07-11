@@ -219,7 +219,7 @@ module Operations
       end
 
       def build_fallback(title:, body:)
-        head   = truncate(title.presence || 'Conteúdo', 60)
+        head   = truncate(title.presence || I18n.t('operations.creatives.carousel_default_title'), 60)
         points = sentences(body).first((@requested_slides || 6) - 2)
         points = ['Ponto principal'] if points.empty?
 

@@ -18,7 +18,7 @@ module Operations
       def call
         unless @post.status_scheduled? || @post.status_failed?
           raise Operations::Errors::Invalid,
-                'Só é possível editar publicações agendadas ou com falha. Um post no ar não pode ser editado.'
+                I18n.t('operations.posts.update_only_scheduled_or_failed')
         end
 
         attrs = @attributes.compact

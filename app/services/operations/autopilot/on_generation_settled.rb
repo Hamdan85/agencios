@@ -47,9 +47,15 @@ module Operations
 
         case action
         when :complete then Operations::Autopilot::Complete.call(run: run)
-        when :fail     then Operations::Autopilot::Fail.call(run: run, reason: 'Uma geração de criativo falhou.')
+        when :fail
+          reason = I18n.with_locale(workspace_locale(run.workspace)) { I18n.t('operations.autopilot.reason.generation_failed') }
+          Operations::Autopilot::Fail.call(run: run, reason: reason)
         end
         run
+      end
+
+      def self.workspace_locale(ws)
+        I18n.available_locales.find { |l| l.to_s == ws&.locale.to_s } || I18n.default_locale
       end
     end
   end

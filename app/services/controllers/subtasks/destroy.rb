@@ -9,7 +9,7 @@ module Controllers
 
       def call
         Subtask.where(workspace_id: workspace.id).find(@params[:id]).destroy!
-        { message: 'Subtarefa removida.' }
+        { message: I18n.t('api.subtasks.removed') }
       end
     end
   end

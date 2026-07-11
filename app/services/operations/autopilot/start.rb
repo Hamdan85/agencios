@@ -22,7 +22,7 @@ module Operations
         return existing if existing
 
         unless Operations::Autopilot::Eligibility.call(ticket: @ticket)[:eligible]
-          raise Operations::Errors::Invalid, 'Ticket não é elegível para o modo GO.'
+          raise Operations::Errors::Invalid, I18n.t('operations.autopilot.not_eligible')
         end
 
         run = create_run

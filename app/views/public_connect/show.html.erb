@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="<%= I18n.locale %>">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Conectar redes — <%= @data[:agency_name] %></title>
+  <title><%= t('pages.public_connect.title', agency: @data[:agency_name]) %></title>
   <style>
     :root { --brand: <%= @data[:brand_color].present? ? @data[:brand_color] : "#7C3AED" %>; }
     * { box-sizing: border-box; }
@@ -37,18 +37,13 @@
   <div class="card">
     <div class="head">
       <div class="agency"><%= @data[:agency_name] %></div>
-      <h1>Conecte suas redes</h1>
-      <p>Conecte as redes sociais de <strong><%= @data[:client_name] %></strong> para que a equipe possa publicar por você. Leva menos de um minuto.</p>
+      <h1><%= t('pages.public_connect.heading') %></h1>
+      <p><%= t('pages.public_connect.intro_html', client: @data[:client_name]) %></p>
     </div>
     <div class="body">
-      <% labels = {
-        "instagram" => ["Instagram", "ig", "Entre com sua conta do Instagram"],
-        "facebook" => ["Facebook", "fb", "Conecte sua Página do Facebook"],
-        "threads" => ["Threads", "th", "Entre com sua conta do Threads"],
-        "tiktok" => ["TikTok", "tt", "Entre com sua conta do TikTok"],
-        "youtube" => ["YouTube", "yt", "Conecte seu canal do YouTube"],
-        "linkedin" => ["LinkedIn", "li", "Conecte sua página do LinkedIn"],
-        "x" => ["X", "xx", "Entre com sua conta do X"]
+      <% css_by_network = {
+        "instagram" => "ig", "facebook" => "fb", "threads" => "th", "tiktok" => "tt",
+        "youtube" => "yt", "linkedin" => "li", "x" => "xx"
       } %>
       <%# Brand glyphs (lucide paths — same icon set the app UI uses). %>
       <% icons = {
@@ -61,7 +56,9 @@
         "x" => '<path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/>'
       } %>
       <% @data[:networks].each do |net| %>
-        <% label, css, sub = labels[net[:key]] %>
+        <% css = css_by_network[net[:key]] %>
+        <% label = t("pages.public_connect.networks.#{net[:key]}.label") %>
+        <% sub = t("pages.public_connect.networks.#{net[:key]}.sub") %>
         <button type="button" class="net" data-network="<%= net[:key] %>" <%= "disabled" if net[:connected] %>>
           <span class="ico <%= css %>">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><%== icons[net[:key]] %></svg>
@@ -70,11 +67,11 @@
             <span class="n"><%= label %></span>
             <span class="s"><%= sub %></span>
           </span>
-          <span class="state" data-role="state" style="<%= "display:none" unless net[:connected] %>">Conectado ✓</span>
-          <span class="cta" data-role="cta" style="<%= "display:none" if net[:connected] %>">Conectar →</span>
+          <span class="state" data-role="state" style="<%= "display:none" unless net[:connected] %>"><%= t('pages.public_connect.connected') %></span>
+          <span class="cta" data-role="cta" style="<%= "display:none" if net[:connected] %>"><%= t('pages.public_connect.connect') %></span>
         </button>
       <% end %>
-      <p class="foot">Você usa o login da sua própria conta. <%= @data[:agency_name] %> nunca vê sua senha.</p>
+      <p class="foot"><%= t('pages.public_connect.footer', agency: @data[:agency_name]) %></p>
     </div>
   </div>
 

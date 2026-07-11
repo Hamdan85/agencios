@@ -7,15 +7,10 @@ module Controllers
     # the same Client used by the approval portal. Every lookup goes through the
     # client's own projects, so a token only ever sees its own campaigns.
     module Portal
-      # User-facing PT-BR labels for the campaign (project) status, as the client
-      # sees them in the central.
-      STATUS_LABELS = {
-        'active' => 'Em andamento',
-        'paused' => 'Pausada',
-        'completed' => 'Finalizada',
-        'archived' => 'Arquivada',
-        'draft' => 'Rascunho'
-      }.freeze
+      # User-facing label for the campaign (project) status, as the client sees
+      # it in the central. Rendered in the client's locale (the portal request
+      # cycle resolves the client's locale).
+      def self.status_label(status) = I18n.t("api.portal.campaign_status.#{status}")
 
       class Base < Controllers::Base
         def initialize(client:, params: {})

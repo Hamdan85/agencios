@@ -9,8 +9,18 @@ module Operations
     # Compose runs again when the chain finishes.
     class UpgradeQuality < Operations::Base
       # Ledger description of the upgrade's credit HOLD — Compose recognizes it
-      # to true-up the estimate to the real rendered duration.
-      HOLD_DESCRIPTION = 'Vídeo em alta qualidade (upgrade)'
+      # to true-up the estimate to the real rendered duration. Rendered in the
+      # workspace language (the ledger is a team-shared artifact); Compose
+      # recomputes it in the same workspace locale to match the stored debit.
+      def self.hold_description(workspace)
+        I18n.with_locale(workspace_locale(workspace)) do
+          I18n.t('operations.video.ledger.upgrade_hold')
+        end
+      end
+
+      def self.workspace_locale(ws)
+        I18n.available_locales.find { |l| l.to_s == ws&.locale.to_s } || I18n.default_locale
+      end
 
       def initialize(creative:)
         @creative = creative
@@ -18,18 +28,18 @@ module Operations
 
       def call
         generation = @creative.generation
-        raise Operations::Errors::Invalid, 'Vídeo sem geração associada' unless generation
-        raise Operations::Errors::Invalid, 'O vídeo ainda está em processamento' if busy?
-        raise Operations::Errors::Invalid, 'Este vídeo já está em alta qualidade' if final?(generation)
+        raise Operations::Errors::Invalid, I18n.t('operations.video.errors.upgrade_quality.no_generation') unless generation
+        raise Operations::Errors::Invalid, I18n.t('operations.video.errors.upgrade_quality.processing') if busy?
+        raise Operations::Errors::Invalid, I18n.t('operations.video.errors.upgrade_quality.already_final') if final?(generation)
 
         scenes = @creative.video_scenes.ordered.to_a
-        raise Operations::Errors::Invalid, 'Vídeo sem cenas' if scenes.empty?
+        raise Operations::Errors::Invalid, I18n.t('operations.video.errors.upgrade_quality.no_scenes') if scenes.empty?
 
         total_seconds = scenes.sum { |s| s.duration_seconds.to_i }
         Operations::Credits::Debit.call(
           workspace: @creative.workspace,
           amount: Pricing.credits_for(kind: :video, seconds: total_seconds),
-          generation: generation, description: HOLD_DESCRIPTION
+          generation: generation, description: self.class.hold_description(@creative.workspace)
         )
 
         generation.update!(status: :processing, params: generation.params.merge('quality' => 'final'))

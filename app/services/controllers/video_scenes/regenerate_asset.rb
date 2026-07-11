@@ -19,7 +19,7 @@ module Controllers
         require_billing!
         creative = workspace.creatives.find(@params[:creative_id])
 
-        raise Operations::Errors::Invalid, 'Tipo de asset inválido.' unless TYPES.include?(type)
+        raise Operations::Errors::Invalid, I18n.t('api.video.invalid_asset_type') unless TYPES.include?(type)
         type == 'music' ? regenerate_music(creative) : regenerate_reference(creative)
 
         creative.reload

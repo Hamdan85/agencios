@@ -1,0 +1,122 @@
+en:
+  operations:
+    errors:
+      seat_limit_reached: "You've reached your plan's seat limit."
+      client_limit_reached: "You've reached your plan's active-client limit. Archive a client or upgrade."
+      billing_required: "A subscription is required for this action."
+      insufficient_credits: "Not enough credits for this generation."
+    notes:
+      empty_comment: "Empty comment."
+    tickets:
+      invalid_status: "Invalid status: %{status}"
+      only_managers_regress: "Only managers can move a ticket backward."
+      project_archived: "The campaign \"%{project}\" is archived — reactivate it to create tickets."
+      creative_not_ready: "One of the selected creatives isn't ready yet."
+      publish_in_progress: "A publish is already in progress — wait for it to finish before publishing again."
+      select_creative: "Select at least one creative to post."
+      define_channel: "Set at least one channel."
+      define_schedule: "Set the schedule date and time."
+      no_channel_supports: "No connected channel supports the selected creatives. %{skipped}"
+      skipped_note: "Skipped: %{items}."
+      media_labels:
+        image: "image"
+        carousel: "carousel"
+        video: "video"
+        text: "text"
+      alert:
+        publish_failed_reason: "Failed to publish on %{provider}: %{reason}"
+        publish_failed_task: "Resolve publishing on %{provider}"
+    posts:
+      unpublish_only_live: "You can only unpublish a post that's live."
+      unpublish_failed: "Couldn't delete on %{provider}: %{message}"
+      update_only_scheduled_or_failed: "You can only edit scheduled or failed posts. A live post can't be edited."
+      cancel_only_scheduled_or_failed: "You can only cancel scheduled or failed posts. To take a post off the air, unpublish it."
+      project_archived: "This post's campaign/client is archived. Reactivate it to publish."
+      unsupported_media: "%{provider} doesn't support %{media}."
+    invoices:
+      paid_cannot_cancel: "A paid invoice can't be canceled."
+      paid_or_canceled_cannot_edit: "Paid or canceled invoices can't be edited."
+      amount_locked: "The amount can't change once a charge has been created — cancel the invoice and create a new one."
+      only_draft_can_send: "Only a draft can be sent for charging."
+    approvals:
+      slot_not_found: "Item not found for approval."
+      option_not_found: "The chosen option wasn't found."
+      choose_option: "Choose an option to approve this item."
+      nothing_to_approve: "There are no creatives ready to approve."
+      already_completed: "The approval has already been completed."
+    autopilot:
+      not_eligible: "This ticket isn't eligible for GO mode."
+      none_eligible: "No ticket is eligible to start."
+      reason:
+        insufficient_credits: "Not enough credits during generation (%{shortfall} short)."
+        generation_failed: "A creative generation failed."
+        generic_failure: "the generation couldn't be completed."
+    billing:
+      unsupported_provider: "Unsupported payment provider: %{provider}"
+    generations:
+      unknown_kind: "Unknown generation type: %{kind}"
+      expired_reason: "Generation expired — the provider didn't respond in time."
+    projects:
+      recipients_required: "Enter at least one recipient."
+    users:
+      google_email_unverified: "Google email not verified."
+    brand_assets:
+      creative_no_image: "The selected creative has no image."
+    creatives:
+      video_estimate: "Video generation (estimate)"
+      carousel_default_title: "Content"
+    ai:
+      improve_prompt_failure: "Couldn't improve the prompt right now — try again."
+      strategy_context:
+        header: "[Strategy conversation that spawned this ticket — respect the agreed tone and guidelines]"
+        role_strategist: "STRATEGIST"
+        role_user: "USER"
+        plan_summary: "Plan summary: %{summary}"
+    workspaces:
+      default_agency_name: "%{name}'s Agency"
+    follow_up:
+      prefix:
+        iterate: "Iteration"
+        repeat: "Repeat"
+      lessons_header: "Lessons from the previous cycle:"
+  notes:
+    status_changed: "Status: %{from} → %{to}"
+    cascade_fields: "Following stages updated to reflect the change in “%{from}”: %{labels}."
+    ticket_created: "Ticket created by %{actor}."
+    system_actor: "system"
+    scope_checklist: "Production checklist generated with %{count} subtasks."
+    publish_failed: "Failed to publish on %{provider}: %{reason}"
+    post_unpublished: "Post unpublished on %{provider}."
+    post_unpublished_manual: "Post unpublished on %{provider}. %{note}"
+    archive:
+      restored: "Ticket restored."
+      archived: "Ticket archived."
+      archived_with_canceled: "Ticket archived. %{count} scheduled publication(s) canceled."
+    approval:
+      default_actor: "Client"
+      approved: "%{actor} approved %{subject}."
+      changes_requested: "%{actor} requested changes on %{subject}: %{feedback}"
+      subject_creative: "the creative (%{type})"
+      subject_content: "the content"
+      fully_approved: "Content approved by %{actor}."
+      link_sent: "Approval link sent to the client."
+      link_not_sent: "Client has no email on file — approval link not sent."
+      undone: "Approval undone by the client."
+    follow_up:
+      spawned_iteration: "Spawned an iteration: #%{id} — %{title}"
+      spawned_repetition: "Spawned a repeat: #%{id} — %{title}"
+  credits:
+    ledger:
+      adjustment: "Credit adjustment"
+      godfathered_monthly: "Monthly credits (godfathered courtesy)"
+      plan_monthly: "Monthly plan credits"
+      expired_unused: "Unused monthly credits expired"
+      purchase: "Credit purchase"
+      expired: "Monthly credits expired"
+      debit_video: "Video generation"
+      debit_image: "Image generation"
+      debit_carousel: "Carousel generation"
+      debit_generic: "Credit debit"
+      refund_failed_generation: "Refund — generation failed"
+      pack_purchase: "Credit purchase — %{pack} pack"
+      plan_monthly_named: "Monthly credits for the %{plan} plan"

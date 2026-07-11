@@ -1,8 +1,7 @@
-Olá<%= @client&.name.present? ? ", #{@client.name}" : "" %>!
+<%= t('mailers.common.hello') %><%= @client&.name.present? ? ", #{@client.name}" : "" %>!
 
-O conteúdo de <%= @project.name %> está pronto para sua aprovação.
-Revise e aprove (ou peça ajustes) aqui:
+<%= t('mailers.approval.review.text_body', project: @project.name) %>
 
 <%= @url %>
 
-Assim que tudo estiver aprovado, agendamos a publicação automaticamente.
+<%= t('mailers.approval.review.note') %>

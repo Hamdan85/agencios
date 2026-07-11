@@ -23,26 +23,38 @@ module Operations
         @post.update!(status: :failed, failure_reason: @reason[0, 500])
         Operations::Notes::Create.call(
           ticket: @post.ticket, user: nil, kind: :system,
-          body: "Falha ao publicar em #{provider}: #{@reason}"
+          i18n_key: 'notes.publish_failed',
+          i18n_params: { provider: provider, reason: @reason }
         )
         # Put the ticket in alert + generate a task carrying the failure context.
+        # Alert reason + task title are persisted plain text (no key column) — render
+        # once in the workspace language.
+        alert_reason, alert_task = I18n.with_locale(workspace_locale(@post.ticket.workspace)) do
+          [I18n.t('operations.tickets.alert.publish_failed_reason', provider: provider, reason: @reason[0, 160]),
+           I18n.t('operations.tickets.alert.publish_failed_task', provider: provider)]
+        end
         Operations::Tickets::RaiseAlert.call(
           ticket: @post.ticket,
-          reason: "Falha ao publicar em #{provider}: #{@reason[0, 160]}",
-          task_title: "Resolver publicação em #{provider}"
+          reason: alert_reason,
+          task_title: alert_task
         )
         Broadcaster.ticket(@post.ticket, 'post_failed', post_id: @post.id)
-        notify("Falha ao publicar em #{provider}", @post.ticket.title)
+        notify(provider, @post.ticket.title)
         email { |to| PostMailer.failed(post: @post, recipient: to, reason: @reason) }
         @post
       end
 
       private
 
-      def notify(title, body)
+      def workspace_locale(ws)
+        I18n.available_locales.find { |l| l.to_s == ws&.locale.to_s } || I18n.default_locale
+      end
+
+      def notify(provider, body)
         Operations::Push::Notify.call(
           user: @post.ticket.assignee || @post.ticket.created_by,
-          title:, body:, path: "/tickets/#{@post.ticket_id}"
+          title_key: 'push.post.failed.title', params: { provider: provider }, body: body,
+          path: "/tickets/#{@post.ticket_id}"
         )
       end
 

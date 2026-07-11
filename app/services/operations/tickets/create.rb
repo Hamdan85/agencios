@@ -13,7 +13,7 @@ module Operations
         # New work only lands on live campaigns of live clients — an archived
         # client is read-only (this is what makes the plan's client limit real).
         project = @workspace.projects.find(@params[:project_id])
-        raise Errors::Invalid, "A campanha \"#{project.name}\" está arquivada — reative-a para criar tickets." if project.status_archived?
+        raise Errors::Invalid, I18n.t('operations.tickets.project_archived', project: project.name) if project.status_archived?
 
         ensure_client_active!(project.client)
 
@@ -46,7 +46,8 @@ module Operations
         end
 
         Operations::Notes::Create.call(ticket: ticket, user: nil, kind: :system,
-                                       body: "Ticket criado por #{@user&.display_name || 'sistema'}.")
+                                       i18n_key: 'notes.ticket_created',
+                                       i18n_params: { actor: @user&.display_name || I18n.t('notes.system_actor') })
         Broadcaster.board(@workspace.id, 'ticket_created', ticket_id: ticket.id, status: ticket.status)
         notify_assignee(ticket)
         ticket
@@ -55,7 +56,7 @@ module Operations
       def notify_assignee(ticket)
         Operations::Push::Notify.call(
           user: ticket.assignee, actor: @user,
-          title: 'Novo ticket atribuído a você',
+          title_key: 'push.ticket_assigned.title',
           body: ticket.title,
           path: "/tickets/#{ticket.id}"
         )

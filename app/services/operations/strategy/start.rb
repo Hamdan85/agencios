@@ -39,12 +39,10 @@ module Operations
       def opening_message
         client = @project.client
         who = client&.name.presence
-        greeting = who ? "Vou planejar o conteúdo de **#{who}** com você." : 'Vou planejar o conteúdo desta campanha com você.'
+        greeting = who ? I18n.t('operations.strategy.start.greeting_named', who: who)
+                       : I18n.t('operations.strategy.start.greeting_generic')
 
-        "Oi! Sou seu estrategista de conteúdo. #{greeting} " \
-          'Me diga a **cadência** (ex.: 1 reel e 2 carrosséis por semana) e o **período** ' \
-          '(um mês, uma campanha ou contínuo) — eu já monto os tickets agendados, com as ' \
-          'tarefas estimadas. Já uso o contexto do cliente (marca, posicionamento e redes conectadas).'
+        I18n.t('operations.strategy.start.opening', greeting: greeting)
       end
     end
   end

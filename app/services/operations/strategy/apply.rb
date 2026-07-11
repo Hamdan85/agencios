@@ -17,7 +17,7 @@ module Operations
         # per project), so a stale plan kept on an `active` session must never be
         # re-runnable — a second POST /apply after the flow settled would re-run
         # side effects (including the full-plan batch discard).
-        raise Operations::Errors::Invalid, 'Nenhum plano proposto para aplicar.' unless
+        raise Operations::Errors::Invalid, I18n.t('operations.strategy.apply.no_plan') unless
           @session.status_proposed? && @session.proposed_plan?
 
         # A full plan is applied as a rewrite: the proposed plan is the COMPLETE
@@ -101,7 +101,7 @@ module Operations
         horizon = PLANNING_HORIZON.from_now
         scheduled_at = horizon if scheduled_at && scheduled_at > horizon
 
-        # The ticket is born in IDEAÇÃO as a SLIM card — the strategy delimiters the
+        # The ticket is born in IDEATION as a SLIM card — the strategy delimiters the
         # planner decided (title, format, channels, posting date). The ideation brief
         # and production checklist are filled per ticket right after creation, async.
         ticket = Operations::Tickets::Create.call(

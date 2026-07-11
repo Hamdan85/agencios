@@ -17,7 +17,7 @@ module Controllers
         authorize!(report.project, :show?)
 
         sent = Operations::Reports::SendToClient.call(report: report, sent_by: user)
-        raise Operations::Errors::Invalid, 'O relatório ainda não está pronto ou o cliente não tem e-mail cadastrado.' unless sent
+        raise Operations::Errors::Invalid, I18n.t('api.reports.not_ready_or_no_email') unless sent
 
         { report: serialize(report, ProjectReportSerializer) }
       end

@@ -16,7 +16,7 @@ module Controllers
         authorize!(client, :update?)
         network = @params.require(:network).to_s
         slug = Publishers::SocialPublisher.connect_slug(network)
-        raise Operations::Errors::Invalid, "Rede não suportada: #{network}" unless slug
+        raise Operations::Errors::Invalid, I18n.t('api.social.unsupported_network', network: network) unless slug
 
         vendor = Publishers::SocialPublisher.vendor_for_slug(slug)
         url = vendor::Actions::AuthorizeUrl.call(

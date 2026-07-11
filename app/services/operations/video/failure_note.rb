@@ -9,32 +9,25 @@ module Operations
     module FailureNote
       module_function
 
-      # Returns the chat message for a failed scene render.
+      # Returns the chat message for a failed scene render. The caller
+      # (PollVideoSceneJob) runs outside the request cycle, so this renders in the
+      # active locale (I18n.default_locale in the job).
       def for(reason:, position:)
-        scene = "a cena #{position.to_i + 1}"
-        "⚠️ Não consegui gerar #{scene}: #{explain(reason.to_s)}"
+        I18n.t('operations.video.failure_note.header', n: position.to_i + 1, explanation: explain(reason.to_s))
       end
 
       def explain(reason)
         r = reason.downcase
         if r.include?('copyright')
-          'o gerador bloqueou o vídeo por **direitos autorais** — provavelmente a cena lembra ' \
-            'personagens ou marcas conhecidas (ex.: animais/personagens que remetem a filmes). ' \
-            'Vale trocar o conceito por algo original: pessoas reais, um mascote próprio ou foco no produto. ' \
-            'Me diga como quer refazer que eu ajusto.'
+          I18n.t('operations.video.failure_note.copyright')
         elsif r.include?('audio') || r.include?('sensitive')
-          'o gerador bloqueou o **áudio** por conteúdo sensível — costuma ser a fala. ' \
-            'Posso reescrever o texto falado de um jeito mais neutro, ou deixar a cena sem voz. ' \
-            'Como prefere?'
+          I18n.t('operations.video.failure_note.audio')
         elsif r.include?('safety') || r.include?('policy') || r.include?('moderat')
-          'o gerador bloqueou a cena por uma **regra de conteúdo**. Me diga o que quer mostrar ' \
-            'que eu reescrevo de um jeito que passe.'
+          I18n.t('operations.video.failure_note.content_rule')
         elsif r.include?('timed out') || r.include?('timeout')
-          'a geração **demorou demais** e expirou. Pode ser instabilidade do gerador — ' \
-            'quer que eu tente de novo?'
+          I18n.t('operations.video.failure_note.timeout')
         else
-          'o gerador recusou essa cena. Quer tentar de novo ou mudar a ideia dela? ' \
-            'Se puder, descreva de outro jeito que eu refaço.'
+          I18n.t('operations.video.failure_note.generic')
         end
       end
     end

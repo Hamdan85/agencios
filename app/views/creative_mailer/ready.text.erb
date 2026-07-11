@@ -1,5 +1,5 @@
-Olá, <%= @user.display_name %>!
+<%= t('mailers.common.hello') %>, <%= @user.display_name %>!
 
-Seu <%= @kind_label.downcase %> gerado está pronto e já disponível.
+<%= t('mailers.creative.ready.text_body', kind: @kind_label.downcase) %>
 
-Ver criativo: <%= @url %>
+<%= t('mailers.creative.ready.text_button') %>: <%= @url %>

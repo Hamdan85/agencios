@@ -1,18 +1,18 @@
-<% content_for :preheader do %><%= @tickets_by_workspace.values.sum(&:size) %> ticket(s) para trabalhar hoje.<% end %>
-<% content_for :eyebrow do %>Digest diário<% end %>
+<% content_for :preheader do %><%= t('mailers.digest.daily_tickets.preheader', count: @tickets_by_workspace.values.sum(&:size)) %><% end %>
+<% content_for :eyebrow do %><%= t('mailers.digest.daily_tickets.eyebrow') %><% end %>
 
 <h1 style="margin:0 0 16px;font-family:'Sora','Inter',Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#18122B;">
-  Seus tickets de hoje
+  <%= t('mailers.digest.daily_tickets.heading') %>
 </h1>
 
 <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#564F6F;">
-  Olá<%= @user.display_name.present? ? ", #{@user.display_name}" : "" %>. Aqui está o que precisa da sua atenção em <%= email_date(@date) %>.
+  <%= t('mailers.common.hello') %><%= @user.display_name.present? ? ", #{@user.display_name}" : "" %>. <%= t('mailers.digest.daily_tickets.intro', date: email_date(@date)) %>
 </p>
 
 <% if @tickets_by_workspace.blank? %>
   <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="margin:8px 0 20px;background-color:#F5F4FB;border-radius:14px;">
     <tr><td style="padding:18px 20px;">
-      <p style="margin:0;font-size:15px;line-height:1.6;color:#18122B;">Nenhum ticket vencendo ou atrasado hoje.</p>
+      <p style="margin:0;font-size:15px;line-height:1.6;color:#18122B;"><%= t('mailers.digest.daily_tickets.empty') %></p>
     </td></tr>
   </table>
 <% else %>
@@ -36,7 +36,7 @@
             </tr>
           </table>
           <p style="margin:10px 0 0;font-size:13px;<%= overdue ? "color:#F43F5E;font-weight:600;" : "color:#8B86A3;" %>">
-            <%= overdue ? "Atrasado" : "Vence hoje" %> — <%= email_date(ticket.due_date || ticket.scheduled_at) %>
+            <%= overdue ? t('mailers.digest.daily_tickets.overdue') : t('mailers.digest.daily_tickets.due_today') %> — <%= email_date(ticket.due_date || ticket.scheduled_at) %>
           </p>
         </td></tr>
       </table>
@@ -44,4 +44,4 @@
   <% end %>
 <% end %>
 
-<%= email_button("Abrir o quadro", app_url("/tickets")) %>
+<%= email_button(t('mailers.digest.daily_tickets.button'), app_url("/tickets")) %>

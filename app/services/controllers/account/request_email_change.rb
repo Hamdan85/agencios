@@ -14,18 +14,18 @@ module Controllers
       def call
         new_email = @params[:email].to_s.strip.downcase
 
-        raise Operations::Errors::Invalid, 'Senha atual incorreta.' unless user.authenticate(@params[:password].to_s)
-        raise Operations::Errors::Invalid, 'Informe um e-mail válido.' unless new_email.match?(URI::MailTo::EMAIL_REGEXP)
-        raise Operations::Errors::Invalid, 'Este já é o seu e-mail atual.' if new_email == user.email
+        raise Operations::Errors::Invalid, I18n.t('api.account.wrong_current_password') unless user.authenticate(@params[:password].to_s)
+        raise Operations::Errors::Invalid, I18n.t('api.account.invalid_email') unless new_email.match?(URI::MailTo::EMAIL_REGEXP)
+        raise Operations::Errors::Invalid, I18n.t('api.account.email_unchanged') if new_email == user.email
         if User.where.not(id: user.id).exists?(email: new_email)
-          raise Operations::Errors::Invalid, 'Este e-mail já está em uso.'
+          raise Operations::Errors::Invalid, I18n.t('api.account.email_taken')
         end
 
         user.update!(pending_email: new_email)
         token = user.generate_token_for(:email_change)
         AuthMailer.confirm_email_change(user: user, token: token, new_email: new_email).deliver_later
 
-        { message: 'Enviamos um link de confirmação para o novo e-mail.', pending_email: new_email }
+        { message: I18n.t('api.account.confirmation_link_sent'), pending_email: new_email }
       end
     end
   end

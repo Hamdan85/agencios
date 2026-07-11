@@ -33,7 +33,7 @@ module Operations
           permalink: result[:permalink] || result['permalink']
         )
         Broadcaster.ticket(@post.ticket, 'post_published', post_id: @post.id, permalink: @post.permalink)
-        notify("Post publicado em #{@post.social_account.provider} ✅", @post.ticket.title)
+        notify('push.post.published.title', { provider: @post.social_account.provider }, @post.ticket.title)
         email { |to| PostMailer.published(post: @post, recipient: to) }
         clear_alert_if_resolved
         advance_ticket_if_all_published
@@ -50,7 +50,7 @@ module Operations
         return unless @post.ticket&.project&.status_archived?
 
         raise Operations::Errors::Invalid,
-              'A campanha/cliente deste post está arquivada. Reative para publicar.'
+              I18n.t('operations.posts.project_archived')
       end
 
       # A network only posts media it supports (e.g. TikTok/YouTube are video-only).
@@ -63,7 +63,7 @@ module Operations
         provider = @post.social_account.provider
         return if Publishers::SocialPublisher.supports?(provider, creative.media_kind)
 
-        raise Vendors::Base::Error, "#{provider} não suporta #{creative.media_kind}."
+        raise Vendors::Base::Error, I18n.t('operations.posts.unsupported_media', provider: provider, media: creative.media_kind)
       end
 
       # A clean publish with no failed posts left clears any alert the earlier
@@ -90,10 +90,10 @@ module Operations
 
       # Publishing runs in a background job (no acting user) — notify whoever owns
       # the ticket: the assignee, falling back to its creator.
-      def notify(title, body)
+      def notify(title_key, params, body)
         Operations::Push::Notify.call(
           user: @post.ticket.assignee || @post.ticket.created_by,
-          title:, body:, path: "/tickets/#{@post.ticket_id}"
+          title_key: title_key, params: params, body: body, path: "/tickets/#{@post.ticket_id}"
         )
       end
 

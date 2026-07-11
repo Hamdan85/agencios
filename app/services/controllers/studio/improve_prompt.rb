@@ -20,7 +20,7 @@ module Controllers
         require_billing!
 
         prompt = @params[:prompt].to_s.strip
-        raise Operations::Errors::Invalid, 'Escreva um rascunho do prompt primeiro.' if prompt.blank?
+        raise Operations::Errors::Invalid, I18n.t('api.studio.prompt_draft_required') if prompt.blank?
 
         mode = @params[:mode].to_s == 'product' ? 'product' : 'avatar'
         improved = Operations::Ai::ImproveVideoPrompt.call(

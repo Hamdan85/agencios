@@ -1,5 +1,5 @@
-<% if @inviter_name %><%= @inviter_name %> convidou você<% else %>Você foi convidado<% end %> para participar da <%= @workspace.name %> na agencios como <%= @role_label %>.
+<% if @inviter_name %><%= t('mailers.invitation.invite.text_invited_by', name: @inviter_name) %><% else %><%= t('mailers.invitation.invite.invited_generic') %><% end %> <%= t('mailers.invitation.invite.text_body', workspace: @workspace.name, role: @role_label) %>
 
-Aceite o convite: <%= @link %>
+<%= t('mailers.invitation.invite.text_accept') %> <%= @link %>
 
-Se você não esperava este convite, ignore este e-mail.
+<%= t('mailers.invitation.invite.text_note') %>

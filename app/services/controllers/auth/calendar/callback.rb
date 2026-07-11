@@ -38,7 +38,7 @@ module Controllers
           Rails.application.message_verifier(Calendar::STATE_PURPOSE).verify(@state.to_s)
         rescue ActiveSupport::MessageVerifier::InvalidSignature,
                ActiveSupport::MessageEncryptor::InvalidMessage
-          raise Operations::Errors::Invalid, 'State inválido ou expirado.'
+          raise Operations::Errors::Invalid, I18n.t('api.auth.invalid_state')
         end
       end
     end

@@ -10,7 +10,7 @@ module Controllers
 
       def call
         subtask = Subtask.where(workspace_id: workspace.id).find_by(id: @params[:id])
-        raise ActiveRecord::RecordNotFound, 'Subtarefa não encontrada.' unless subtask
+        raise ActiveRecord::RecordNotFound, I18n.t('api.subtasks.not_found') unless subtask
 
         subtask.update!(subtask_params)
         { subtask: serialize(subtask, SubtaskSerializer) }

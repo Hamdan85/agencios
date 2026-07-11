@@ -9,14 +9,14 @@
 
     <%# ── Desktop nav ─────────────────────────────────────────────── %>
     <nav class="hidden items-center gap-1 md:flex">
-      <%= link_to "Como funciona", how_it_works_path,
+      <%= link_to t('pages.nav.how_it_works'), how_it_works_path,
             class: "rounded-lg px-3 py-2 text-sm font-semibold transition #{nav_section_active?('/como-funciona') ? 'text-white' : 'text-white/60 hover:text-white'}" %>
 
       <%# Funcionalidades — CSS-only hover/focus dropdown %>
       <div class="group relative">
         <%= link_to features_path,
               class: "flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold transition #{nav_section_active?('/funcionalidades') ? 'text-white' : 'text-white/60 hover:text-white'}" do %>
-          Funcionalidades <%= icon "chevron-down", size: 14, css: "opacity-60 transition group-hover:rotate-180" %>
+          <%= t('pages.nav.features') %> <%= icon "chevron-down", size: 14, css: "opacity-60 transition group-hover:rotate-180" %>
         <% end %>
         <div class="invisible absolute left-1/2 top-full w-72 -translate-x-1/2 pt-2 opacity-0 transition-all duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
           <div class="overflow-hidden rounded-2xl border border-border bg-surface p-2 shadow-2xl">
@@ -35,17 +35,17 @@
         </div>
       </div>
 
-      <%= link_to "Preços", pricing_path,
+      <%= link_to t('pages.nav.pricing'), pricing_path,
             class: "rounded-lg px-3 py-2 text-sm font-semibold transition #{nav_section_active?('/precos') ? 'text-white' : 'text-white/60 hover:text-white'}" %>
     </nav>
 
     <%# ── Right side CTAs ─────────────────────────────────────────── %>
     <div class="flex items-center gap-2">
-      <%= link_to "Entrar", "/login", class: "hidden rounded-xl px-3.5 py-2 text-sm font-semibold text-white/80 transition hover:bg-white/10 hover:text-white sm:inline-flex" %>
+      <%= link_to t('pages.nav.login'), "/login", class: "hidden rounded-xl px-3.5 py-2 text-sm font-semibold text-white/80 transition hover:bg-white/10 hover:text-white sm:inline-flex" %>
       <%= link_to "/cadastro", class: "inline-flex h-9 items-center gap-1.5 rounded-xl bg-brand-gradient px-3.5 text-[13px] font-semibold text-white shadow-[0_8px_20px_-8px_rgba(124,58,237,0.7)] transition hover:brightness-105" do %>
-        Começar grátis <%= icon "arrow-right", size: 15 %>
+        <%= t('pages.nav.start_free') %> <%= icon "arrow-right", size: 15 %>
       <% end %>
-      <button type="button" data-mobile-open aria-label="Abrir menu" class="inline-flex size-9 items-center justify-center rounded-xl text-white/80 transition hover:bg-white/10 md:hidden">
+      <button type="button" data-mobile-open aria-label="<%= t('pages.nav.open_menu') %>" class="inline-flex size-9 items-center justify-center rounded-xl text-white/80 transition hover:bg-white/10 md:hidden">
         <%= icon "menu", size: 20 %>
       </button>
     </div>
@@ -61,14 +61,14 @@
         <img src="/icon.svg" alt="agencios" class="size-9 drop-shadow-md" />
         <span class="font-display text-lg font-extrabold text-white">agencios</span>
       </span>
-      <button type="button" data-mobile-close aria-label="Fechar menu" class="inline-flex size-9 items-center justify-center rounded-xl text-white/80 transition hover:bg-white/10">
+      <button type="button" data-mobile-close aria-label="<%= t('pages.nav.close_menu') %>" class="inline-flex size-9 items-center justify-center rounded-xl text-white/80 transition hover:bg-white/10">
         <%= icon "x", size: 20 %>
       </button>
     </div>
 
     <nav class="mt-8 flex flex-col gap-1">
-      <%= link_to "Como funciona", how_it_works_path, class: "rounded-xl px-3 py-3 text-base font-semibold text-white/80 transition hover:bg-white/10 hover:text-white" %>
-      <%= link_to "Funcionalidades", features_path, class: "rounded-xl px-3 py-3 text-base font-semibold text-white/80 transition hover:bg-white/10 hover:text-white" %>
+      <%= link_to t('pages.nav.how_it_works'), how_it_works_path, class: "rounded-xl px-3 py-3 text-base font-semibold text-white/80 transition hover:bg-white/10 hover:text-white" %>
+      <%= link_to t('pages.nav.features'), features_path, class: "rounded-xl px-3 py-3 text-base font-semibold text-white/80 transition hover:bg-white/10 hover:text-white" %>
       <div class="ml-2 flex flex-col gap-0.5 border-l border-white/10 pl-3">
         <% @features_catalog.each do |f| %>
           <%= link_to feature_path(f[:slug]), class: "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-white/55 transition hover:bg-white/10 hover:text-white" do %>
@@ -79,13 +79,13 @@
           <% end %>
         <% end %>
       </div>
-      <%= link_to "Preços", pricing_path, class: "rounded-xl px-3 py-3 text-base font-semibold text-white/80 transition hover:bg-white/10 hover:text-white" %>
+      <%= link_to t('pages.nav.pricing'), pricing_path, class: "rounded-xl px-3 py-3 text-base font-semibold text-white/80 transition hover:bg-white/10 hover:text-white" %>
     </nav>
 
     <div class="mt-auto flex flex-col gap-2.5 pt-6">
-      <%= link_to "Entrar", "/login", class: "inline-flex h-11 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-sm font-semibold text-white transition hover:bg-white/10" %>
+      <%= link_to t('pages.nav.login'), "/login", class: "inline-flex h-11 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-sm font-semibold text-white transition hover:bg-white/10" %>
       <%= link_to "/cadastro", class: "inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-brand-gradient text-sm font-semibold text-white shadow-lg transition hover:brightness-105" do %>
-        Começar grátis <%= icon "arrow-right", size: 16 %>
+        <%= t('pages.nav.start_free') %> <%= icon "arrow-right", size: 16 %>
       <% end %>
     </div>
   </div>

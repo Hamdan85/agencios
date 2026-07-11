@@ -15,7 +15,7 @@ module Operations
 
       def call
         creative = @scene.creative
-        raise Operations::Errors::Invalid, 'O vídeo precisa de pelo menos uma cena' if creative.video_scenes.count <= 1
+        raise Operations::Errors::Invalid, I18n.t('operations.video.errors.remove_scene.needs_one') if creative.video_scenes.count <= 1
 
         @scene.destroy!
         creative.video_scenes.ordered.each_with_index do |s, i|

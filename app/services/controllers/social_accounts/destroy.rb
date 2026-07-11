@@ -12,7 +12,7 @@ module Controllers
         client = workspace.clients.find(@params[:client_id])
         account = client.social_accounts.find(@params[:id])
         Operations::Social::Disconnect.call(account: account)
-        { message: 'Conta desconectada.' }
+        { message: I18n.t('api.social.disconnected') }
       end
     end
   end

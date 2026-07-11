@@ -85,6 +85,12 @@ module Pricing
     end
   end
 
+  # Localize a plan/pack display name for a KNOWN code-default key; admin-authored
+  # DB catalog names (custom keys) fall back to the stored value.
+  def localize_name(key, fallback)
+    I18n.t("models.pricing.names.#{key}", default: fallback.to_s)
+  end
+
   # ── Catalog accessors (admin-configured DB tables, code defaults as fallback) ─
 
   def plans = PricingPlan.catalog.presence || DEFAULT_PLANS
@@ -158,12 +164,13 @@ module Pricing
       plans: plans.map do |p|
         annual = annual_price_cents_for(p[:key])
         p.slice(:key, :name, :price_cents, :seats, :clients, :included_credits, :features).merge(
+          name: localize_name(p[:key], p[:name]),
           features: localize_features(p[:features]),
           annual_price_cents: annual,
           annual_monthly_equivalent_cents: (annual / 12.0).round
         )
       end,
-      credit_packs: credit_packs.map { |p| p.slice(:key, :name, :price_cents, :credits) },
+      credit_packs: credit_packs.map { |p| p.slice(:key, :name, :price_cents, :credits).merge(name: localize_name(p[:key], p[:name])) },
       # Video is cost-based, so its display cost is DERIVED from the same formula
       # the debit uses (an estimate for a VIDEO_DISPLAY_SECONDS clip) — never a
       # stale hand-set number.

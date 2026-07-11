@@ -1,0 +1,32 @@
+en:
+  operations:
+    strategy:
+      start:
+        greeting_named: "I'll plan **%{who}**'s content with you."
+        greeting_generic: "I'll plan this campaign's content with you."
+        opening: "Hi! I'm your content strategist. %{greeting} Tell me the **cadence** (e.g., 1 reel and 2 carousels per week) and the **period** (a month, a campaign, or ongoing) — I'll set up the scheduled tickets, with estimated tasks. I already use the client's context (brand, positioning, and connected networks)."
+      turn_helpers:
+        role_assistant: "STRATEGIST"
+        role_user: "USER"
+        conversation: "Conversation so far:\n\n%{lines}"
+        no_plan: "No plan proposed yet."
+        current_plan: "Current plan (to revise ONE ticket, use its key):\n%{lines}"
+        no_tickets: "The campaign has no tickets created yet."
+        existing_tickets: "Tickets the campaign ALREADY has (%{count}) — do NOT recreate them. To add new ones use add_tickets; to edit/remove ONE, use revise_ticket/remove_ticket with ticket_key in the format \"#<id>\":\n%{lines}"
+      converse:
+        empty_message: "Empty message."
+        holding_line: "Got it! Let me put this together and I'll bring you the proposal."
+      resolve_turn:
+        replan_refused: "This campaign already has tickets in progress, so I won't rebuild the plan from scratch (that would erase the existing work). I can **add** new pieces, **edit** or **remove** specific tickets — tell me what to adjust. If you really want a new plan, create a new campaign."
+        decide_system: "You decide the next content-planning action based on the conversation, the proposed plan, and the tickets the campaign already has."
+        decide_instruction: "Decide the action by calling the tool."
+      generate_plan:
+        instruction: "Generate the content plan now, calling the tool."
+      add_tickets:
+        instruction: "Add ONLY the NEW pieces requested%{ask}\nDon't repeat any existing ticket. Call the add_tickets tool with the new cards."
+      revise_ticket:
+        directive_proposed: "Revise ONLY ticket %{key} as requested: %{instruction}\nCall the tool with the updated card (keeping the same card format)."
+        directive_existing: "Adjust this already-existing ticket as requested: %{instruction}\nCall the tool with the updated card (keeping the same card format)."
+        ticket_context: "Current ticket to edit (%{key}):\ntitle: %{title}\nformat: %{creative_type}\nchannels: %{channels}\npriority: %{priority}\ndate: %{date}"
+      apply:
+        no_plan: "No proposed plan to apply."

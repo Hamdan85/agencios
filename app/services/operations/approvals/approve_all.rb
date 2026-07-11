@@ -13,7 +13,7 @@ module Operations
 
       def call
         slots = @ticket.approval_slots
-        raise Operations::Errors::Invalid, 'Não há criativos prontos para aprovar.' if slots.empty?
+        raise Operations::Errors::Invalid, I18n.t('operations.approvals.nothing_to_approve') if slots.empty?
 
         slots.each_value do |options|
           winner = options.max_by { |c| c.created_at || Time.at(0) } # newest option wins

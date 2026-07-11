@@ -1,18 +1,18 @@
-<% content_for :preheader do %>Faltam créditos para uma ação no seu workspace.<% end %>
-<% content_for :eyebrow do %>Créditos<% end %>
+<% content_for :preheader do %><%= t('mailers.credit_alert.insufficient.preheader') %><% end %>
+<% content_for :eyebrow do %><%= t('mailers.credit_alert.insufficient.eyebrow') %><% end %>
 
 <h1 style="margin:0 0 16px;font-family:'Sora','Inter',Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#18122B;">
-  Créditos insuficientes
+  <%= t('mailers.credit_alert.insufficient.heading') %>
 </h1>
 
 <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#564F6F;">
-  Uma ação que depende de créditos não pôde ser executada<%= @context ? " (#{@context})" : "" %>.
-  <% if @required&.positive? %>São necessários <strong><%= @required %> créditos</strong>.<% end %>
-  Compre créditos para que o conteúdo seja gerado.
+  <%= t('mailers.credit_alert.insufficient.body_intro') %><%= @context ? " (#{@context})" : "" %>.
+  <% if @required&.positive? %><%= t('mailers.credit_alert.insufficient.body_required_html', count: @required) %><% end %>
+  <%= t('mailers.credit_alert.insufficient.body_outro') %>
 </p>
 
-<%= email_button('Comprar créditos', @url) %>
+<%= email_button(t('mailers.credit_alert.insufficient.button'), @url) %>
 
 <p style="margin:16px 0 0;font-size:13px;line-height:1.5;color:#8B86A3;">
-  A solicitação fica aguardando — assim que houver saldo, é só gerar novamente.
+  <%= t('mailers.credit_alert.insufficient.note') %>
 </p>

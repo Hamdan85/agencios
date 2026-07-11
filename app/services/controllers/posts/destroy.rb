@@ -14,7 +14,7 @@ module Controllers
         # Destroying is CANCELING a not-yet-live publication — the cancelable
         # rule (and the refusal for published posts) lives in the operation.
         Operations::Posts::Cancel.call(post: post)
-        { message: 'Agendamento cancelado.' }
+        { message: I18n.t('api.posts.schedule_canceled') }
       end
     end
   end

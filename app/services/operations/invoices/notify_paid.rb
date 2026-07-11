@@ -16,7 +16,7 @@ module Operations
         managers.each do |manager|
           Operations::Push::Notify.call(
             user: manager,
-            title: 'Cobrança paga 💸',
+            title_key: 'push.invoice_paid.title',
             body: "#{@invoice.client&.name} — #{money(@invoice.amount_cents)}",
             path: '/cobrancas'
           )

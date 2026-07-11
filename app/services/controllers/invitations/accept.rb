@@ -11,7 +11,7 @@ module Controllers
 
       def call
         data = Token.verify(@params[:token])
-        raise Operations::Errors::Invalid, 'Convite inválido ou expirado.' unless data
+        raise Operations::Errors::Invalid, I18n.t('api.invitations.invalid_or_expired') unless data
 
         target = Workspace.find(data['workspace_id'])
         membership = target.memberships.find_or_create_by!(user: user) do |m|

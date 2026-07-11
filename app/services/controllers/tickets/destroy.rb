@@ -11,7 +11,7 @@ module Controllers
         require_manager!
         ticket = workspace.tickets.find(@params[:id])
         ticket.update!(archived_at: Time.current)
-        { message: 'Ticket arquivado.' }
+        { message: I18n.t('api.tickets.archived') }
       end
     end
   end

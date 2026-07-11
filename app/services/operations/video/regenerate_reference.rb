@@ -25,15 +25,15 @@ module Operations
       end
 
       def call
-        raise Operations::Errors::Invalid, 'Descreva o que gerar.' if @prompt.blank?
+        raise Operations::Errors::Invalid, I18n.t('operations.video.errors.regenerate_reference.describe') if @prompt.blank?
 
         generation = @creative.generation
-        raise Operations::Errors::Invalid, 'Vídeo sem geração associada.' unless generation
+        raise Operations::Errors::Invalid, I18n.t('operations.video.errors.regenerate_reference.no_generation') unless generation
 
         result = GenerateReference.call(
           generation: generation, role: @role, prompt: @prompt, aspect_ratio: aspect_ratio
         )
-        raise Operations::Errors::Invalid, 'Não consegui gerar a imagem agora. Tente de novo.' if result.nil?
+        raise Operations::Errors::Invalid, I18n.t('operations.video.errors.regenerate_reference.failed') if result.nil?
 
         swap_across_scenes!(result[:url])
         update_identity_and_description!(generation, result[:url])

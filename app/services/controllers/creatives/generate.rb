@@ -44,7 +44,7 @@ module Controllers
             creative_type: @params[:type].presence
           )
         else
-          raise Operations::Errors::Invalid, "Tipo de geração desconhecido: #{@params[:kind]}"
+          raise Operations::Errors::Invalid, I18n.t('api.creatives.unknown_generation_kind', kind: @params[:kind])
         end
       end
 

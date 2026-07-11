@@ -110,10 +110,10 @@ module PagesHelper
 
   # Human seat label derived from the canonical plan seat count.
   def plan_seats_label(seats)
-    return '1 assento' if seats <= 1
-    return 'Assentos ilimitados' if seats >= 9_999
+    return t('pages.plans.seats.single') if seats <= 1
+    return t('pages.plans.seats.unlimited') if seats >= 9_999
 
-    "Até #{seats} assentos"
+    t('pages.plans.seats.up_to', seats: seats)
   end
 
   # Is the given path prefix the active section (for nav highlighting)?
@@ -127,6 +127,7 @@ module PagesHelper
   # pricing catalog). Defensive: never breaks a page if pricing is absent.
   def marketing_structured_data
     origin = request.base_url
+    lang   = I18n.locale.to_s
     lowest = begin
       Controllers::Billing::Plans.all.map { |p| p[:price_cents] }.compact.min
     rescue StandardError
@@ -140,14 +141,14 @@ module PagesHelper
         'name' => 'agencios',
         'url' => origin,
         'logo' => "#{origin}/icon.svg",
-        'description' => 'O sistema operacional da agência criativa: funil de produção com IA, publicação multi-rede, métricas e cobrança.'
+        'description' => t('pages.seo.organization_description')
       },
       {
         '@type' => 'WebSite',
         '@id' => "#{origin}/#website",
         'url' => origin,
         'name' => 'agencios',
-        'inLanguage' => 'pt-BR',
+        'inLanguage' => lang,
         'publisher' => { '@id' => "#{origin}/#organization" }
       },
       {
@@ -155,8 +156,8 @@ module PagesHelper
         'name' => 'agencios',
         'applicationCategory' => 'BusinessApplication',
         'operatingSystem' => 'Web',
-        'inLanguage' => 'pt-BR',
-        'description' => 'Funil de produção com IA, estrategista de conteúdo, estúdio de criativos, publicação em 7 redes, métricas em tempo real e cobrança via Pix.'
+        'inLanguage' => lang,
+        'description' => t('pages.seo.app_description')
       }.tap do |app|
         if lowest
           app['offers'] = {

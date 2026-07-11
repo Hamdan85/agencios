@@ -23,7 +23,7 @@ RSpec.describe Operations::Approvals::NotifyDecision do
       end
     end.to change { ticket.notes.where(kind: 'system').count }.by(1)
 
-    expect(ticket.notes.order(:created_at).last.body).to include('aprovou')
+    expect(ticket.notes.order(:created_at).last.display_body).to include('aprovou')
     mail = ActionMailer::Base.deliveries.last
     expect(mail.to).to eq([user.email])
   end
@@ -34,7 +34,7 @@ RSpec.describe Operations::Approvals::NotifyDecision do
       described_class.call(ticket: ticket, decision: 'changes_requested', actor: client,
                            creative: creative, feedback: 'Trocar a cor de fundo')
     end
-    expect(ticket.notes.order(:created_at).last.body).to include('ajustes').and include('Trocar a cor')
+    expect(ticket.notes.order(:created_at).last.display_body).to include('ajustes').and include('Trocar a cor')
   end
 
   describe 'Ticket#responsible_user' do

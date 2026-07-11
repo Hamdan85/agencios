@@ -1,9 +1,9 @@
-Olá<%= @user.display_name.present? ? ", #{@user.display_name}" : "" %>!
+<%= t('mailers.common.hello') %><%= @user.display_name.present? ? ", #{@user.display_name}" : "" %>!
 
-Seus tickets de hoje — <%= email_date(@date) %>
+<%= t('mailers.digest.daily_tickets.text_heading', date: email_date(@date)) %>
 
 <% if @tickets_by_workspace.blank? %>
-Nenhum ticket vencendo ou atrasado hoje.
+<%= t('mailers.digest.daily_tickets.empty') %>
 <% else %>
 <% @tickets_by_workspace.each do |ws, tickets| %>
 <% if @tickets_by_workspace.size > 1 %>
@@ -11,10 +11,10 @@ Nenhum ticket vencendo ou atrasado hoje.
 <% end %>
 <% tickets.each do |ticket| %>
 <% overdue = (ticket.due_date || ticket.scheduled_at&.to_date)&.past? %>
-- <%= ticket.display_title %> (<%= status_label(ticket.status) %>) — <%= overdue ? "Atrasado" : "Vence hoje" %>: <%= email_date(ticket.due_date || ticket.scheduled_at) %>
+- <%= ticket.display_title %> (<%= status_label(ticket.status) %>) — <%= overdue ? t('mailers.digest.daily_tickets.overdue') : t('mailers.digest.daily_tickets.due_today') %>: <%= email_date(ticket.due_date || ticket.scheduled_at) %>
   <%= app_url("/tickets/#{ticket.id}") %>
 <% end %>
 <% end %>
 <% end %>
 
-Abrir o quadro: <%= app_url("/tickets") %>
+<%= t('mailers.digest.daily_tickets.text_open_board') %> <%= app_url("/tickets") %>

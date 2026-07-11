@@ -23,12 +23,12 @@ module Operations
         recipients = self.class.recipients_for(@ticket)
         if recipients.any?
           ApprovalMailer.review(ticket: @ticket, recipients: recipients).deliver_later
-          note = 'Link de aprovação enviado ao cliente.'
+          note_key = 'notes.approval.link_sent'
         else
-          note = 'Cliente sem e-mail cadastrado — link de aprovação não enviado.'
+          note_key = 'notes.approval.link_not_sent'
         end
 
-        Operations::Notes::Create.call(ticket: @ticket, user: @sent_by, kind: :system, body: note)
+        Operations::Notes::Create.call(ticket: @ticket, user: @sent_by, kind: :system, i18n_key: note_key)
         @ticket
       end
 

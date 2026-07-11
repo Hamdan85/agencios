@@ -19,6 +19,10 @@ pt-BR:
     auth:
       invalid_credentials: "E-mail ou senha inválidos."
       signed_out: "Sessão encerrada."
+      invalid_state: "State inválido ou expirado."
+      google_authorization_missing: "Autorização do Google ausente."
+      login_session_expired: "Sessão de login expirada. Tente novamente."
+      no_facebook_page: "Nenhuma Página do Facebook encontrada."
     strategy:
       not_allowed: "Você não tem permissão para planejar esta campanha."
       session_not_found: "Sessão não encontrada."
@@ -87,6 +91,8 @@ pt-BR:
     reports:
       not_ready_or_no_email: "O relatório ainda não está pronto ou o cliente não tem e-mail cadastrado."
       filename: "relatorio-%{project}.pdf"
+      report_unavailable: "Relatório indisponível."
+      report_not_ready: "Relatório ainda não está pronto."
     social:
       disconnected: "Conta desconectada."
       unsupported_network: "Rede não suportada: %{network}"
@@ -95,6 +101,7 @@ pt-BR:
       prompt_draft_required: "Escreva um rascunho do prompt primeiro."
     subtasks:
       removed: "Subtarefa removida."
+      not_found: "Subtarefa não encontrada."
     tickets:
       archived: "Ticket arquivado."
     uploads:
@@ -105,3 +112,4 @@ pt-BR:
       invalid_asset_type: "Tipo de asset inválido."
     workspaces:
       create_limit_reached: "Você atingiu o limite de workspaces que pode criar."
+      not_found: "Workspace não encontrado."

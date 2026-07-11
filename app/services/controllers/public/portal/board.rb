@@ -15,7 +15,7 @@ module Controllers
                            .group_by(&:status)
           {
             campaign: { id: project.id, name: project.name, color: project.color,
-                        status: project.status, status_label: STATUS_LABELS[project.status] },
+                        status: project.status, status_label: Controllers::Public::Portal.status_label(project.status) },
             columns: Ticket::WORKFLOW.map do |status|
               tickets = grouped[status.to_s] || []
               {

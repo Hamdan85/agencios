@@ -17,15 +17,16 @@ module Operations
 
       def call
         unless @post.status_published?
-          raise Operations::Errors::Invalid, 'Só é possível despublicar um post que está no ar.'
+          raise Operations::Errors::Invalid, I18n.t('operations.posts.unpublish_only_live')
         end
 
         manual_removal_note = delete_from_network
         @post.update!(status: :unpublished, unpublished_at: Time.current, failure_reason: manual_removal_note)
 
         Broadcaster.ticket(@post.ticket, 'post_unpublished', post_id: @post.id)
+        key, params = note_key(manual_removal_note)
         Operations::Notes::Create.call(
-          ticket: @post.ticket, user: @user, kind: :system, body: note_body(manual_removal_note)
+          ticket: @post.ticket, user: @user, kind: :system, i18n_key: key, i18n_params: params
         )
         revert_ticket_if_no_longer_published
 
@@ -42,14 +43,18 @@ module Operations
       rescue Vendors::Base::NotSupportedError => e
         e.message
       rescue Vendors::Base::Error => e
-        raise Operations::Errors::Invalid, "Não foi possível excluir no #{@post.social_account.provider}: #{e.message}"
+        raise Operations::Errors::Invalid,
+              I18n.t('operations.posts.unpublish_failed', provider: @post.social_account.provider, message: e.message)
       end
 
-      def note_body(manual_removal_note)
+      # Returns [i18n_key, params] for the history note (rendered per reader).
+      def note_key(manual_removal_note)
         provider = @post.social_account.provider
-        return "Post despublicado em #{provider}. #{manual_removal_note}" if manual_removal_note
-
-        "Post despublicado em #{provider}."
+        if manual_removal_note
+          ['notes.post_unpublished_manual', { provider: provider, note: manual_removal_note }]
+        else
+          ['notes.post_unpublished', { provider: provider }]
+        end
       end
 
       def revert_ticket_if_no_longer_published

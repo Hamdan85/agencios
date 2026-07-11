@@ -20,7 +20,7 @@ module Operations
 
       def call
         options = @ticket.approval_slots[@creative_type]
-        raise Operations::Errors::Invalid, 'Peça não encontrada para aprovação.' if options.blank?
+        raise Operations::Errors::Invalid, I18n.t('operations.approvals.slot_not_found') if options.blank?
 
         winner = pick_winner(options)
         winner.update!(approval_state: 'approved', reviewed_by: @actor, decided_at: Time.current, client_feedback: nil)
@@ -30,7 +30,8 @@ module Operations
 
         Broadcaster.ticket(@ticket, 'approval_updated', creative_type: @creative_type, decision: 'approved')
         Operations::Notes::Create.call(ticket: @ticket, user: nil, kind: :system,
-                                       body: "#{actor_name} aprovou #{slot_label}.")
+                                       i18n_key: 'notes.approval.approved',
+                                       i18n_params: { actor: actor_name, subject: slot_label })
 
         finalize_if_fully_approved
         @ticket
@@ -41,13 +42,13 @@ module Operations
       def pick_winner(options)
         if @chosen_creative_id.present?
           winner = options.find { |o| o.id.to_s == @chosen_creative_id.to_s }
-          raise Operations::Errors::Invalid, 'Opção escolhida não encontrada.' unless winner
+          raise Operations::Errors::Invalid, I18n.t('operations.approvals.option_not_found') unless winner
 
           winner
         elsif options.one?
           options.first # single-option slot: the choice is implicit
         else
-          raise Operations::Errors::Invalid, 'Escolha uma opção para aprovar esta peça.'
+          raise Operations::Errors::Invalid, I18n.t('operations.approvals.choose_option')
         end
       end
 
@@ -65,7 +66,7 @@ module Operations
 
       def actor_name
         name = @actor.respond_to?(:name) ? @actor.name.to_s : ''
-        name.presence || 'Cliente'
+        name.presence || I18n.t('notes.approval.default_actor')
       end
     end
   end

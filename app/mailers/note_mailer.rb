@@ -8,12 +8,14 @@ class NoteMailer < ApplicationMailer
     @note = note
     @recipient = recipient
     @ticket = note.ticket
-    @author_name = note.user&.display_name || 'Alguém'
     @ticket_url = "#{SystemConfig.app_host}/tickets/#{@ticket.id}"
 
-    mail(
-      to: recipient.email,
-      subject: "#{@author_name} mencionou você em \"#{@ticket.display_title}\""
-    )
+    with_recipient_locale(recipient) do
+      @author_name = note.user&.display_name || I18n.t('mailers.note.mention.someone')
+      mail(
+        to: recipient.email,
+        subject: I18n.t('mailers.note.mention.subject', author: @author_name, title: @ticket.display_title)
+      )
+    end
   end
 end

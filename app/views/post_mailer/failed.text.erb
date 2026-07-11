@@ -1,7 +1,7 @@
-Olá, <%= @recipient.display_name %>!
+<%= t('mailers.common.hello') %>, <%= @recipient.display_name %>!
 
-Não foi possível publicar o post do ticket "<%= @ticket.display_title %>" em <%= @provider %>.
+<%= t('mailers.post.failed.text_body', title: @ticket.display_title, provider: @provider) %>
 <% if @reason.present? %>
-Detalhe: <%= @reason %>
+<%= t('mailers.post.failed.text_reason') %> <%= @reason %>
 <% end %>
-Revise a conta conectada e o conteúdo, e tente novamente: <%= @ticket_url %>
+<%= t('mailers.post.failed.text_retry') %> <%= @ticket_url %>

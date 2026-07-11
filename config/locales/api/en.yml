@@ -19,6 +19,10 @@ en:
     auth:
       invalid_credentials: "Invalid email or password."
       signed_out: "Signed out."
+      invalid_state: "Invalid or expired state."
+      google_authorization_missing: "Google authorization is missing."
+      login_session_expired: "Your login session expired. Please try again."
+      no_facebook_page: "No Facebook Page found."
     strategy:
       not_allowed: "You don't have permission to plan this campaign."
       session_not_found: "Session not found."
@@ -87,6 +91,8 @@ en:
     reports:
       not_ready_or_no_email: "The report isn't ready yet or the client has no email on file."
       filename: "report-%{project}.pdf"
+      report_unavailable: "Report unavailable."
+      report_not_ready: "The report isn't ready yet."
     social:
       disconnected: "Account disconnected."
       unsupported_network: "Unsupported network: %{network}"
@@ -95,6 +101,7 @@ en:
       prompt_draft_required: "Write a draft prompt first."
     subtasks:
       removed: "Subtask removed."
+      not_found: "Subtask not found."
     tickets:
       archived: "Ticket archived."
     uploads:
@@ -105,3 +112,4 @@ en:
       invalid_asset_type: "Invalid asset type."
     workspaces:
       create_limit_reached: "You've reached the limit of workspaces you can create."
+      not_found: "Workspace not found."

@@ -1,7 +1,7 @@
-Olá<%= @owner&.display_name.present? ? ", #{@owner.display_name}" : "" %>!
+<%= t('mailers.common.hello') %><%= @owner&.display_name.present? ? ", #{@owner.display_name}" : "" %>!
 
-A assinatura <%= @plan_label %> da <%= @workspace.name %> foi cancelada.
-Você ainda pode acessar seus dados, mas os recursos pagos ficam indisponíveis.
+<%= t('mailers.subscription.canceled.text_body', plan: @plan_label, workspace: @workspace.name) %>
+<%= t('mailers.subscription.canceled.text_body_note') %>
 
-Mudou de ideia? Reative a qualquer momento:
+<%= t('mailers.subscription.canceled.text_body2') %>
 <%= @billing_url %>

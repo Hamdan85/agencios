@@ -19,8 +19,8 @@ module Controllers
 
         PushNotificationJob.perform_later(
           user.id,
-          title: 'Notificações ativadas ✅',
-          body: 'Você vai receber avisos de tickets, prazos e publicações aqui.',
+          title_key: 'api.push.notifications_enabled.title',
+          body_key: 'api.push.notifications_enabled.body',
           path: '/painel'
         )
 

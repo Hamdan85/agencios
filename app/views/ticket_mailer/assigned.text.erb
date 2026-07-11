@@ -1,10 +1,10 @@
-Olá, <%= @assignee.display_name %>!
+<%= t('mailers.common.hello') %>, <%= @assignee.display_name %>!
 
-<% if @actor_name %><%= @actor_name %> atribuiu<% else %>Foi atribuído<% end %> um ticket a você:
+<% if @actor_name %><%= t('mailers.ticket.assigned.text_assigned_by', name: @actor_name) %><% else %><%= t('mailers.ticket.assigned.text_assigned_generic') %><% end %> <%= t('mailers.ticket.assigned.text_body_suffix') %>
 
 <%= @ticket.display_title %>
-<% if @project %>Campanha: <%= @project.name %>
-<% end %>Status: <%= status_label(@ticket.status) %>
-<% if @ticket.due_date %>Prazo: <%= email_date(@ticket.due_date) %>
+<% if @project %><%= t('mailers.ticket.assigned.text_campaign') %> <%= @project.name %>
+<% end %><%= t('mailers.ticket.assigned.text_status') %> <%= status_label(@ticket.status) %>
+<% if @ticket.due_date %><%= t('mailers.ticket.assigned.text_due') %> <%= email_date(@ticket.due_date) %>
 <% end %>
-Abrir ticket: <%= @ticket_url %>
+<%= t('mailers.common.open_ticket') %>: <%= @ticket_url %>

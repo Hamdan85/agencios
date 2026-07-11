@@ -25,9 +25,10 @@ module Operations
 
         @ticket.update!(archived_at: @archived ? Time.current : nil)
 
+        key, params = archive_note(canceled)
         Operations::Notes::Create.call(
           ticket: @ticket, user: nil, kind: :system,
-          body: archive_note(canceled)
+          i18n_key: key, i18n_params: params
         )
 
         Broadcaster.ticket(@ticket, @archived ? 'archived' : 'unarchived')
@@ -46,11 +47,12 @@ module Operations
         end.size
       end
 
+      # Returns [i18n_key, params] for the history note (rendered per reader).
       def archive_note(canceled)
-        return 'Ticket restaurado.' unless @archived
-        return 'Ticket arquivado.' if canceled.zero?
+        return ['notes.archive.restored', {}] unless @archived
+        return ['notes.archive.archived', {}] if canceled.zero?
 
-        "Ticket arquivado. #{canceled} agendamento(s) de publicação cancelado(s)."
+        ['notes.archive.archived_with_canceled', { count: canceled }]
       end
     end
   end

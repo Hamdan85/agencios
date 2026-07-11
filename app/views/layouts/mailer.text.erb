@@ -1,7 +1,7 @@
 <%= yield %>
 
 —
-<% if @brand_workspace %>Enviado por <%= @brand_workspace.name %> via agencios, a plataforma operacional da sua agência.
-<% else %>agencios — o sistema operacional da sua agência.
-<% end %>E-mail automático enviado de nao-responda@agencios.app. Não responda a esta mensagem.
+<% if @brand_workspace %><%= t('mailers.layout.sent_by_agency_text', name: @brand_workspace.name) %>
+<% else %><%= t('mailers.layout.agencios_tagline_text') %>
+<% end %><%= t('mailers.layout.automated_email_text') %>
 <%= app_url %>

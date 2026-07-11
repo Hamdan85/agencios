@@ -8,7 +8,7 @@ module Controllers
       def call
         unless user.mcp_available?
           raise Operations::Errors::Forbidden,
-                'O conector do Claude requer um workspace no plano Agência ou Enterprise com assinatura ativa.'
+                I18n.t('api.mcp.plan_required')
         end
 
         user.rotate_mcp_connector_token!

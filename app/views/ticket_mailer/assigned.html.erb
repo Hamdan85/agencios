@@ -1,30 +1,30 @@
-<% content_for :preheader do %>Um ticket foi atribuído a você: <%= @ticket.display_title %>.<% end %>
-<% content_for :eyebrow do %>Ticket<% end %>
+<% content_for :preheader do %><%= t('mailers.ticket.assigned.preheader', title: @ticket.display_title) %><% end %>
+<% content_for :eyebrow do %><%= t('mailers.ticket.assigned.eyebrow') %><% end %>
 
 <h1 style="margin:0 0 16px;font-family:'Sora','Inter',Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#18122B;">
-  Novo ticket para você
+  <%= t('mailers.ticket.assigned.heading') %>
 </h1>
 
 <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#564F6F;">
-  Olá, <%= @assignee.display_name %>.
-  <% if @actor_name %><strong><%= @actor_name %></strong> atribuiu<% else %>Foi atribuído<% end %>
-  um ticket a você.
+  <%= t('mailers.common.hello') %>, <%= @assignee.display_name %>.
+  <% if @actor_name %><%= t('mailers.ticket.assigned.assigned_by_html', name: @actor_name) %><% else %><%= t('mailers.ticket.assigned.assigned_generic') %><% end %>
+  <%= t('mailers.ticket.assigned.body_suffix') %>
 </p>
 
 <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="margin:8px 0 20px;background-color:#F5F4FB;border-radius:14px;">
   <tr><td style="padding:18px 20px;">
     <p style="margin:0 0 6px;font-size:16px;font-weight:700;color:#18122B;"><%= @ticket.display_title %></p>
     <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
-      <% if @project %><%= email_detail_row("Campanha", @project.name) %><% end %>
+      <% if @project %><%= email_detail_row(t('mailers.ticket.assigned.field_campaign'), @project.name) %><% end %>
       <tr>
-        <td style="padding:6px 0;font-size:14px;color:#8B86A3;">Status</td>
+        <td style="padding:6px 0;font-size:14px;color:#8B86A3;"><%= t('mailers.ticket.assigned.field_status') %></td>
         <td align="right" style="padding:6px 0;">
           <span style="display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;color:#ffffff;background-color:<%= status_color(@ticket.status) %>;"><%= status_label(@ticket.status) %></span>
         </td>
       </tr>
-      <% if @ticket.due_date %><%= email_detail_row("Prazo", email_date(@ticket.due_date)) %><% end %>
+      <% if @ticket.due_date %><%= email_detail_row(t('mailers.ticket.assigned.field_due'), email_date(@ticket.due_date)) %><% end %>
     </table>
   </td></tr>
 </table>
 
-<%= email_button("Abrir ticket", @ticket_url) %>
+<%= email_button(t('mailers.common.open_ticket'), @ticket_url) %>

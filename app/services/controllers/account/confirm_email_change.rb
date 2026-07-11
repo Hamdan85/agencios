@@ -12,17 +12,17 @@ module Controllers
 
       def call
         target = User.find_by_token_for(:email_change, @params[:token].to_s)
-        raise Operations::Errors::Invalid, 'Link inválido ou expirado.' if target.nil? || target.pending_email.blank?
+        raise Operations::Errors::Invalid, I18n.t('api.public.invalid_link') if target.nil? || target.pending_email.blank?
 
         new_email = target.pending_email
         if User.where.not(id: target.id).exists?(email: new_email)
           target.update!(pending_email: nil)
-          raise Operations::Errors::Invalid, 'Este e-mail já está em uso.'
+          raise Operations::Errors::Invalid, I18n.t('api.account.email_taken')
         end
 
         # Changing the address re-verifies ownership, so the account is confirmed.
         target.update!(email: new_email, pending_email: nil, confirmed_at: Time.current)
-        { message: 'E-mail confirmado e atualizado.', email: new_email }
+        { message: I18n.t('api.account.email_confirmed'), email: new_email }
       end
     end
   end

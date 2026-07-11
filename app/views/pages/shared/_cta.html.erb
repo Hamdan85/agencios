@@ -1,8 +1,8 @@
 <%# Reusable bottom call-to-action band.
     Locals (all optional): title, subtitle, primary_label %>
-<% title       = local_assigns.fetch(:title, "Pronto para escalar sua agência?") %>
-<% subtitle    = local_assigns.fetch(:subtitle, "Comece grátis hoje. Seu primeiro post viral está a poucos cliques.") %>
-<% primary     = local_assigns.fetch(:primary_label, "Criar minha agência") %>
+<% title       = local_assigns.fetch(:title, t('pages.cta.title')) %>
+<% subtitle    = local_assigns.fetch(:subtitle, t('pages.cta.subtitle')) %>
+<% primary     = local_assigns.fetch(:primary_label, t('pages.cta.primary_label')) %>
 <section class="relative overflow-hidden bg-shell-gradient py-20 sm:py-24">
   <div class="absolute inset-0 bg-aurora opacity-70"></div>
   <div class="relative mx-auto max-w-3xl px-5 text-center sm:px-8">
@@ -12,8 +12,8 @@
       <%= link_to "/cadastro", class: "inline-flex h-12 items-center gap-2 rounded-xl bg-brand-gradient px-6 text-base font-semibold text-white shadow-[0_10px_28px_-8px_rgba(124,58,237,0.7)] transition hover:brightness-105" do %>
         <%= primary %> <%= icon "arrow-right", size: 18 %>
       <% end %>
-      <%= link_to "Ver planos", pricing_path, class: "inline-flex h-12 items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 text-base font-semibold text-white transition hover:bg-white/10" %>
+      <%= link_to t('pages.cta.view_plans'), pricing_path, class: "inline-flex h-12 items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 text-base font-semibold text-white transition hover:bg-white/10" %>
     </div>
-    <p class="mt-4 text-xs text-white/40"><%= Pricing.trial_days %> dias de teste · cartão obrigatório · cancele quando quiser</p>
+    <p class="mt-4 text-xs text-white/40"><%= t('pages.cta.trial_note', days: Pricing.trial_days) %></p>
   </div>
 </section>

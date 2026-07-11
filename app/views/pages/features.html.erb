@@ -1,19 +1,18 @@
-<% content_for :title, "Funcionalidades — agencios" %>
-<% content_for :description, "Quadro de produção, estrategista de IA, estúdio criativo, publicação em 7 redes, calendário, reuniões, relatórios e cobranças. Conheça todas as funcionalidades da agencios." %>
+<% content_for :title, t('pages.features.title') %>
+<% content_for :description, t('pages.features.description') %>
 
 <%# ── Hero ──────────────────────────────────────────────────────── %>
 <section class="relative overflow-hidden bg-shell-gradient">
   <div class="absolute inset-0 bg-aurora opacity-70"></div>
   <div class="relative mx-auto max-w-4xl px-5 pb-16 pt-28 text-center sm:px-8 sm:pt-36">
     <span class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-bold text-white/80 ring-1 ring-white/10">
-      <span class="text-pink"><%= icon "sparkles", size: 13 %></span> Funcionalidades
+      <span class="text-pink"><%= icon "sparkles", size: 13 %></span> <%= t('pages.features.hero_badge') %>
     </span>
     <h1 class="mx-auto mt-6 max-w-3xl font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-white sm:text-5xl">
-      Tudo que sua agência faz, <span class="text-gradient-brand">num só sistema.</span>
+      <%= t('pages.features.hero_title_1') %> <span class="text-gradient-brand"><%= t('pages.features.hero_title_2') %></span>
     </h1>
     <p class="mx-auto mt-5 max-w-xl text-lg text-white/70">
-      Oito frentes que normalmente exigem oito ferramentas — reunidas, integradas e conversando entre si.
-      Clique em cada uma para ver em detalhe.
+      <%= t('pages.features.hero_sub') %>
     </p>
   </div>
 </section>
@@ -44,4 +43,4 @@
   </div>
 </section>
 
-<%= render "pages/shared/cta", title: "Experimente todas as funcionalidades", subtitle: "#{Pricing.trial_days} dias de teste, com cartão. Monte sua agência em minutos." %>
+<%= render "pages/shared/cta", title: t('pages.features.cta_title'), subtitle: t('pages.features.cta_subtitle', days: Pricing.trial_days) %>

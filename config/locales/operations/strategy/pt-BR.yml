@@ -1,0 +1,32 @@
+pt-BR:
+  operations:
+    strategy:
+      start:
+        greeting_named: "Vou planejar o conteúdo de **%{who}** com você."
+        greeting_generic: "Vou planejar o conteúdo desta campanha com você."
+        opening: "Oi! Sou seu estrategista de conteúdo. %{greeting} Me diga a **cadência** (ex.: 1 reel e 2 carrosséis por semana) e o **período** (um mês, uma campanha ou contínuo) — eu já monto os tickets agendados, com as tarefas estimadas. Já uso o contexto do cliente (marca, posicionamento e redes conectadas)."
+      turn_helpers:
+        role_assistant: "ESTRATEGISTA"
+        role_user: "USUÁRIO"
+        conversation: "Conversa até aqui:\n\n%{lines}"
+        no_plan: "Ainda não há plano proposto."
+        current_plan: "Plano atual (para revisar UM ticket, use a key):\n%{lines}"
+        no_tickets: "A campanha ainda não tem tickets criados."
+        existing_tickets: "Tickets que a campanha JÁ tem (%{count}) — NÃO os recrie. Para acrescentar novos use add_tickets; para editar/remover UM, use revise_ticket/remove_ticket com ticket_key no formato \"#<id>\":\n%{lines}"
+      converse:
+        empty_message: "Mensagem vazia."
+        holding_line: "Certo! Deixa eu montar isso e já te trago a proposta."
+      resolve_turn:
+        replan_refused: "Esta campanha já tem tickets em andamento, então não vou refazer o plano do zero (isso apagaria o trabalho existente). Posso **adicionar** peças novas, **editar** ou **remover** tickets específicos — me diga o que ajustar. Se quiser mesmo um plano novo, crie uma nova campanha."
+        decide_system: "Você decide a próxima ação do planejamento de conteúdo a partir da conversa, do plano proposto e dos tickets que a campanha já tem."
+        decide_instruction: "Decida a ação chamando a ferramenta."
+      generate_plan:
+        instruction: "Gere o plano de conteúdo agora, chamando a ferramenta."
+      add_tickets:
+        instruction: "Adicione APENAS as peças NOVAS pedidas%{ask}\nNão repita nenhum ticket existente. Chame a ferramenta add_tickets com os cards novos."
+      revise_ticket:
+        directive_proposed: "Revise SOMENTE o ticket %{key} conforme o pedido: %{instruction}\nChame a ferramenta com o card atualizado (mantendo o mesmo formato de card)."
+        directive_existing: "Ajuste este ticket já existente conforme o pedido: %{instruction}\nChame a ferramenta com o card atualizado (mantendo o mesmo formato de card)."
+        ticket_context: "Ticket atual a editar (%{key}):\ntítulo: %{title}\nformato: %{creative_type}\ncanais: %{channels}\nprioridade: %{priority}\ndata: %{date}"
+      apply:
+        no_plan: "Nenhum plano proposto para aplicar."

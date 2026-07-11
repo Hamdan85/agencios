@@ -45,17 +45,15 @@ module Operations
         log_usage(result, ai)
 
         improved = result.tool_input.is_a?(Hash) ? result.tool_input['prompt'].to_s.strip : ''
-        raise Operations::Errors::Invalid, FAILURE_MESSAGE if improved.blank?
+        raise Operations::Errors::Invalid, I18n.t('operations.ai.improve_prompt_failure') if improved.blank?
 
         improved[0, @max_chars]
       rescue Operations::Errors::Invalid
         raise
       rescue StandardError => e
         Rails.logger.warn("[Ai::ImproveVideoPrompt] #{e.class}: #{e.message}")
-        raise Operations::Errors::Invalid, FAILURE_MESSAGE
+        raise Operations::Errors::Invalid, I18n.t('operations.ai.improve_prompt_failure')
       end
-
-      FAILURE_MESSAGE = 'Não foi possível melhorar o prompt agora — tente de novo.'
 
       private
 

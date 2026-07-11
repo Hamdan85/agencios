@@ -13,7 +13,7 @@ module Operations
 
       def call
         source = @creative.assets.attachments.find { |a| a.blob&.image? }
-        raise Operations::Errors::Invalid, 'O criativo selecionado não tem imagem.' if source.nil?
+        raise Operations::Errors::Invalid, I18n.t('operations.brand_assets.creative_no_image') if source.nil?
 
         @owner.carousel_background.attach(
           io: StringIO.new(source.download),

@@ -19,10 +19,11 @@ module Operations
         return unless @ticket.production? && @ticket.fully_approved?
 
         actor = @ticket.approval_actor
-        actor_name = actor.respond_to?(:name) ? actor.name : 'Cliente'
+        actor_name = (actor.respond_to?(:name) ? actor.name.presence : nil) || I18n.t('notes.approval.default_actor')
         Operations::Notes::Create.call(
           ticket: @ticket, user: nil, kind: :system,
-          body: "Conteúdo aprovado por #{actor_name}."
+          i18n_key: 'notes.approval.fully_approved',
+          i18n_params: { actor: actor_name }
         )
         Broadcaster.ticket(@ticket, 'approval_completed', actor: actor_name)
 

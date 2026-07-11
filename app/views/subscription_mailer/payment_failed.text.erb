@@ -1,8 +1,8 @@
-Olá<%= @owner&.display_name.present? ? ", #{@owner.display_name}" : "" %>!
+<%= t('mailers.common.hello') %><%= @owner&.display_name.present? ? ", #{@owner.display_name}" : "" %>!
 
-Não conseguimos processar o pagamento da assinatura <%= @plan_label %> da <%= @workspace.name %>.
+<%= t('mailers.subscription.payment_failed.text_body', plan: @plan_label, workspace: @workspace.name) %>
 
-Para evitar a suspensão do acesso, atualize sua forma de pagamento:
+<%= t('mailers.subscription.payment_failed.text_body2') %>
 <%= @billing_url %>
 
-Faremos uma nova tentativa automaticamente nos próximos dias.
+<%= t('mailers.subscription.payment_failed.text_retry') %>

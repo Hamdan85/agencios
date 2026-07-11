@@ -21,12 +21,12 @@ module Operations
 
       def call
         unless EDITABLE_STATUSES.include?(@invoice.status)
-          raise Operations::Errors::Invalid, 'Faturas pagas ou canceladas não podem ser editadas.'
+          raise Operations::Errors::Invalid, I18n.t('operations.invoices.paid_or_canceled_cannot_edit')
         end
 
         if @attributes.key?(:amount_cents) && changing_amount? && @invoice.charges.exists?
           raise Operations::Errors::Invalid,
-                'O valor não pode mudar depois de uma cobrança gerada — cancele a fatura e crie outra.'
+                I18n.t('operations.invoices.amount_locked')
         end
 
         @invoice.update!(@attributes)

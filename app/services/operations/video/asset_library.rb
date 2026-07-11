@@ -28,8 +28,8 @@ module Operations
         return [] unless ctx
 
         [
-          { url: ctx.brand_avatar_url, role: 'avatar', label: 'Avatar da marca', kind: 'img' },
-          { url: ctx.brand_logo_url, role: 'logo', label: 'Logo da marca', kind: 'img' }
+          { url: ctx.brand_avatar_url, role: 'avatar', label: I18n.t('operations.video.library.brand_avatar'), kind: 'img' },
+          { url: ctx.brand_logo_url, role: 'logo', label: I18n.t('operations.video.library.brand_logo'), kind: 'img' }
         ].select { |i| i[:url].present? }
       rescue StandardError
         []
@@ -48,7 +48,7 @@ module Operations
           next unless REUSABLE_ROLES.include?(r[:role].to_s) && url.present? && seen.add?(url)
 
           { url: url, role: r[:role].to_s, kind: r[:kind],
-            label: r[:role].to_s == 'character' ? 'Personagem' : 'Cenário' }
+            label: I18n.t("operations.video.roles.#{r[:role].to_s == 'character' ? 'character' : 'scene'}") }
         end
       end
 

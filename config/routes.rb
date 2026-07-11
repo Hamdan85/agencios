@@ -331,6 +331,21 @@ Rails.application.routes.draw do
   get 'privacidade',           to: 'pages#privacy',      as: :privacy
   get 'termos',                to: 'pages#terms',        as: :terms
 
+  # ── Localized English URLs for the marketing site ──────────────────
+  # English visitors get English URLs (SEO + hreflang). The canonical
+  # Portuguese routes above are unchanged; these force locale :en via a
+  # route default that PagesController#current_locale reads first.
+  scope '/en', defaults: { locale: 'en' } do
+    get '',              to: 'pages#home'
+    get 'how-it-works',  to: 'pages#how_it_works'
+    get 'features',      to: 'pages#features'
+    get 'features/:slug', to: 'pages#feature',
+                          constraints: { slug: /quadro|estudio|inteligencia|publicacao|calendario|cobrancas|estrategista|relatorios/ }
+    get 'pricing',       to: 'pages#pricing'
+    get 'privacy',       to: 'pages#privacy'
+    get 'terms',         to: 'pages#terms'
+  end
+
   # ── SPA shell — every other HTML GET boots React ───────────────────
   root to: 'pages#home'
   get '*path', to: 'spa#index', constraints: lambda { |req|

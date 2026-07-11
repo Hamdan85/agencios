@@ -26,7 +26,7 @@
   <body style="margin:0; padding:0; background-color:#F5F4FB; font-family:'Inter','Segoe UI',Helvetica,Arial,sans-serif; color:#18122B;">
     <!-- Preheader: hidden preview text pulled from the template -->
     <div style="display:none; max-height:0; overflow:hidden; mso-hide:all; font-size:1px; line-height:1px; color:#F5F4FB; opacity:0;">
-      <%= content_for?(:preheader) ? yield(:preheader) : "agencios — o sistema operacional da sua agência." %>
+      <%= content_for?(:preheader) ? yield(:preheader) : t('mailers.layout.preheader_default') %>
       &#847;&zwnj;&nbsp;&#8199;&shy;
     </div>
 
@@ -83,15 +83,15 @@
               <td class="email-pad" style="padding:24px 40px 32px; border-top:1px solid #E8E6F2;">
                 <% if @brand_workspace %>
                   <p style="margin:0 0 6px; font-size:13px; line-height:1.5; color:#8B86A3;">
-                    Enviado por <strong style="color:#564F6F;"><%= @brand_workspace.name %></strong> via agencios, a plataforma operacional da sua agência.
+                    <%= t('mailers.layout.sent_by_agency_html', name: @brand_workspace.name) %>
                   </p>
                 <% else %>
                   <p style="margin:0 0 6px; font-size:13px; line-height:1.5; color:#8B86A3;">
-                    Enviado por <strong style="color:#564F6F;">agencios</strong> — o sistema operacional da sua agência.
+                    <%= t('mailers.layout.sent_by_agencios_html') %>
                   </p>
                 <% end %>
                 <p style="margin:0; font-size:12px; line-height:1.5; color:#B6B1C9;">
-                  Este é um e-mail automático enviado de <a href="mailto:nao-responda@agencios.app" style="color:#8B86A3; text-decoration:underline;">nao-responda@agencios.app</a>. Por favor, não responda a esta mensagem.
+                  <%= t('mailers.layout.automated_email_html') %>
                 </p>
               </td>
             </tr>

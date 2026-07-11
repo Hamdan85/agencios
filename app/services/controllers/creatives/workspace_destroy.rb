@@ -11,7 +11,7 @@ module Controllers
       def call
         require_manager!
         workspace.creatives.find(@params[:id]).destroy!
-        { message: 'Criativo removido.' }
+        { message: I18n.t('api.creatives.removed') }
       end
     end
   end

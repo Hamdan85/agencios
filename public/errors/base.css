@@ -58,6 +58,14 @@ h1 {
   line-height: 1.55;
 }
 
+.error-desc-en {
+  max-width: 28rem;
+  margin-top: -0.35rem;
+  color: #8B86A3;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
 .error-actions {
   display: flex;
   flex-wrap: wrap;

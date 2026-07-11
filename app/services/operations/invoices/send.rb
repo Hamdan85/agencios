@@ -12,7 +12,7 @@ module Operations
       def call
         unless @invoice.status_draft?
           raise Operations::Errors::Invalid,
-                'Só um rascunho pode ser enviado para cobrança.'
+                I18n.t('operations.invoices.only_draft_can_send')
         end
 
         @invoice.update!(status: :open)

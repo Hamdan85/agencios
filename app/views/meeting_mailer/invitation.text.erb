@@ -1,12 +1,12 @@
-Olá<%= @recipient_name.present? ? ", #{@recipient_name}" : "" %>!
+<%= t('mailers.common.hello') %><%= @recipient_name.present? ? ", #{@recipient_name}" : "" %>!
 
-A <%= @workspace.name %> agendou uma reunião com você.
+<%= t('mailers.meeting.invitation.text_body', workspace: @workspace.name) %>
 
 <%= @meeting.title %>
-Início: <%= email_datetime(@meeting.starts_at) %>
-<% if @meeting.ends_at %>Término: <%= email_datetime(@meeting.ends_at) %>
+<%= t('mailers.meeting.invitation.text_start') %> <%= email_datetime(@meeting.starts_at) %>
+<% if @meeting.ends_at %><%= t('mailers.meeting.invitation.text_end') %> <%= email_datetime(@meeting.ends_at) %>
 <% end %><% if @meet_url.present? %>
-Entrar no Google Meet: <%= @meet_url %>
+<%= t('mailers.meeting.invitation.text_join') %> <%= @meet_url %>
 <% end %><% if @meeting.notes.present? %>
-Pauta: <%= @meeting.notes %>
+<%= t('mailers.meeting.invitation.text_agenda') %> <%= @meeting.notes %>
 <% end %>

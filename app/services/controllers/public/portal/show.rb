@@ -32,7 +32,7 @@ module Controllers
             name: project.name,
             color: project.color,
             status: project.status,
-            status_label: Controllers::Public::Portal::STATUS_LABELS[project.status],
+            status_label: Controllers::Public::Portal.status_label(project.status),
             counts: { tickets: project.tickets.size, pending_approval: pending_count },
             has_report: has_ready_report,
             available_tabs: available_tabs(project, pending_count, has_ready_report),

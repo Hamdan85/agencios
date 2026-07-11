@@ -1,7 +1,7 @@
-Créditos insuficientes
+<%= t('mailers.credit_alert.insufficient.heading') %>
 
-Uma ação que depende de créditos não pôde ser executada<%= @context ? " (#{@context})" : "" %>.
-<% if @required&.positive? %>São necessários <%= @required %> créditos.<% end %>
-Compre créditos para que o conteúdo seja gerado: <%= @url %>
+<%= t('mailers.credit_alert.insufficient.body_intro') %><%= @context ? " (#{@context})" : "" %>.
+<% if @required&.positive? %><%= t('mailers.credit_alert.insufficient.text_required', count: @required) %><% end %>
+<%= t('mailers.credit_alert.insufficient.text_outro') %> <%= @url %>
 
-A solicitação fica aguardando — assim que houver saldo, é só gerar novamente.
+<%= t('mailers.credit_alert.insufficient.note') %>

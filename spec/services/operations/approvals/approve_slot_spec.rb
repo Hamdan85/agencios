@@ -64,7 +64,7 @@ RSpec.describe Operations::Approvals::ApproveSlot do
   it 'writes a granular history note per slot' do
     car = creative('carousel')
     described_class.call(ticket: ticket, creative_type: 'carousel', chosen_creative_id: car.id, actor: client)
-    expect(ticket.notes.where(kind: 'system').last.body).to include('Carrossel')
+    expect(ticket.notes.where(kind: 'system').last.display_body).to include('Carrossel')
   end
 
   it 'undo reverts approved + not_selected back to pending within the window' do

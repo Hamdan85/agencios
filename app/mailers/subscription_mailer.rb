@@ -3,24 +3,31 @@
 # SaaS-billing emails (agencios charging the workspace via Stripe). These go to
 # the workspace owner.
 class SubscriptionMailer < ApplicationMailer
-  PLAN_LABELS = { 'solo' => 'Solo', 'agencia' => 'Agência', 'enterprise' => 'Enterprise' }.freeze
-
   # Trial is about to end (customer.subscription.trial_will_end).
   def trial_ending(workspace:, subscription:)
     assign(workspace, subscription)
-    mail(to: @owner.email, subject: 'Seu teste da agencios termina em breve')
+    with_recipient_locale(@owner) do
+      resolve_plan_label
+      mail(to: @owner.email, subject: I18n.t('mailers.subscription.trial_ending.subject'))
+    end
   end
 
   # A charge failed (invoice.payment_failed → past_due).
   def payment_failed(workspace:, subscription:)
     assign(workspace, subscription)
-    mail(to: @owner.email, subject: 'Falha no pagamento da sua assinatura agencios')
+    with_recipient_locale(@owner) do
+      resolve_plan_label
+      mail(to: @owner.email, subject: I18n.t('mailers.subscription.payment_failed.subject'))
+    end
   end
 
   # Subscription was canceled (customer.subscription.deleted).
   def canceled(workspace:, subscription:)
     assign(workspace, subscription)
-    mail(to: @owner.email, subject: 'Sua assinatura agencios foi cancelada')
+    with_recipient_locale(@owner) do
+      resolve_plan_label
+      mail(to: @owner.email, subject: I18n.t('mailers.subscription.canceled.subject'))
+    end
   end
 
   private
@@ -29,7 +36,11 @@ class SubscriptionMailer < ApplicationMailer
     @workspace = workspace
     @subscription = subscription
     @owner = workspace.owner
-    @plan_label = PLAN_LABELS[subscription&.plan.to_s] || subscription&.plan.to_s.humanize
     @billing_url = "#{SystemConfig.app_host}/assinatura"
+  end
+
+  def resolve_plan_label
+    plan = @subscription&.plan.to_s
+    @plan_label = I18n.t("mailers.subscription.plans.#{plan}", default: plan.humanize)
   end
 end

@@ -14,7 +14,7 @@ module Controllers
 
         def call
           data = verify_state!
-          raise Operations::Errors::Invalid, 'Autorização do Google ausente.' if @code.blank?
+          raise Operations::Errors::Invalid, I18n.t('api.auth.google_authorization_missing') if @code.blank?
 
           user = Operations::Auth::Google::SignIn.call(
             code: @code, redirect_uri: Google.redirect_uri
@@ -27,7 +27,7 @@ module Controllers
         def verify_state!
           Rails.application.message_verifier(Google::STATE_PURPOSE).verify(@state.to_s)
         rescue ActiveSupport::MessageVerifier::InvalidSignature, ActiveSupport::MessageEncryptor::InvalidMessage
-          raise Operations::Errors::Invalid, 'Sessão de login expirada. Tente novamente.'
+          raise Operations::Errors::Invalid, I18n.t('api.auth.login_session_expired')
         end
       end
     end

@@ -33,7 +33,7 @@ module Operations
 
         Operations::Push::Notify.call(
           user: subtask.assignee, actor: Current.user,
-          title: 'Nova tarefa atribuída a você',
+          title_key: 'push.subtask_assigned.title',
           body: subtask.title,
           path: "/tickets/#{@ticket.id}"
         )

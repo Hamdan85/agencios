@@ -1,12 +1,12 @@
-<% content_for :preheader do %>Falha ao publicar o post em <%= @provider %>.<% end %>
-<% content_for :eyebrow do %>Publicação<% end %>
+<% content_for :preheader do %><%= t('mailers.post.failed.preheader', provider: @provider) %><% end %>
+<% content_for :eyebrow do %><%= t('mailers.post.failed.eyebrow') %><% end %>
 
 <h1 style="margin:0 0 16px;font-family:'Sora','Inter',Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#18122B;">
-  Falha na publicação
+  <%= t('mailers.post.failed.heading') %>
 </h1>
 
 <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#564F6F;">
-  Olá, <%= @recipient.display_name %>. Não foi possível publicar o post do ticket <strong><%= @ticket.display_title %></strong> em <strong><%= @provider %></strong>.
+  <%= t('mailers.common.hello') %>, <%= @recipient.display_name %>. <%= t('mailers.post.failed.body_html', title: @ticket.display_title, provider: @provider) %>
 </p>
 
 <% if @reason.present? %>
@@ -18,7 +18,7 @@
 <% end %>
 
 <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#564F6F;">
-  Revise a conta conectada e o conteúdo no ticket e tente publicar novamente.
+  <%= t('mailers.post.failed.retry_hint') %>
 </p>
 
-<%= email_button("Abrir ticket", @ticket_url, color: "#F43F5E") %>
+<%= email_button(t('mailers.post.failed.button'), @ticket_url, color: "#F43F5E") %>

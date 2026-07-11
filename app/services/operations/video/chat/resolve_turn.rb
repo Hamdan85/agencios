@@ -79,7 +79,7 @@ module Operations
           reply = insufficient_credits_reply if @credits_short && edited.blank?
           reply ||= apply_error_reply if @apply_errors.present?
           reply ||= decision['message'].to_s.strip.presence || default_reply(edited)
-          # Stamp the cost ON this assistant bubble so the UI shows "−N créditos"
+          # Stamp the cost ON this assistant bubble so the UI shows "−N credits"
           # right under it (and the wallet counter refreshes) — not a floating pill.
           @creative.push_chat_message(role: :assistant, content: reply, credits: spent)
           @creative.save!
@@ -192,21 +192,21 @@ module Operations
         # Out of credits: tell the user how many they have and that they need to
         # top up — no scene was re-rendered.
         def insufficient_credits_reply
-          bal = credit_balance
-          "Você tem #{bal} #{bal == 1 ? 'crédito' : 'créditos'} — não é suficiente para refazer essa cena. " \
-            'Compre mais créditos na sua assinatura e a gente continua. 😉'
+          I18n.t('operations.video.chat.insufficient_credits', count: credit_balance)
         end
 
-        # Turns collected validation messages into one natural chat reply.
+        # Turns collected validation messages into one natural chat reply. The
+        # single-error "needs a description" branch is detected in a
+        # locale-independent way: the AddScene error carries the "descri" stem in
+        # pt-BR and the "description" stem in en, so match either.
         def apply_error_reply
           msgs = @apply_errors.uniq
-          if msgs.one? && msgs.first.match?(/descrição/i)
-            'Para criar essa cena eu preciso saber o que deve aparecer nela. ' \
-              'Me diga o que mostrar (cenário, ação, personagens) que eu já adiciono.'
+          if msgs.one? && msgs.first.match?(/descri|description/i)
+            I18n.t('operations.video.chat.needs_description_reply')
           elsif msgs.one?
-            "#{msgs.first} Me diga como quer ajustar."
+            I18n.t('operations.video.chat.apply_error_single', message: msgs.first)
           else
-            "Não consegui aplicar algumas mudanças: #{msgs.join('; ')}."
+            I18n.t('operations.video.chat.apply_error_multiple', messages: msgs.join('; '))
           end
         end
 
@@ -240,15 +240,15 @@ module Operations
             reference_descriptions: (intake['reference_descriptions'] || {})
           )
           decision['message'].to_s.strip.presence ||
-            'Fechado! Já tenho o que preciso — montando seu vídeo agora. ✨'
+            I18n.t('operations.video.chat.generate_reply')
         rescue Operations::Errors::InsufficientCredits
           insufficient_credits_reply
         rescue Operations::Errors::Invalid => e
-          "Ainda não consigo gerar: #{e.message}"
+          I18n.t('operations.video.chat.generate_error', error: e.message)
         end
 
         def already_generating_reply
-          'O vídeo já está sendo montado — me diga o que quer ajustar nas cenas.'
+          I18n.t('operations.video.chat.already_generating')
         end
 
         # Combine the agent's consolidated brief with the user's ORIGINAL request
@@ -260,16 +260,16 @@ module Operations
           return o if c.blank?
           return c if o.blank? || c.include?(o)
 
-          "#{c}\n\n--- Pedido original do usuário (mantenha todos os detalhes) ---\n#{o}"
+          "#{c}\n\n#{I18n.t('operations.video.chat.original_request_separator')}\n#{o}"
         end
 
         # "Para de gerar": abandon the in-flight renders and settle the ledger.
         def cancel(decision)
           Operations::Video::CancelRender.call(creative: @creative)
           decision['message'].to_s.strip.presence ||
-            'Beleza, cancelei a geração. As cenas ficam como estão — me diga o que quer fazer com elas.'
+            I18n.t('operations.video.chat.cancel_reply')
         rescue Operations::Errors::Invalid => e
-          "Não deu para cancelar: #{e.message}"
+          I18n.t('operations.video.chat.cancel_error', error: e.message)
         end
 
         # The user asked to change the background song: re-mix only (no re-render,
@@ -278,9 +278,9 @@ module Operations
           Operations::Video::ChangeMusic.call(creative: @creative,
                                               mood: decision['music_mood'], query: decision['music_query'])
           decision['message'].to_s.strip.presence ||
-            (decision['music_mood'].to_s == 'none' ? 'Pronto, tirei a música.' : 'Beleza, troquei a trilha!')
+            (decision['music_mood'].to_s == 'none' ? I18n.t('operations.video.chat.music_removed') : I18n.t('operations.video.chat.music_changed'))
         rescue Operations::Errors::Invalid => e
-          "Não deu para trocar a música: #{e.message}"
+          I18n.t('operations.video.chat.music_error', error: e.message)
         end
 
         # The user asked to change the fixed voice (narrator/speaker): swap the
@@ -288,11 +288,11 @@ module Operations
         def change_voice(decision)
           Operations::Video::SetVoice.call(creative: @creative, voice: decision['voice'])
           decision['message'].to_s.strip.presence ||
-            'Beleza, trocando a voz e refazendo as cenas com a nova voz…'
+            I18n.t('operations.video.chat.voice_reply')
         rescue Operations::Errors::InsufficientCredits
           insufficient_credits_reply
         rescue Operations::Errors::Invalid => e
-          "Não deu para trocar a voz: #{e.message}"
+          I18n.t('operations.video.chat.voice_error', error: e.message)
         end
 
         # The user changed something project-wide (character, wardrobe, setting,
@@ -300,11 +300,11 @@ module Operations
         def change_identity(decision)
           Operations::Video::SetIdentity.call(creative: @creative, changes: decision['identity'])
           decision['message'].to_s.strip.presence ||
-            'Beleza, ajustando o visual do vídeo inteiro e refazendo as cenas…'
+            I18n.t('operations.video.chat.identity_reply')
         rescue Operations::Errors::InsufficientCredits
           insufficient_credits_reply
         rescue Operations::Errors::Invalid => e
-          "Não deu para ajustar: #{e.message}"
+          I18n.t('operations.video.chat.identity_error', error: e.message)
         end
 
         # The user approved the draft: kick the high-quality re-render of every
@@ -314,11 +314,11 @@ module Operations
         def finalize(decision)
           Operations::Video::UpgradeQuality.call(creative: @creative)
           decision['message'].to_s.strip.presence ||
-            'Fechado! Gerando a versão final em alta qualidade — te aviso quando estiver pronta.'
+            I18n.t('operations.video.chat.finalize_reply')
         rescue Operations::Errors::InsufficientCredits
           insufficient_credits_reply
         rescue Operations::Errors::Invalid => e
-          "Ainda não dá para finalizar: #{e.message}"
+          I18n.t('operations.video.chat.finalize_error', error: e.message)
         end
 
         def decide
@@ -330,7 +330,7 @@ module Operations
                          editor.turn_prompt(scenes_context, conversation)].compact.join("\n\n")
 
           # Weaker models sometimes answer WITHOUT the forced tool (the whole turn
-          # then degrades to "não consegui processar"). Retry once with a blunt
+          # then degrades to the fallback reply). Retry once with a blunt
           # instruction before giving up — cheap insurance against a dropped call.
           2.times do |attempt|
             prompt = attempt.zero? ? base_prompt : "#{base_prompt}\n\nYou MUST call the #{Prompts::VideoEditor::EDIT_TOOL} tool now."
@@ -424,7 +424,7 @@ module Operations
 
         # Keeps well-formed annotations (1-based scene number) that carry EITHER
         # a note OR a pinned reference. reference_urls ride with the scene they
-        # were pinned to (item: "a referência vai direto para o processo da cena");
+        # were pinned to (the reference goes straight to that scene's render);
         # reference_descriptions is the parallel array of the user's words per file.
         def normalize_annotations(annotations)
           Array(annotations).filter_map do |a|
@@ -466,17 +466,21 @@ module Operations
 
           notes = @annotations.map do |a|
             ref = a[:reference_urls].present? ? ' 📎' : ''
-            "- Cena #{a[:scene]}: #{a[:note].presence || 'referência anexada'}#{ref}"
+            note = a[:note].presence || I18n.t('operations.video.chat.reference_attached')
+            "- #{I18n.t('operations.video.chat.scene_note', n: a[:scene], note: note)}#{ref}"
           end.join("\n")
-          [@message.presence, "Notas por cena:\n#{notes}"].compact.join("\n\n")
+          [@message.presence, "#{I18n.t('operations.video.chat.per_scene_notes_header')}\n#{notes}"].compact.join("\n\n")
         end
 
         def fallback_decision
-          { 'action' => 'reply', 'message' => 'Não consegui processar agora — pode reformular o que quer mudar?' }
+          { 'action' => 'reply', 'message' => I18n.t('operations.video.chat.fallback') }
         end
 
         def default_reply(edited)
-          edited.any? ? "Refazendo #{edited.size == 1 ? 'a cena' : 'as cenas'} #{edited.map { |i| i + 1 }.join(', ')}…" : 'Certo.'
+          return I18n.t('operations.video.chat.default_ack') if edited.empty?
+
+          scenes = edited.map { |i| i + 1 }.join(', ')
+          I18n.t("operations.video.chat.#{edited.size == 1 ? 'default_redo_one' : 'default_redo_many'}", scenes: scenes)
         end
 
         # Human-meaning per render state, so the agent never misreads (or invents)

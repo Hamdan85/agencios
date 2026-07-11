@@ -11,11 +11,10 @@ RSpec.describe 'i18n hardcoded copy guard' do
     app/controllers/api
     app/controllers/concerns
     app/jobs
+    app/mailers
     app/serializers
-    app/services/controllers/credits
-    app/services/operations/credits
-    app/services/operations/notes
-    app/services/operations/push
+    app/services/controllers
+    app/services/operations
   ].freeze
 
   PT_CHARS = /[ãáàâçéêíóôõúÃÁÀÂÇÉÊÍÓÔÕÚ]/

@@ -1,5 +1,5 @@
-<% content_for :title, "agencios — o sistema operacional da sua agência" %>
-<% content_for :description, "Do brief ao post no ar: funil de produção com IA, estrategista que planeja o mês, estúdio de criativos, publicação em 7 redes, métricas em tempo real e cobrança via Pix. Tudo que sua agência de social media precisa." %>
+<% content_for :title, t('pages.home.title') %>
+<% content_for :description, t('pages.home.description') %>
 
 <%# ══════════════════════════════════════════════════════════════════
     HERO
@@ -10,29 +10,27 @@
 
   <div class="relative mx-auto max-w-6xl px-5 pb-24 pt-28 text-center sm:px-8 sm:pt-36">
     <span class="reveal inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-bold text-white/80 ring-1 ring-white/10">
-      <span class="text-amber"><%= icon "zap", size: 13 %></span> O sistema operacional da sua agência
+      <span class="text-amber"><%= icon "zap", size: 13 %></span> <%= t('pages.home.hero_badge') %>
     </span>
 
     <h1 class="reveal mx-auto mt-6 max-w-4xl font-display text-[2.6rem] font-extrabold leading-[1.02] tracking-tight text-white sm:text-6xl lg:text-7xl">
-      Do brief ao post viral —<br class="hidden sm:block" />
-      <span class="text-gradient-brand anim-gradient-x">num só lugar.</span>
+      <%= t('pages.home.hero_title_1') %><br class="hidden sm:block" />
+      <span class="text-gradient-brand anim-gradient-x"><%= t('pages.home.hero_title_2') %></span>
     </h1>
 
     <p class="reveal mx-auto mt-6 max-w-2xl text-lg text-white/70 sm:text-xl">
-      Um funil de produção com IA, um estrategista que planeja o mês inteiro, estúdio de criativos,
-      publicação em 7 redes, métricas em tempo real e cobrança via Pix. A operação inteira da sua
-      agência, integrada e viva.
+      <%= t('pages.home.hero_sub') %>
     </p>
 
     <div class="reveal mt-9 flex flex-wrap items-center justify-center gap-3">
       <%= link_to "/cadastro", class: "group inline-flex h-13 items-center gap-2 rounded-2xl bg-brand-gradient px-7 py-3.5 text-base font-semibold text-white shadow-[0_14px_40px_-10px_rgba(124,58,237,0.8)] transition hover:brightness-110 hover:shadow-[0_18px_50px_-10px_rgba(124,58,237,0.9)]" do %>
-        Começar grátis <span class="transition-transform group-hover:translate-x-0.5"><%= icon "arrow-right", size: 18 %></span>
+        <%= t('pages.home.cta_start_free') %> <span class="transition-transform group-hover:translate-x-0.5"><%= icon "arrow-right", size: 18 %></span>
       <% end %>
       <%= link_to how_it_works_path, class: "inline-flex h-13 items-center gap-2 rounded-2xl border border-white/20 bg-white/5 px-7 py-3.5 text-base font-semibold text-white backdrop-blur transition hover:bg-white/10" do %>
-        <%= icon "play", size: 15 %> Ver como funciona
+        <%= icon "play", size: 15 %> <%= t('pages.home.cta_see_how') %>
       <% end %>
     </div>
-    <p class="reveal mt-4 text-xs text-white/40"><%= @trial_days %> dias de teste · cartão obrigatório · cancele quando quiser</p>
+    <p class="reveal mt-4 text-xs text-white/40"><%= t('pages.home.trial_note', days: @trial_days) %></p>
 
     <%= render "pages/shared/board_preview", funnel: @funnel %>
   </div>
@@ -45,7 +43,7 @@
     LOGO MARQUEE — integrations
     ══════════════════════════════════════════════════════════════════ %>
 <section class="border-y border-border bg-surface/70 backdrop-blur-xl py-8">
-  <p class="text-center text-xs font-bold uppercase tracking-[0.16em] text-ink-muted">A operação inteira da agência, integrada</p>
+  <p class="text-center text-xs font-bold uppercase tracking-[0.16em] text-ink-muted"><%= t('pages.home.marquee') %></p>
   <div class="marquee mt-6">
     <div class="marquee-track gap-3">
       <% (@integrations * 2).each do |name, ic| %>
@@ -81,9 +79,9 @@
     ══════════════════════════════════════════════════════════════════ %>
 <section class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24">
   <div class="reveal text-center">
-    <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand">O funil</p>
-    <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-5xl">Sete etapas, do insight ao impacto</h2>
-    <p class="mx-auto mt-3 max-w-xl text-ink-muted">Cada ticket é uma peça de conteúdo que caminha por um funil colorido e auto-explicativo. Arraste o card e a etapa muda — o resto da operação acompanha sozinho.</p>
+    <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand"><%= t('pages.home.funnel_eyebrow') %></p>
+    <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-5xl"><%= t('pages.home.funnel_title') %></h2>
+    <p class="mx-auto mt-3 max-w-xl text-ink-muted"><%= t('pages.home.funnel_sub') %></p>
   </div>
 
   <%# connecting line that draws itself in (lg+) %>
@@ -112,7 +110,7 @@
 
   <div class="mt-10 text-center">
     <%= link_to how_it_works_path, class: "inline-flex items-center gap-1.5 text-sm font-semibold text-brand transition hover:gap-2.5" do %>
-      Ver o funil em detalhe <%= icon "arrow-right", size: 16 %>
+      <%= t('pages.home.funnel_link') %> <%= icon "arrow-right", size: 16 %>
     <% end %>
   </div>
 </section>
@@ -125,29 +123,25 @@
   <div class="relative mx-auto grid max-w-6xl items-center gap-12 px-5 sm:px-8 lg:grid-cols-2">
     <div class="reveal reveal-left">
       <span class="inline-flex items-center gap-1.5 rounded-full bg-indigo/20 px-3 py-1 text-xs font-bold text-white ring-1 ring-indigo/30">
-        <%= icon "bot", size: 13 %> Estrategista de IA
+        <%= icon "bot", size: 13 %> <%= t('pages.home.strategist_badge') %>
       </span>
       <h2 class="mt-4 font-display text-3xl font-extrabold leading-tight sm:text-5xl">
-        Descreva a cadência.<br /><span class="text-gradient-brand">Ele preenche o mês.</span>
+        <%= t('pages.home.strategist_title_1') %><br /><span class="text-gradient-brand"><%= t('pages.home.strategist_title_2') %></span>
       </h2>
       <p class="mt-4 max-w-md text-lg text-white/70">
-        Converse com um estrategista sênior de conteúdo. Diga o objetivo e o ritmo — ele propõe um
-        plano completo, com datas, briefs e subtarefas, pronto para aplicar no quadro em um clique.
+        <%= t('pages.home.strategist_sub') %>
       </p>
       <ul class="mt-7 space-y-3 text-sm">
-        <% [
-          ["messages-square", "Uma conversa multi-turno que entende a marca e a campanha"],
-          ["workflow", "Um mês de tickets criados de uma vez, cada um já em Ideação"],
-          ["list-checks", "Briefs e subtarefas com estimativa de esforço, prontos"],
-        ].each do |ic, text| %>
+        <% strategist_icons = %w[messages-square workflow list-checks] %>
+        <% t('pages.home.strategist_bullets').each_with_index do |text, i| %>
           <li class="flex items-center gap-2.5 text-white/85">
-            <span class="flex size-6 shrink-0 items-center justify-center rounded-lg bg-white/10 text-indigo"><%= icon ic, size: 14, stroke: 2.5 %></span>
+            <span class="flex size-6 shrink-0 items-center justify-center rounded-lg bg-white/10 text-indigo"><%= icon strategist_icons[i], size: 14, stroke: 2.5 %></span>
             <%= text %>
           </li>
         <% end %>
       </ul>
       <%= link_to feature_path("estrategista"), class: "mt-8 inline-flex items-center gap-1.5 rounded-xl border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10" do %>
-        Conhecer o estrategista <%= icon "arrow-right", size: 15 %>
+        <%= t('pages.home.strategist_link') %> <%= icon "arrow-right", size: 15 %>
       <% end %>
     </div>
 
@@ -155,8 +149,8 @@
     <div class="reveal reveal-right rounded-3xl border border-white/10 bg-white/[0.06] p-4 shadow-2xl backdrop-blur sm:p-6" data-typewriter-root>
       <div class="flex items-center gap-2 border-b border-white/10 pb-3">
         <span class="flex size-8 items-center justify-center rounded-xl bg-brand-gradient text-white"><%= icon "bot", size: 16 %></span>
-        <span class="font-display text-sm font-bold">Estrategista</span>
-        <span class="ml-auto inline-flex items-center gap-1.5 text-[11px] text-white/45"><span class="size-1.5 rounded-full bg-emerald"></span> online</span>
+        <span class="font-display text-sm font-bold"><%= t('pages.home.strategist_name') %></span>
+        <span class="ml-auto inline-flex items-center gap-1.5 text-[11px] text-white/45"><span class="size-1.5 rounded-full bg-emerald"></span> <%= t('pages.home.strategist_online') %></span>
       </div>
 
       <div class="space-y-3 py-4">
@@ -174,20 +168,20 @@
       <%# resulting tickets — revealed after the typing finishes %>
       <div data-typewriter-then hidden>
         <p class="mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-white/45">
-          <%= icon "circle-check", size: 13, css: "text-emerald" %> 12 tickets prontos para aplicar
+          <%= icon "circle-check", size: 13, css: "text-emerald" %> <%= t('pages.home.strategist_tickets_ready') %>
         </p>
         <div class="grid grid-cols-2 gap-2">
-          <% @strategist[:tickets].each do |t| %>
+          <% @strategist[:tickets].each do |tk| %>
             <div class="animate-rise rounded-xl border border-white/10 bg-brand-ink2/70 p-2.5">
-              <span class="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-bold" style="background: <%= t[:color] %>22; color: <%= t[:color] %>;">
-                <%= icon "circle-dot", size: 9 %> <%= t[:status] == 'ideation' ? 'Ideação' : 'Escopo' %>
+              <span class="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-bold" style="background: <%= tk[:color] %>22; color: <%= tk[:color] %>;">
+                <%= icon "circle-dot", size: 9 %> <%= tk[:status] == 'ideation' ? t('pages.funnel.ideation.label') : t('pages.funnel.scoping.label') %>
               </span>
-              <p class="mt-1.5 text-[11px] font-medium leading-snug text-white/85"><%= t[:title] %></p>
+              <p class="mt-1.5 text-[11px] font-medium leading-snug text-white/85"><%= tk[:title] %></p>
             </div>
           <% end %>
         </div>
         <button type="button" class="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald px-4 py-2.5 text-sm font-bold text-white shadow-lg">
-          <%= icon "check", size: 15, stroke: 3 %> Aplicar no quadro
+          <%= icon "check", size: 15, stroke: 3 %> <%= t('pages.home.strategist_apply') %>
         </button>
       </div>
     </div>
@@ -199,9 +193,9 @@
     ══════════════════════════════════════════════════════════════════ %>
 <section class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24">
   <div class="reveal text-center">
-    <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand">Ticket contextual</p>
-    <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-5xl">Cada etapa mostra o que importa — e nada mais</h2>
-    <p class="mx-auto mt-3 max-w-xl text-ink-muted">O ticket muda de cara conforme avança: campos próprios de cada etapa e um resumo da IA que evolui junto com o conteúdo.</p>
+    <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand"><%= t('pages.home.context_eyebrow') %></p>
+    <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-5xl"><%= t('pages.home.context_title') %></h2>
+    <p class="mx-auto mt-3 max-w-xl text-ink-muted"><%= t('pages.home.context_sub') %></p>
   </div>
 
   <div class="reveal mx-auto mt-12 max-w-4xl overflow-hidden rounded-3xl border border-border bg-surface shadow-xl" data-ticket-demo>
@@ -237,12 +231,12 @@
         </div>
         <div class="rounded-2xl border border-border bg-brand-soft/40 p-5">
           <p class="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-brand">
-            <%= icon "sparkles", size: 13 %> Resumo da IA
+            <%= icon "sparkles", size: 13 %> <%= t('pages.home.ai_summary') %>
           </p>
           <p class="mt-2.5 text-sm leading-relaxed text-ink-secondary">“<%= st[:summary] %>”</p>
           <div class="mt-4 flex items-center gap-1.5 text-[11px] text-ink-muted">
             <span class="pulse-ring relative flex size-1.5 rounded-full text-emerald" style="background: currentColor;"></span>
-            atualizado a cada mudança de etapa
+            <%= t('pages.home.context_updated') %>
           </div>
         </div>
       </div>
@@ -264,16 +258,16 @@
             <div class="absolute size-28 -rotate-6 rounded-xl bg-brand-gradient opacity-30 anim-float-slow"></div>
             <div class="absolute size-28 rotate-3 rounded-xl bg-pink/40 anim-float-sm"></div>
             <div class="relative flex size-28 flex-col justify-between rounded-xl bg-brand-gradient p-2.5 text-white shadow-lg anim-float">
-              <span class="text-[9px] font-bold opacity-80">@marca</span>
-              <span class="font-display text-[11px] font-extrabold leading-tight">5 mitos que te travam</span>
-              <span class="text-[8px] opacity-70">deslize →</span>
+              <span class="text-[9px] font-bold opacity-80"><%= t('pages.home.studio_handle') %></span>
+              <span class="font-display text-[11px] font-extrabold leading-tight"><%= t('pages.home.studio_carousel_title') %></span>
+              <span class="text-[8px] opacity-70"><%= t('pages.home.studio_swipe') %></span>
             </div>
           </div>
           <%# video render progress %>
           <div class="flex h-40 flex-col justify-center rounded-xl border border-border bg-surface p-3">
             <span class="flex size-9 items-center justify-center rounded-lg bg-pink/12 text-pink"><%= icon "video", size: 18 %></span>
-            <p class="mt-2 text-[11px] font-bold text-ink">Vídeo UGC</p>
-            <p class="text-[10px] text-ink-muted">renderizando…</p>
+            <p class="mt-2 text-[11px] font-bold text-ink"><%= t('pages.home.studio_video') %></p>
+            <p class="text-[10px] text-ink-muted"><%= t('pages.home.studio_rendering') %></p>
             <div class="anim-sheen relative mt-2 h-1.5 overflow-hidden rounded-full bg-surface-muted">
               <div class="h-full w-2/3 rounded-full bg-pink"></div>
             </div>
@@ -281,31 +275,30 @@
           <%# image shimmer-in %>
           <div class="flex h-40 flex-col justify-center rounded-xl border border-border bg-surface p-3">
             <span class="flex size-9 items-center justify-center rounded-lg bg-sky/12 text-sky"><%= icon "image", size: 18 %></span>
-            <p class="mt-2 text-[11px] font-bold text-ink">Imagem</p>
+            <p class="mt-2 text-[11px] font-bold text-ink"><%= t('pages.home.studio_image') %></p>
             <div class="shimmer mt-2 h-14 rounded-lg bg-gradient-to-br from-sky/30 to-brand/30"></div>
           </div>
         </div>
         <div class="mt-4 flex items-center gap-2 rounded-xl bg-brand-soft/50 px-3.5 py-2.5">
           <span class="text-brand"><%= icon "palette", size: 16 %></span>
-          <span class="text-xs font-semibold text-ink-secondary">Identidade da marca aplicada automaticamente</span>
+          <span class="text-xs font-semibold text-ink-secondary"><%= t('pages.home.studio_brand_applied') %></span>
         </div>
       </div>
     </div>
 
     <div class="reveal reveal-right order-1 lg:order-2">
       <span class="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-3 py-1.5 text-xs font-bold text-brand">
-        <%= icon "wand-sparkles", size: 13 %> Estúdio criativo
+        <%= icon "wand-sparkles", size: 13 %> <%= t('pages.home.studio_badge') %>
       </span>
-      <h2 class="mt-4 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-5xl">Criativos gerados com a cara da marca</h2>
+      <h2 class="mt-4 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-5xl"><%= t('pages.home.studio_title') %></h2>
       <p class="mt-4 max-w-md text-lg text-ink-muted">
-        Carrosséis virais, vídeos UGC com avatar e imagens — gerados dentro do app com o logo, as
-        cores, o @handle e o avatar do criador. Da ideia ao arquivo final sem trocar de ferramenta.
+        <%= t('pages.home.studio_sub') %>
       </p>
       <div class="mt-7 grid gap-3 sm:grid-cols-3">
         <% [
-          ["image", "#7C3AED", "Carrossel", "Viral com IA"],
-          ["video", "#EC4899", "Vídeo UGC", "IA generativa"],
-          ["sparkles", "#0EA5E9", "Imagem", "Google Banana"],
+          ["image", "#7C3AED", t('pages.home.studio_cards.carousel.title'), t('pages.home.studio_cards.carousel.tag')],
+          ["video", "#EC4899", t('pages.home.studio_cards.video.title'), t('pages.home.studio_cards.video.tag')],
+          ["sparkles", "#0EA5E9", t('pages.home.studio_cards.image.title'), t('pages.home.studio_cards.image.tag')],
         ].each do |ic, cc, title, tag| %>
           <div class="rounded-2xl border border-border bg-canvas p-4">
             <span class="flex size-9 items-center justify-center rounded-lg" style="background: <%= soft_bg(cc) %>; color: <%= cc %>;"><%= icon ic, size: 18, stroke: 2.2 %></span>
@@ -323,9 +316,9 @@
     ══════════════════════════════════════════════════════════════════ %>
 <section class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24">
   <div class="reveal text-center">
-    <p class="text-xs font-bold uppercase tracking-[0.16em] text-emerald">Publicação & analytics</p>
-    <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-5xl">Publique em 7 redes. Meça tudo num lugar.</h2>
-    <p class="mx-auto mt-3 max-w-xl text-ink-muted">Agende e publique com integração direta e nativa em cada rede, e acompanhe as métricas de cada post em tempo real.</p>
+    <p class="text-xs font-bold uppercase tracking-[0.16em] text-emerald"><%= t('pages.home.publish_eyebrow') %></p>
+    <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-5xl"><%= t('pages.home.publish_title') %></h2>
+    <p class="mx-auto mt-3 max-w-xl text-ink-muted"><%= t('pages.home.publish_sub') %></p>
   </div>
 
   <div class="mt-12 grid gap-6 lg:grid-cols-[1fr_1.2fr]">
@@ -336,7 +329,7 @@
           <span class="flex size-9 shrink-0 items-center justify-center rounded-xl" style="background: <%= soft_bg(n[:color]) %>; color: <%= n[:color] %>;"><%= icon n[:icon], size: 18, stroke: 2.2 %></span>
           <div class="min-w-0">
             <p class="truncate font-display text-sm font-bold text-ink"><%= n[:name] %></p>
-            <p class="text-[10px] font-semibold uppercase tracking-wide text-emerald">direto</p>
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-emerald"><%= t('pages.home.network_direct') %></p>
           </div>
         </div>
       <% end %>
@@ -346,8 +339,8 @@
     <div class="reveal reveal-right rounded-3xl border border-border bg-surface p-6 shadow-lg">
       <div class="flex items-center justify-between">
         <div>
-          <p class="font-display text-sm font-bold text-ink">Desempenho · últimos 14 dias</p>
-          <p class="text-xs text-ink-muted">sincronizado automaticamente por rede</p>
+          <p class="font-display text-sm font-bold text-ink"><%= t('pages.home.perf_title') %></p>
+          <p class="text-xs text-ink-muted"><%= t('pages.home.perf_sub') %></p>
         </div>
         <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald/12 px-2.5 py-1 text-[11px] font-bold text-emerald">
           <%= icon "trending-up", size: 12, stroke: 2.5 %> +38%
@@ -365,7 +358,7 @@
       </svg>
 
       <div class="mt-4 grid grid-cols-4 gap-2 border-t border-border pt-4 text-center">
-        <% [["Alcance", 84, "k", "#7C3AED"], ["Curtidas", 12, "k", "#EC4899"], ["Salvos", 3, "k", "#10B981"], ["Comentários", 940, "", "#0EA5E9"]].each do |label, val, suf, cc| %>
+        <% [[t('pages.home.kpi_reach'), 84, "k", "#7C3AED"], [t('pages.home.kpi_likes'), 12, "k", "#EC4899"], [t('pages.home.kpi_saves'), 3, "k", "#10B981"], [t('pages.home.kpi_comments'), 940, "", "#0EA5E9"]].each do |label, val, suf, cc| %>
           <div>
             <p class="font-display text-xl font-extrabold" style="color: <%= cc %>;"><span data-count="<%= val %>">0</span><%= suf %></p>
             <p class="mt-0.5 text-[10px] font-medium text-ink-muted"><%= label %></p>
@@ -384,18 +377,18 @@
     <div class="grid gap-5 md:grid-cols-3" data-reveal-group>
       <div class="reveal reveal-scale rounded-3xl border border-border bg-canvas p-7 lift">
         <span class="flex size-12 items-center justify-center rounded-2xl bg-emerald/12 text-emerald"><span class="pulse-ring relative flex size-5 items-center justify-center rounded-full" style="color: currentColor;"><%= icon "radio-tower", size: 20, stroke: 2.2 %></span></span>
-        <h3 class="mt-4 font-display text-lg font-bold text-ink">Tempo real, de verdade</h3>
-        <p class="mt-1.5 text-sm leading-relaxed text-ink-muted">Cards se movem, resumos ficam prontos e métricas chegam — sem recarregar. O time inteiro vê a mesma tela, viva.</p>
+        <h3 class="mt-4 font-display text-lg font-bold text-ink"><%= t('pages.home.realtime_title') %></h3>
+        <p class="mt-1.5 text-sm leading-relaxed text-ink-muted"><%= t('pages.home.realtime_desc') %></p>
       </div>
       <div class="reveal reveal-scale rounded-3xl border border-border bg-canvas p-7 lift">
         <span class="flex size-12 items-center justify-center rounded-2xl bg-indigo/12 text-indigo"><%= icon "users-round", size: 24, stroke: 2.2 %></span>
-        <h3 class="mt-4 font-display text-lg font-bold text-ink">Papéis e permissões</h3>
-        <p class="mt-1.5 text-sm leading-relaxed text-ink-muted">Owner, admin, gerente, membro e convidado — cada um vê e faz exatamente o que deve. O cliente aprova; o time produz.</p>
+        <h3 class="mt-4 font-display text-lg font-bold text-ink"><%= t('pages.home.roles_title') %></h3>
+        <p class="mt-1.5 text-sm leading-relaxed text-ink-muted"><%= t('pages.home.roles_desc') %></p>
       </div>
       <div class="reveal reveal-scale rounded-3xl border border-border bg-canvas p-7 lift">
         <span class="flex size-12 items-center justify-center rounded-2xl bg-brand-soft text-brand"><%= icon "building-2", size: 24, stroke: 2.2 %></span>
-        <h3 class="mt-4 font-display text-lg font-bold text-ink">Várias agências, isoladas</h3>
-        <p class="mt-1.5 text-sm leading-relaxed text-ink-muted">Cada workspace é uma agência com seu time, clientes e dados. Gerencie todas de uma conta, sem misturar nada.</p>
+        <h3 class="mt-4 font-display text-lg font-bold text-ink"><%= t('pages.home.workspaces_title') %></h3>
+        <p class="mt-1.5 text-sm leading-relaxed text-ink-muted"><%= t('pages.home.workspaces_desc') %></p>
       </div>
     </div>
   </div>
@@ -410,29 +403,27 @@
     <div class="relative grid items-center gap-10 lg:grid-cols-2">
       <div>
         <span class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-white/80">
-          <%= icon "plug-zap", size: 13 %> Novo — Conector de IA
+          <%= icon "plug-zap", size: 13 %> <%= t('pages.home.mcp_badge') %>
         </span>
         <h2 class="mt-4 font-display text-3xl font-extrabold leading-tight sm:text-4xl">
-          Opere a agência <span class="text-gradient-brand">conversando com a IA</span>
+          <%= t('pages.home.mcp_title_1') %> <span class="text-gradient-brand"><%= t('pages.home.mcp_title_2') %></span>
         </h2>
         <p class="mt-3 max-w-md text-white/75">
-          Adicione o agencios como <strong class="text-white">conector (MCP)</strong> no seu assistente de
-          IA e comande tudo por linguagem natural — crie e mova tickets, gere criativos, agende posts e
-          cobranças, sem sair da conversa.
+          <%= t('pages.home.mcp_body_html').html_safe %>
         </p>
         <ul class="mt-6 space-y-2.5 text-sm text-white/85">
-          <li class="flex items-center gap-2"><span class="text-emerald"><%= icon "check", size: 16 %></span> Cola uma URL — sem login, sem OAuth</li>
-          <li class="flex items-center gap-2"><span class="text-emerald"><%= icon "check", size: 16 %></span> Respeita seu papel e permissões em cada workspace</li>
-          <li class="flex items-center gap-2"><span class="text-emerald"><%= icon "check", size: 16 %></span> Mais de 70 ações da plataforma à disposição</li>
+          <% t('pages.home.mcp_bullets').each do |bullet| %>
+            <li class="flex items-center gap-2"><span class="text-emerald"><%= icon "check", size: 16 %></span> <%= bullet %></li>
+          <% end %>
         </ul>
       </div>
       <div class="rounded-2xl border border-white/10 bg-white/[0.06] p-5 backdrop-blur" data-typewriter-root>
         <div class="space-y-3">
           <div data-type-line hidden class="ml-auto max-w-[85%]">
-            <div class="rounded-2xl rounded-br-md bg-brand-bright/90 px-4 py-2.5 text-sm text-white shadow"><span data-typewriter="No workspace estúdio-pulse, crie um ticket na campanha Bloom: “Reel de lançamento”."></span></div>
+            <div class="rounded-2xl rounded-br-md bg-brand-bright/90 px-4 py-2.5 text-sm text-white shadow"><span data-typewriter="<%= t('pages.home.mcp_chat_prompt') %>"></span></div>
           </div>
           <div data-type-line hidden class="max-w-[90%]">
-            <div class="rounded-2xl rounded-bl-md bg-white/10 px-4 py-2.5 text-sm text-white/85"><span data-typewriter="Pronto ✅ — ticket #214 criado em Ideação, atribuído a você. Quer que eu já gere um carrossel?"></span></div>
+            <div class="rounded-2xl rounded-bl-md bg-white/10 px-4 py-2.5 text-sm text-white/85"><span data-typewriter="<%= t('pages.home.mcp_chat_reply') %>"></span></div>
           </div>
         </div>
       </div>
@@ -448,12 +439,12 @@
     <%# reports %>
     <div class="reveal reveal-left flex flex-col rounded-3xl border border-border bg-surface p-8 shadow-lg">
       <span class="inline-flex w-fit items-center gap-1.5 rounded-full bg-teal/12 px-3 py-1.5 text-xs font-bold text-teal">
-        <%= icon "file-text", size: 13 %> Relatórios de campanha
+        <%= icon "file-text", size: 13 %> <%= t('pages.home.reports_badge') %>
       </span>
-      <h3 class="mt-4 font-display text-2xl font-extrabold tracking-tight text-ink">O fechamento vira um deck que impressiona</h3>
-      <p class="mt-3 text-ink-muted">A IA lê as métricas, o histórico e as lições e monta um relatório com KPIs, acertos, gargalos e plano de ação — pronto para apresentar ao cliente.</p>
+      <h3 class="mt-4 font-display text-2xl font-extrabold tracking-tight text-ink"><%= t('pages.home.reports_title') %></h3>
+      <p class="mt-3 text-ink-muted"><%= t('pages.home.reports_desc') %></p>
       <div class="mt-6 grid grid-cols-3 gap-3">
-        <% [["Alcance", "+42%", "#10B981"], ["Posts", "24", "#7C3AED"], ["Meta", "118%", "#F59E0B"]].each do |label, val, cc| %>
+        <% [[t('pages.home.reports_kpi_reach'), "+42%", "#10B981"], [t('pages.home.reports_kpi_posts'), "24", "#7C3AED"], [t('pages.home.reports_kpi_goal'), "118%", "#F59E0B"]].each do |label, val, cc| %>
           <div class="rounded-2xl border border-border bg-canvas p-3 text-center">
             <p class="font-display text-xl font-extrabold" style="color: <%= cc %>;"><%= val %></p>
             <p class="mt-0.5 text-[10px] font-medium text-ink-muted"><%= label %></p>
@@ -461,41 +452,41 @@
         <% end %>
       </div>
       <div class="mt-4 space-y-2">
-        <div class="flex items-center gap-2 rounded-xl bg-emerald/8 px-3 py-2 text-xs text-ink-secondary"><span class="text-emerald"><%= icon "trophy", size: 14 %></span> Acerto: bastidores puxaram o alcance</div>
-        <div class="flex items-center gap-2 rounded-xl bg-amber/8 px-3 py-2 text-xs text-ink-secondary"><span class="text-amber"><%= icon "target", size: 14 %></span> Ajuste: publicar mais cedo às terças</div>
+        <div class="flex items-center gap-2 rounded-xl bg-emerald/8 px-3 py-2 text-xs text-ink-secondary"><span class="text-emerald"><%= icon "trophy", size: 14 %></span> <%= t('pages.home.reports_win') %></div>
+        <div class="flex items-center gap-2 rounded-xl bg-amber/8 px-3 py-2 text-xs text-ink-secondary"><span class="text-amber"><%= icon "target", size: 14 %></span> <%= t('pages.home.reports_adjust') %></div>
       </div>
       <%= link_to feature_path("relatorios"), class: "mt-auto pt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-teal transition hover:gap-2.5" do %>
-        Ver relatórios <%= icon "arrow-right", size: 15 %>
+        <%= t('pages.home.reports_link') %> <%= icon "arrow-right", size: 15 %>
       <% end %>
     </div>
 
     <%# client billing — Pix %>
     <div class="reveal reveal-right flex flex-col rounded-3xl border border-border bg-surface p-8 shadow-lg">
       <span class="inline-flex w-fit items-center gap-1.5 rounded-full bg-orange/12 px-3 py-1.5 text-xs font-bold text-orange">
-        <%= icon "receipt", size: 13 %> Cobranças
+        <%= icon "receipt", size: 13 %> <%= t('pages.home.billing_badge') %>
       </span>
-      <h3 class="mt-4 font-display text-2xl font-extrabold tracking-tight text-ink">Fature seus clientes e receba via Pix</h3>
-      <p class="mt-3 text-ink-muted">Crie faturas ligadas a campanhas, cobre por Pix, boleto ou cartão pelo Mercado Pago e deixe a conciliação acontecer sozinha.</p>
+      <h3 class="mt-4 font-display text-2xl font-extrabold tracking-tight text-ink"><%= t('pages.home.billing_title') %></h3>
+      <p class="mt-3 text-ink-muted"><%= t('pages.home.billing_desc') %></p>
       <div class="mt-6 flex items-center gap-4 rounded-2xl border border-border bg-canvas p-4">
         <div class="grid size-20 shrink-0 place-items-center rounded-xl bg-brand-ink text-white/90 anim-float-sm">
           <%= icon "qr-code", size: 44, stroke: 1.6 %>
         </div>
         <div class="min-w-0 flex-1">
           <div class="flex items-center justify-between">
-            <span class="font-display text-sm font-bold text-ink">Fatura #0182</span>
-            <span class="inline-flex items-center gap-1 rounded-full bg-emerald/12 px-2 py-0.5 text-[10px] font-bold text-emerald"><span class="size-1.5 rounded-full bg-emerald"></span> Pago</span>
+            <span class="font-display text-sm font-bold text-ink"><%= t('pages.home.billing_invoice') %></span>
+            <span class="inline-flex items-center gap-1 rounded-full bg-emerald/12 px-2 py-0.5 text-[10px] font-bold text-emerald"><span class="size-1.5 rounded-full bg-emerald"></span> <%= t('pages.home.billing_paid') %></span>
           </div>
           <p class="mt-1 font-display text-2xl font-extrabold text-ink">R$ 2.400</p>
-          <p class="text-[11px] text-ink-muted">Pix conciliado automaticamente</p>
+          <p class="text-[11px] text-ink-muted"><%= t('pages.home.billing_reconciled') %></p>
         </div>
       </div>
       <div class="mt-4 flex flex-wrap gap-2">
-        <% ["Pix", "Boleto", "Cartão", "Multi-campanha"].each do |tag| %>
+        <% t('pages.home.billing_tags').each do |tag| %>
           <span class="rounded-full bg-surface-muted px-2.5 py-1 text-[11px] font-semibold text-ink-secondary"><%= tag %></span>
         <% end %>
       </div>
       <%= link_to feature_path("cobrancas"), class: "mt-auto pt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-orange transition hover:gap-2.5" do %>
-        Ver cobranças <%= icon "arrow-right", size: 15 %>
+        <%= t('pages.home.billing_link') %> <%= icon "arrow-right", size: 15 %>
       <% end %>
     </div>
   </div>
@@ -507,9 +498,9 @@
 <section class="bg-surface/65 backdrop-blur-2xl py-20 sm:py-24">
   <div class="mx-auto max-w-6xl px-5 sm:px-8">
     <div class="reveal text-center">
-      <p class="text-xs font-bold uppercase tracking-[0.16em] text-pink">Tudo incluso</p>
-      <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-5xl">Uma plataforma, a operação inteira</h2>
-      <p class="mx-auto mt-3 max-w-lg text-ink-muted">Oito frentes que normalmente exigem oito ferramentas — reunidas e conversando entre si.</p>
+      <p class="text-xs font-bold uppercase tracking-[0.16em] text-pink"><%= t('pages.home.all_features_eyebrow') %></p>
+      <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-5xl"><%= t('pages.home.all_features_title') %></h2>
+      <p class="mx-auto mt-3 max-w-lg text-ink-muted"><%= t('pages.home.all_features_sub') %></p>
     </div>
     <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4" data-reveal-group data-reveal-step="60">
       <% @features.each do |f| %>
@@ -533,21 +524,21 @@
     ══════════════════════════════════════════════════════════════════ %>
 <section class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24">
   <div class="reveal text-center">
-    <p class="text-xs font-bold uppercase tracking-[0.16em] text-emerald">Planos</p>
-    <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-5xl">Preço que cresce com a agência</h2>
-    <p class="mx-auto mt-3 max-w-lg text-ink-muted">Comece com <%= @trial_days %> dias de teste. Vídeos, imagens e carrosséis usam créditos.</p>
+    <p class="text-xs font-bold uppercase tracking-[0.16em] text-emerald"><%= t('pages.home.pricing_eyebrow') %></p>
+    <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-5xl"><%= t('pages.home.pricing_title') %></h2>
+    <p class="mx-auto mt-3 max-w-lg text-ink-muted"><%= t('pages.home.pricing_sub', days: @trial_days) %></p>
   </div>
   <div class="mx-auto mt-12 grid max-w-4xl gap-6 md:grid-cols-3" data-reveal-group>
     <% @plans.each do |p| %>
       <div class="reveal <%= p[:highlight] ? 'relative rounded-3xl border-2 border-brand bg-brand-soft p-7 shadow-xl' : 'rounded-3xl border border-border bg-surface p-7' %>">
         <% if p[:highlight] %>
-          <span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand-gradient px-3 py-1 text-xs font-bold text-white shadow-lg">Mais popular</span>
+          <span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand-gradient px-3 py-1 text-xs font-bold text-white shadow-lg"><%= t('pages.plans.most_popular') %></span>
         <% end %>
         <h3 class="font-display text-xl font-extrabold text-ink"><%= p[:name] %></h3>
         <p class="mt-1 text-sm text-ink-muted"><%= plan_seats_label(p[:seats]) %></p>
-        <p class="mt-4 font-display text-4xl font-extrabold text-ink"><%= brl_short(p[:price_cents]) %><span class="text-base font-semibold text-ink-muted">/mês</span></p>
+        <p class="mt-4 font-display text-4xl font-extrabold text-ink"><%= brl_short(p[:price_cents]) %><span class="text-base font-semibold text-ink-muted"><%= t('pages.plans.per_month') %></span></p>
         <% if @annual_discount_percent.to_i.positive? %>
-          <p class="mt-1 text-xs font-semibold text-emerald">ou <%= brl_short(p[:annual_monthly_equivalent_cents]) %>/mês no anual · -<%= @annual_discount_percent %>%</p>
+          <p class="mt-1 text-xs font-semibold text-emerald"><%= t('pages.home.pricing_annual', price: brl_short(p[:annual_monthly_equivalent_cents]), pct: @annual_discount_percent) %></p>
         <% end %>
         <ul class="mt-6 space-y-2.5">
           <% p[:features].first(5).each do |feat| %>
@@ -563,7 +554,7 @@
     <% end %>
   </div>
   <p class="mt-6 text-center text-sm">
-    <%= link_to "Ver planos e perguntas frequentes", pricing_path, class: "font-semibold text-brand hover:underline" %>
+    <%= link_to t('pages.home.pricing_link'), pricing_path, class: "font-semibold text-brand hover:underline" %>
   </p>
 </section>
 

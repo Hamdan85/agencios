@@ -19,7 +19,7 @@ module Operations
       end
 
       def call
-        raise Operations::Errors::Invalid, 'Referência inválida.' if @url.blank?
+        raise Operations::Errors::Invalid, I18n.t('operations.video.errors.add_reference.invalid_reference') if @url.blank?
 
         kind = References.kind_for(@url)
         @creative.video_scenes.find_each do |scene|

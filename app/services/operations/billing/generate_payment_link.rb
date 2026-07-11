@@ -34,7 +34,7 @@ module Operations
         case @provider
         when 'mercado_pago' then mercado_pago_link
         else
-          raise Operations::Errors::Invalid, "Provedor de pagamento não suportado: #{@provider}"
+          raise Operations::Errors::Invalid, I18n.t('operations.billing.unsupported_provider', provider: @provider)
         end
       end
 

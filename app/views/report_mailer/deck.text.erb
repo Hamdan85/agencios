@@ -1,7 +1,7 @@
-Relatório da campanha <%= @project.name %>
+<%= t('mailers.report.deck.text_heading', project: @project.name) %>
 
-Olá<%= @client&.name.present? ? ", #{@client.name}" : "" %>. Fechamos a campanha <%= @project.name %> e preparamos o relatório completo de desempenho. Ele está em anexo neste e-mail (PDF).
+<%= t('mailers.common.hello') %><%= @client&.name.present? ? ", #{@client.name}" : "" %>. <%= t('mailers.report.deck.text_body', project: @project.name) %>
 
-Abra sua central: <%= @url %>
+<%= t('mailers.report.deck.text_open') %> <%= @url %>
 
-Na sua central você acompanha esta e as demais campanhas a qualquer momento.
+<%= t('mailers.report.deck.note') %>

@@ -11,6 +11,8 @@ class ApprovalMailer < ApplicationMailer
     # One link per client — the central lists every campaign; deep-link straight
     # to this campaign's approvals tab.
     @url = app_url("/portal/#{@client.approval_token!}?campanha=#{@project.id}&aba=aprovacoes")
-    mail(to: recipients, subject: "Aprove o conteúdo — #{@project.name}")
+    with_recipient_locale(@client) do
+      mail(to: recipients, subject: I18n.t('mailers.approval.review.subject', project: @project.name))
+    end
   end
 end

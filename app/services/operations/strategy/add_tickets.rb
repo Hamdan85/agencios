@@ -45,11 +45,13 @@ module Operations
       def build_additions(base)
         client = ai_client('strategy_plan')
         ask = @instruction.present? ? ": #{@instruction}" : '.'
+        prompt = I18n.with_locale(workspace_locale(@session.workspace)) do
+          "#{conversation(@session)}\n\n#{project_tickets_context(@session)}\n\n" \
+            "#{I18n.t('operations.strategy.add_tickets.instruction', ask: ask)}"
+        end
         result = client.generate(
           system: planner(@session).system,
-          prompt: "#{conversation(@session)}\n\n#{project_tickets_context(@session)}\n\n" \
-                  "Adicione APENAS as peças NOVAS pedidas#{ask}\n" \
-                  'Não repita nenhum ticket existente. Chame a ferramenta add_tickets com os cards novos.',
+          prompt: prompt,
           tool: Prompts::StrategyPlanner.add_tool,
           max_tokens: ADD_MAX_TOKENS
         )

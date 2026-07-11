@@ -7,6 +7,8 @@ class DigestMailer < ApplicationMailer
     @user = user
     @tickets_by_workspace = tickets.group_by(&:workspace)
     @date = Date.current
-    mail(to: user.email, subject: "Seus tickets de hoje — #{email_date(@date)}")
+    with_recipient_locale(user) do
+      mail(to: user.email, subject: I18n.t('mailers.digest.daily_tickets.subject', date: email_date(@date)))
+    end
   end
 end

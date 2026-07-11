@@ -33,10 +33,15 @@ module Operations
           Operations::Ai::FillFields.call(ticket: @ticket, status: status, only_blank: false, note: false)
         end
 
-        labels = targets.map { |s| Ticket::STATUS_LABELS[s] || s }.join(', ')
+        # Status labels are DATA in the note params — render them once in the
+        # workspace language (this runs off-request, where I18n.locale is default).
+        from_name, labels = I18n.with_locale(workspace_locale(@ticket.workspace)) do
+          [from_label, targets.map { |s| Ticket::STATUS_LABELS[s] || s }.join(', ')]
+        end
         Operations::Notes::Create.call(
           ticket: @ticket, user: nil, kind: :ai,
-          body: "Etapas seguintes atualizadas para refletir a alteração em “#{from_label}”: #{labels}."
+          i18n_key: 'notes.cascade_fields',
+          i18n_params: { from: from_name, labels: labels }
         )
         @ticket
       rescue StandardError => e
@@ -62,6 +67,10 @@ module Operations
 
       def from_label
         Ticket::STATUS_LABELS[@from_status] || @from_status
+      end
+
+      def workspace_locale(ws)
+        I18n.available_locales.find { |l| l.to_s == ws&.locale.to_s } || I18n.default_locale
       end
     end
   end

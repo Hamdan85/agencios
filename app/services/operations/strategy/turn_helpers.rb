@@ -31,20 +31,21 @@ module Operations
           content = m['content'].to_s.strip
           next if content.blank?
 
-          "#{m['role'] == 'assistant' ? 'ESTRATEGISTA' : 'USUÁRIO'}: #{content}"
+          role = I18n.t(m['role'] == 'assistant' ? 'operations.strategy.turn_helpers.role_assistant' : 'operations.strategy.turn_helpers.role_user')
+          "#{role}: #{content}"
         end
-        "Conversa até aqui:\n\n#{lines.join("\n\n")}"
+        I18n.t('operations.strategy.turn_helpers.conversation', lines: lines.join("\n\n"))
       end
 
       # The current proposed cards, so the router can target a revise by `key`.
       def cards_context(session)
         cards = Array(session.proposed_plan&.dig('tickets'))
-        return 'Ainda não há plano proposto.' if cards.empty?
+        return I18n.t('operations.strategy.turn_helpers.no_plan') if cards.empty?
 
         lines = cards.map do |c|
           "#{c['key']}: #{c['title']} (#{c['creative_type']}, #{Array(c['channels']).join('/')}, #{c['scheduled_at']})"
         end
-        "Plano atual (para revisar UM ticket, use a key):\n#{lines.join("\n")}"
+        I18n.t('operations.strategy.turn_helpers.current_plan', lines: lines.join("\n"))
       end
 
       # The project's ALREADY-created tickets — so the router can tell a running
@@ -52,16 +53,19 @@ module Operations
       # to duplicate, and can target one for edit/remove by its `#<id>` reference.
       def project_tickets_context(session)
         tickets = session.project.tickets.order(:scheduled_at).limit(60)
-        return 'A campanha ainda não tem tickets criados.' if tickets.empty?
+        return I18n.t('operations.strategy.turn_helpers.no_tickets') if tickets.empty?
 
         lines = tickets.map do |t|
           format = t.creative_type.presence || Array(t.try(:creative_types)).join('/')
           "- ##{t.id}: #{t.display_title} (#{format}, #{t.scheduled_at&.iso8601})"
         end
-        "Tickets que a campanha JÁ tem (#{tickets.size}) — NÃO os recrie. Para acrescentar " \
-          "novos use add_tickets; para editar/remover UM, use revise_ticket/remove_ticket com " \
-          "ticket_key no formato \"#<id>\":\n#{lines.join("\n")}"
+        I18n.t('operations.strategy.turn_helpers.existing_tickets',
+               count: tickets.size, lines: lines.join("\n"))
       end
+
+      # Resolve the workspace's own locale so off-request turns (Sidekiq) render the
+      # planner prompts and assistant notes in the workspace language.
+      def workspace_locale(ws) = I18n.available_locales.find { |l| l.to_s == ws&.locale.to_s } || I18n.default_locale
 
       # The pending additive/ops cards to stack onto (when the user is stacking
       # changes onto an already-proposed append plan that hasn't been applied), or

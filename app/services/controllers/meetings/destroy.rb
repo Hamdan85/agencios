@@ -12,7 +12,7 @@ module Controllers
         authorize!(meeting, :destroy?)
         Operations::Meetings::RemoveFromCalendar.call(meeting)
         meeting.destroy!
-        { message: 'Reunião removida.' }
+        { message: I18n.t('api.meetings.removed') }
       end
     end
   end

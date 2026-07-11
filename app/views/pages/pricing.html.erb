@@ -1,19 +1,18 @@
-<% content_for :title, "Preços — agencios" %>
-<% content_for :description, "Planos que crescem com a sua agência: Solo, Agência e Enterprise. #{@trial_days} dias de teste (com cartão). Vídeos, imagens e carrosséis por créditos pré-pagos." %>
+<% content_for :title, t('pages.pricing.title') %>
+<% content_for :description, t('pages.pricing.description', days: @trial_days) %>
 
 <%# ── Hero ──────────────────────────────────────────────────────── %>
 <section class="relative overflow-hidden bg-shell-gradient">
   <div class="absolute inset-0 bg-aurora opacity-70"></div>
   <div class="relative mx-auto max-w-4xl px-5 pb-28 pt-28 text-center sm:px-8 sm:pt-36">
     <span class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-bold text-white/80 ring-1 ring-white/10">
-      <span class="text-emerald"><%= icon "rocket", size: 13 %></span> Planos
+      <span class="text-emerald"><%= icon "rocket", size: 13 %></span> <%= t('pages.pricing.hero_badge') %>
     </span>
     <h1 class="mx-auto mt-6 max-w-3xl font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-white sm:text-5xl">
-      Preço que cresce <span class="text-gradient-brand">com a agência.</span>
+      <%= t('pages.pricing.hero_title_1') %> <span class="text-gradient-brand"><%= t('pages.pricing.hero_title_2') %></span>
     </h1>
     <p class="mx-auto mt-5 max-w-xl text-lg text-white/70">
-      <%= @trial_days %> dias de teste em qualquer plano — com cartão. Vídeos, imagens e carrosséis
-      usam créditos pré-pagos.
+      <%= t('pages.pricing.hero_sub', days: @trial_days) %>
     </p>
   </div>
 </section>
@@ -23,12 +22,12 @@
   <%# Billing interval toggle (Mensal / Anual) — driven by marketing.js %>
   <% if @annual_discount_percent.to_i.positive? %>
     <div class="relative z-10 mb-8 flex justify-center">
-      <div class="inline-flex items-center gap-1 rounded-full border border-border bg-surface p-1 shadow-sm" role="tablist" aria-label="Ciclo de cobrança">
+      <div class="inline-flex items-center gap-1 rounded-full border border-border bg-surface p-1 shadow-sm" role="tablist" aria-label="<%= t('pages.pricing.billing_cycle') %>">
         <button type="button" role="tab" data-pricing-interval="month" aria-selected="true"
-                class="inline-flex items-center rounded-full px-5 py-2 text-sm font-semibold transition">Mensal</button>
+                class="inline-flex items-center rounded-full px-5 py-2 text-sm font-semibold transition"><%= t('pages.pricing.monthly') %></button>
         <button type="button" role="tab" data-pricing-interval="year" aria-selected="false"
                 class="inline-flex items-center gap-1.5 rounded-full px-5 py-2 text-sm font-semibold transition">
-          Anual
+          <%= t('pages.pricing.annual') %>
           <span class="rounded-full bg-emerald/12 px-1.5 py-0.5 text-[10px] font-bold leading-none text-emerald">-<%= @annual_discount_percent %>%</span>
         </button>
       </div>
@@ -38,18 +37,18 @@
     <% @plans.each do |p| %>
       <div class="<%= p[:highlight] ? 'relative rounded-3xl border-2 border-brand bg-surface p-7 shadow-2xl reveal reveal-scale' : 'rounded-3xl border border-border bg-surface p-7 shadow-lg reveal reveal-scale' %>">
         <% if p[:highlight] %>
-          <span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand-gradient px-3 py-1 text-xs font-bold text-white shadow-lg">Mais popular</span>
+          <span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand-gradient px-3 py-1 text-xs font-bold text-white shadow-lg"><%= t('pages.plans.most_popular') %></span>
         <% end %>
         <h2 class="font-display text-xl font-extrabold text-ink"><%= p[:name] %></h2>
         <p class="mt-1 text-sm text-ink-muted"><%= p[:tagline] %></p>
         <%# Monthly price (default) and annual monthly-equivalent, toggled via [data-price-*] %>
         <p class="mt-5 font-display text-4xl font-extrabold text-ink">
           <span data-price-month><%= brl_short(p[:price_cents]) %></span>
-          <span data-price-year hidden><%= brl_short(p[:annual_monthly_equivalent_cents]) %></span><span class="text-base font-semibold text-ink-muted">/mês</span>
+          <span data-price-year hidden><%= brl_short(p[:annual_monthly_equivalent_cents]) %></span><span class="text-base font-semibold text-ink-muted"><%= t('pages.plans.per_month') %></span>
         </p>
         <% if @annual_discount_percent.to_i.positive? %>
           <p class="mt-1 h-4 text-xs font-semibold text-emerald" data-price-year-caption hidden>
-            <%= brl_short(p[:annual_price_cents]) %>/ano · economize <%= @annual_discount_percent %>%
+            <%= t('pages.pricing.annual_caption', price: brl_short(p[:annual_price_cents]), pct: @annual_discount_percent) %>
           </p>
         <% end %>
         <p class="mt-1 text-xs font-semibold uppercase tracking-wider text-ink-muted"><%= plan_seats_label(p[:seats]) %></p>
@@ -67,7 +66,7 @@
       </div>
     <% end %>
   </div>
-  <p class="mt-6 text-center text-sm text-ink-muted">Todos os planos incluem <%= @trial_days %> dias de teste · cartão obrigatório para iniciar · cancele quando quiser.</p>
+  <p class="mt-6 text-center text-sm text-ink-muted"><%= t('pages.pricing.all_plans_note', days: @trial_days) %></p>
 </section>
 
 <%# ── Credit economy explainer ──────────────────────────────────── %>
@@ -75,14 +74,14 @@
   <div class="overflow-hidden rounded-3xl border border-border bg-surface reveal">
     <div class="grid lg:grid-cols-2">
       <div class="p-8 sm:p-10">
-        <span class="inline-flex items-center gap-2 rounded-full bg-brand-soft px-3 py-1.5 text-xs font-bold text-brand"><%= icon "zap", size: 13 %> Créditos pré-pagos</span>
-        <h2 class="mt-4 font-display text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">Geração por créditos</h2>
-        <p class="mt-3 text-ink-muted">A assinatura cobre a plataforma, os assentos e uma cota mensal de créditos. Vídeos, imagens e carrosséis consomem créditos da sua carteira. <strong class="text-ink">1 crédito = R$ 1.</strong></p>
+        <span class="inline-flex items-center gap-2 rounded-full bg-brand-soft px-3 py-1.5 text-xs font-bold text-brand"><%= icon "zap", size: 13 %> <%= t('pages.pricing.credits_badge') %></span>
+        <h2 class="mt-4 font-display text-2xl font-extrabold tracking-tight text-ink sm:text-3xl"><%= t('pages.pricing.credits_title') %></h2>
+        <p class="mt-3 text-ink-muted"><%= t('pages.pricing.credits_desc_html').html_safe %></p>
         <ul class="mt-6 space-y-3">
           <% [
-            ["palette", "#7C3AED", "Carrosséis", "#{@credit_costs[:carousel]} #{@credit_costs[:carousel] == 1 ? 'crédito' : 'créditos'} por carrossel."],
-            ["image", "#0EA5E9", "Imagens", "#{@credit_costs[:image]} #{@credit_costs[:image] == 1 ? 'crédito' : 'créditos'} por imagem."],
-            ["video", "#EC4899", "Vídeos UGC", "A partir de #{@credit_costs[:video_15s]} créditos por 15s."],
+            ["palette", "#7C3AED", t('pages.pricing.credits_carousel_title'), t('pages.pricing.credits_carousel_desc', count: @credit_costs[:carousel])],
+            ["image", "#0EA5E9", t('pages.pricing.credits_image_title'), t('pages.pricing.credits_image_desc', count: @credit_costs[:image])],
+            ["video", "#EC4899", t('pages.pricing.credits_video_title'), t('pages.pricing.credits_video_desc', count: @credit_costs[:video_15s])],
           ].each do |ic, cc, title, desc| %>
             <li class="flex items-center gap-3">
               <span class="flex size-10 items-center justify-center rounded-xl" style="background: <%= soft_bg(cc) %>; color: <%= cc %>;"><%= icon ic, size: 20, stroke: 2.2 %></span>
@@ -95,13 +94,13 @@
         </ul>
       </div>
       <div class="bg-shell-gradient p-8 sm:p-10">
-        <p class="text-xs font-bold uppercase tracking-[0.16em] text-white/50">Pacotes de créditos</p>
-        <p class="mt-1 text-sm text-white/70">Precisou de mais? Compre créditos quando quiser — eles não expiram por 12 meses.</p>
+        <p class="text-xs font-bold uppercase tracking-[0.16em] text-white/50"><%= t('pages.pricing.packs_title') %></p>
+        <p class="mt-1 text-sm text-white/70"><%= t('pages.pricing.packs_desc') %></p>
         <div class="mt-5 grid grid-cols-2 gap-3" data-reveal-group data-reveal-step="70">
           <% @credit_packs.each do |pack| %>
             <div class="reveal reveal-scale rounded-2xl bg-surface/95 p-4 shadow-lg backdrop-blur lift">
               <p class="font-display text-sm font-bold text-ink"><%= pack[:name] %></p>
-              <p class="mt-1 font-display text-2xl font-extrabold text-ink"><%= pack[:credits] %><span class="ml-1 text-xs font-semibold text-ink-muted">créditos</span></p>
+              <p class="mt-1 font-display text-2xl font-extrabold text-ink"><%= pack[:credits] %><span class="ml-1 text-xs font-semibold text-ink-muted"><%= t('pages.pricing.packs_credits_unit') %></span></p>
               <p class="mt-0.5 text-sm text-ink-muted"><%= brl_short(pack[:price_cents]) %></p>
             </div>
           <% end %>
@@ -115,8 +114,8 @@
 <section class="bg-surface py-20 sm:py-24">
   <div class="mx-auto max-w-3xl px-5 sm:px-8">
     <div class="text-center reveal">
-      <p class="text-xs font-bold uppercase tracking-[0.16em] text-sky">Dúvidas</p>
-      <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">Perguntas frequentes</h2>
+      <p class="text-xs font-bold uppercase tracking-[0.16em] text-sky"><%= t('pages.pricing.faq_eyebrow') %></p>
+      <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl"><%= t('pages.pricing.faq_title') %></h2>
     </div>
     <div class="mt-10 space-y-3" data-accordion>
       <% @faqs.each do |faq| %>
@@ -134,4 +133,4 @@
   </div>
 </section>
 
-<%= render "pages/shared/cta", title: "Pronto quando você estiver", subtitle: "Crie sua conta grátis e comece a produzir hoje." %>
+<%= render "pages/shared/cta", title: t('pages.pricing.cta_title'), subtitle: t('pages.pricing.cta_subtitle') %>

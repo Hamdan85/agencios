@@ -20,18 +20,18 @@ module Operations
 
       def call
         generation = @creative.generation
-        raise Operations::Errors::Invalid, 'Vídeo sem geração associada' unless generation
+        raise Operations::Errors::Invalid, I18n.t('operations.video.errors.set_identity.no_generation') unless generation
 
         scenes = @creative.video_scenes.ordered.to_a
-        raise Operations::Errors::Invalid, 'Vídeo sem cenas' if scenes.empty?
-        raise Operations::Errors::Invalid, 'Espere as cenas terminarem para mudar a identidade' if busy?(scenes)
+        raise Operations::Errors::Invalid, I18n.t('operations.video.errors.set_identity.no_scenes') if scenes.empty?
+        raise Operations::Errors::Invalid, I18n.t('operations.video.errors.set_identity.busy') if busy?(scenes)
 
         generation.update!(params: (generation.params || {}).merge('identity' => merged_identity(generation)))
 
         Operations::Credits::Debit.call(
           workspace: @creative.workspace,
           amount: Pricing.credits_for(kind: :video, seconds: scenes.sum { |s| s.duration_seconds.to_i }),
-          generation: generation, description: 'Ajustar identidade do vídeo (refazer cenas)'
+          generation: generation, description: ledger_description
         )
         generation.update!(status: :processing)
         @creative.update!(status: :generating) unless @creative.status_generating?
@@ -55,6 +55,16 @@ module Operations
       def busy?(scenes)
         scenes.any? { |s| %w[rendering fresh].include?(s.render_state) }
       end
+
+      # Persisted to the workspace credit ledger (a team-shared artifact), so it
+      # is rendered once in the workspace language at write time.
+      def ledger_description
+        I18n.with_locale(workspace_locale(@creative.workspace)) do
+          I18n.t('operations.video.ledger.set_identity')
+        end
+      end
+
+      def workspace_locale(ws) = I18n.available_locales.find { |l| l.to_s == ws&.locale.to_s } || I18n.default_locale
     end
   end
 end

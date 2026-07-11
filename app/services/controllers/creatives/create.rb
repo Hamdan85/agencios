@@ -44,15 +44,14 @@ module Controllers
           kind = file.content_type.to_s.split('/').first
           next if allowed.include?(kind)
 
-          raise Operations::Errors::Invalid,
-                "Este tipo de criativo aceita apenas #{media_label(allowed)}. Envie um arquivo compatível."
+          raise Operations::Errors::Invalid, I18n.t("api.creatives.#{media_mismatch_key(allowed)}")
         end
       end
 
-      def media_label(allowed)
-        return 'imagens ou vídeos' if allowed.sort == %w[image video]
+      def media_mismatch_key(allowed)
+        return 'media_mismatch_images_or_videos' if allowed.sort == %w[image video]
 
-        allowed.include?('video') ? 'vídeos' : 'imagens'
+        allowed.include?('video') ? 'media_mismatch_videos' : 'media_mismatch_images'
       end
     end
   end

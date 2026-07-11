@@ -30,11 +30,11 @@ module Operations
       end
 
       def call
-        raise Operations::Errors::Invalid, 'A nova cena precisa de uma descrição' if @prompt.blank?
+        raise Operations::Errors::Invalid, I18n.t('operations.video.errors.add_scene.needs_description') if @prompt.blank?
 
         scenes = @creative.video_scenes.ordered.to_a
         if scenes.size >= PlanScenes::MAX_SCENES
-          raise Operations::Errors::Invalid, "O vídeo já tem o máximo de #{PlanScenes::MAX_SCENES} cenas"
+          raise Operations::Errors::Invalid, I18n.t('operations.video.errors.add_scene.max_scenes', max: PlanScenes::MAX_SCENES)
         end
 
         generation = @creative.generation
@@ -48,7 +48,7 @@ module Operations
         Operations::Credits::Debit.call(
           workspace: @creative.workspace,
           amount: Pricing.credits_for(kind: :video, seconds: duration),
-          generation: generation, description: "Adicionar cena #{pos + 1} do vídeo"
+          generation: generation, description: ledger_description('operations.video.ledger.add_scene', n: pos + 1)
         )
 
         scenes.select { |s| s.position >= pos }.sort_by(&:position)
@@ -78,6 +78,14 @@ module Operations
 
       private
 
+      # Persisted to the workspace credit ledger (a team-shared artifact), so it
+      # is rendered once in the workspace language at write time.
+      def ledger_description(key, **params)
+        I18n.with_locale(workspace_locale(@creative.workspace)) { I18n.t(key, **params) }
+      end
+
+      def workspace_locale(ws) = I18n.available_locales.find { |l| l.to_s == ws&.locale.to_s } || I18n.default_locale
+
       def sibling_mode(scenes, generation)
         scenes.first&.mode.presence || generation&.params&.dig('mode').presence || 'avatar'
       end
@@ -92,7 +100,7 @@ module Operations
         Operations::Credits::Debit.call(
           workspace: @creative.workspace,
           amount: Pricing.credits_for(kind: :video, seconds: follower.duration_seconds),
-          generation: generation, description: 'Refazer cena do vídeo (continuidade)'
+          generation: generation, description: ledger_description('operations.video.ledger.relink_follower')
         )
         follower.update!(render_state: :stale)
       end

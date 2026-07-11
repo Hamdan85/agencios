@@ -1,10 +1,10 @@
-<%= @approved ? "O cliente aprovou o conteúdo" : "O cliente pediu ajustes" %>
+<%= @approved ? t('mailers.approval_decision.decided.heading_approved') : t('mailers.approval_decision.decided.heading_changes') %>
 
-<%= @client&.name.presence || "O cliente" %> <%= @approved ? "aprovou" : "pediu ajustes em" %> <%= @ticket.display_title %> (<%= @project.name %>)<%= @creative ? " — peça: #{@creative.creative_type}" : "" %>.
+<%= @client&.name.presence || t('mailers.approval_decision.decided.default_client') %> <%= @approved ? t('mailers.approval_decision.decided.verb_approved') : t('mailers.approval_decision.decided.verb_changes') %> <%= @ticket.display_title %> (<%= @project.name %>)<%= @creative ? t('mailers.approval_decision.decided.piece_suffix', type: @creative.creative_type) : "" %>.
 <% if !@approved && @feedback.present? %>
-Feedback do cliente:
+<%= t('mailers.approval_decision.decided.feedback_label_text') %>
 <%= @feedback %>
 <% end %>
-<%= @approved ? "Ver conteúdo" : "Tratar os ajustes" %>: <%= @url %>
+<%= @approved ? t('mailers.approval_decision.decided.button_approved') : t('mailers.approval_decision.decided.button_changes') %>: <%= @url %>
 
-<%= @approved ? "O conteúdo seguiu para a fase de publicação." : "O conteúdo continua na fase de produção aguardando os ajustes." %>
+<%= @approved ? t('mailers.approval_decision.decided.note_approved') : t('mailers.approval_decision.decided.note_changes') %>

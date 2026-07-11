@@ -15,7 +15,6 @@ module Operations
     class Publish < Operations::Base
       MODES = %w[immediate scheduled].freeze
 
-      MEDIA_LABELS = { 'image' => 'imagem', 'carousel' => 'carrossel', 'video' => 'vídeo', 'text' => 'texto' }.freeze
 
       def initialize(ticket:, user:, creative_ids: nil, creative_id: nil, mode: 'immediate', scheduled_at: nil)
         @ticket = ticket
@@ -31,7 +30,7 @@ module Operations
         posts = build_posts
         if posts.empty?
           raise Operations::Errors::Invalid,
-                "Nenhum canal conectado suporta os criativos selecionados. #{skipped_note}".strip
+                I18n.t('operations.tickets.no_channel_supports', skipped: skipped_note).strip
         end
 
         posts.each { |post| PublishPostJob.perform_later(post.id) } if @mode == 'immediate'
@@ -42,22 +41,22 @@ module Operations
       private
 
       def validate!
-        raise Operations::Errors::Invalid, 'Selecione ao menos um criativo para postar.' if creatives.empty?
+        raise Operations::Errors::Invalid, I18n.t('operations.tickets.select_creative') if creatives.empty?
         if creatives.any? { |c| !c.status_ready? }
-          raise Operations::Errors::Invalid, 'Há um criativo selecionado que ainda não está pronto.'
+          raise Operations::Errors::Invalid, I18n.t('operations.tickets.creative_not_ready')
         end
-        raise Operations::Errors::Invalid, 'Defina ao menos um canal.' if @ticket.channels.blank?
+        raise Operations::Errors::Invalid, I18n.t('operations.tickets.define_channel') if @ticket.channels.blank?
         # An in-flight post must never be dropped mid-publish (the vendor call may
         # already be out — destroying its record would orphan the content on the
         # network, with no unpublish handle and no metrics).
         if @ticket.posts.status_publishing.exists?
           raise Operations::Errors::Invalid,
-                'Há uma publicação em andamento — aguarde ela concluir antes de publicar novamente.'
+                I18n.t('operations.tickets.publish_in_progress')
         end
         return unless @mode == 'scheduled' && publish_at.nil?
 
         raise Operations::Errors::Invalid,
-              'Defina a data e hora do agendamento.'
+              I18n.t('operations.tickets.define_schedule')
       end
 
       def creatives
@@ -123,8 +122,13 @@ module Operations
       def skipped_note
         return '' if @skipped.blank?
 
-        parts = @skipped.map { |s| "#{s[:channel]} (#{MEDIA_LABELS[s[:media_kind].to_s] || s[:media_kind]})" }
-        "Ignorados: #{parts.uniq.join(', ')}."
+        parts = @skipped.map { |s| "#{s[:channel]} (#{media_label(s[:media_kind])})" }
+        I18n.t('operations.tickets.skipped_note', items: parts.uniq.join(', '))
+      end
+
+      def media_label(kind)
+        key = kind.to_s
+        I18n.t("operations.tickets.media_labels.#{key}", default: key)
       end
     end
   end

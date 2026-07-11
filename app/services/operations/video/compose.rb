@@ -41,6 +41,8 @@ module Operations
 
       private
 
+      def workspace_locale(ws) = I18n.available_locales.find { |l| l.to_s == ws&.locale.to_s } || I18n.default_locale
+
       def attach_composed!(scenes)
         Dir.mktmpdir('hf-compose') do |dir|
           inputs = scenes.each_with_index.map { |s, i| download(s, File.join(dir, "s#{i}.mp4")) }
@@ -206,14 +208,17 @@ module Operations
                            .where(generation_id: generation.id).order(:created_at).to_a
         debit = debits.last
         return unless debit
-        return unless debit.id == debits.first.id || debit.description == UpgradeQuality::HOLD_DESCRIPTION
+        return unless debit.id == debits.first.id ||
+                      debit.description == UpgradeQuality.hold_description(generation.workspace)
 
         delta = (-debit.amount) - actual
         return if delta.zero?
 
         Operations::Credits::Adjust.call(
           workspace: generation.workspace, amount: delta, generation: generation,
-          description: "Ajuste de créditos do vídeo (#{total_seconds}s)"
+          description: I18n.with_locale(workspace_locale(generation.workspace)) {
+            I18n.t('operations.video.ledger.reconcile', seconds: total_seconds)
+          }
         )
       end
 
@@ -242,8 +247,9 @@ module Operations
 
       def notify_owner(generation)
         Operations::Push::Notify.call(
-          user: generation.user, title: 'Vídeo pronto ✨',
-          body: 'Sua geração foi concluída e já está disponível.',
+          user: generation.user,
+          title_key: 'operations.video.push.ready.title',
+          body_key: 'operations.video.push.ready.body',
           path: @creative.ticket ? "/tickets/#{@creative.ticket_id}" : '/estudio'
         )
         return if generation.user&.email.blank?

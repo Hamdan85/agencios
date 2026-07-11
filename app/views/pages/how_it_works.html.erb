@@ -1,19 +1,18 @@
-<% content_for :title, "Como funciona — agencios" %>
-<% content_for :description, "Do brief ao post no ar em sete etapas. Veja como o funil de produção da agencios conduz cada peça de conteúdo, com IA em cada passo." %>
+<% content_for :title, t('pages.how_it_works.title') %>
+<% content_for :description, t('pages.how_it_works.description') %>
 
 <%# ── Hero ──────────────────────────────────────────────────────── %>
 <section class="relative overflow-hidden bg-shell-gradient">
   <div class="absolute inset-0 bg-aurora opacity-70"></div>
   <div class="relative mx-auto max-w-4xl px-5 pb-16 pt-28 text-center sm:px-8 sm:pt-36">
     <span class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-bold text-white/80 ring-1 ring-white/10">
-      <span class="text-sky"><%= icon "target", size: 13 %></span> Como funciona
+      <span class="text-sky"><%= icon "target", size: 13 %></span> <%= t('pages.how_it_works.hero_badge') %>
     </span>
     <h1 class="mx-auto mt-6 max-w-3xl font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-white sm:text-5xl">
-      Do brief ao post no ar, <span class="text-gradient-brand">sem perder o fio.</span>
+      <%= t('pages.how_it_works.hero_title_1') %> <span class="text-gradient-brand"><%= t('pages.how_it_works.hero_title_2') %></span>
     </h1>
     <p class="mx-auto mt-5 max-w-xl text-lg text-white/70">
-      Cada peça de conteúdo é um ticket que caminha por um funil de sete etapas. A etapa atual decide
-      o que aparece na tela e o que a IA faz por você.
+      <%= t('pages.how_it_works.hero_sub') %>
     </p>
   </div>
 </section>
@@ -21,8 +20,8 @@
 <%# ── Three steps (overview) ────────────────────────────────────── %>
 <section class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24">
   <div class="text-center reveal">
-    <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand">Em resumo</p>
-    <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">Três passos, na prática</h2>
+    <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand"><%= t('pages.how_it_works.steps_eyebrow') %></p>
+    <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl"><%= t('pages.how_it_works.steps_title') %></h2>
   </div>
   <div class="mt-12 grid gap-6 md:grid-cols-3" data-reveal-group data-reveal-step="90">
     <% @steps.each do |s| %>
@@ -42,12 +41,12 @@
     <div class="relative flex flex-col items-start gap-5 sm:flex-row sm:items-center">
       <span class="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-indigo ring-1 ring-white/10"><%= icon "bot", size: 28, stroke: 2.1 %></span>
       <div class="flex-1">
-        <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-white/50">Antes de tudo</p>
-        <h3 class="mt-1 font-display text-xl font-extrabold sm:text-2xl">Ou deixe o estrategista preencher o mês por você</h3>
-        <p class="mt-1.5 max-w-2xl text-sm text-white/70">Diga a cadência e o objetivo e a IA cria dezenas de tickets já em Ideação — cada um com brief, canais e subtarefas. Você começa o funil com o quadro cheio.</p>
+        <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-white/50"><%= t('pages.how_it_works.strategist_eyebrow') %></p>
+        <h3 class="mt-1 font-display text-xl font-extrabold sm:text-2xl"><%= t('pages.how_it_works.strategist_title') %></h3>
+        <p class="mt-1.5 max-w-2xl text-sm text-white/70"><%= t('pages.how_it_works.strategist_desc') %></p>
       </div>
       <%= link_to feature_path("estrategista"), class: "inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10" do %>
-        Ver o estrategista <%= icon "arrow-right", size: 15 %>
+        <%= t('pages.how_it_works.strategist_link') %> <%= icon "arrow-right", size: 15 %>
       <% end %>
     </div>
   </div>
@@ -57,9 +56,9 @@
 <section class="bg-surface py-20 sm:py-24">
   <div class="mx-auto max-w-5xl px-5 sm:px-8">
     <div class="text-center reveal">
-      <p class="text-xs font-bold uppercase tracking-[0.16em] text-pink">O funil completo</p>
-      <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">As sete etapas, uma a uma</h2>
-      <p class="mx-auto mt-3 max-w-lg text-ink-muted">A vista do ticket é contextual: cada etapa mostra seus próprios campos e um resumo da IA que evolui com o conteúdo.</p>
+      <p class="text-xs font-bold uppercase tracking-[0.16em] text-pink"><%= t('pages.how_it_works.funnel_eyebrow') %></p>
+      <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl"><%= t('pages.how_it_works.funnel_title') %></h2>
+      <p class="mx-auto mt-3 max-w-lg text-ink-muted"><%= t('pages.how_it_works.funnel_sub') %></p>
     </div>
 
     <ol class="mt-14 space-y-3" data-reveal-group data-reveal-step="70">
@@ -92,15 +91,15 @@
 <section class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24">
   <div class="grid items-center gap-12 lg:grid-cols-2">
     <div class="reveal">
-      <p class="text-xs font-bold uppercase tracking-[0.16em] text-amber">IA em cada etapa</p>
-      <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">A IA trabalha junto com o time</h2>
-      <p class="mt-4 text-ink-muted">A inteligência artificial não é um botão isolado — ela acompanha o ticket pelo funil, do primeiro brief à retrospectiva final.</p>
+      <p class="text-xs font-bold uppercase tracking-[0.16em] text-amber"><%= t('pages.how_it_works.ai_eyebrow') %></p>
+      <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl"><%= t('pages.how_it_works.ai_title') %></h2>
+      <p class="mt-4 text-ink-muted"><%= t('pages.how_it_works.ai_desc') %></p>
       <ul class="mt-8 space-y-5">
         <% [
-          ["sparkles", "#F59E0B", "Resumo contextual", "A cada mudança de etapa, um resumo da IA é gerado e fica visível no ticket."],
-          ["lightbulb", "#0EA5E9", "Ideias & escopo", "O brief vira ângulos; a ideia escolhida vira um escopo com subtarefas."],
-          ["wand-sparkles", "#7C3AED", "Criativos & legendas", "Carrosséis, vídeos e imagens gerados, com legendas adaptadas a cada rede."],
-          ["chart-line", "#10B981", "Retrospectiva", "As métricas do post viram aprendizado para o próximo ciclo."],
+          ["sparkles", "#F59E0B", t('pages.how_it_works.ai_items.summary.title'), t('pages.how_it_works.ai_items.summary.desc')],
+          ["lightbulb", "#0EA5E9", t('pages.how_it_works.ai_items.ideas.title'), t('pages.how_it_works.ai_items.ideas.desc')],
+          ["wand-sparkles", "#7C3AED", t('pages.how_it_works.ai_items.creatives.title'), t('pages.how_it_works.ai_items.creatives.desc')],
+          ["chart-line", "#10B981", t('pages.how_it_works.ai_items.retro.title'), t('pages.how_it_works.ai_items.retro.desc')],
         ].each do |ic, c, title, desc| %>
           <li class="flex gap-4">
             <span class="flex size-11 shrink-0 items-center justify-center rounded-xl" style="background: <%= soft_bg(c) %>; color: <%= c %>;"><%= icon ic, size: 22, stroke: 2.2 %></span>
@@ -117,7 +116,7 @@
       <div class="relative">
         <div class="absolute -inset-6 bg-aurora opacity-50 blur-3xl"></div>
         <div class="relative space-y-3 rounded-3xl border border-border bg-surface p-6 shadow-[0_30px_80px_-40px_rgba(24,18,43,0.45)]">
-          <div class="flex items-center gap-2 text-sm font-bold text-brand"><%= icon "sparkles", size: 16 %> Resumo da IA · Produção</div>
+          <div class="flex items-center gap-2 text-sm font-bold text-brand"><%= icon "sparkles", size: 16 %> <%= t('pages.how_it_works.ai_mockup_title') %></div>
           <div class="rounded-2xl bg-canvas p-4">
             <div class="space-y-2">
               <div class="h-2.5 w-full rounded bg-surface-muted"></div>
@@ -125,13 +124,13 @@
               <div class="h-2.5 w-4/5 rounded bg-surface-muted"></div>
             </div>
             <div class="mt-4 flex flex-wrap gap-2">
-              <% ["3 criativos prontos", "Legenda IG ✓", "Aguardando aprovação"].each do |chip| %>
+              <% t('pages.how_it_works.ai_mockup_chips').each do |chip| %>
                 <span class="rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-semibold text-ink-secondary"><%= chip %></span>
               <% end %>
             </div>
           </div>
           <div class="flex items-center justify-between rounded-2xl bg-canvas p-4">
-            <div class="flex items-center gap-2 text-sm font-semibold text-ink-secondary"><span class="text-emerald"><%= icon "list-checks", size: 18 %></span> Subtarefas</div>
+            <div class="flex items-center gap-2 text-sm font-semibold text-ink-secondary"><span class="text-emerald"><%= icon "list-checks", size: 18 %></span> <%= t('pages.how_it_works.ai_mockup_subtasks') %></div>
             <span class="font-display text-sm font-bold text-ink">4 / 6</span>
           </div>
         </div>
@@ -140,4 +139,4 @@
   </div>
 </section>
 
-<%= render "pages/shared/cta", title: "Veja o funil rodando na sua agência", subtitle: "Crie sua conta e leve seu primeiro conteúdo da ideia ao ar." %>
+<%= render "pages/shared/cta", title: t('pages.how_it_works.cta_title'), subtitle: t('pages.how_it_works.cta_subtitle') %>

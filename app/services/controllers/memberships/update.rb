@@ -16,12 +16,12 @@ module Controllers
         # grants it or takes it away, and the workspace can never end up with
         # no owner at all.
         if (new_role == 'owner' || membership_record.owner?) && !Current.membership&.owner?
-          raise Operations::Errors::Forbidden, 'Só o owner pode conceder ou remover o papel de owner.'
+          raise Operations::Errors::Forbidden, I18n.t('api.memberships.owner_role_restricted')
         end
         if membership_record.owner? && new_role != 'owner' &&
            workspace.memberships.where(role: :owner).where.not(id: membership_record.id).none?
           raise Operations::Errors::Invalid,
-                'O workspace precisa de ao menos um owner — transfira a propriedade antes de rebaixar este membro.'
+                I18n.t('api.memberships.last_owner')
         end
 
         membership_record.update!(role: new_role)

@@ -20,7 +20,7 @@ module Operations
       end
 
       def call
-        raise Operations::Errors::Invalid, 'Uma fatura paga não pode ser cancelada.' if @invoice.status_paid?
+        raise Operations::Errors::Invalid, I18n.t('operations.invoices.paid_cannot_cancel') if @invoice.status_paid?
         return @invoice if @invoice.status_canceled?
 
         @invoice.charges.where(status: PENDING_STATUSES).find_each do |charge|

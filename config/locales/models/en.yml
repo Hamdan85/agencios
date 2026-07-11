@@ -18,6 +18,14 @@ en:
       file_required: "is required"
     creative_fallback: "Creative"
     pricing:
+      names:
+        solo: "Solo"
+        agencia: "Agency"
+        enterprise: "Enterprise"
+        starter: "Starter"
+        pro: "Pro"
+        studio: "Studio"
+        scale: "Scale"
       features:
         solo:
           seats: "2 seats"

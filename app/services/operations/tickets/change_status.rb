@@ -42,7 +42,7 @@ module Operations
       def validate_status!
         return if WORKFLOW.map(&:to_s).include?(@to_status)
 
-        raise Operations::Errors::InvalidTransition, "Status inválido: #{@to_status}"
+        raise Operations::Errors::InvalidTransition, I18n.t('operations.tickets.invalid_status', status: @to_status)
       end
 
       # A board drag may move backward only for managers (or force).
@@ -51,7 +51,7 @@ module Operations
         return if step(@to_status) >= step(from_status)
         return if @user.nil? || @user.can_manage?(@ticket.workspace)
 
-        raise Operations::Errors::InvalidTransition, 'Apenas gestores podem retroceder um ticket.'
+        raise Operations::Errors::InvalidTransition, I18n.t('operations.tickets.only_managers_regress')
       end
 
       def apply_status!(_from_status)
@@ -76,7 +76,8 @@ module Operations
           ticket: @ticket,
           user: nil,
           kind: :system,
-          body: "Status: #{label(from_status)} → #{label(@to_status)}"
+          i18n_key: 'notes.status_changed',
+          i18n_params: { from: label(from_status), to: label(@to_status) }
         )
       end
 

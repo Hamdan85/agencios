@@ -7,21 +7,21 @@
           <span class="font-display text-lg font-extrabold tracking-tight text-white">agencios</span>
         </span>
         <p class="mt-4 max-w-xs text-sm leading-relaxed text-white/45">
-          O sistema operacional da sua agência criativa. Do brief ao post no ar, num só lugar.
+          <%= t('pages.nav.footer_tagline') %>
         </p>
       </div>
 
       <div>
-        <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-white/35">Produto</p>
+        <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-white/35"><%= t('pages.nav.product') %></p>
         <ul class="mt-4 space-y-2.5 text-sm">
-          <li><%= link_to "Como funciona", how_it_works_path, class: "text-white/55 transition hover:text-white" %></li>
-          <li><%= link_to "Funcionalidades", features_path, class: "text-white/55 transition hover:text-white" %></li>
-          <li><%= link_to "Preços", pricing_path, class: "text-white/55 transition hover:text-white" %></li>
+          <li><%= link_to t('pages.nav.how_it_works'), how_it_works_path, class: "text-white/55 transition hover:text-white" %></li>
+          <li><%= link_to t('pages.nav.features'), features_path, class: "text-white/55 transition hover:text-white" %></li>
+          <li><%= link_to t('pages.nav.pricing'), pricing_path, class: "text-white/55 transition hover:text-white" %></li>
         </ul>
       </div>
 
       <div>
-        <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-white/35">Funcionalidades</p>
+        <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-white/35"><%= t('pages.nav.features') %></p>
         <ul class="mt-4 space-y-2.5 text-sm">
           <% @features_catalog.first(4).each do |f| %>
             <li><%= link_to f[:name], feature_path(f[:slug]), class: "text-white/55 transition hover:text-white" %></li>
@@ -30,20 +30,20 @@
       </div>
 
       <div>
-        <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-white/35">Conta</p>
+        <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-white/35"><%= t('pages.nav.account') %></p>
         <ul class="mt-4 space-y-2.5 text-sm">
-          <li><%= link_to "Entrar", "/login", class: "text-white/55 transition hover:text-white" %></li>
-          <li><%= link_to "Criar conta", "/cadastro", class: "text-white/55 transition hover:text-white" %></li>
+          <li><%= link_to t('pages.nav.login'), "/login", class: "text-white/55 transition hover:text-white" %></li>
+          <li><%= link_to t('pages.nav.create_account'), "/cadastro", class: "text-white/55 transition hover:text-white" %></li>
         </ul>
       </div>
     </div>
 
     <div class="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 sm:flex-row">
-      <p class="text-xs text-white/35">© <%= Date.current.year %> agencios — o SO da sua agência criativa.</p>
+      <p class="text-xs text-white/35"><%= t('pages.nav.copyright', year: Date.current.year) %></p>
       <div class="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs">
-        <%= link_to "Privacidade", privacy_path, class: "text-white/45 transition hover:text-white" %>
-        <%= link_to "Termos de uso", terms_path, class: "text-white/45 transition hover:text-white" %>
-        <button type="button" onclick="window.agenciosOpenCookiePrefs && window.agenciosOpenCookiePrefs()" class="text-white/45 transition hover:text-white">Preferências de cookies</button>
+        <%= link_to t('pages.nav.privacy'), privacy_path, class: "text-white/45 transition hover:text-white" %>
+        <%= link_to t('pages.nav.terms'), terms_path, class: "text-white/45 transition hover:text-white" %>
+        <button type="button" onclick="window.agenciosOpenCookiePrefs && window.agenciosOpenCookiePrefs()" class="text-white/45 transition hover:text-white"><%= t('pages.nav.cookie_prefs') %></button>
       </div>
     </div>
   </div>

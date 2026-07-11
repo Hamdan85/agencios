@@ -1,0 +1,122 @@
+pt-BR:
+  operations:
+    errors:
+      seat_limit_reached: "Limite de assentos do plano atingido."
+      client_limit_reached: "Limite de clientes ativos do plano atingido. Arquive um cliente ou faça upgrade."
+      billing_required: "Assinatura necessária para esta ação."
+      insufficient_credits: "Créditos insuficientes para esta geração."
+    notes:
+      empty_comment: "Comentário vazio."
+    tickets:
+      invalid_status: "Status inválido: %{status}"
+      only_managers_regress: "Apenas gestores podem retroceder um ticket."
+      project_archived: "A campanha \"%{project}\" está arquivada — reative-a para criar tickets."
+      creative_not_ready: "Há um criativo selecionado que ainda não está pronto."
+      publish_in_progress: "Há uma publicação em andamento — aguarde ela concluir antes de publicar novamente."
+      select_creative: "Selecione ao menos um criativo para postar."
+      define_channel: "Defina ao menos um canal."
+      define_schedule: "Defina a data e hora do agendamento."
+      no_channel_supports: "Nenhum canal conectado suporta os criativos selecionados. %{skipped}"
+      skipped_note: "Ignorados: %{items}."
+      media_labels:
+        image: "imagem"
+        carousel: "carrossel"
+        video: "vídeo"
+        text: "texto"
+      alert:
+        publish_failed_reason: "Falha ao publicar em %{provider}: %{reason}"
+        publish_failed_task: "Resolver publicação em %{provider}"
+    posts:
+      unpublish_only_live: "Só é possível despublicar um post que está no ar."
+      unpublish_failed: "Não foi possível excluir no %{provider}: %{message}"
+      update_only_scheduled_or_failed: "Só é possível editar publicações agendadas ou com falha. Um post no ar não pode ser editado."
+      cancel_only_scheduled_or_failed: "Só é possível cancelar publicações agendadas ou com falha. Para tirar um post do ar, despublique-o."
+      project_archived: "A campanha/cliente deste post está arquivada. Reative para publicar."
+      unsupported_media: "%{provider} não suporta %{media}."
+    invoices:
+      paid_cannot_cancel: "Uma fatura paga não pode ser cancelada."
+      paid_or_canceled_cannot_edit: "Faturas pagas ou canceladas não podem ser editadas."
+      amount_locked: "O valor não pode mudar depois de uma cobrança gerada — cancele a fatura e crie outra."
+      only_draft_can_send: "Só um rascunho pode ser enviado para cobrança."
+    approvals:
+      slot_not_found: "Peça não encontrada para aprovação."
+      option_not_found: "Opção escolhida não encontrada."
+      choose_option: "Escolha uma opção para aprovar esta peça."
+      nothing_to_approve: "Não há criativos prontos para aprovar."
+      already_completed: "A aprovação já foi concluída."
+    autopilot:
+      not_eligible: "Ticket não é elegível para o modo GO."
+      none_eligible: "Nenhum ticket elegível para iniciar."
+      reason:
+        insufficient_credits: "Créditos insuficientes durante a geração (faltam %{shortfall})."
+        generation_failed: "Uma geração de criativo falhou."
+        generic_failure: "a geração não pôde ser concluída."
+    billing:
+      unsupported_provider: "Provedor de pagamento não suportado: %{provider}"
+    generations:
+      unknown_kind: "Tipo de geração desconhecido: %{kind}"
+      expired_reason: "Geração expirada — o provedor não respondeu a tempo."
+    projects:
+      recipients_required: "Informe pelo menos um destinatário."
+    users:
+      google_email_unverified: "E-mail do Google não verificado."
+    brand_assets:
+      creative_no_image: "O criativo selecionado não tem imagem."
+    creatives:
+      video_estimate: "Geração de vídeo (estimativa)"
+      carousel_default_title: "Conteúdo"
+    ai:
+      improve_prompt_failure: "Não foi possível melhorar o prompt agora — tente de novo."
+      strategy_context:
+        header: "[Conversa de estratégia que originou este ticket — respeite o tom e as diretrizes combinados]"
+        role_strategist: "ESTRATEGISTA"
+        role_user: "USUÁRIO"
+        plan_summary: "Resumo do plano: %{summary}"
+    workspaces:
+      default_agency_name: "Agência de %{name}"
+    follow_up:
+      prefix:
+        iterate: "Iteração"
+        repeat: "Repetição"
+      lessons_header: "Lições do ciclo anterior:"
+  notes:
+    status_changed: "Status: %{from} → %{to}"
+    cascade_fields: "Etapas seguintes atualizadas para refletir a alteração em “%{from}”: %{labels}."
+    ticket_created: "Ticket criado por %{actor}."
+    system_actor: "sistema"
+    scope_checklist: "Checklist de produção gerada com %{count} subtarefas."
+    publish_failed: "Falha ao publicar em %{provider}: %{reason}"
+    post_unpublished: "Post despublicado em %{provider}."
+    post_unpublished_manual: "Post despublicado em %{provider}. %{note}"
+    archive:
+      restored: "Ticket restaurado."
+      archived: "Ticket arquivado."
+      archived_with_canceled: "Ticket arquivado. %{count} agendamento(s) de publicação cancelado(s)."
+    approval:
+      default_actor: "Cliente"
+      approved: "%{actor} aprovou %{subject}."
+      changes_requested: "%{actor} pediu ajustes em %{subject}: %{feedback}"
+      subject_creative: "o criativo (%{type})"
+      subject_content: "o conteúdo"
+      fully_approved: "Conteúdo aprovado por %{actor}."
+      link_sent: "Link de aprovação enviado ao cliente."
+      link_not_sent: "Cliente sem e-mail cadastrado — link de aprovação não enviado."
+      undone: "Aprovação desfeita pelo cliente."
+    follow_up:
+      spawned_iteration: "Gerou uma iteração: #%{id} — %{title}"
+      spawned_repetition: "Gerou uma repetição: #%{id} — %{title}"
+  credits:
+    ledger:
+      adjustment: "Ajuste de créditos"
+      godfathered_monthly: "Créditos mensais (cortesia godfathered)"
+      plan_monthly: "Créditos mensais do plano"
+      expired_unused: "Créditos mensais não usados expirados"
+      purchase: "Compra de créditos"
+      expired: "Créditos mensais expirados"
+      debit_video: "Geração de vídeo"
+      debit_image: "Geração de imagem"
+      debit_carousel: "Geração de carrossel"
+      debit_generic: "Débito de créditos"
+      refund_failed_generation: "Estorno — geração falhou"
+      pack_purchase: "Compra de créditos — pacote %{pack}"
+      plan_monthly_named: "Créditos mensais do plano %{plan}"

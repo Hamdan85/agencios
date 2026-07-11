@@ -1,17 +1,16 @@
-<% content_for :preheader do %>Sua conta está pronta. Bem-vindo à agencios.<% end %>
-<% content_for :eyebrow do %>Bem-vindo<% end %>
+<% content_for :preheader do %><%= t('mailers.auth.welcome.preheader') %><% end %>
+<% content_for :eyebrow do %><%= t('mailers.auth.welcome.eyebrow') %><% end %>
 
 <h1 style="margin:0 0 16px;font-family:'Sora','Inter',Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#18122B;">
-  Olá, <%= @user.display_name %> 👋
+  <%= t('mailers.common.hello') %>, <%= @user.display_name %> 👋
 </h1>
 
 <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#564F6F;">
-  Sua conta na <strong>agencios</strong> está pronta — o sistema operacional da sua agência de conteúdo.
-  Centralize clientes, campanhas, o quadro de produção, calendário, criativos gerados por IA e cobranças, tudo em um só lugar.
+  <%= t('mailers.auth.welcome.body_html') %>
 </p>
 
-<%= email_button("Abrir meu painel", @board_url) %>
+<%= email_button(t('mailers.auth.welcome.button'), @board_url) %>
 
 <p style="margin:24px 0 0;font-size:14px;line-height:1.6;color:#564F6F;">
-  Para começar, crie seu primeiro cliente e abra um ticket no quadro — é por ali que o trabalho flui, da ideação à publicação.
+  <%= t('mailers.auth.welcome.footer') %>
 </p>

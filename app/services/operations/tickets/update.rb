@@ -31,7 +31,7 @@ module Operations
 
         Operations::Push::Notify.call(
           user: @ticket.assignee, actor: Current.user,
-          title: 'Ticket atribuído a você',
+          title_key: 'push.ticket_reassigned.title',
           body: @ticket.title,
           path: "/tickets/#{@ticket.id}"
         )

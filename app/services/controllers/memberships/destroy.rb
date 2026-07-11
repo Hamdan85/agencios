@@ -10,10 +10,10 @@ module Controllers
       def call
         require_manager!
         membership_record = workspace.memberships.find(@params[:id])
-        raise Operations::Errors::Forbidden, 'Não é possível remover o owner.' if membership_record.owner?
+        raise Operations::Errors::Forbidden, I18n.t('api.memberships.cannot_remove_owner') if membership_record.owner?
 
         membership_record.destroy!
-        { message: 'Membro removido.' }
+        { message: I18n.t('api.memberships.removed') }
       end
     end
   end

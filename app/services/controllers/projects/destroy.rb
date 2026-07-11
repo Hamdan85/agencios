@@ -10,7 +10,7 @@ module Controllers
       def call
         require_manager!
         workspace.projects.find(@params[:id]).destroy!
-        { message: 'Campanha removido.' }
+        { message: I18n.t('api.projects.removed') }
       end
     end
   end

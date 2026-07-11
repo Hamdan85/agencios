@@ -7,7 +7,6 @@ module Operations
     # ChangeStatus when a ticket reaches `done` recommending iterate / repeat.
     class SpawnFollowUp < Operations::Base
       KIND_FOR = { 'iterate' => :iteration_of, 'repeat' => :repetition_of }.freeze
-      PREFIX   = { 'iterate' => 'Iteração', 'repeat' => 'Repetição' }.freeze
 
       def initialize(source:, recommendation:, user: nil)
         @source = source
@@ -41,12 +40,24 @@ module Operations
       def build_params
         {
           project_id: @source.project_id,
-          title: "[#{PREFIX[@recommendation]}] #{@source.title}",
+          title: "[#{prefix_label}] #{@source.title}",
           channels: @source.channels,
           creative_type: @source.creative_type,
           priority: @source.priority,
           fields: ideation_fields
         }
+      end
+
+      # The new ticket's title/brief are persisted plain text (no key column) —
+      # render once in the workspace language.
+      def prefix_label
+        I18n.with_locale(workspace_locale(@source.workspace)) do
+          I18n.t("operations.follow_up.prefix.#{@recommendation}")
+        end
+      end
+
+      def workspace_locale(ws)
+        I18n.available_locales.find { |l| l.to_s == ws&.locale.to_s } || I18n.default_locale
       end
 
       # Carry over the original brief/ideation context. For an iteration, prepend
@@ -56,7 +67,8 @@ module Operations
         if @recommendation == 'iterate'
           lessons = strip_html(@source.fields_for('retrospective')['lessons_learned'])
           if lessons.present?
-            base['brief'] = ["Lições do ciclo anterior:\n#{lessons}", base['brief']].reject(&:blank?).join("\n\n")
+            header = I18n.with_locale(workspace_locale(@source.workspace)) { I18n.t('operations.follow_up.lessons_header') }
+            base['brief'] = ["#{header}\n#{lessons}", base['brief']].reject(&:blank?).join("\n\n")
           end
         end
         base
@@ -73,7 +85,8 @@ module Operations
         )
         Operations::Notes::Create.call(
           ticket: @source, user: nil, kind: :system,
-          body: "Gerou #{@recommendation == 'iterate' ? 'uma iteração' : 'uma repetição'}: ##{new_ticket.id} — #{new_ticket.title}"
+          i18n_key: @recommendation == 'iterate' ? 'notes.follow_up.spawned_iteration' : 'notes.follow_up.spawned_repetition',
+          i18n_params: { id: new_ticket.id, title: new_ticket.title }
         )
       end
     end

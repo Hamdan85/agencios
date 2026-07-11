@@ -17,16 +17,16 @@ module Controllers
         password = @params[:password].to_s
 
         unless user.authenticate(current)
-          raise Operations::Errors::Invalid, 'Senha atual incorreta.'
+          raise Operations::Errors::Invalid, I18n.t('api.account.wrong_current_password')
         end
 
         if password.length < MIN_LENGTH
-          raise Operations::Errors::Invalid, "A nova senha deve ter ao menos #{MIN_LENGTH} caracteres."
+          raise Operations::Errors::Invalid, I18n.t('api.account.password_too_short', min: MIN_LENGTH)
         end
 
         user.update!(password: password)
         AuthMailer.password_changed(user: user).deliver_later
-        { message: 'Senha alterada.' }
+        { message: I18n.t('api.account.password_changed') }
       end
     end
   end

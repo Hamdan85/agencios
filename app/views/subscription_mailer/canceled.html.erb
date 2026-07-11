@@ -1,17 +1,16 @@
-<% content_for :preheader do %>Sua assinatura agencios foi cancelada.<% end %>
-<% content_for :eyebrow do %>Assinatura<% end %>
+<% content_for :preheader do %><%= t('mailers.subscription.canceled.preheader') %><% end %>
+<% content_for :eyebrow do %><%= t('mailers.subscription.canceled.eyebrow') %><% end %>
 
 <h1 style="margin:0 0 16px;font-family:'Sora','Inter',Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#18122B;">
-  Assinatura cancelada
+  <%= t('mailers.subscription.canceled.heading') %>
 </h1>
 
 <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#564F6F;">
-  Olá<%= @owner&.display_name.present? ? ", #{@owner.display_name}" : "" %>. A assinatura <strong><%= @plan_label %></strong> da
-  <strong><%= @workspace.name %></strong> foi cancelada. Você ainda pode acessar seus dados, mas os recursos pagos ficam indisponíveis.
+  <%= t('mailers.common.hello') %><%= @owner&.display_name.present? ? ", #{@owner.display_name}" : "" %>. <%= t('mailers.subscription.canceled.body_html', plan: @plan_label, workspace: @workspace.name) %>
 </p>
 
 <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#564F6F;">
-  Mudou de ideia? Você pode reativar a qualquer momento.
+  <%= t('mailers.subscription.canceled.body2') %>
 </p>
 
-<%= email_button("Reativar assinatura", @billing_url) %>
+<%= email_button(t('mailers.subscription.canceled.button'), @billing_url) %>

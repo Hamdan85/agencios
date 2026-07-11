@@ -22,7 +22,7 @@ module Controllers
 
         unless account.status_connected?
           raise Operations::Errors::Invalid,
-                'Não foi possível reativar com o token atual — reconecte a conta pelo fluxo de autorização da rede.'
+                I18n.t('api.social.reconnect_failed')
         end
 
         { social_account: serialize(account, SocialAccountSerializer) }

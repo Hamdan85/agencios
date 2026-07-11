@@ -36,7 +36,8 @@ module Operations
         end
 
         Operations::Notes::Create.call(ticket: @ticket, user: nil, kind: :ai,
-                                       body: "Checklist de produção gerada com #{created.size} subtarefas.")
+                                       i18n_key: 'notes.scope_checklist',
+                                       i18n_params: { count: created.size })
         created
       end
 

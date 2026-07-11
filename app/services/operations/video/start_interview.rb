@@ -9,7 +9,7 @@ module Operations
     # drives the interview and later decides — via its `generate` action — when it
     # has enough context to actually build the video (or the user orders it).
     #
-    # This is the studio "novo vídeo" flow. Autopilot / ticket flows still
+    # This is the studio "new video" flow. Autopilot / ticket flows still
     # generate immediately through Operations::Creatives::GenerateUgcVideo.
     class StartInterview < Operations::Base
       def initialize(workspace:, ticket: nil, client_id: nil, mode: nil, prompt: nil,

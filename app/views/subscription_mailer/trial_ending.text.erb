@@ -1,6 +1,6 @@
-Olá<%= @owner&.display_name.present? ? ", #{@owner.display_name}" : "" %>!
+<%= t('mailers.common.hello') %><%= @owner&.display_name.present? ? ", #{@owner.display_name}" : "" %>!
 
-O período de teste da <%= @workspace.name %> na agencios <% if @subscription&.trial_ends_at %>termina em <%= email_date(@subscription.trial_ends_at) %><% else %>está chegando ao fim<% end %>.
+<%= t('mailers.subscription.trial_ending.text_body_prefix', workspace: @workspace.name) %> <% if @subscription&.trial_ends_at %><%= t('mailers.subscription.trial_ending.text_ends_on', date: email_date(@subscription.trial_ends_at)) %><% else %><%= t('mailers.subscription.trial_ending.ends_soon') %><% end %>.
 
-Para continuar com o plano <%= @plan_label %> sem interrupções, adicione uma forma de pagamento:
+<%= t('mailers.subscription.trial_ending.text_body2', plan: @plan_label) %>
 <%= @billing_url %>

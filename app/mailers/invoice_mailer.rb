@@ -8,7 +8,10 @@ class InvoiceMailer < ApplicationMailer
   def created(invoice:, payment_url: nil)
     assign(invoice)
     @payment_url = payment_url
-    mail(to: @client.email, subject: "Nova cobrança da #{@workspace.name} — #{email_amount}")
+    with_recipient_locale(@client) do
+      mail(to: @client.email,
+           subject: I18n.t('mailers.invoice.created.subject', workspace: @workspace.name, amount: email_amount))
+    end
   end
 
   # An explicit "here's the link" send — from the invoice list or the
@@ -17,26 +20,35 @@ class InvoiceMailer < ApplicationMailer
   def payment_link(invoice:, payment_url:)
     assign(invoice)
     @payment_url = payment_url
-    mail(to: @client.email, subject: "Link de pagamento — #{@workspace.name} — #{email_amount}")
+    with_recipient_locale(@client) do
+      mail(to: @client.email,
+           subject: I18n.t('mailers.invoice.payment_link.subject', workspace: @workspace.name, amount: email_amount))
+    end
   end
 
   # Payment confirmed — a receipt.
   def paid(invoice:)
     assign(invoice)
-    mail(to: @client.email, subject: "Pagamento confirmado — #{email_amount}")
+    with_recipient_locale(@client) do
+      mail(to: @client.email, subject: I18n.t('mailers.invoice.paid.subject', amount: email_amount))
+    end
   end
 
   # Past-due reminder (dunning).
   def overdue(invoice:, payment_url: nil)
     assign(invoice)
     @payment_url = payment_url
-    mail(to: @client.email, subject: "Cobrança em atraso — #{email_amount}")
+    with_recipient_locale(@client) do
+      mail(to: @client.email, subject: I18n.t('mailers.invoice.overdue.subject', amount: email_amount))
+    end
   end
 
   # The invoice was canceled.
   def canceled(invoice:)
     assign(invoice)
-    mail(to: @client.email, subject: "Cobrança cancelada — #{@workspace.name}")
+    with_recipient_locale(@client) do
+      mail(to: @client.email, subject: I18n.t('mailers.invoice.canceled.subject', workspace: @workspace.name))
+    end
   end
 
   private

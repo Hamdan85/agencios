@@ -19,7 +19,7 @@ module Operations
         admin = VideoConfig.instance.voices.filter_map do |name, id|
           next if live_ids.include?(id)
 
-          { id: id, name: name, gender: '', description: '(catálogo)' }
+          { id: id, name: name, gender: '', description: I18n.t('operations.video.voice_options.catalog_tag') }
         end
         live + admin
       end

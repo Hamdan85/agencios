@@ -37,12 +37,17 @@ module Operations
         Generation.where(kind: kinds, status: %i[queued processing])
                   .where(updated_at: ..cutoff)
                   .find_each.sum do |generation|
-          Operations::Creatives::FailGeneration.call(
-            generation: generation,
-            reason: 'Geração expirada — o provedor não respondeu a tempo.'
-          )
+          # failure_reason is persisted plain text — render in the workspace language.
+          reason = I18n.with_locale(workspace_locale(generation.workspace)) do
+            I18n.t('operations.generations.expired_reason')
+          end
+          Operations::Creatives::FailGeneration.call(generation: generation, reason: reason)
           1
         end
+      end
+
+      def workspace_locale(ws)
+        I18n.available_locales.find { |l| l.to_s == ws&.locale.to_s } || I18n.default_locale
       end
 
       # Creatives left `generating` that never got a Generation row — a carousel/image
