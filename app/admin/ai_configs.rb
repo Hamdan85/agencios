@@ -4,7 +4,7 @@
 # the single row's edit form. Changing a model here takes effect immediately —
 # no deploy. (The API key stays in credentials; only non-secret slugs live here.)
 ActiveAdmin.register AiConfig do
-  menu label: 'IA (modelos)', priority: 20
+  menu label: I18n.t('admin.ai_configs.menu'), priority: 20
 
   actions :index, :edit, :update
 
@@ -19,26 +19,25 @@ ActiveAdmin.register AiConfig do
 
   form do |f|
     f.semantic_errors
-    f.inputs 'Provedor' do
+    f.inputs I18n.t('admin.ai_configs.provider_section') do
       f.input :provider,
               as: :select,
-              collection: [['Auto (detecta pela chave configurada)', ''],
-                           ['OpenRouter (vários modelos)', 'openrouter'],
-                           ['Anthropic (direto)', 'anthropic']],
+              collection: [[I18n.t('admin.ai_configs.provider_auto'), ''],
+                           [I18n.t('admin.ai_configs.provider_openrouter'), 'openrouter'],
+                           [I18n.t('admin.ai_configs.provider_anthropic'), 'anthropic']],
               include_blank: false,
-              hint: 'A chave da API continua nas credentials — aqui só se escolhe o provedor.'
+              hint: I18n.t('admin.ai_configs.provider_hint')
     end
-    f.inputs 'Modelo padrão' do
+    f.inputs I18n.t('admin.ai_configs.default_model_section') do
       f.input :default_model,
-              label: 'Modelo padrão',
-              hint: 'Slug do OpenRouter usado quando a operação não tem um modelo próprio. ' \
-                    'Ex.: anthropic/claude-sonnet-4.5, openai/gpt-5-mini, google/gemini-2.5-flash.'
+              label: I18n.t('admin.ai_configs.default_model_label'),
+              hint: I18n.t('admin.ai_configs.default_model_hint')
     end
-    f.inputs 'Modelo por operação (deixe vazio para usar o padrão)' do
+    f.inputs I18n.t('admin.ai_configs.per_operation_section') do
       AiConfig::OPERATIONS.each do |op|
         f.input :"op_model_#{op}",
-                label: AiConfig::OP_LABELS.fetch(op, op),
-                input_html: { placeholder: "padrão (#{f.object.default_model})", autocomplete: 'off' }
+                label: AiConfig::OP_LABELS[op],
+                input_html: { placeholder: I18n.t('admin.ai_configs.op_placeholder', model: f.object.default_model), autocomplete: 'off' }
       end
     end
     f.actions

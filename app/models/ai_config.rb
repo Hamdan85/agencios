@@ -18,22 +18,9 @@ class AiConfig < ApplicationRecord
 
   PROVIDERS = ['', AiUsageLog::PROVIDER_OPENROUTER, AiUsageLog::PROVIDER_ANTHROPIC].freeze
 
-  # Human labels for the per-operation model fields in ActiveAdmin.
-  OP_LABELS = {
-    'summarize_ticket' => 'Resumo do ticket',
-    'fill_fields' => 'Preencher campos (Gerar com IA)',
-    'build_scope' => 'Montar escopo (subtarefas)',
-    'synthesize_positioning' => 'Sintetizar posicionamento',
-    'extract_client_from_url' => 'Extrair cliente de URL',
-    'carousel_copy' => 'Copy de carrossel',
-    'project_audit' => 'Auditoria de campanha',
-    'draft_retrospective' => 'Rascunho de retrospectiva',
-    'strategy_planner' => 'Planejador de estratégia (chat)',
-    'strategy_plan' => 'Planejador de estratégia (gerar plano)',
-    'video_storyboard' => 'Storyboard de vídeo',
-    'video_editor' => 'Editor de vídeo (chat)',
-    'improve_video_prompt' => 'Melhorar prompt de vídeo'
-  }.freeze
+  # Human labels for the per-operation model fields in ActiveAdmin. Locale-aware:
+  # `OP_LABELS[op]` renders the current-locale label (falls back to the raw key).
+  OP_LABELS = Hash.new { |_h, k| I18n.t("admin.ai_config.op_labels.#{k}", default: k.to_s) }.freeze
 
   # nil and '' both mean "auto-detect" — allow nil so a fresh first_or_create!
   # (provider column has no DB default) is valid.
@@ -95,6 +82,6 @@ class AiConfig < ApplicationRecord
   # Safety net — the setter already drops unknown keys, so this should never fire.
   def operation_models_are_known
     bad = operation_models.keys.map(&:to_s) - OPERATIONS
-    errors.add(:operation_models, "operações desconhecidas: #{bad.join(', ')}") if bad.any?
+    errors.add(:operation_models, "unknown operations: #{bad.join(', ')}") if bad.any?
   end
 end

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 ActiveAdmin.register Workspace do
-  menu parent: 'Tenants', label: 'Workspaces', priority: 1
+  menu parent: I18n.t('admin.menu.tenants'), label: I18n.t('admin.workspaces.menu'), priority: 1
 
   actions :index, :show, :edit, :update
   # The founding-user comp: the godfathered flag plus an optional monthly credit
@@ -10,19 +10,18 @@ ActiveAdmin.register Workspace do
 
   form do |f|
     f.semantic_errors
-    f.inputs 'Cortesia (godfathered)' do
+    f.inputs I18n.t('admin.workspaces.godfathered_section') do
       f.input :godfathered,
-              hint: 'Acesso vitalício grátis — ignora o paywall e os limites de assentos/clientes.'
+              hint: I18n.t('admin.workspaces.godfathered_hint')
       f.input :monthly_credit_limit,
-              label: 'Limite de créditos mensais',
-              hint: 'Créditos de geração (vídeo/imagem) por mês para este workspace godfathered. ' \
-                    'Em branco = ilimitado. Só se aplica quando "godfathered" está ativo.'
+              label: I18n.t('admin.workspaces.credit_limit_label'),
+              hint: I18n.t('admin.workspaces.credit_limit_hint')
     end
     f.actions
   end
 
-  filter :name_cont, label: 'Nome contém'
-  filter :slug_cont, label: 'Slug contém'
+  filter :name_cont, label: I18n.t('admin.workspaces.filter_name')
+  filter :slug_cont, label: I18n.t('admin.workspaces.filter_slug')
   filter :godfathered
   filter :created_at
 
@@ -34,25 +33,25 @@ ActiveAdmin.register Workspace do
     id_column
     column :name
     column :slug
-    column('Plano') { |w| w.subscription&.plan || '—' }
-    column('Status') do |w|
+    column(I18n.t('admin.workspaces.col_plan')) { |w| w.subscription&.plan || '—' }
+    column(I18n.t('admin.workspaces.col_status')) do |w|
       sub = w.subscription
       next status_tag('godfathered', class: 'yes') if w.godfathered?
       next '—' unless sub
 
       status_tag(sub.status, class: (Subscription::ACTIVE_STATUSES.include?(sub.status) ? 'yes' : 'error'))
     end
-    column('Acesso') do |w|
-      status_tag(w.billing_active? ? 'sim' : 'bloqueado', class: w.billing_active? ? 'yes' : 'error')
+    column(I18n.t('admin.workspaces.col_access')) do |w|
+      status_tag(w.billing_active? ? I18n.t('admin.workspaces.access_yes') : I18n.t('admin.workspaces.access_blocked'), class: w.billing_active? ? 'yes' : 'error')
     end
-    column('Créditos') do |w|
+    column(I18n.t('admin.workspaces.col_credits')) do |w|
       if w.godfathered?
-        w.monthly_credit_limit ? "#{w.credits_available} / #{w.monthly_credit_limit} · mês" : '∞'
+        w.monthly_credit_limit ? I18n.t('admin.workspaces.credits_per_month', available: w.credits_available, limit: w.monthly_credit_limit) : '∞'
       else
         w.credits_available
       end
     end
-    column('Assentos') { |w| "#{w.seat_count} / #{w.seat_limit.infinite? ? '∞' : w.seat_limit}" }
+    column(I18n.t('admin.workspaces.col_seats')) { |w| "#{w.seat_count} / #{w.seat_limit.infinite? ? '∞' : w.seat_limit}" }
     column :created_at
     actions
   end
@@ -62,78 +61,78 @@ ActiveAdmin.register Workspace do
       row :id
       row :name
       row :slug
-      row('Godfathered') { |w| w.godfathered? ? status_tag('sim', class: 'yes') : 'não' }
-      row('Limite de créditos mensais') do |w|
+      row(I18n.t('admin.workspaces.row_godfathered')) { |w| w.godfathered? ? status_tag(I18n.t('admin.common.yes_tag'), class: 'yes') : I18n.t('admin.common.no_tag') }
+      row(I18n.t('admin.workspaces.row_credit_limit')) do |w|
         next '—' unless w.godfathered?
 
-        w.monthly_credit_limit ? "#{w.monthly_credit_limit} / mês" : 'ilimitado'
+        w.monthly_credit_limit ? I18n.t('admin.workspaces.credit_limit_per_month', limit: w.monthly_credit_limit) : I18n.t('admin.workspaces.unlimited')
       end
-      row('Acesso liberado') { |w| w.billing_active? ? 'Sim' : 'Não (bloqueado)' }
-      row('Dono') { |w| w.owner ? link_to(w.owner.email, admin_user_path(w.owner)) : '—' }
-      row('Assentos') { |w| "#{w.seat_count} / #{w.seat_limit.infinite? ? '∞' : w.seat_limit}" }
-      row('Clientes') { |w| w.clients.count }
+      row(I18n.t('admin.workspaces.row_access')) { |w| w.billing_active? ? I18n.t('admin.common.yes') : I18n.t('admin.workspaces.access_granted_no') }
+      row(I18n.t('admin.workspaces.row_owner')) { |w| w.owner ? link_to(w.owner.email, admin_user_path(w.owner)) : '—' }
+      row(I18n.t('admin.workspaces.col_seats')) { |w| "#{w.seat_count} / #{w.seat_limit.infinite? ? '∞' : w.seat_limit}" }
+      row(I18n.t('admin.workspaces.row_clients')) { |w| w.clients.count }
       row :created_at
     end
 
-    panel 'Assinatura' do
+    panel I18n.t('admin.workspaces.subscription_panel') do
       sub = workspace.subscription
       if sub
         attributes_table_for sub do
-          row('Plano') { sub.plan }
-          row('Status') { sub.status }
-          row('Cartão no arquivo') { sub.card_on_file? ? 'Sim' : 'Não' }
-          row('Assentos') { sub.seats }
-          row('Trial termina') { sub.trial_ends_at }
-          row('Período atual até') { sub.current_period_end }
-          row('Cancela em') { sub.cancel_at }
-          row('Stripe customer') { sub.stripe_customer_id }
-          row('Stripe subscription') { sub.stripe_subscription_id }
+          row(I18n.t('admin.workspaces.sub_plan')) { sub.plan }
+          row(I18n.t('admin.workspaces.sub_status')) { sub.status }
+          row(I18n.t('admin.workspaces.sub_card')) { sub.card_on_file? ? I18n.t('admin.common.yes') : I18n.t('admin.common.no') }
+          row(I18n.t('admin.workspaces.sub_seats')) { sub.seats }
+          row(I18n.t('admin.workspaces.sub_trial_ends')) { sub.trial_ends_at }
+          row(I18n.t('admin.workspaces.sub_period_end')) { sub.current_period_end }
+          row(I18n.t('admin.workspaces.sub_cancel_at')) { sub.cancel_at }
+          row(I18n.t('admin.workspaces.sub_customer')) { sub.stripe_customer_id }
+          row(I18n.t('admin.workspaces.sub_subscription')) { sub.stripe_subscription_id }
         end
       else
-        para 'Sem assinatura.'
+        para I18n.t('admin.workspaces.no_subscription')
       end
     end
 
-    panel 'Créditos' do
+    panel I18n.t('admin.workspaces.credits_panel') do
       wallet = workspace.credit_wallet
       if wallet
         attributes_table_for wallet do
-          row('Disponível') do
+          row(I18n.t('admin.workspaces.credits_available')) do
             if workspace.credit_limited?
-              "#{workspace.credits_available} / #{workspace.monthly_credit_limit} (godfathered, mês)"
+              I18n.t('admin.workspaces.credits_available_godfathered', available: workspace.credits_available, limit: workspace.monthly_credit_limit)
             elsif workspace.godfathered?
-              '∞ (godfathered)'
+              I18n.t('admin.workspaces.credits_infinite_godfathered')
             else
               wallet.available
             end
           end
-          row('Do plano (granted)') { wallet.live_granted }
-          row('Comprados (purchased)') { wallet.purchased_balance }
-          row('Granted expira em') { wallet.granted_expires_at }
+          row(I18n.t('admin.workspaces.credits_granted')) { wallet.live_granted }
+          row(I18n.t('admin.workspaces.credits_purchased')) { wallet.purchased_balance }
+          row(I18n.t('admin.workspaces.credits_granted_expires')) { wallet.granted_expires_at }
         end
       else
-        para 'Sem carteira.'
+        para I18n.t('admin.workspaces.no_wallet')
       end
       div class: 'action_items' do
-        span button_to('Creditar +100 (cortesia)', grant_credits_admin_workspace_path(workspace, amount: 100),
+        span button_to(I18n.t('admin.workspaces.grant_100'), grant_credits_admin_workspace_path(workspace, amount: 100),
                        method: :post, class: 'button')
-        span button_to('Creditar +500 (cortesia)', grant_credits_admin_workspace_path(workspace, amount: 500),
+        span button_to(I18n.t('admin.workspaces.grant_500'), grant_credits_admin_workspace_path(workspace, amount: 500),
                        method: :post, class: 'button')
       end
     end
 
-    panel 'Membros' do
+    panel I18n.t('admin.workspaces.members_panel') do
       table_for workspace.memberships.includes(:user) do
-        column('Usuário') { |m| link_to(m.user.email, admin_user_path(m.user)) }
-        column('Papel', &:role)
+        column(I18n.t('admin.common.user')) { |m| link_to(m.user.email, admin_user_path(m.user)) }
+        column(I18n.t('admin.common.role'), &:role)
       end
     end
 
     div class: 'action_items' do
-      span link_to('Convidar membro', invite_form_admin_workspace_path(workspace), class: 'button')
+      span link_to(I18n.t('admin.workspaces.invite_member'), invite_form_admin_workspace_path(workspace), class: 'button')
       if workspace.owner && !workspace.owner.staff?
-        span button_to('Personificar dono', admin_impersonate_path(workspace.owner), method: :post,
-                                                                                     class: 'button', data: { confirm: "Entrar como #{workspace.owner.email}?" })
+        span button_to(I18n.t('admin.workspaces.impersonate_owner'), admin_impersonate_path(workspace.owner), method: :post,
+                                                                                     class: 'button', data: { confirm: I18n.t('admin.common.impersonate_confirm', email: workspace.owner.email) })
       end
     end
   end
@@ -162,13 +161,14 @@ ActiveAdmin.register Workspace do
   member_action :grant_credits, method: :post do
     amount = params[:amount].to_i
     Operations::Credits::Adjust.call(
-      workspace: resource, amount: amount, description: "Cortesia da equipe agencios (+#{amount})"
+      workspace: resource, amount: amount,
+      description_key: 'credits.ledger.staff_courtesy', description_params: { amount: amount }
     )
     AdminAuditLog.record(
       staff_user: current_staff_user, action: 'grant_credits', target: resource,
       metadata: { amount: amount }, ip_address: request.remote_ip
     )
-    redirect_to admin_workspace_path(resource), notice: "#{amount} créditos concedidos."
+    redirect_to admin_workspace_path(resource), notice: I18n.t('admin.workspaces.credits_granted_notice', amount: amount)
   end
 
   # ── Invite a member to this workspace ─────────────────────────────────────
@@ -181,7 +181,7 @@ ActiveAdmin.register Workspace do
     email = params[:email].to_s.strip.downcase
     role  = params[:role].presence || 'member'
 
-    redirect_to(invite_form_admin_workspace_path(resource), alert: 'Informe um e-mail.') && return if email.blank?
+    redirect_to(invite_form_admin_workspace_path(resource), alert: I18n.t('admin.workspaces.invite_email_required')) && return if email.blank?
 
     token = Controllers::Invitations::Token.sign(workspace_id: resource.id, email: email, role: role)
     link  = "#{SystemConfig.app_host}/convite/#{token}"
@@ -192,6 +192,6 @@ ActiveAdmin.register Workspace do
       staff_user: current_staff_user, action: 'invite_member', target: resource,
       metadata: { email: email, role: role }, ip_address: request.remote_ip
     )
-    redirect_to admin_workspace_path(resource), notice: "Convite enviado para #{email}."
+    redirect_to admin_workspace_path(resource), notice: I18n.t('admin.workspaces.invite_sent', email: email)
   end
 end

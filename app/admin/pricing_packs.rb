@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 ActiveAdmin.register PricingPack do
-  menu parent: 'Preços', label: 'Pacotes de crédito', priority: 3
+  menu parent: I18n.t('admin.menu.pricing'), label: I18n.t('admin.pricing_packs.menu'), priority: 3
 
   permit_params :key, :name, :price_cents, :credits, :position, :active
 
@@ -12,20 +12,20 @@ ActiveAdmin.register PricingPack do
     column :position
     column :key
     column :name
-    column('Preço (BRL)') { |p| number_to_currency(p.price_cents / 100.0, unit: 'R$ ') }
+    column(I18n.t('admin.pricing_packs.col_price')) { |p| number_to_currency(p.price_cents / 100.0, unit: 'R$ ') }
     column :credits
-    column('R$/crédito') { |p| number_to_currency(p.price_cents / 100.0 / p.credits, unit: 'R$ ', precision: 3) }
+    column(I18n.t('admin.pricing_packs.col_price_per_credit')) { |p| number_to_currency(p.price_cents / 100.0 / p.credits, unit: 'R$ ', precision: 3) }
     column :active
     actions
   end
 
   form do |f|
     f.semantic_errors
-    f.inputs 'Pacote de crédito' do
+    f.inputs I18n.t('admin.pricing_packs.pack_section') do
       f.input :key
       f.input :name
-      f.input :price_cents, label: 'Preço em centavos (BRL)'
-      f.input :credits, label: 'Créditos concedidos (com bônus de volume)'
+      f.input :price_cents, label: I18n.t('admin.pricing_packs.price_cents_label')
+      f.input :credits, label: I18n.t('admin.pricing_packs.credits_label')
       f.input :position
       f.input :active
     end

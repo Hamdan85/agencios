@@ -23,7 +23,7 @@ module AiUsageChart
     end
 
     if op_totals.empty?
-      return %(<p style="color:#999;margin:0">Sem uso de IA nos últimos #{DAYS_WINDOW} dias para o filtro atual.</p>)
+      return %(<p style="color:#999;margin:0">#{esc(I18n.t('admin.ai_usage.chart.empty', days: DAYS_WINDOW))}</p>)
     end
 
     operations = op_totals.sort_by { |_, t| -t[:cost] }.map(&:first)
@@ -88,8 +88,8 @@ module AiUsageChart
         seg = data[day][op] or next
         seg_h = [plot_h * (seg[:cost] / ymax), 1.0].max
         y_cursor -= seg_h
-        tooltip = "#{day.strftime('%d/%m')} · #{esc(op)} — #{seg[:calls]} chamadas&#10;" \
-                  "#{tokens(seg[:input])} tokens entrada · #{tokens(seg[:output])} saída&#10;#{usd(seg[:cost])}"
+        tooltip = "#{day.strftime('%d/%m')} · #{esc(op)} — #{seg[:calls]} #{I18n.t('admin.ai_usage.chart.calls')}&#10;" \
+                  "#{tokens(seg[:input])} #{I18n.t('admin.ai_usage.chart.input_tokens')} · #{tokens(seg[:output])} #{I18n.t('admin.ai_usage.chart.output')}&#10;#{usd(seg[:cost])}"
         parts << %(<rect x="#{x}" y="#{y_cursor.round(2)}" width="#{bar_w.round(2)}" height="#{seg_h.round(2)}" fill="#{colors[op]}" rx="1"><title>#{tooltip}</title></rect>)
       end
 
@@ -105,15 +105,15 @@ module AiUsageChart
   def self.legend(operations, colors, op_totals)
     totals = op_totals.values
     summary = %(<p style="margin:10px 0 4px;font-size:12px;color:#555">) +
-              %(<strong>Total do período: #{usd(totals.sum { |t| t[:cost] })}</strong> · ) +
-              %(#{totals.sum { |t| t[:calls] }} chamadas · ) +
-              %(#{tokens(totals.sum { |t| t[:input] })} tokens entrada · #{tokens(totals.sum do |t|
+              %(<strong>#{esc(I18n.t('admin.ai_usage.chart.period_total'))} #{usd(totals.sum { |t| t[:cost] })}</strong> · ) +
+              %(#{totals.sum { |t| t[:calls] }} #{I18n.t('admin.ai_usage.chart.calls')} · ) +
+              %(#{tokens(totals.sum { |t| t[:input] })} #{I18n.t('admin.ai_usage.chart.input_tokens')} · #{tokens(totals.sum do |t|
                 t[:output]
-              end)} saída</p>)
+              end)} #{I18n.t('admin.ai_usage.chart.output')}</p>)
 
     items = operations.map do |op|
       t = op_totals[op]
-      "<span style=\"display:inline-flex;align-items:center;gap:6px\"><span style=\"width:10px;height:10px;border-radius:3px;background:#{colors[op]};display:inline-block\"></span><span><strong>#{esc(op)}</strong> · #{t[:calls]} chamadas · #{usd(t[:cost])}</span></span>"
+      "<span style=\"display:inline-flex;align-items:center;gap:6px\"><span style=\"width:10px;height:10px;border-radius:3px;background:#{colors[op]};display:inline-block\"></span><span><strong>#{esc(op)}</strong> · #{t[:calls]} #{I18n.t('admin.ai_usage.chart.calls')} · #{usd(t[:cost])}</span></span>"
     end
 
     summary + %(<div style="display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12px;color:#555">#{items.join}</div>)
@@ -150,7 +150,7 @@ module ActiveAdmin
     class IndexAsTableWithChart < IndexAsTable
       def build(page_presenter, collection)
         scoped = collection.except(:select, :order, :limit, :offset)
-        panel "Uso e custo — últimos #{AiUsageChart::DAYS_WINDOW} dias (filtros aplicados)" do
+        panel I18n.t('admin.ai_usage.chart.panel_title', days: AiUsageChart::DAYS_WINDOW) do
           text_node AiUsageChart.html(scoped).html_safe
         end
         super
@@ -160,7 +160,7 @@ module ActiveAdmin
 end
 
 ActiveAdmin.register AiUsageLog do
-  menu parent: 'Plataforma', label: 'Custo de IA', priority: 1
+  menu parent: I18n.t('admin.menu.platform'), label: I18n.t('admin.ai_usage.menu'), priority: 1
   actions :index, :show
 
   filter :workspace
@@ -171,10 +171,10 @@ ActiveAdmin.register AiUsageLog do
   filter :created_at
 
   scope :all, default: true
-  scope('Hoje') { |s| s.where(created_at: Time.zone.now.beginning_of_day..) }
-  scope('7 dias') { |s| s.where(created_at: 7.days.ago..) }
-  scope('30 dias') { |s| s.where(created_at: 30.days.ago..) }
-  scope('Este mês') { |s| s.where(created_at: Time.zone.now.beginning_of_month..) }
+  scope(I18n.t('admin.ai_usage.scope_today')) { |s| s.where(created_at: Time.zone.now.beginning_of_day..) }
+  scope(I18n.t('admin.ai_usage.scope_7d')) { |s| s.where(created_at: 7.days.ago..) }
+  scope(I18n.t('admin.ai_usage.scope_30d')) { |s| s.where(created_at: 30.days.ago..) }
+  scope(I18n.t('admin.ai_usage.scope_month')) { |s| s.where(created_at: Time.zone.now.beginning_of_month..) }
 
   index as: :table_with_chart do
     column :created_at
@@ -182,10 +182,10 @@ ActiveAdmin.register AiUsageLog do
     column :provider
     column :operation
     column :model
-    column('Tokens (in/out)') { |l| "#{l.input_tokens} / #{l.output_tokens}" }
-    column('Unidades') { |l| l.units.to_f.zero? ? '—' : "#{l.units} #{l.unit_kind}" }
-    column('Custo (US$)') { |l| AiUsageChart.usd(l.cost_cents) }
-    column('Sujeito') { |l| l.subject_type ? "#{l.subject_type}##{l.subject_id}" : '—' }
+    column(I18n.t('admin.ai_usage.col_tokens')) { |l| "#{l.input_tokens} / #{l.output_tokens}" }
+    column(I18n.t('admin.ai_usage.col_units')) { |l| l.units.to_f.zero? ? '—' : "#{l.units} #{l.unit_kind}" }
+    column(I18n.t('admin.common.cost_usd')) { |l| AiUsageChart.usd(l.cost_cents) }
+    column(I18n.t('admin.ai_usage.col_subject')) { |l| l.subject_type ? "#{l.subject_type}##{l.subject_id}" : '—' }
   end
 
   show do
@@ -196,37 +196,37 @@ ActiveAdmin.register AiUsageLog do
       row :provider
       row :operation
       row :model
-      row('Sujeito') { |l| l.subject_type ? "#{l.subject_type}##{l.subject_id}" : '—' }
+      row(I18n.t('admin.ai_usage.col_subject')) { |l| l.subject_type ? "#{l.subject_type}##{l.subject_id}" : '—' }
       row :input_tokens
       row :output_tokens
       row :cache_creation_input_tokens
       row :cache_read_input_tokens
       row :unit_kind
       row :units
-      row('Custo (US$)') { |l| AiUsageChart.usd(l.cost_cents) }
+      row(I18n.t('admin.common.cost_usd')) { |l| AiUsageChart.usd(l.cost_cents) }
       row :created_at
     end
   end
 
-  sidebar 'Resumo de custo', only: :index do
+  sidebar I18n.t('admin.ai_usage.sidebar_title'), only: :index do
     scoped = collection.except(:select, :order, :limit, :offset)
     total  = scoped.total_cost_cents.to_f
     by_provider  = scoped.cost_by_provider
     by_operation = scoped.cost_by_operation.sort_by { |_, v| -v.to_f }.first(8)
 
     div do
-      strong 'Total: '
+      strong I18n.t('admin.ai_usage.sidebar_total')
       span AiUsageChart.usd(total)
     end
     hr
-    strong 'Por provider'
+    strong I18n.t('admin.ai_usage.sidebar_by_provider')
     ul do
       by_provider.each do |provider, cents|
         li "#{provider}: #{AiUsageChart.usd(cents)}"
       end
     end
     hr
-    strong 'Top operations'
+    strong I18n.t('admin.ai_usage.sidebar_top_operations')
     ul do
       by_operation.each do |operation, cents|
         li "#{operation}: #{AiUsageChart.usd(cents)}"

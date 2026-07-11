@@ -18,13 +18,8 @@ class VideoConfig < ApplicationRecord
   # Modes the generate dialog offers directly (the rest are director-only).
   UI_MODES = %w[avatar product].freeze
 
-  MODE_LABELS = {
-    'avatar'    => 'Avatar UGC (pessoa falando)',
-    'product'   => 'Produto (a partir de fotos)',
-    'character' => 'Personagem (mascote/animado, recorrente)',
-    'scene'     => 'Cena / B-roll (lugares, momentos, lifestyle)',
-    'motion'    => 'Motion / gráfico (abstrato, energético)'
-  }.freeze
+  # Locale-aware: `MODE_LABELS[mode]` renders the current-locale label.
+  MODE_LABELS = Hash.new { |_h, k| I18n.t("admin.video_config.mode_labels.#{k}", default: k.to_s) }.freeze
 
   # One-line brief the storyboard uses to pick the right mode.
   MODE_GUIDANCE = {
@@ -88,11 +83,8 @@ class VideoConfig < ApplicationRecord
   # admin-managed `music_tracks` base) under the audio.
   MUSIC_MOODS = %w[upbeat calm corporate energetic emotional epic playful cinematic].freeze
 
-  MUSIC_MOOD_LABELS = {
-    'upbeat' => 'Animada', 'calm' => 'Calma', 'corporate' => 'Corporativa',
-    'energetic' => 'Energética', 'emotional' => 'Emocional', 'epic' => 'Épica',
-    'playful' => 'Divertida', 'cinematic' => 'Cinematográfica'
-  }.freeze
+  # Locale-aware: `MUSIC_MOOD_LABELS[mood]` renders the current-locale label.
+  MUSIC_MOOD_LABELS = Hash.new { |_h, k| I18n.t("admin.video_config.music_mood_labels.#{k}", default: k.to_s) }.freeze
 
   # Consistent voice: one FIXED Cartesia voice per video (a voice_id) so the
   # spoken voice is identical across every scene (the model's own per-clip voice
@@ -107,10 +99,8 @@ class VideoConfig < ApplicationRecord
   # Vendors::Music. Jamendo (royalty-free) is the default; Epidemic Sound is the
   # licensed alternative (needs an entitled API account before it can download).
   MUSIC_PROVIDERS = %w[jamendo epidemic_sound].freeze
-  MUSIC_PROVIDER_LABELS = {
-    'jamendo' => 'Jamendo (royalty-free)',
-    'epidemic_sound' => 'Epidemic Sound (licenciado)'
-  }.freeze
+  # Locale-aware: `MUSIC_PROVIDER_LABELS[provider]` renders the current-locale label.
+  MUSIC_PROVIDER_LABELS = Hash.new { |_h, k| I18n.t("admin.video_config.music_provider_labels.#{k}", default: k.to_s) }.freeze
   DEFAULT_MUSIC_PROVIDER = 'jamendo'
 
   validates :provider, inclusion: { in: PROVIDERS }, allow_nil: true

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 ActiveAdmin.register PricingPlan do
-  menu parent: 'Preços', label: 'Planos', priority: 2
+  menu parent: I18n.t('admin.menu.pricing'), label: I18n.t('admin.pricing_plans.menu'), priority: 2
 
   permit_params :key, :name, :stripe_product_id, :stripe_lookup_key, :stripe_price_id,
                 :stripe_annual_lookup_key, :stripe_annual_price_id,
@@ -13,8 +13,8 @@ ActiveAdmin.register PricingPlan do
   # Force a re-sync (idempotent) — e.g. after editing a price directly in Stripe,
   # or to re-provision a plan that lost its Product/Price.
   action_item :sync_to_stripe, only: :show do
-    link_to 'Sincronizar com o Stripe', sync_to_stripe_admin_pricing_plan_path(resource),
-            method: :post, data: { confirm: 'Garante o Product + Prices (mensal + anual) no Stripe com estes valores.' }
+    link_to I18n.t('admin.pricing_plans.sync_action'), sync_to_stripe_admin_pricing_plan_path(resource),
+            method: :post, data: { confirm: I18n.t('admin.pricing_plans.sync_confirm') }
   end
 
   member_action :sync_to_stripe, method: :post do
@@ -24,12 +24,11 @@ ActiveAdmin.register PricingPlan do
                          metadata: { price_cents: resource.price_cents, annual_price_cents: resource.annual_price_cents },
                          ip_address: request.remote_ip)
     redirect_to admin_pricing_plan_path(resource),
-                notice: "Plano #{resource.key} sincronizado com o Stripe (mensal + anual). " \
-                        'Novos checkouts já usam o novo valor; assinantes atuais mantêm o preço antigo.'
+                notice: I18n.t('admin.pricing_plans.sync_notice', key: resource.key)
   rescue Vendors::Base::NotConfiguredError => e
-    redirect_to admin_pricing_plan_path(resource), alert: "Stripe não configurado: #{e.message}"
+    redirect_to admin_pricing_plan_path(resource), alert: I18n.t('admin.pricing_plans.not_configured', message: e.message)
   rescue StandardError => e
-    redirect_to admin_pricing_plan_path(resource), alert: "Falha ao sincronizar com o Stripe: #{e.message}"
+    redirect_to admin_pricing_plan_path(resource), alert: I18n.t('admin.pricing_plans.sync_failed', message: e.message)
   end
 
   index do
@@ -37,12 +36,12 @@ ActiveAdmin.register PricingPlan do
     column :position
     column :key
     column :name
-    column('Mensal (BRL)') { |p| number_to_currency(p.price_cents / 100.0, unit: 'R$ ') }
-    column('Anual (BRL)') { |p| number_to_currency(Pricing.annual_price_cents_for(p.key) / 100.0, unit: 'R$ ') }
-    column('Créditos inclusos', &:included_credits)
+    column(I18n.t('admin.pricing_plans.col_monthly')) { |p| number_to_currency(p.price_cents / 100.0, unit: 'R$ ') }
+    column(I18n.t('admin.pricing_plans.col_annual')) { |p| number_to_currency(Pricing.annual_price_cents_for(p.key) / 100.0, unit: 'R$ ') }
+    column(I18n.t('admin.pricing_plans.col_included_credits'), &:included_credits)
     column :seats
     column :clients
-    column('Stripe price') { |p| p.stripe_price_id.presence || '— não sincronizado' }
+    column(I18n.t('admin.pricing_plans.col_stripe_price')) { |p| p.stripe_price_id.presence || I18n.t('admin.pricing_plans.not_synced') }
     column :active
     actions
   end
@@ -51,12 +50,12 @@ ActiveAdmin.register PricingPlan do
     attributes_table do
       row :key
       row :name
-      row('Preço mensal (BRL)') { |p| number_to_currency(p.price_cents / 100.0, unit: 'R$ ') }
-      row('Preço anual (BRL)') { |p| number_to_currency(Pricing.annual_price_cents_for(p.key) / 100.0, unit: 'R$ ') }
+      row(I18n.t('admin.pricing_plans.row_monthly')) { |p| number_to_currency(p.price_cents / 100.0, unit: 'R$ ') }
+      row(I18n.t('admin.pricing_plans.row_annual')) { |p| number_to_currency(Pricing.annual_price_cents_for(p.key) / 100.0, unit: 'R$ ') }
       row :seats
       row :clients
       row :included_credits
-      row('Recursos') { |p| ul { Array(p.features).each { |f| li f } } }
+      row(I18n.t('admin.pricing_plans.row_features')) { |p| ul { Array(p.features).each { |f| li f } } }
       row :stripe_product_id
       row :stripe_lookup_key
       row :stripe_price_id
@@ -65,36 +64,34 @@ ActiveAdmin.register PricingPlan do
       row :active
       row :updated_at
     end
-    para 'Salvar um plano sincroniza o Product + Prices (mensal e anual) no Stripe automaticamente. ' \
-         'Uma mudança de preço cria um Price novo e arquiva o antigo (assinantes atuais mantêm o preço).'
+    para I18n.t('admin.pricing_plans.show_note')
   end
 
   form do |f|
     f.semantic_errors
-    f.inputs 'Plano (fonte da verdade do preço)' do
+    f.inputs I18n.t('admin.pricing_plans.plan_section') do
       para class: 'inline-hints' do
-        span 'Ao salvar, os preços são publicados no Stripe automaticamente (um Price novo por mudança de valor). ' \
-             'O valor definido aqui é o que o cliente paga.'
+        span I18n.t('admin.pricing_plans.plan_section_hint')
       end
-      f.input :key, hint: 'Chave estável (solo/agencia/enterprise). Referenciada por Subscription#plan.'
+      f.input :key, hint: I18n.t('admin.pricing_plans.key_hint')
       f.input :name
-      f.input :price_cents, label: 'Preço MENSAL em centavos (BRL)'
+      f.input :price_cents, label: I18n.t('admin.pricing_plans.price_cents_label')
       f.input :annual_price_cents,
-              label: 'Preço ANUAL em centavos (BRL) — 0 = calcula 12× mensal − desconto',
-              hint: "0 usa o desconto anual fixo (#{Pricing.annual_discount_percent}%)."
+              label: I18n.t('admin.pricing_plans.annual_price_cents_label'),
+              hint: I18n.t('admin.pricing_plans.annual_price_cents_hint', percent: Pricing.annual_discount_percent)
       f.input :seats
       f.input :clients
-      f.input :included_credits, label: 'Créditos mensais inclusos'
-      f.input :features_text, as: :text, label: 'Recursos (um por linha)', input_html: { rows: 8 }
+      f.input :included_credits, label: I18n.t('admin.pricing_plans.included_credits_label')
+      f.input :features_text, as: :text, label: I18n.t('admin.pricing_plans.features_text_label'), input_html: { rows: 8 }
     end
-    f.inputs 'Stripe (preenchido automaticamente pela sincronização)' do
-      f.input :stripe_product_id, hint: 'ID do Product (criado/atualizado ao salvar).'
-      f.input :stripe_lookup_key, hint: 'lookup_key do Price MENSAL (estável — transferido para o novo Price).'
-      f.input :stripe_price_id, label: 'Stripe price id mensal (cacheado)'
-      f.input :stripe_annual_lookup_key, hint: 'lookup_key do Price ANUAL.'
-      f.input :stripe_annual_price_id, label: 'Stripe price id anual (cacheado)'
+    f.inputs I18n.t('admin.pricing_plans.stripe_section') do
+      f.input :stripe_product_id, hint: I18n.t('admin.pricing_plans.stripe_product_hint')
+      f.input :stripe_lookup_key, hint: I18n.t('admin.pricing_plans.stripe_lookup_hint')
+      f.input :stripe_price_id, label: I18n.t('admin.pricing_plans.stripe_price_id_label')
+      f.input :stripe_annual_lookup_key, hint: I18n.t('admin.pricing_plans.stripe_annual_lookup_hint')
+      f.input :stripe_annual_price_id, label: I18n.t('admin.pricing_plans.stripe_annual_price_id_label')
     end
-    f.inputs 'Exibição' do
+    f.inputs I18n.t('admin.pricing_plans.display_section') do
       f.input :position
       f.input :active
     end
@@ -111,10 +108,10 @@ ActiveAdmin.register PricingPlan do
     begin
       Operations::Billing::SyncPlanToStripe.call(plan: plan)
     rescue Vendors::Base::NotConfiguredError => e
-      flash[:warning] = "Plano salvo, mas o Stripe não está configurado (#{e.message}) — não sincronizado."
+      flash[:warning] = I18n.t('admin.pricing_plans.save_not_configured', message: e.message)
     rescue StandardError => e
       Rails.logger.error("[Admin::PricingPlans] Stripe sync failed for #{plan.key}: #{e.message}")
-      flash[:error] = "Plano salvo, mas a sincronização com o Stripe falhou: #{e.message}"
+      flash[:error] = I18n.t('admin.pricing_plans.save_sync_failed', message: e.message)
     end
 
     AdminAuditLog.record(staff_user: current_staff_user, action: 'edit_pricing_plan',

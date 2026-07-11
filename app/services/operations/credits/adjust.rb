@@ -11,11 +11,14 @@ module Operations
     class Adjust < Operations::Base
       include BroadcastsBalance
 
-      def initialize(workspace:, amount:, generation: nil, description: nil)
-        @workspace   = workspace
-        @amount      = amount.to_i
-        @generation  = generation
-        @description = description
+      def initialize(workspace:, amount:, generation: nil, description: nil,
+                     description_key: nil, description_params: {})
+        @workspace          = workspace
+        @amount             = amount.to_i
+        @generation         = generation
+        @description        = description
+        @description_key    = description_key
+        @description_params = description_params
       end
 
       def call
@@ -57,8 +60,17 @@ module Operations
           kind: 'adjustment', bucket: bucket,
           amount: granted + purchased, granted_delta: granted, purchased_delta: purchased,
           balance_after: wallet.granted_balance + wallet.purchased_balance,
-          description: @description, description_key: (@description ? nil : 'credits.ledger.adjustment')
+          description: @description,
+          description_key: resolved_description_key,
+          description_params: @description_params
         )
+      end
+
+      # An explicit description wins; else the caller's key; else the default.
+      def resolved_description_key
+        return nil if @description.present?
+
+        @description_key.presence || 'credits.ledger.adjustment'
       end
     end
   end
