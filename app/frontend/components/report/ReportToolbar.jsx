@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Printer, Download } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -12,6 +13,7 @@ import { InlineSpinner } from '@/components/ui/feedback'
 // iframe and opens the browser print dialog on it. `accent` themes the primary
 // action to match the agency color on the client portal.
 export default function ReportToolbar({ pdfUrl, filename, accent }) {
+  const { t } = useTranslation('reports')
   const [printing, setPrinting] = useState(false)
   if (!pdfUrl) return null
 
@@ -32,23 +34,23 @@ export default function ReportToolbar({ pdfUrl, filename, accent }) {
         frame.contentWindow.focus()
         frame.contentWindow.print()
       } catch {
-        toast.error('Não foi possível abrir a impressão. Baixe o PDF e imprima por lá.')
+        toast.error(t('toolbar.printError'))
       } finally {
         cleanup()
       }
     }
-    frame.onerror = () => { toast.error('Não foi possível gerar o PDF.'); cleanup() }
+    frame.onerror = () => { toast.error(t('toolbar.pdfError')); cleanup() }
     document.body.appendChild(frame)
   }
 
   return (
     <div className="no-print flex items-center gap-2">
       <Button variant="outline" size="sm" onClick={print} disabled={printing}>
-        {printing ? <InlineSpinner size={15} /> : <Printer size={15} />} Imprimir
+        {printing ? <InlineSpinner size={15} /> : <Printer size={15} />} {t('toolbar.print')}
       </Button>
       <Button asChild size="sm" style={accent ? { background: accent } : undefined}>
         <a href={pdfUrl} download={filename} target="_blank" rel="noreferrer">
-          <Download size={15} /> Baixar PDF
+          <Download size={15} /> {t('toolbar.downloadPdf')}
         </a>
       </Button>
     </div>

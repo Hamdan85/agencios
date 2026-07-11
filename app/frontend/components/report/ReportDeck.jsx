@@ -3,18 +3,20 @@ import {
   CheckCircle2, Sparkles, Target, Lightbulb, Rocket, CalendarClock, Users,
   Eye, Share2, Repeat, Heart, BarChart3, MessageCircle,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/i18n'
 import { Card } from '@/components/ui/card'
 import { IconTile } from '@/components/ui/icon-tile'
 import { SectionLabel } from '@/components/ui/section-label'
 import { date, num, pct } from '@/lib/formatters'
 
-// Compact pt-BR number ("16,8 mil", "3,0 mi") for the headline tiles.
+// Compact number ("16,8 mil", "3,0 mi") for the headline tiles.
 // Unlike formatters.compact(), null/NaN render as "—" (missing metric).
 function compact(n) {
   if (n == null || Number.isNaN(Number(n))) return '—'
   const v = Number(n)
-  if (Math.abs(v) >= 1_000_000) return `${(v / 1_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} mi`
-  if (Math.abs(v) >= 1_000) return `${(v / 1_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} mil`
+  if (Math.abs(v) >= 1_000_000) return i18n.t('reports:compact.millions', { value: (v / 1_000_000).toLocaleString(i18n.language, { maximumFractionDigits: 1 }) })
+  if (Math.abs(v) >= 1_000) return i18n.t('reports:compact.thousands', { value: (v / 1_000).toLocaleString(i18n.language, { maximumFractionDigits: 1 }) })
   return num(v)
 }
 
@@ -72,12 +74,13 @@ function CardList({ items = [], color }) {
 }
 
 function PerfColumn({ title, items = [], tone }) {
+  const { t } = useTranslation('reports')
   const color = tone === 'good' ? '#10B981' : '#EF4444'
   return (
     <Card className="overflow-hidden">
       <div className="px-4 py-3 text-sm font-bold text-white" style={{ background: color }}>{title}</div>
       <div className="divide-y divide-border">
-        {items.length === 0 && <p className="p-4 text-sm text-ink-muted">Sem dados.</p>}
+        {items.length === 0 && <p className="p-4 text-sm text-ink-muted">{t('deck.noData')}</p>}
         {items.map((it, i) => (
           <div key={i} className="p-4">
             <p className="font-semibold text-ink">{it.label}</p>
@@ -98,7 +101,7 @@ function MatrixRow({ dimension, score, comment }) {
         <div className="h-full rounded-full" style={{ width: `${Math.min(100, Number(score) * 10)}%`, background: color }} />
       </div>
       <span className="w-10 shrink-0 text-right font-display text-sm font-extrabold" style={{ color }}>
-        {Number(score).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+        {Number(score).toLocaleString(i18n.language, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
       </span>
       <span className="hidden flex-1 text-xs text-ink-secondary md:block">{comment}</span>
     </div>
@@ -139,6 +142,7 @@ function Milestones({ title, items = [], color }) {
 // (Cover → growth angle). Reused by the internal report page and the client
 // approval portal — it owns no page shell, no navigation, and no status states.
 export default function ReportDeck({ report }) {
+  const { t } = useTranslation('reports')
   const d = report.data || {}
   const k = d.kpis || {}
   const overall = d.overall || {}
@@ -156,7 +160,7 @@ export default function ReportDeck({ report }) {
         <div className="p-6">
           <div className="flex items-center gap-2 text-brand">
             <FileBarChart size={18} />
-            <SectionLabel as="span" className="text-xs tracking-widest text-inherit">Auditoria de redes sociais</SectionLabel>
+            <SectionLabel as="span" className="text-xs tracking-widest text-inherit">{t('deck.coverEyebrow')}</SectionLabel>
           </div>
           <h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink">{report.project_name}</h1>
           <p className="mt-1 text-sm font-semibold text-ink-secondary">
@@ -165,44 +169,44 @@ export default function ReportDeck({ report }) {
           </p>
           {d.ai_ok === false && (
             <p className="mt-3 rounded-lg bg-amber/15 px-3 py-2 text-xs font-medium text-[#B45309]">
-              A análise textual não pôde ser gerada agora — os números abaixo refletem os dados reais da campanha.
+              {t('deck.aiUnavailable')}
             </p>
           )}
         </div>
       </Card>
 
       {/* OS NÚMEROS */}
-      <SectionTitle icon={BarChart3}>Os números</SectionTitle>
+      <SectionTitle icon={BarChart3}>{t('deck.numbersTitle')}</SectionTitle>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <KpiTile label="Seguidores" value={compact(k.followers)} delta={k.follower_growth_pct} icon={Users} />
-        <KpiTile label="Novos seguidores" value={compact(k.new_followers)} icon={Users} />
-        <KpiTile label="Contas alcançadas" value={compact(k.accounts_reached)} delta={k.reach_delta_pct} icon={Eye} />
-        <KpiTile label="Visualizações" value={compact(k.views)} icon={BarChart3} />
-        <KpiTile label="Alcance (posts)" value={compact(k.reach)} icon={Eye} />
-        <KpiTile label="Compart. de Reels" value={compact(k.reel_shares)} icon={Share2} />
-        <KpiTile label="Respostas em Stories" value={compact(k.story_replies)} icon={MessageCircle} />
-        <KpiTile label="Engajamento" value={compact(k.engagement)} icon={Heart} />
+        <KpiTile label={t('deck.kpis.followers')} value={compact(k.followers)} delta={k.follower_growth_pct} icon={Users} />
+        <KpiTile label={t('deck.kpis.newFollowers')} value={compact(k.new_followers)} icon={Users} />
+        <KpiTile label={t('deck.kpis.accountsReached')} value={compact(k.accounts_reached)} delta={k.reach_delta_pct} icon={Eye} />
+        <KpiTile label={t('deck.kpis.views')} value={compact(k.views)} icon={BarChart3} />
+        <KpiTile label={t('deck.kpis.postsReach')} value={compact(k.reach)} icon={Eye} />
+        <KpiTile label={t('deck.kpis.reelShares')} value={compact(k.reel_shares)} icon={Share2} />
+        <KpiTile label={t('deck.kpis.storyReplies')} value={compact(k.story_replies)} icon={MessageCircle} />
+        <KpiTile label={t('deck.kpis.engagement')} value={compact(k.engagement)} icon={Heart} />
       </div>
       {k.has_account_data === false && (
         <p className="mt-2 text-xs text-ink-muted">
-          As métricas de perfil (seguidores, alcance de contas, respostas em Stories) começam a aparecer conforme o histórico de snapshots é coletado.
+          {t('deck.accountDataNotice')}
         </p>
       )}
 
       {/* NOTA GERAL */}
       {Number.isFinite(score) && score > 0 && (
         <>
-          <SectionTitle icon={Target}>Nota geral</SectionTitle>
+          <SectionTitle icon={Target}>{t('deck.overallTitle')}</SectionTitle>
           <div className="grid gap-3 md:grid-cols-3">
             <Card className="flex flex-col items-center justify-center p-6 text-center">
               <p className="font-display text-6xl font-black" style={{ color: scoreColor(score) }}>
-                {score.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                {score.toLocaleString(i18n.language, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
               </p>
-              <p className="text-sm font-semibold text-ink-muted">/ 10</p>
+              <p className="text-sm font-semibold text-ink-muted">{t('deck.outOfTen')}</p>
               {overall.verdict && <p className="mt-2 text-sm text-ink-secondary">{overall.verdict}</p>}
             </Card>
-            <Milestones title="Para chegar a 8" items={overall.to_8} color="#10B981" />
-            <Milestones title="Para chegar a 9" items={overall.to_9} color="#F59E0B" />
+            <Milestones title={t('deck.toReach8')} items={overall.to_8} color="#10B981" />
+            <Milestones title={t('deck.toReach9')} items={overall.to_9} color="#F59E0B" />
           </div>
         </>
       )}
@@ -210,7 +214,7 @@ export default function ReportDeck({ report }) {
       {/* O QUE ESTÁ FUNCIONANDO */}
       {d.wins?.length > 0 && (
         <>
-          <SectionTitle icon={CheckCircle2} color="#10B981">O que está funcionando</SectionTitle>
+          <SectionTitle icon={CheckCircle2} color="#10B981">{t('deck.winsTitle')}</SectionTitle>
           <CardList items={d.wins} color="#10B981" />
         </>
       )}
@@ -218,10 +222,10 @@ export default function ReportDeck({ report }) {
       {/* PERFORMANCE DOS REELS / FORMATOS */}
       {(cp.winners?.length || cp.losers?.length) ? (
         <>
-          <SectionTitle icon={Sparkles}>Performance por formato</SectionTitle>
+          <SectionTitle icon={Sparkles}>{t('deck.formatPerformanceTitle')}</SectionTitle>
           <div className="grid gap-3 md:grid-cols-2">
-            <PerfColumn title="✅ O que performa" items={cp.winners} tone="good" />
-            <PerfColumn title="❌ O que não funciona" items={cp.losers} tone="bad" />
+            <PerfColumn title={t('deck.whatPerforms')} items={cp.winners} tone="good" />
+            <PerfColumn title={t('deck.whatDoesnt')} items={cp.losers} tone="bad" />
           </div>
         </>
       ) : null}
@@ -229,7 +233,7 @@ export default function ReportDeck({ report }) {
       {/* GARGALOS */}
       {d.bottlenecks?.length > 0 && (
         <>
-          <SectionTitle icon={AlertTriangle} color="#EF4444">Gargalos críticos</SectionTitle>
+          <SectionTitle icon={AlertTriangle} color="#EF4444">{t('deck.bottlenecksTitle')}</SectionTitle>
           <div className="space-y-3">
             {d.bottlenecks.map((b, i) => (
               <Card key={i} className="flex gap-4 p-4">
@@ -247,7 +251,7 @@ export default function ReportDeck({ report }) {
       {/* OPORTUNIDADES */}
       {d.opportunities?.length > 0 && (
         <>
-          <SectionTitle icon={Lightbulb} color="#F59E0B">O que precisa ser explorado</SectionTitle>
+          <SectionTitle icon={Lightbulb} color="#F59E0B">{t('deck.opportunitiesTitle')}</SectionTitle>
           <CardList items={d.opportunities} color="#F59E0B" />
         </>
       )}
@@ -255,7 +259,7 @@ export default function ReportDeck({ report }) {
       {/* MATRIZ */}
       {d.matrix?.length > 0 && (
         <>
-          <SectionTitle icon={BarChart3}>Matriz de performance</SectionTitle>
+          <SectionTitle icon={BarChart3}>{t('deck.matrixTitle')}</SectionTitle>
           <Card className="divide-y divide-border px-4 py-1">
             {d.matrix.map((m, i) => <MatrixRow key={i} {...m} />)}
           </Card>
@@ -265,11 +269,11 @@ export default function ReportDeck({ report }) {
       {/* PLANO DE AÇÃO */}
       {(plan.d7 || plan.d30 || plan.d90) && (
         <>
-          <SectionTitle icon={CalendarClock}>Plano de ação</SectionTitle>
+          <SectionTitle icon={CalendarClock}>{t('deck.actionPlanTitle')}</SectionTitle>
           <div className="grid gap-3 md:grid-cols-3">
-            <PlanColumn title="Próximos 7 dias" items={plan.d7} color="#EF4444" />
-            <PlanColumn title="Próximos 30 dias" items={plan.d30} color="#F59E0B" />
-            <PlanColumn title="Próximos 90 dias" items={plan.d90} color="#10B981" />
+            <PlanColumn title={t('deck.next7Days')} items={plan.d7} color="#EF4444" />
+            <PlanColumn title={t('deck.next30Days')} items={plan.d30} color="#F59E0B" />
+            <PlanColumn title={t('deck.next90Days')} items={plan.d90} color="#10B981" />
           </div>
         </>
       )}
@@ -277,7 +281,7 @@ export default function ReportDeck({ report }) {
       {/* PROJEÇÃO */}
       {projection.verdict && (
         <>
-          <SectionTitle icon={TrendingUp}>Projeção 12 meses</SectionTitle>
+          <SectionTitle icon={TrendingUp}>{t('deck.projectionTitle')}</SectionTitle>
           <Card className="p-6">
             <p className="font-display text-lg font-bold text-ink">{projection.verdict}</p>
             {(projection.narrative || []).map((p, i) => (
@@ -290,7 +294,7 @@ export default function ReportDeck({ report }) {
       {/* GROWTH ANGLE */}
       {growth.tactics?.length > 0 && (
         <>
-          <SectionTitle icon={Rocket} color="#EC4899">{growth.title || 'Vetor de crescimento'}</SectionTitle>
+          <SectionTitle icon={Rocket} color="#EC4899">{growth.title || t('deck.growthFallbackTitle')}</SectionTitle>
           {growth.intro && <p className="mb-3 text-sm text-ink-secondary">{growth.intro}</p>}
           <CardList items={growth.tactics} color="#EC4899" />
         </>

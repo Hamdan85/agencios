@@ -352,7 +352,7 @@ function UsageSection() {
   const totalValues = series.map((s) => Number(s[metric] || 0))
   const chartMax = Math.max(1, ...totalValues)
   const chartLines = [
-    { key: 'total', label: 'Total', color: TOTAL_COLOR, width: 2.25, values: totalValues },
+    { key: 'total', label: t('usage.chart.total'), color: TOTAL_COLOR, width: 2.25, values: totalValues },
     ...['video', 'image', 'carousel'].map((k) => ({
       key: k,
       label: KIND_META[k]?.label || k,
@@ -452,7 +452,7 @@ function UsageSection() {
               {/* Breakdown by kind */}
               <Card className="lg:col-span-2">
                 <CardContent className="p-5">
-                  <p className="mb-4 font-display text-sm font-bold text-ink">Por tipo de criativo</p>
+                  <p className="mb-4 font-display text-sm font-bold text-ink">{t('usage.byKind')}</p>
                   <div className="space-y-4">
                     {byKind.map((k) => {
                       const meta = KIND_META[k.kind] || { label: k.kind, icon: Sparkles, color: '#7C3AED' }
@@ -467,10 +467,10 @@ function UsageSection() {
                                 <meta.icon size={15} strokeWidth={2.2} />
                               </span>
                               {meta.label}
-                              <span className="text-xs font-medium text-ink-muted">· {Number(k.count || 0)} {Number(k.count) === 1 ? 'geração' : 'gerações'}</span>
+                              <span className="text-xs font-medium text-ink-muted">· {t('usage.generationCount', { count: Number(k.count || 0) })}</span>
                             </span>
                             <span className="shrink-0 font-display text-sm font-extrabold" style={{ color: free ? undefined : meta.color }}>
-                              {free ? <span className="text-emerald">Incluso</span> : `${num(credits)} cr.`}
+                              {free ? <span className="text-emerald">{t('credits.included')}</span> : t('usage.creditsShort', { value: num(credits) })}
                             </span>
                           </div>
                           <div className="h-2 overflow-hidden rounded-full bg-surface-muted">
@@ -491,10 +491,10 @@ function UsageSection() {
                 <CardContent className="p-5">
                   <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                     <p className="font-display text-sm font-bold text-ink">
-                      {metric === 'credits' ? 'Créditos gastos ao longo do tempo' : 'Gerações ao longo do tempo'}
+                      {metric === 'credits' ? t('usage.chart.creditsOverTime') : t('usage.chart.generationsOverTime')}
                     </p>
                     <div className="inline-flex items-center gap-0.5 rounded-lg bg-surface-muted p-0.5">
-                      {[['credits', 'Créditos'], ['generations', 'Gerações']].map(([k, l]) => (
+                      {[['credits', t('credits.title')], ['generations', t('usage.generations')]].map(([k, l]) => (
                         <button
                           key={k}
                           type="button"
@@ -511,7 +511,7 @@ function UsageSection() {
                   </div>
                   {series.length === 0 || metricTotal === 0 ? (
                     <p className="py-16 text-center text-sm text-ink-muted">
-                      {metric === 'credits' ? 'Nenhum crédito gasto no período.' : 'Nenhuma geração no período.'}
+                      {metric === 'credits' ? t('usage.chart.emptyCredits') : t('usage.chart.emptyGenerations')}
                     </p>
                   ) : (
                     <>
@@ -533,10 +533,10 @@ function UsageSection() {
                           {/* Transparent hit columns give a hover tooltip per bucket. */}
                           {series.map((s, i) => {
                             const w = 100 / series.length
-                            const unit = metric === 'credits' ? 'cr.' : 'ger.'
-                            const tip = `${chartLabel(s.date, granularity)} · Total ${Number(s[metric] || 0)} ${unit}`
+                            const unit = metric === 'credits' ? t('usage.chart.unitCredits') : t('usage.chart.unitGenerations')
+                            const tip = t('usage.chart.tooltip', { date: chartLabel(s.date, granularity), total: Number(s[metric] || 0), unit })
                               + ['video', 'image', 'carousel']
-                                .map((k) => ` · ${KIND_META[k]?.label}: ${Number(s.by_kind?.[k]?.[metric] || 0)}`)
+                                .map((k) => t('usage.chart.tooltipKind', { label: KIND_META[k]?.label, value: Number(s.by_kind?.[k]?.[metric] || 0) }))
                                 .join('')
                             return (
                               <rect key={s.date} x={i * w} y="0" width={w} height="100" fill="transparent">
@@ -572,7 +572,7 @@ function UsageSection() {
               <CardContent className="p-0">
                 <div className="flex flex-wrap items-center gap-2 border-b border-border px-5 py-3">
                   <p className="mr-auto flex items-center gap-2 font-display text-sm font-bold text-ink">
-                    <Clock size={15} className="text-ink-muted" /> Gerações recentes
+                    <Clock size={15} className="text-ink-muted" /> {t('usage.recent.title')}
                     {total > 0 && <span className="text-xs font-medium text-ink-muted">· {num(total)}</span>}
                   </p>
                   <Select value={kind} onValueChange={changeKind}>
@@ -591,7 +591,7 @@ function UsageSection() {
 
                 {recent.length === 0 ? (
                   <div className="px-5 py-12 text-center text-sm text-ink-muted">
-                    Nenhuma geração {filtered ? 'com esses filtros' : 'no período'}.
+                    {filtered ? t('usage.recent.emptyFiltered') : t('usage.chart.emptyGenerations')}
                   </div>
                 ) : (
                   <ul className={cn('max-h-112 divide-y divide-border overflow-y-auto transition-opacity', isFetching && 'opacity-60')}>
@@ -612,7 +612,7 @@ function UsageSection() {
                             </div>
                           </div>
                           <span className={cn('shrink-0 font-display text-sm font-extrabold', credits > 0 ? 'text-ink' : 'text-emerald')}>
-                            {credits > 0 ? `${num(credits)} cr.` : 'Incluso'}
+                            {credits > 0 ? t('usage.creditsShort', { value: num(credits) }) : t('credits.included')}
                           </span>
                         </li>
                       )
@@ -622,13 +622,13 @@ function UsageSection() {
 
                 {total > per && (
                   <div className="flex items-center justify-between gap-3 border-t border-border px-5 py-3">
-                    <p className="text-xs text-ink-muted">{from}–{to} de {num(total)}</p>
+                    <p className="text-xs text-ink-muted">{t('usage.recent.pageInfo', { from, to, total: num(total) })}</p>
                     <div className="flex items-center gap-1.5">
                       <Button variant="outline" size="sm" disabled={page <= 1 || isFetching} onClick={() => setPage((p) => Math.max(1, p - 1))}>
-                        <ChevronLeft size={15} /> Anterior
+                        <ChevronLeft size={15} /> {t('usage.recent.prev')}
                       </Button>
                       <Button variant="outline" size="sm" disabled={!meta.has_more || isFetching} onClick={() => setPage((p) => p + 1)}>
-                        Próxima <ChevronRight size={15} />
+                        {t('usage.recent.next')} <ChevronRight size={15} />
                       </Button>
                     </div>
                   </div>
@@ -647,6 +647,7 @@ const TAB_TO_SEG = { plano: '', uso: 'uso' }
 const SEG_TO_TAB = { uso: 'uso' }
 
 export default function BillingIndex() {
+  const { t } = useTranslation('billing')
   const { data, isLoading } = useBilling()
   const { data: me } = useCurrentUser()
   const { changePlan, cancel, reactivate, portal } = useBillingMutations()
@@ -681,11 +682,11 @@ export default function BillingIndex() {
   return (
     <Page>
       <PageHeader
-        eyebrow="Plano"
-        title="Assinatura"
+        eyebrow={t('page.eyebrow')}
+        title={t('page.title')}
         icon={CreditCard}
         color="#7C3AED"
-        description="Gerencie o plano da sua agência no agencios."
+        description={t('page.description')}
       />
 
       {/* Seat overage banner — a downgrade (in-app or via the Stripe dashboard)
@@ -695,9 +696,7 @@ export default function BillingIndex() {
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-danger/30 bg-danger/8 px-5 py-3.5">
           <p className="flex items-center gap-2 text-sm font-semibold text-danger">
             <AlertTriangle size={18} />
-            O workspace tem {me.workspace.seat_count} membros, e o plano atual permite até{' '}
-            {me.workspace.seat_limit}. Remova membros ou faça upgrade — novos tickets e campanhas
-            estão bloqueados enquanto isso.
+            {t('seatOverage', { count: me.workspace.seat_count, limit: me.workspace.seat_limit })}
           </p>
         </div>
       )}
@@ -708,12 +707,11 @@ export default function BillingIndex() {
           <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-sky/15 text-sky"><Sparkles size={18} /></span>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-ink">
-              Período de teste ativo
-              {sub.trial_ends_at && <span className="font-normal text-ink-muted"> — termina em {date(sub.trial_ends_at)}</span>}
+              {t('trial.active')}
+              {sub.trial_ends_at && <span className="font-normal text-ink-muted"> {t('trial.endsOn', { date: date(sub.trial_ends_at) })}</span>}
             </p>
             <p className="mt-0.5 text-[13px] leading-snug text-ink-muted">
-              Os créditos mensais do plano serão liberados quando o período de teste terminar.
-              Precisa gerar antes? Você já pode comprar packs de créditos avulsos abaixo.
+              {t('trial.description')}
             </p>
           </div>
         </div>
@@ -724,18 +722,18 @@ export default function BillingIndex() {
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-danger/30 bg-danger/8 px-5 py-3.5">
           <p className="flex items-center gap-2 text-sm font-semibold text-danger">
             <AlertTriangle size={18} />
-            Assinatura será cancelada em {date(sub.cancel_at)}.
+            {t('cancelBanner.message', { date: date(sub.cancel_at) })}
           </p>
           <Button variant="solid" size="sm" onClick={() => reactivate.mutate()} disabled={reactivate.isPending}>
-            <RefreshCw size={15} /> Reativar
+            <RefreshCw size={15} /> {t('cancelBanner.reactivate')}
           </Button>
         </div>
       )}
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="mb-6">
-          <TabsTrigger value="plano"><CreditCard size={15} /> Plano & créditos</TabsTrigger>
-          <TabsTrigger value="uso"><BarChart3 size={15} /> Uso</TabsTrigger>
+          <TabsTrigger value="plano"><CreditCard size={15} /> {t('tabs.plan')}</TabsTrigger>
+          <TabsTrigger value="uso"><BarChart3 size={15} /> {t('tabs.usage')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="plano">
@@ -745,22 +743,22 @@ export default function BillingIndex() {
           <div className="flex items-center gap-4">
             <IconTile icon={Icon} color="#FFFFFF" tint="33" className="size-14 backdrop-blur" iconSize={28} />
             <div>
-              <SectionLabel className="text-white/80">Plano atual</SectionLabel>
+              <SectionLabel className="text-white/80">{t('plan.currentBadge')}</SectionLabel>
               <h2 className="font-display text-2xl font-extrabold">
                 {meta.label}
-                {subscribed && <span className="text-base font-semibold text-white/70"> · {(sub.interval || 'month') === 'year' ? 'Anual' : 'Mensal'}</span>}
+                {subscribed && <span className="text-base font-semibold text-white/70"> · {(sub.interval || 'month') === 'year' ? t('plan.annual') : t('plan.monthly')}</span>}
               </h2>
             </div>
           </div>
           <Badge variant={STATUS_VARIANT[sub.status] || 'soft'} className="bg-white/20 text-white">
-            {STATUS_LABEL[sub.status] || sub.status || 'Ativo'}
+            {STATUS_LABEL[sub.status] || sub.status || t('subscriptionStatus.active')}
           </Badge>
         </div>
         <CardContent className="grid grid-cols-1 gap-4 p-6 sm:grid-cols-3">
           <div className="flex items-center gap-3">
             <span className="flex size-10 items-center justify-center rounded-xl bg-indigo/12 text-indigo"><Users2 size={18} /></span>
             <div>
-              <SectionLabel className="text-xs tracking-wider">Assentos</SectionLabel>
+              <SectionLabel className="text-xs tracking-wider">{t('currentPlan.seats')}</SectionLabel>
               <p className="font-display text-lg font-extrabold text-ink">
                 {sub.seats ?? '—'}{sub.seat_limit ? ` / ${sub.seat_limit}` : ''}
               </p>
@@ -769,15 +767,15 @@ export default function BillingIndex() {
           <div className="flex items-center gap-3">
             <span className="flex size-10 items-center justify-center rounded-xl bg-emerald/12 text-emerald"><CalendarClock size={18} /></span>
             <div>
-              <SectionLabel className="text-xs tracking-wider">Próxima renovação</SectionLabel>
+              <SectionLabel className="text-xs tracking-wider">{t('currentPlan.nextRenewal')}</SectionLabel>
               <p className="font-display text-lg font-extrabold text-ink">{sub.current_period_end ? date(sub.current_period_end) : '—'}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <span className="flex size-10 items-center justify-center rounded-xl bg-brand-soft text-brand"><Check size={18} /></span>
             <div>
-              <SectionLabel className="text-xs tracking-wider">Acesso</SectionLabel>
-              <p className="font-display text-lg font-extrabold text-ink">{sub.access_granted ? 'Liberado' : 'Restrito'}</p>
+              <SectionLabel className="text-xs tracking-wider">{t('currentPlan.access')}</SectionLabel>
+              <p className="font-display text-lg font-extrabold text-ink">{sub.access_granted ? t('currentPlan.granted') : t('currentPlan.restricted')}</p>
             </div>
           </div>
         </CardContent>
@@ -791,7 +789,7 @@ export default function BillingIndex() {
       <div className={cn('mb-3 flex flex-wrap items-center justify-between gap-3', subscribed && 'mt-10')}>
         <div className="flex items-center gap-2">
           <Sparkles size={18} className="text-brand" />
-          <h2 className="font-display text-lg font-bold text-ink">Planos</h2>
+          <h2 className="font-display text-lg font-bold text-ink">{t('plans.title')}</h2>
         </div>
         {discountPercent > 0 && (
           <IntervalToggle value={interval} onChange={setInterval} discountPercent={discountPercent} />
@@ -823,12 +821,12 @@ export default function BillingIndex() {
       <Card className="mt-8">
         <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <p className="font-display text-base font-bold text-ink">Gerenciar pagamento</p>
-            <p className="text-sm text-ink-muted">Atualize forma de pagamento e veja faturas no portal Stripe.</p>
+            <p className="font-display text-base font-bold text-ink">{t('manage.title')}</p>
+            <p className="text-sm text-ink-muted">{t('manage.description')}</p>
           </div>
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
             <Button variant="outline" className="w-full sm:w-auto" onClick={() => portal.mutate()} disabled={portal.isPending}>
-              <ExternalLink size={16} /> Gerenciar no portal
+              <ExternalLink size={16} /> {t('manage.portal')}
             </Button>
             {!sub.cancel_at && sub.status !== 'canceled' && (
               <Button
@@ -836,17 +834,17 @@ export default function BillingIndex() {
                 className="w-full text-danger hover:bg-danger/10 hover:text-danger sm:w-auto"
                 onClick={async () => {
                   const ok = await confirm({
-                    title: 'Cancelar assinatura?',
-                    description: 'Sua assinatura continua ativa até o fim do período atual e não será renovada.',
-                    confirmLabel: 'Cancelar assinatura',
-                    cancelLabel: 'Manter assinatura',
+                    title: t('manage.confirmCancel.title'),
+                    description: t('manage.confirmCancel.description'),
+                    confirmLabel: t('manage.cancel'),
+                    cancelLabel: t('manage.confirmCancel.keep'),
                     destructive: true,
                   })
                   if (ok) cancel.mutate()
                 }}
                 disabled={cancel.isPending}
               >
-                Cancelar assinatura
+                {t('manage.cancel')}
               </Button>
             )}
           </div>
@@ -865,18 +863,18 @@ export default function BillingIndex() {
         const cents = isYear
           ? (confirmPlan.annual_monthly_equivalent_cents ?? confirmPlan.price_cents)
           : confirmPlan.price_cents
-        const cycle = isYear ? 'anual' : 'mensal'
+        const cycle = isYear ? t('plan.cycleAnnual') : t('plan.cycleMonthly')
         const name = confirmPlan.name || PLAN_META[confirmPlan.key]?.label || confirmPlan.key
-        const price = `${brl(cents)}/mês${isYear ? ' (cobrado anualmente)' : ''}`
+        const price = isYear ? t('confirmChange.priceAnnual', { price: brl(cents) }) : t('confirmChange.priceMonthly', { price: brl(cents) })
         return (
           <ConfirmDialog
             open
             onOpenChange={(o) => { if (!o) setConfirmPlan(null) }}
-            title={subscribed ? 'Confirmar mudança de plano' : 'Confirmar assinatura'}
+            title={subscribed ? t('confirmChange.titleChange') : t('confirmChange.titleSubscribe')}
             description={subscribed
-              ? `Mudar para o plano ${name} (${cycle}), ${price}. A diferença é ajustada proporcionalmente na sua próxima fatura (proração).`
-              : `Assinar o plano ${name} (${cycle}), ${price}. Você será levado ao pagamento seguro do Stripe.`}
-            confirmLabel={subscribed ? 'Confirmar mudança' : 'Ir para o pagamento'}
+              ? t('confirmChange.descriptionChange', { name, cycle, price })
+              : t('confirmChange.descriptionSubscribe', { name, cycle, price })}
+            confirmLabel={subscribed ? t('confirmChange.confirm') : t('confirmChange.goToPayment')}
             icon={Zap}
             tone="#7C3AED"
             loading={changePlan.isPending}

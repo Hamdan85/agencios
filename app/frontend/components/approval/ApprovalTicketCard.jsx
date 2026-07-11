@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Check, MessageSquarePlus, CalendarClock } from 'lucide-react'
 import CreativeExperience from '@/components/creative/CreativeExperience'
 import { Button } from '@/components/ui/button'
@@ -12,6 +13,7 @@ import { pieceName, slotLabel } from '@/lib/creativeName'
 // pinned). The brief lives inline in the content column — no sheet that hides
 // the actions.
 export default function ApprovalTicketCard({ ticket, accent, fg, busy, onApproveSlot, onRequestChanges }) {
+  const { t } = useTranslation('portal')
   const slots = ticket.slots || []
   const firstPending = Math.max(0, slots.findIndex((s) => s.state === 'pending'))
   const [slotIdx, setSlotIdx] = useState(firstPending)
@@ -34,10 +36,10 @@ export default function ApprovalTicketCard({ ticket, accent, fg, busy, onApprove
   const approveLabel = useMemo(() => {
     if (options.length > 1 && chosenId) {
       const i = options.findIndex((o) => o.id === chosenId)
-      return `Aprovar Opção ${String.fromCharCode(65 + Math.max(0, i))}`
+      return t('card.approveOption', { letter: String.fromCharCode(65 + Math.max(0, i)) })
     }
-    return slots.length > 1 ? `Aprovar ${slotLabel(slot?.creative_type)}` : 'Aprovar'
-  }, [options, chosenId, slots.length, slot])
+    return slots.length > 1 ? t('card.approveSlot', { slot: slotLabel(slot?.creative_type) }) : t('card.approve')
+  }, [options, chosenId, slots.length, slot, t])
 
   const SLOT_STATE = {
     approved: ['✓', 'text-emerald-600'],
@@ -58,7 +60,7 @@ export default function ApprovalTicketCard({ ticket, accent, fg, busy, onApprove
         {options.length > 1 && (
           <div className="mt-3 shrink-0">
             <p className="mb-1.5 text-center text-xs text-ink-muted">
-              {pieceName(active, { index: viewIdx, optionCount: options.length })} — {options.length} opções · toque para escolher
+              {t('card.optionsCaption', { piece: pieceName(active, { index: viewIdx, optionCount: options.length }), total: options.length })}
             </p>
             <div className="flex items-center justify-center gap-2 overflow-x-auto pb-1" role="radiogroup">
               {options.map((o, i) => {
@@ -94,13 +96,13 @@ export default function ApprovalTicketCard({ ticket, accent, fg, busy, onApprove
 
           {ticket.objective && (
             <div className="mt-4">
-              <SectionLabel className="tracking-wide text-ink-faint">Objetivo</SectionLabel>
+              <SectionLabel className="tracking-wide text-ink-faint">{t('labels.objective')}</SectionLabel>
               <p className="mt-0.5 text-sm text-ink-secondary">{ticket.objective}</p>
             </div>
           )}
           {ticket.brief && (
             <div className="mt-4">
-              <SectionLabel className="tracking-wide text-ink-faint">Briefing</SectionLabel>
+              <SectionLabel className="tracking-wide text-ink-faint">{t('labels.brief')}</SectionLabel>
               <p className="mt-0.5 whitespace-pre-wrap text-sm leading-relaxed text-ink-secondary">{ticket.brief}</p>
             </div>
           )}
@@ -109,7 +111,7 @@ export default function ApprovalTicketCard({ ticket, accent, fg, busy, onApprove
               drives the viewer + the actions below. Only shown when >1 slot. */}
           {slots.length > 1 && (
             <div className="mt-5">
-              <SectionLabel className="mb-1.5 tracking-wide text-ink-faint">Peças ({slots.length})</SectionLabel>
+              <SectionLabel className="mb-1.5 tracking-wide text-ink-faint">{t('card.pieces', { total: slots.length })}</SectionLabel>
               <div className="flex flex-col gap-1.5">
                 {slots.map((s, i) => {
                   const [icon, cls] = SLOT_STATE[s.state] || SLOT_STATE.pending
@@ -119,7 +121,7 @@ export default function ApprovalTicketCard({ ticket, accent, fg, busy, onApprove
                       className={`flex items-center justify-between rounded-xl border px-3 py-2 text-left text-sm transition ${on ? 'bg-surface-muted' : 'border-border hover:bg-surface-muted/60'}`}
                       style={on ? { borderColor: accent } : undefined}>
                       <span className="font-medium text-ink">{slotLabel(s.creative_type)}</span>
-                      <span className={`text-xs font-bold ${cls}`}>{icon || (s.options.length > 1 ? `${s.options.length} opções` : '')}</span>
+                      <span className={`text-xs font-bold ${cls}`}>{icon || (s.options.length > 1 ? t('card.optionsCount', { total: s.options.length }) : '')}</span>
                     </button>
                   )
                 })}
@@ -130,21 +132,21 @@ export default function ApprovalTicketCard({ ticket, accent, fg, busy, onApprove
 
         {/* Decision — pinned, always visible */}
         <div className="shrink-0 border-t border-border p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
-          {slots.length > 1 && <p className="mb-2 text-xs font-medium text-ink-muted">Decisão: {slotLabel(slot?.creative_type)}</p>}
-          {needsChoice && !decided && <p className="mb-2 text-xs text-ink-muted">Escolha uma opção ao lado para aprovar.</p>}
+          {slots.length > 1 && <p className="mb-2 text-xs font-medium text-ink-muted">{t('card.decision', { slot: slotLabel(slot?.creative_type) })}</p>}
+          {needsChoice && !decided && <p className="mb-2 text-xs text-ink-muted">{t('card.chooseOption')}</p>}
           {slot?.state === 'changes_requested' ? (
             <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3">
               <p className="flex items-center gap-1.5 text-sm font-semibold text-amber-600">
-                <MessageSquarePlus size={16} /> Você pediu ajustes
+                <MessageSquarePlus size={16} /> {t('card.changesRequestedTitle')}
               </p>
               {changeFeedback && (
                 <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed text-ink-secondary">{changeFeedback}</p>
               )}
-              <p className="mt-2 text-xs text-ink-muted">A equipe está trabalhando nos ajustes e reenviará para aprovação.</p>
+              <p className="mt-2 text-xs text-ink-muted">{t('card.changesRequestedBody')}</p>
             </div>
           ) : decided ? (
             <p className="py-2 text-center text-sm font-semibold text-emerald-600">
-              ✓ Aprovado
+              {t('card.approved')}
             </p>
           ) : (
             <div className="flex gap-2">
@@ -154,7 +156,7 @@ export default function ApprovalTicketCard({ ticket, accent, fg, busy, onApprove
                 <Check size={18} /> {approveLabel}
               </Button>
               <Button variant="outline" className="h-12 flex-1 text-base" disabled={busy} onClick={() => onRequestChanges(slot)}>
-                <MessageSquarePlus size={18} /> Pedir ajustes
+                <MessageSquarePlus size={18} /> {t('card.requestChanges')}
               </Button>
             </div>
           )}

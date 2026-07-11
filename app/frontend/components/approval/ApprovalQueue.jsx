@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Search, ImageIcon, CheckSquare } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { CreativeTypeChip, ChannelIcons } from '@/components/ui/iconography'
@@ -65,13 +66,14 @@ function QueueRow({ ticket, on, accent, onPick }) {
 // column owns its own scroll; `className` sizes it (full-height sidebar on
 // desktop, a capped strip when stacked on mobile).
 export default function ApprovalQueue({ tickets = [], currentId, onPick, accent = '#7C3AED', className }) {
+  const { t } = useTranslation('portal')
   const [q, setQ] = useState('')
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase()
     if (!term) return tickets
-    return tickets.filter((t) =>
-      (t.title || '').toLowerCase().includes(term) ||
-      (t.campaign || '').toLowerCase().includes(term))
+    return tickets.filter((tk) =>
+      (tk.title || '').toLowerCase().includes(term) ||
+      (tk.campaign || '').toLowerCase().includes(term))
   }, [tickets, q])
 
   return (
@@ -83,7 +85,7 @@ export default function ApprovalQueue({ tickets = [], currentId, onPick, accent 
             <span className="flex size-7 shrink-0 items-center justify-center rounded-lg" style={{ background: `${accent}1F`, color: accent }}>
               <CheckSquare size={15} strokeWidth={2.4} />
             </span>
-            <p className="truncate font-display text-[13px] font-bold leading-tight text-ink">Aguardando aprovação</p>
+            <p className="truncate font-display text-[13px] font-bold leading-tight text-ink">{t('queue.title')}</p>
           </div>
           <span className="flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-[12px] font-extrabold" style={{ background: `${accent}1A`, color: accent }}>
             {tickets.length}
@@ -94,16 +96,16 @@ export default function ApprovalQueue({ tickets = [], currentId, onPick, accent 
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Buscar conteúdo…"
+            placeholder={t('queue.searchPlaceholder')}
             className="w-full rounded-lg border border-border bg-surface py-1.5 pl-8 pr-2.5 text-sm text-ink placeholder:text-ink-faint focus:border-brand/50 focus:outline-none"
           />
         </div>
       </div>
       <div className="scrollbar-subtle flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto bg-surface-muted/35 p-2.5">
         {filtered.length === 0
-          ? <p className="px-2 py-8 text-center text-sm text-ink-muted">Nada encontrado.</p>
-          : filtered.map((t) => (
-            <QueueRow key={t.id} ticket={t} on={t.id === currentId} accent={accent} onPick={onPick} />
+          ? <p className="px-2 py-8 text-center text-sm text-ink-muted">{t('queue.noResults')}</p>
+          : filtered.map((tk) => (
+            <QueueRow key={tk.id} ticket={tk} on={tk.id === currentId} accent={accent} onPick={onPick} />
           ))}
       </div>
     </div>

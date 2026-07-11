@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
@@ -29,10 +30,11 @@ function Tool({ active, disabled, onClick, title, children }) {
 }
 
 function Toolbar({ editor }) {
+  const { t } = useTranslation('ui')
   if (!editor) return null
   const setLink = () => {
     const prev = editor.getAttributes('link')?.href || ''
-    const url = window.prompt('URL do link', prev)
+    const url = window.prompt(t('richText.linkPrompt'), prev)
     if (url === null) return
     if (url === '') { editor.chain().focus().extendMarkRange('link').unsetLink().run(); return }
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
@@ -40,16 +42,16 @@ function Toolbar({ editor }) {
 
   return (
     <div className="flex flex-wrap items-center gap-0.5 border-b border-border px-1.5 py-1">
-      <Tool title="Negrito" active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()}><Bold size={15} /></Tool>
-      <Tool title="Itálico" active={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()}><Italic size={15} /></Tool>
-      <Tool title="Tachado" active={editor.isActive('strike')} onClick={() => editor.chain().focus().toggleStrike().run()}><Strikethrough size={15} /></Tool>
+      <Tool title={t('richText.bold')} active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()}><Bold size={15} /></Tool>
+      <Tool title={t('richText.italic')} active={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()}><Italic size={15} /></Tool>
+      <Tool title={t('richText.strike')} active={editor.isActive('strike')} onClick={() => editor.chain().focus().toggleStrike().run()}><Strikethrough size={15} /></Tool>
       <span className="mx-1 h-4 w-px bg-border" />
-      <Tool title="Título" active={editor.isActive('heading', { level: 2 })} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 size={15} /></Tool>
-      <Tool title="Lista" active={editor.isActive('bulletList')} onClick={() => editor.chain().focus().toggleBulletList().run()}><List size={15} /></Tool>
-      <Tool title="Lista numerada" active={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()}><ListOrdered size={15} /></Tool>
-      <Tool title="Citação" active={editor.isActive('blockquote')} onClick={() => editor.chain().focus().toggleBlockquote().run()}><Quote size={15} /></Tool>
+      <Tool title={t('richText.heading')} active={editor.isActive('heading', { level: 2 })} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 size={15} /></Tool>
+      <Tool title={t('richText.bulletList')} active={editor.isActive('bulletList')} onClick={() => editor.chain().focus().toggleBulletList().run()}><List size={15} /></Tool>
+      <Tool title={t('richText.orderedList')} active={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()}><ListOrdered size={15} /></Tool>
+      <Tool title={t('richText.quote')} active={editor.isActive('blockquote')} onClick={() => editor.chain().focus().toggleBlockquote().run()}><Quote size={15} /></Tool>
       <span className="mx-1 h-4 w-px bg-border" />
-      <Tool title="Link" active={editor.isActive('link')} onClick={setLink}><Link2 size={15} /></Tool>
+      <Tool title={t('richText.link')} active={editor.isActive('link')} onClick={setLink}><Link2 size={15} /></Tool>
     </div>
   )
 }
@@ -58,6 +60,7 @@ function Toolbar({ editor }) {
 // styled to match the design system (mirrors the Textarea surface). Used wherever
 // formatted long-form content is wanted — see `<Textarea rich />`.
 export function RichTextEditor({ value = '', onChange, onBlur, placeholder, className, disabled = false, minHeight = '6rem', autofocus = false }) {
+  const { t } = useTranslation('ui')
   const editor = useEditor({
     immediatelyRender: false,
     editable: !disabled,
@@ -65,7 +68,7 @@ export function RichTextEditor({ value = '', onChange, onBlur, placeholder, clas
     extensions: [
       StarterKit.configure({ heading: { levels: [2, 3] } }),
       Link.configure({ openOnClick: false, autolink: true, HTMLAttributes: { class: 'text-brand underline' } }),
-      Placeholder.configure({ placeholder: placeholder || 'Escreva…' }),
+      Placeholder.configure({ placeholder: placeholder || t('richText.write') }),
     ],
     content: value || '',
     editorProps: {

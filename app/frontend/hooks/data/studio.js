@@ -1,4 +1,5 @@
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { studioApi, generationsApi, creativesApi } from '@/api'
 import { keys } from '@/api/queryKeys'
@@ -11,6 +12,7 @@ export const useGenerations = (filters = {}) =>
   useQuery({ queryKey: keys.generations(filters), queryFn: () => generationsApi.list(filters), select: (d) => d.generations })
 
 export function useGenerate() {
+  const { t } = useTranslation('studio')
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ kind, params }) => studioApi.generate(kind, params),
@@ -22,9 +24,9 @@ export function useGenerate() {
       // Activation + usage tracking (video/image/carousel all consume credits).
       analytics.track(EVENTS.CREATIVE_GENERATED, { kind: variables?.kind, source: 'studio' })
       // Video runs async (storyboard + render off-request) — it only STARTED here.
-      toast.success(variables?.kind === 'video' ? 'Geração iniciada ✨' : 'Geração concluída ✨')
+      toast.success(variables?.kind === 'video' ? t('toasts.generateStartedVideo') : t('toasts.generateDone'))
     },
-    onError: onErr('Erro ao gerar criativo.'),
+    onError: onErr(t('toasts.generateError')),
   })
 }
 
@@ -54,18 +56,19 @@ export const useWorkspaceCreativesInfinite = (filters = {}) =>
   })
 
 export function useCreativeMutations() {
+  const { t } = useTranslation('studio')
   const qc = useQueryClient()
   const inv = () => qc.invalidateQueries({ queryKey: ['creatives'] })
   return {
     update: useMutation({
       mutationFn: ({ id, ...data }) => creativesApi.update(id, data),
-      onSuccess: () => { inv(); toast.success('Criativo atualizado.') },
-      onError: onErr('Erro ao atualizar criativo.'),
+      onSuccess: () => { inv(); toast.success(t('toasts.creativeUpdated')) },
+      onError: onErr(t('toasts.creativeUpdateError')),
     }),
     destroy: useMutation({
       mutationFn: (id) => creativesApi.destroy(id),
-      onSuccess: () => { inv(); toast.success('Criativo removido.') },
-      onError: onErr('Erro ao remover criativo.'),
+      onSuccess: () => { inv(); toast.success(t('toasts.creativeRemoved')) },
+      onError: onErr(t('toasts.creativeRemoveError')),
     }),
   }
 }

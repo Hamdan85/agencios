@@ -1,0 +1,56 @@
+{
+  "greeting": {
+    "morning": "Bom dia",
+    "afternoon": "Boa tarde",
+    "evening": "Boa noite",
+    "fallbackName": "por aqui"
+  },
+  "genStatus": {
+    "ready": "Pronto",
+    "generating": "Gerando",
+    "queued": "Na fila",
+    "failed": "Falhou"
+  },
+  "hero": {
+    "workspaceFallback": "Sua agência",
+    "subtitle": "Aqui está o pulso da agência hoje. Mova o trabalho pelo funil e mantenha tudo no ar.",
+    "newTicket": "Novo ticket",
+    "studio": "Estúdio"
+  },
+  "stats": {
+    "activeTickets": { "label": "Tickets ativos", "sub": "em produção agora" },
+    "clients": { "label": "Clientes", "sub": "na carteira" },
+    "projects": { "label": "Campanhas", "sub": "em andamento" },
+    "scheduledPosts": { "label": "Posts agendados", "sub": "na fila" },
+    "openInvoices": { "label": "Cobranças abertas", "sub": "aguardando" },
+    "revenue": { "label": "Receita", "sub": "recebido" }
+  },
+  "funnel": {
+    "title": "Funil de produção",
+    "subtitle": "{{count}} tickets distribuídos pelas 7 etapas",
+    "openBoard": "Abrir quadro"
+  },
+  "meetings": {
+    "title": "Próximas reuniões",
+    "viewAll": "Ver todas",
+    "emptyTitle": "Sem reuniões agendadas",
+    "emptyDescription": "Quando você marcar reuniões, elas aparecem aqui.",
+    "schedule": "Agendar reunião",
+    "fallbackTitle": "Reunião",
+    "join": "Entrar"
+  },
+  "generations": {
+    "title": "Gerações recentes",
+    "studio": "Estúdio",
+    "emptyTitle": "Nenhuma geração ainda",
+    "emptyDescription": "Gere carrosséis, vídeos e imagens com IA no Estúdio.",
+    "openStudio": "Abrir Estúdio"
+  },
+  "shortcuts": {
+    "title": "Atalhos",
+    "tickets": { "label": "Tickets", "hint": "Funil de produção" },
+    "studio": { "label": "Estúdio", "hint": "Gerar criativos" },
+    "calendar": { "label": "Calendário", "hint": "Posts e reuniões" },
+    "clients": { "label": "Clientes", "hint": "Sua carteira" }
+  }
+}

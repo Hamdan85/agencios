@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   Plus, Ticket, Users, FolderKanban, CalendarClock,
   Receipt, TrendingUp, Video, Calendar, Sparkles, ArrowUpRight,
   KanbanSquare, Wand2, CalendarDays, ChevronRight, Clock,
 } from 'lucide-react'
+import i18n from '@/i18n'
 import { cn } from '@/lib/utils'
 import { dt, brl, timeAgo } from '@/lib/formatters'
 import { WORKFLOW, statusMeta, GENERATION_KIND_META } from '@/lib/constants'
@@ -17,34 +19,35 @@ import { IconTile } from '@/components/ui/icon-tile'
 import { PageLoader, EmptyState } from '@/components/ui/feedback'
 import { Page } from '@/components/ui/page'
 
-function greeting() {
+function greetingKey() {
   const h = new Date().getHours()
-  if (h < 12) return 'Bom dia'
-  if (h < 18) return 'Boa tarde'
-  return 'Boa noite'
+  if (h < 12) return 'morning'
+  if (h < 18) return 'afternoon'
+  return 'evening'
 }
 
-const firstName = (name) => (name || '').trim().split(/\s+/)[0] || 'por aqui'
+const firstName = (name) => (name || '').trim().split(/\s+/)[0] || i18n.t('dashboard:greeting.fallbackName')
 
 const GEN_STATUS = {
-  completed: { label: 'Pronto', variant: 'success' },
-  succeeded: { label: 'Pronto', variant: 'success' },
-  ready:     { label: 'Pronto', variant: 'success' },
-  processing:{ label: 'Gerando', variant: 'warning' },
-  pending:   { label: 'Na fila', variant: 'muted' },
-  queued:    { label: 'Na fila', variant: 'muted' },
-  failed:    { label: 'Falhou', variant: 'danger' },
-  error:     { label: 'Falhou', variant: 'danger' },
+  completed: { get label() { return i18n.t('dashboard:genStatus.ready') }, variant: 'success' },
+  succeeded: { get label() { return i18n.t('dashboard:genStatus.ready') }, variant: 'success' },
+  ready:     { get label() { return i18n.t('dashboard:genStatus.ready') }, variant: 'success' },
+  processing:{ get label() { return i18n.t('dashboard:genStatus.generating') }, variant: 'warning' },
+  pending:   { get label() { return i18n.t('dashboard:genStatus.queued') }, variant: 'muted' },
+  queued:    { get label() { return i18n.t('dashboard:genStatus.queued') }, variant: 'muted' },
+  failed:    { get label() { return i18n.t('dashboard:genStatus.failed') }, variant: 'danger' },
+  error:     { get label() { return i18n.t('dashboard:genStatus.failed') }, variant: 'danger' },
 }
 
 const SHORTCUTS = [
-  { to: '/tickets', label: 'Tickets', hint: 'Funil de produção', icon: KanbanSquare, color: '#EC4899' },
-  { to: '/estudio', label: 'Estúdio', hint: 'Gerar criativos', icon: Wand2, color: '#7C3AED' },
-  { to: '/calendario', label: 'Calendário', hint: 'Posts e reuniões', icon: CalendarDays, color: '#0EA5E9' },
-  { to: '/clientes', label: 'Clientes', hint: 'Sua carteira', icon: Users, color: '#10B981' },
+  { to: '/tickets', key: 'tickets', icon: KanbanSquare, color: '#EC4899' },
+  { to: '/estudio', key: 'studio', icon: Wand2, color: '#7C3AED' },
+  { to: '/calendario', key: 'calendar', icon: CalendarDays, color: '#0EA5E9' },
+  { to: '/clientes', key: 'clients', icon: Users, color: '#10B981' },
 ]
 
 export default function Dashboard() {
+  const { t } = useTranslation('dashboard')
   const { data, isLoading } = useDashboard()
   const { data: me } = useCurrentUser()
 
@@ -62,12 +65,12 @@ export default function Dashboard() {
   const totalFunnel = WORKFLOW.reduce((sum, s) => sum + (Number(byStatus[s]) || 0), 0)
 
   const statCards = [
-    { label: 'Tickets ativos', value: stats.active_tickets ?? 0, icon: Ticket, color: '#EC4899', sub: 'em produção agora', to: '/tickets' },
-    { label: 'Clientes', value: stats.clients ?? 0, icon: Users, color: '#10B981', sub: 'na carteira', to: '/clientes' },
-    { label: 'Campanhas', value: stats.projects ?? 0, icon: FolderKanban, color: '#7C3AED', sub: 'em andamento', to: '/campanhas' },
-    { label: 'Posts agendados', value: stats.scheduled_posts ?? 0, icon: CalendarClock, color: '#0EA5E9', sub: 'na fila', to: '/calendario' },
-    { label: 'Cobranças abertas', value: stats.open_invoices ?? 0, icon: Receipt, color: '#F59E0B', sub: 'aguardando', to: '/cobrancas' },
-    { label: 'Receita', value: brl(stats.revenue_cents), icon: TrendingUp, color: '#14B8A6', sub: 'recebido', to: '/cobrancas' },
+    { label: t('stats.activeTickets.label'), value: stats.active_tickets ?? 0, icon: Ticket, color: '#EC4899', sub: t('stats.activeTickets.sub'), to: '/tickets' },
+    { label: t('stats.clients.label'), value: stats.clients ?? 0, icon: Users, color: '#10B981', sub: t('stats.clients.sub'), to: '/clientes' },
+    { label: t('stats.projects.label'), value: stats.projects ?? 0, icon: FolderKanban, color: '#7C3AED', sub: t('stats.projects.sub'), to: '/campanhas' },
+    { label: t('stats.scheduledPosts.label'), value: stats.scheduled_posts ?? 0, icon: CalendarClock, color: '#0EA5E9', sub: t('stats.scheduledPosts.sub'), to: '/calendario' },
+    { label: t('stats.openInvoices.label'), value: stats.open_invoices ?? 0, icon: Receipt, color: '#F59E0B', sub: t('stats.openInvoices.sub'), to: '/cobrancas' },
+    { label: t('stats.revenue.label'), value: brl(stats.revenue_cents), icon: TrendingUp, color: '#14B8A6', sub: t('stats.revenue.sub'), to: '/cobrancas' },
   ]
 
   return (
@@ -77,20 +80,20 @@ export default function Dashboard() {
         <div className="bg-aurora pointer-events-none absolute inset-0 opacity-90" />
         <div className="relative flex flex-col gap-5 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/55">{workspace.name || 'Sua agência'}</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/55">{workspace.name || t('hero.workspaceFallback')}</p>
             <h1 className="mt-1.5 font-display text-[26px] font-extrabold leading-tight tracking-tight sm:text-[34px]">
-              {greeting()}, {name} <span className="inline-block">👋</span>
+              {t(`greeting.${greetingKey()}`)}, {name} <span className="inline-block">👋</span>
             </h1>
             <p className="mt-2 max-w-md text-sm text-white/70">
-              Aqui está o pulso da agência hoje. Mova o trabalho pelo funil e mantenha tudo no ar.
+              {t('hero.subtitle')}
             </p>
           </div>
           <div className="flex w-full gap-2.5 sm:w-auto sm:flex-wrap sm:items-center">
             <Button asChild size="lg" variant="glow" className="flex-1 justify-center bg-white text-brand-ink hover:bg-white/90 sm:flex-none">
-              <Link to="/tickets"><Plus size={18} /> Novo ticket</Link>
+              <Link to="/tickets"><Plus size={18} /> {t('hero.newTicket')}</Link>
             </Button>
             <Button asChild size="lg" variant="ghost" className="flex-1 justify-center text-white hover:bg-white/10 sm:flex-none">
-              <Link to="/estudio"><Sparkles size={18} /> Estúdio</Link>
+              <Link to="/estudio"><Sparkles size={18} /> {t('hero.studio')}</Link>
             </Button>
           </div>
         </div>
@@ -110,11 +113,11 @@ export default function Dashboard() {
         <Card>
           <CardHeader className="flex-row items-center justify-between">
             <div>
-              <CardTitle>Funil de produção</CardTitle>
-              <p className="text-sm text-ink-muted">{totalFunnel} tickets distribuídos pelas 7 etapas</p>
+              <CardTitle>{t('funnel.title')}</CardTitle>
+              <p className="text-sm text-ink-muted">{t('funnel.subtitle', { count: totalFunnel })}</p>
             </div>
             <Button asChild variant="outline" size="sm">
-              <Link to="/tickets">Abrir quadro <ArrowUpRight size={15} /></Link>
+              <Link to="/tickets">{t('funnel.openBoard')} <ArrowUpRight size={15} /></Link>
             </Button>
           </CardHeader>
           <CardContent>
@@ -158,18 +161,18 @@ export default function Dashboard() {
           <CardHeader className="flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <span className="flex size-8 items-center justify-center rounded-xl bg-sky/12 text-sky"><Calendar size={16} strokeWidth={2.4} /></span>
-              Próximas reuniões
+              {t('meetings.title')}
             </CardTitle>
-            <Button asChild variant="ghost" size="sm"><Link to="/reunioes">Ver todas <ChevronRight size={15} /></Link></Button>
+            <Button asChild variant="ghost" size="sm"><Link to="/reunioes">{t('meetings.viewAll')} <ChevronRight size={15} /></Link></Button>
           </CardHeader>
           <CardContent className="space-y-2">
             {meetings.length === 0 ? (
               <EmptyState
                 icon={Calendar}
                 color="#0EA5E9"
-                title="Sem reuniões agendadas"
-                description="Quando você marcar reuniões, elas aparecem aqui."
-                action={<Button asChild variant="outline" size="sm"><Link to="/reunioes"><Plus size={15} /> Agendar reunião</Link></Button>}
+                title={t('meetings.emptyTitle')}
+                description={t('meetings.emptyDescription')}
+                action={<Button asChild variant="outline" size="sm"><Link to="/reunioes"><Plus size={15} /> {t('meetings.schedule')}</Link></Button>}
               />
             ) : (
               meetings.map((mtg) => (
@@ -179,7 +182,7 @@ export default function Dashboard() {
                       <Clock size={16} strokeWidth={2.4} />
                     </span>
                     <div className="min-w-0">
-                      <p className="truncate font-semibold text-ink">{mtg.title || 'Reunião'}</p>
+                      <p className="truncate font-semibold text-ink">{mtg.title || t('meetings.fallbackTitle')}</p>
                       <p className="truncate text-[12.5px] text-ink-muted">
                         {dt(mtg.starts_at)}{mtg.client_name ? ` · ${mtg.client_name}` : ''}
                       </p>
@@ -187,7 +190,7 @@ export default function Dashboard() {
                   </div>
                   {mtg.meet_url && (
                     <Button asChild size="sm" variant="outline" className="shrink-0">
-                      <a href={mtg.meet_url} target="_blank" rel="noreferrer"><Video size={15} /> Entrar</a>
+                      <a href={mtg.meet_url} target="_blank" rel="noreferrer"><Video size={15} /> {t('meetings.join')}</a>
                     </Button>
                   )}
                 </div>
@@ -201,18 +204,18 @@ export default function Dashboard() {
           <CardHeader className="flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <span className="flex size-8 items-center justify-center rounded-xl bg-brand-soft text-brand"><Sparkles size={16} strokeWidth={2.4} /></span>
-              Gerações recentes
+              {t('generations.title')}
             </CardTitle>
-            <Button asChild variant="ghost" size="sm"><Link to="/estudio">Estúdio <ChevronRight size={15} /></Link></Button>
+            <Button asChild variant="ghost" size="sm"><Link to="/estudio">{t('generations.studio')} <ChevronRight size={15} /></Link></Button>
           </CardHeader>
           <CardContent className="space-y-2">
             {generations.length === 0 ? (
               <EmptyState
                 icon={Wand2}
                 color="#7C3AED"
-                title="Nenhuma geração ainda"
-                description="Gere carrosséis, vídeos e imagens com IA no Estúdio."
-                action={<Button asChild variant="outline" size="sm"><Link to="/estudio"><Sparkles size={15} /> Abrir Estúdio</Link></Button>}
+                title={t('generations.emptyTitle')}
+                description={t('generations.emptyDescription')}
+                action={<Button asChild variant="outline" size="sm"><Link to="/estudio"><Sparkles size={15} /> {t('generations.openStudio')}</Link></Button>}
               />
             ) : (
               generations.map((gen) => {
@@ -250,7 +253,7 @@ export default function Dashboard() {
 
       {/* ── Shortcuts ──────────────────────────────────────────── */}
       <section className="animate-rise">
-        <h2 className="mb-3 text-[11px] font-bold uppercase tracking-[0.14em] text-ink-muted">Atalhos</h2>
+        <h2 className="mb-3 text-[11px] font-bold uppercase tracking-[0.14em] text-ink-muted">{t('shortcuts.title')}</h2>
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           {SHORTCUTS.map((s) => {
             const Icon = s.icon
@@ -265,8 +268,8 @@ export default function Dashboard() {
                   <Icon size={20} strokeWidth={2.3} />
                 </span>
                 <div className="min-w-0">
-                  <p className="font-display text-[15px] font-bold text-ink">{s.label}</p>
-                  <p className="truncate text-[12.5px] text-ink-muted">{s.hint}</p>
+                  <p className="font-display text-[15px] font-bold text-ink">{t(`shortcuts.${s.key}.label`)}</p>
+                  <p className="truncate text-[12.5px] text-ink-muted">{t(`shortcuts.${s.key}.hint`)}</p>
                 </div>
                 <ArrowUpRight size={16} className="ml-auto shrink-0 text-ink-faint transition-colors group-hover:text-ink" />
               </Link>

@@ -12,11 +12,13 @@
     "description": "We can't reach agencios right now. As soon as your internet is back, the page will recover on its own — or jump some obstacles while you wait."
   },
   "serverError": {
+    "title": "Something went wrong here",
     "description": "We've been notified and we're on it. Try reloading the page — or take the frustration out on the game below."
   },
   "actions": {
     "backToDashboard": "Back to dashboard",
-    "back": "Go back"
+    "back": "Go back",
+    "reload": "Reload"
   },
   "dino": {
     "start": "Press space or tap to start",

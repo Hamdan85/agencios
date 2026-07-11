@@ -55,6 +55,7 @@
     "bulletList": "Lista",
     "orderedList": "Lista numerada",
     "quote": "Citação",
+    "link": "Link",
     "write": "Escreva…"
   },
   "filterBar": {
@@ -94,5 +95,15 @@
     "timeout": "A IA está demorando mais que o normal. Tente atualizar novamente.",
     "done": "IA atualizou o ticket ✨",
     "failed": "A IA não conseguiu atualizar os campos. Tente novamente."
+  },
+  "account": {
+    "profileUpdated": "Perfil atualizado.",
+    "profileError": "Erro ao atualizar o perfil.",
+    "avatarUpdated": "Foto atualizada.",
+    "avatarError": "Erro ao enviar a foto.",
+    "passwordChanged": "Senha alterada.",
+    "passwordError": "Erro ao alterar a senha.",
+    "emailChangeSent": "Enviamos um link de confirmação para o novo e-mail.",
+    "emailChangeError": "Erro ao solicitar a troca de e-mail."
   }
 }

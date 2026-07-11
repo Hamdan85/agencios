@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useTranslation, Trans } from 'react-i18next'
 import {
   UserRound, Shield, Bot, Save, Camera, Mail, Check, Copy, RefreshCw,
-  ShieldCheck, Sparkles, Trash2, KeyRound, AlertCircle, Calendar,
+  ShieldCheck, Sparkles, Trash2, KeyRound, AlertCircle, Calendar, Languages,
 } from 'lucide-react'
 import {
   useCurrentUser, useUpdateAccount, useUpdateAvatar, useUpdatePassword, useRequestEmailChange,
@@ -23,9 +24,13 @@ import { useCopyToClipboard } from '@/components/ui/copy-button'
 import { PageLoader } from '@/components/ui/feedback'
 import { Page } from '@/components/ui/page'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import {
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from '@/components/ui/select'
 
 // ── Profile tab (avatar, name, e-mail) ─────────────────────────
 function ProfileTab({ user }) {
+  const { t } = useTranslation('account')
   const updateAccount = useUpdateAccount()
   const updateAvatar = useUpdateAvatar()
   const requestEmail = useRequestEmailChange()
@@ -60,8 +65,8 @@ function ProfileTab({ user }) {
       <form onSubmit={saveProfile} className="space-y-6 lg:col-span-2">
         <Card>
           <CardHeader>
-            <CardTitle>Seu perfil</CardTitle>
-            <CardDescription>Foto e nome exibidos para a sua equipe.</CardDescription>
+            <CardTitle>{t('profile.title')}</CardTitle>
+            <CardDescription>{t('profile.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="flex items-center gap-4">
@@ -73,21 +78,43 @@ function ProfileTab({ user }) {
                 </label>
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-ink">{avatarFile ? avatarFile.name : 'Foto de perfil'}</p>
-                <p className="text-xs text-ink-faint">PNG ou JPG, quadrada de preferência.</p>
+                <p className="text-sm font-semibold text-ink">{avatarFile ? avatarFile.name : t('profile.avatarLabel')}</p>
+                <p className="text-xs text-ink-faint">{t('profile.avatarHint')}</p>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="ac-name">Nome</Label>
-              <Input id="ac-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome" />
+              <Label htmlFor="ac-name">{t('profile.nameLabel')}</Label>
+              <Input id="ac-name" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('profile.namePlaceholder')} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Languages size={18} /> {t('language.title')}</CardTitle>
+            <CardDescription>{t('language.description')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1.5">
+              <Label htmlFor="ac-locale">{t('language.label')}</Label>
+              <Select
+                value={user?.locale || 'pt-BR'}
+                onValueChange={(locale) => updateAccount.mutate({ user: { locale } })}
+              >
+                <SelectTrigger id="ac-locale" className="w-full sm:w-72"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pt-BR">{t('language.ptBR')}</SelectItem>
+                  <SelectItem value="en">{t('language.en')}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
 
         <div className="flex justify-end">
           <Button type="submit" size="lg" disabled={savingProfile || !dirty}>
-            <Save size={18} /> {savingProfile ? 'Salvando…' : 'Salvar alterações'}
+            <Save size={18} /> {savingProfile ? t('profile.saving') : t('profile.save')}
           </Button>
         </div>
       </form>
@@ -96,16 +123,16 @@ function ProfileTab({ user }) {
       <div className="lg:col-span-1">
         <Card className="h-fit">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Mail size={18} /> E-mail</CardTitle>
-            <CardDescription>Usado para login e notificações.</CardDescription>
+            <CardTitle className="flex items-center gap-2"><Mail size={18} /> {t('email.title')}</CardTitle>
+            <CardDescription>{t('email.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="rounded-xl border border-border bg-surface-muted/50 p-3">
               <p className="break-all text-sm font-semibold text-ink">{user?.email}</p>
               <p className="mt-0.5 flex items-center gap-1 text-xs">
                 {user?.email_confirmed
-                  ? <><Check size={12} className="text-emerald" /> <span className="text-ink-faint">Confirmado</span></>
-                  : <><AlertCircle size={12} className="text-amber" /> <span className="text-ink-faint">Não confirmado</span></>}
+                  ? <><Check size={12} className="text-emerald" /> <span className="text-ink-faint">{t('email.confirmed')}</span></>
+                  : <><AlertCircle size={12} className="text-amber" /> <span className="text-ink-faint">{t('email.unconfirmed')}</span></>}
               </p>
             </div>
 
@@ -113,8 +140,7 @@ function ProfileTab({ user }) {
               <div className="flex items-start gap-2 rounded-xl border border-amber/30 bg-amber/8 p-3">
                 <AlertCircle size={15} className="mt-0.5 shrink-0 text-amber" />
                 <p className="text-xs text-ink-muted">
-                  Aguardando confirmação de <strong className="break-all">{user.pending_email}</strong>.
-                  Verifique a caixa de entrada do novo e-mail.
+                  <Trans t={t} i18nKey="email.pendingNotice" values={{ email: user.pending_email }} components={{ strong: <strong className="break-all" /> }} />
                 </p>
               </div>
             )}
@@ -122,24 +148,24 @@ function ProfileTab({ user }) {
             {editingEmail ? (
               <form onSubmit={submitEmail} className="space-y-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="ac-newemail">Novo e-mail</Label>
-                  <Input id="ac-newemail" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="novo@email.com" />
+                  <Label htmlFor="ac-newemail">{t('email.newLabel')}</Label>
+                  <Input id="ac-newemail" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder={t('email.newPlaceholder')} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="ac-emailpass">Senha atual</Label>
+                  <Label htmlFor="ac-emailpass">{t('email.currentPasswordLabel')}</Label>
                   <Input id="ac-emailpass" type="password" value={emailPassword} onChange={(e) => setEmailPassword(e.target.value)} placeholder="••••••••" autoComplete="current-password" />
                 </div>
                 <div className="flex gap-2">
                   <Button type="submit" size="sm" disabled={requestEmail.isPending}>
-                    {requestEmail.isPending ? 'Enviando…' : 'Enviar confirmação'}
+                    {requestEmail.isPending ? t('email.sending') : t('email.sendConfirmation')}
                   </Button>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setEditingEmail(false)}>Cancelar</Button>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setEditingEmail(false)}>{t('email.cancel')}</Button>
                 </div>
-                <p className="text-xs text-ink-faint">Enviaremos um link ao novo e-mail. A troca só ocorre após a confirmação.</p>
+                <p className="text-xs text-ink-faint">{t('email.confirmationHint')}</p>
               </form>
             ) : (
               <Button type="button" variant="outline" size="sm" onClick={() => setEditingEmail(true)}>
-                <Mail size={15} /> Alterar e-mail
+                <Mail size={15} /> {t('email.change')}
               </Button>
             )}
           </CardContent>
@@ -151,6 +177,7 @@ function ProfileTab({ user }) {
 
 // ── Security tab (password) ────────────────────────────────────
 function SecurityTab() {
+  const { t } = useTranslation('account')
   const updatePassword = useUpdatePassword()
   const [form, setForm] = useState({ current_password: '', password: '', confirm: '' })
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
@@ -172,28 +199,28 @@ function SecurityTab() {
     <div className="max-w-xl">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><KeyRound size={18} /> Alterar senha</CardTitle>
-          <CardDescription>Use uma senha forte com pelo menos 8 caracteres.</CardDescription>
+          <CardTitle className="flex items-center gap-2"><KeyRound size={18} /> {t('security.title')}</CardTitle>
+          <CardDescription>{t('security.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={submit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="pw-current">Senha atual</Label>
+              <Label htmlFor="pw-current">{t('security.currentLabel')}</Label>
               <Input id="pw-current" type="password" value={form.current_password} onChange={set('current_password')} autoComplete="current-password" placeholder="••••••••" />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="pw-new">Nova senha</Label>
+              <Label htmlFor="pw-new">{t('security.newLabel')}</Label>
               <Input id="pw-new" type="password" value={form.password} onChange={set('password')} autoComplete="new-password" placeholder="••••••••" />
-              {tooShort && <p className="text-xs text-danger">Mínimo de 8 caracteres.</p>}
+              {tooShort && <p className="text-xs text-danger">{t('security.tooShort')}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="pw-confirm">Confirmar nova senha</Label>
+              <Label htmlFor="pw-confirm">{t('security.confirmLabel')}</Label>
               <Input id="pw-confirm" type="password" value={form.confirm} onChange={set('confirm')} autoComplete="new-password" placeholder="••••••••" />
-              {mismatch && <p className="text-xs text-danger">As senhas não coincidem.</p>}
+              {mismatch && <p className="text-xs text-danger">{t('security.mismatch')}</p>}
             </div>
             <div className="flex justify-end">
               <Button type="submit" disabled={!canSubmit || updatePassword.isPending}>
-                <Shield size={16} /> {updatePassword.isPending ? 'Salvando…' : 'Alterar senha'}
+                <Shield size={16} /> {updatePassword.isPending ? t('security.saving') : t('security.submit')}
               </Button>
             </div>
           </form>
@@ -207,6 +234,7 @@ function SecurityTab() {
 // Google Calendar is personal: meetings you schedule live on YOUR calendar
 // (with the Meet link), so each member connects their own account here.
 function GoogleCalendarCard() {
+  const { t } = useTranslation('account')
   const { data: me } = useCurrentUser()
   const calendar = useGoogleCalendarMutations()
   const confirm = useConfirm()
@@ -214,9 +242,9 @@ function GoogleCalendarCard() {
 
   const onDisconnect = async () => {
     const ok = await confirm({
-      title: 'Desconectar Google Calendar?',
-      description: 'Novas reuniões deixarão de ser criadas no seu calendário até você reconectar.',
-      confirmLabel: 'Desconectar',
+      title: t('calendar.disconnectConfirm.title'),
+      description: t('calendar.disconnectConfirm.description'),
+      confirmLabel: t('calendar.disconnectConfirm.confirm'),
       destructive: true,
     })
     if (ok) calendar.disconnect.mutate()
@@ -227,32 +255,31 @@ function GoogleCalendarCard() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2"><Calendar size={18} /> Google Calendar</CardTitle>
         <CardDescription>
-          Suas reuniões são criadas no <strong>seu</strong> Google Calendar, com link do Meet e convite
-          para todos os participantes.
+          <Trans t={t} i18nKey="calendar.description" components={{ strong: <strong /> }} />
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-wrap items-center justify-between gap-3">
         {connected ? (
           <>
-            <Badge variant="success" className="gap-1.5"><Check size={13} /> Conectado</Badge>
+            <Badge variant="success" className="gap-1.5"><Check size={13} /> {t('calendar.connected')}</Badge>
             <Button
               type="button"
               variant="outline"
               onClick={onDisconnect}
               disabled={calendar.disconnect.isPending}
             >
-              {calendar.disconnect.isPending ? 'Desconectando…' : 'Desconectar'}
+              {calendar.disconnect.isPending ? t('calendar.disconnecting') : t('calendar.disconnect')}
             </Button>
           </>
         ) : (
           <>
-            <p className="text-sm text-ink-muted">Nenhuma conta conectada.</p>
+            <p className="text-sm text-ink-muted">{t('calendar.notConnected')}</p>
             <Button
               type="button"
               onClick={() => calendar.connect.mutate()}
               disabled={calendar.connect.isPending}
             >
-              <Calendar size={16} /> {calendar.connect.isPending ? 'Abrindo…' : 'Conectar Google Calendar'}
+              <Calendar size={16} /> {calendar.connect.isPending ? t('calendar.opening') : t('calendar.connect')}
             </Button>
           </>
         )}
@@ -262,6 +289,7 @@ function GoogleCalendarCard() {
 }
 
 function ConnectionsTab() {
+  const { t } = useTranslation('account')
   const { data: connections, isLoading } = useConnections()
   const revoke = useRevokeConnection()
   const { data: connector, isLoading: loadingConnector } = useMcpConnector()
@@ -278,9 +306,9 @@ function ConnectionsTab() {
 
   const onRotate = async () => {
     const ok = await confirm({
-      title: 'Gerar nova URL?',
-      description: 'A URL atual deixa de funcionar no Claude. Você precisará reconectar o conector com a nova URL.',
-      confirmLabel: 'Gerar nova URL',
+      title: t('connector.rotateConfirm.title'),
+      description: t('connector.rotateConfirm.description'),
+      confirmLabel: t('connector.rotateConfirm.confirm'),
       destructive: true,
     })
     if (ok) rotate.mutate()
@@ -288,9 +316,9 @@ function ConnectionsTab() {
 
   const onRevoke = async (connection) => {
     const ok = await confirm({
-      title: `Revogar acesso de ${connection.name}?`,
-      description: 'O app perde o acesso à sua conta imediatamente.',
-      confirmLabel: 'Revogar',
+      title: t('apps.revokeConfirm.title', { name: connection.name }),
+      description: t('apps.revokeConfirm.description'),
+      confirmLabel: t('apps.revokeConfirm.confirm'),
       destructive: true,
     })
     if (ok) revoke.mutate(connection.id)
@@ -303,11 +331,9 @@ function ConnectionsTab() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Bot size={18} /> Conector do Claude</CardTitle>
+            <CardTitle className="flex items-center gap-2"><Bot size={18} /> {t('connector.title')}</CardTitle>
             <CardDescription>
-              Sua URL pessoal — vale para <strong>todos os seus workspaces</strong>. Adicione no Claude em{' '}
-              <strong>Configurações → Conectores → Adicionar conector personalizado</strong>. A URL já contém sua
-              credencial — não precisa de login nem OAuth.
+              <Trans t={t} i18nKey="connector.description" components={{ strong: <strong /> }} />
             </CardDescription>
           </CardHeader>
           {locked ? (
@@ -315,40 +341,35 @@ function ConnectionsTab() {
               <div className="flex items-start gap-3 rounded-xl border border-brand/30 bg-brand-soft/40 p-4">
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand/15 text-brand"><Sparkles size={18} /></span>
                 <div>
-                  <p className="text-sm font-semibold text-ink">Requer um workspace com assinatura ativa</p>
-                  <p className="mt-0.5 text-sm text-ink-muted">
-                    O conector fica disponível quando você tem ao menos um workspace no plano Agência ou
-                    Enterprise com assinatura ativa. Assine para operar seus workspaces pelo Claude.
-                  </p>
+                  <p className="text-sm font-semibold text-ink">{t('connector.lockedTitle')}</p>
+                  <p className="mt-0.5 text-sm text-ink-muted">{t('connector.lockedDescription')}</p>
                 </div>
               </div>
               <Button type="button" onClick={() => navigate('/assinatura')}>
-                <Sparkles size={16} /> Ver planos
+                <Sparkles size={16} /> {t('connector.seePlans')}
               </Button>
             </CardContent>
           ) : (
             <CardContent className="space-y-2.5">
-              <Label>URL do conector</Label>
+              <Label>{t('connector.urlLabel')}</Label>
               <div className="flex flex-wrap items-center gap-2">
                 <Input
                   readOnly
-                  value={loadingConnector ? 'Carregando…' : (revealed ? url : masked)}
+                  value={loadingConnector ? t('connector.loading') : (revealed ? url : masked)}
                   className="min-w-0 flex-1 font-mono text-sm"
                   onFocus={(e) => e.target.select()}
                 />
                 <Button type="button" variant="outline" onClick={() => setRevealed((v) => !v)}>
-                  {revealed ? 'Ocultar' : 'Revelar'}
+                  {revealed ? t('connector.hide') : t('connector.reveal')}
                 </Button>
                 <Button type="button" variant="outline" onClick={() => copy(url)} disabled={!url}>
-                  {copied ? <Check size={16} /> : <Copy size={16} />} {copied ? 'Copiado' : 'Copiar'}
+                  {copied ? <Check size={16} /> : <Copy size={16} />} {copied ? t('connector.copied') : t('connector.copy')}
                 </Button>
               </div>
               <div className="flex items-center justify-between gap-2 pt-1">
-                <p className="text-xs text-ink-faint">
-                  A URL é um segredo: quem a tiver opera seus workspaces com as suas permissões.
-                </p>
+                <p className="text-xs text-ink-faint">{t('connector.secretHint')}</p>
                 <Button type="button" variant="ghost" size="sm" className="shrink-0 text-ink-muted" onClick={onRotate} disabled={rotate.isPending}>
-                  <RefreshCw size={14} /> Gerar nova URL
+                  <RefreshCw size={14} /> {t('connector.rotate')}
                 </Button>
               </div>
             </CardContent>
@@ -357,14 +378,14 @@ function ConnectionsTab() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><ShieldCheck size={18} /> Apps autorizados</CardTitle>
-            <CardDescription>Aplicativos com acesso à sua conta via OAuth.</CardDescription>
+            <CardTitle className="flex items-center gap-2"><ShieldCheck size={18} /> {t('apps.title')}</CardTitle>
+            <CardDescription>{t('apps.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {isLoading ? (
-              <p className="text-sm text-ink-faint">Carregando…</p>
+              <p className="text-sm text-ink-faint">{t('apps.loading')}</p>
             ) : !connections?.length ? (
-              <p className="text-sm text-ink-faint">Nenhum app conectado ainda.</p>
+              <p className="text-sm text-ink-faint">{t('apps.empty')}</p>
             ) : (
               connections.map((c) => (
                 <div key={c.id} className="flex items-center justify-between rounded-lg border border-line p-3">
@@ -378,7 +399,7 @@ function ConnectionsTab() {
                     </div>
                   </div>
                   <Button type="button" variant="ghost" className="text-danger" onClick={() => onRevoke(c)} disabled={revoke.isPending}>
-                    <Trash2 size={16} /> Revogar
+                    <Trash2 size={16} /> {t('apps.revoke')}
                   </Button>
                 </div>
               ))
@@ -395,6 +416,7 @@ const TAB_TO_SEG = { profile: '', security: 'seguranca', connections: 'conexoes'
 const SEG_TO_TAB = { seguranca: 'security', conexoes: 'connections' }
 
 export default function AccountIndex() {
+  const { t } = useTranslation('account')
   const { tab: seg } = useParams()
   const navigate = useNavigate()
   const { data: me, isLoading } = useCurrentUser()
@@ -412,18 +434,18 @@ export default function AccountIndex() {
   return (
     <Page>
       <PageHeader
-        eyebrow="Você"
-        title="Minha conta"
+        eyebrow={t('header.eyebrow')}
+        title={t('header.title')}
         icon={UserRound}
         color="#6366F1"
-        description="Seu perfil, segurança e conexões pessoais."
+        description={t('header.description')}
       />
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="mb-6">
-          <TabsTrigger value="profile"><UserRound size={15} /> Perfil</TabsTrigger>
-          <TabsTrigger value="security"><Shield size={15} /> Segurança</TabsTrigger>
-          <TabsTrigger value="connections"><Bot size={15} /> Conexões</TabsTrigger>
+          <TabsTrigger value="profile"><UserRound size={15} /> {t('tabs.profile')}</TabsTrigger>
+          <TabsTrigger value="security"><Shield size={15} /> {t('tabs.security')}</TabsTrigger>
+          <TabsTrigger value="connections"><Bot size={15} /> {t('tabs.connections')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="animate-rise">

@@ -1,4 +1,5 @@
 import { Suspense, lazy, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react'
 
 const MediaViewer = lazy(() => import('@/components/ticket/MediaViewer'))
@@ -25,6 +26,7 @@ function toAttachments(creative) {
 // fit="square" (default) forces a 1:1 stage; fit="height" fills the available
 // height (contain) so a tall reel letterboxes instead of overflowing the deck.
 export default function CreativeExperience({ creative, fit = 'square' }) {
+  const { t } = useTranslation('creative')
   const [idx, setIdx] = useState(0)
   const [open, setOpen] = useState(false)
   const urls = creative?.asset_urls || []
@@ -32,7 +34,7 @@ export default function CreativeExperience({ creative, fit = 'square' }) {
 
   const stageShape = fit === 'height' ? 'h-full w-full' : 'aspect-square w-full'
   if (!urls.length && !cover) {
-    return <div className={`flex ${stageShape} items-center justify-center rounded-2xl bg-surface-muted text-sm text-ink-muted`}>Sem prévia</div>
+    return <div className={`flex ${stageShape} items-center justify-center rounded-2xl bg-surface-muted text-sm text-ink-muted`}>{t('experience.noPreview')}</div>
   }
 
   const current = urls[idx] || cover
@@ -48,18 +50,18 @@ export default function CreativeExperience({ creative, fit = 'square' }) {
         )}
 
         <button type="button" onClick={() => setOpen(true)}
-          className="absolute right-2 top-2 rounded-lg bg-black/50 p-1.5 text-white hover:bg-black/70" aria-label="Ampliar">
+          className="absolute right-2 top-2 rounded-lg bg-black/50 p-1.5 text-white hover:bg-black/70" aria-label={t('experience.zoom')}>
           <Maximize2 size={16} />
         </button>
 
         {many && (
           <>
             <button type="button" onClick={() => setIdx((i) => (i - 1 + urls.length) % urls.length)}
-              className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-1.5 text-white" aria-label="Anterior">
+              className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-1.5 text-white" aria-label={t('experience.previous')}>
               <ChevronLeft size={18} />
             </button>
             <button type="button" onClick={() => setIdx((i) => (i + 1) % urls.length)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-1.5 text-white" aria-label="Próximo">
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-1.5 text-white" aria-label={t('experience.next')}>
               <ChevronRight size={18} />
             </button>
             <div className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-black/50 px-2 py-0.5 text-xs text-white">

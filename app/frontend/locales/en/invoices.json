@@ -1,0 +1,72 @@
+{
+  "page": {
+    "eyebrow": "Finance",
+    "title": "Invoices",
+    "description": "The agency's invoices to its clients.",
+    "newInvoice": "New invoice"
+  },
+  "status": {
+    "draft": "Draft",
+    "open": "Open",
+    "paid": "Paid",
+    "overdue": "Overdue",
+    "canceled": "Canceled"
+  },
+  "filters": {
+    "all": "All",
+    "open": "Open",
+    "paid": "Paid",
+    "overdue": "Overdue",
+    "draft": "Drafts",
+    "canceled": "Canceled"
+  },
+  "stats": {
+    "open": { "label": "Open", "sub": "awaiting payment" },
+    "paid": { "label": "Total paid", "sub": "settled invoices" },
+    "overdue": { "label": "Overdue" }
+  },
+  "empty": {
+    "noneTitle": "No invoices",
+    "noneDescription": "Register the first invoice for a client.",
+    "filteredTitle": "Nothing in this filter",
+    "filteredDescription": "Try another status."
+  },
+  "paymentDialog": {
+    "title": "Payment link",
+    "subtitle": "Invoice for {{name}}",
+    "subtitleFallback": "Invoice",
+    "mpLink": "Mercado Pago link",
+    "copyLink": "Copy link",
+    "sendToClient": "Send to client",
+    "sending": "Sending…",
+    "openPage": "Open payment page",
+    "autoNote": "Or send the link above to the client — it's settled automatically after payment.",
+    "generating": "Generating the payment link…"
+  },
+  "row": {
+    "clientFallback": "Client",
+    "due": "Due {{date}}",
+    "paymentLink": "Payment link",
+    "generateLink": "Generate link",
+    "generating": "Generating…",
+    "markPaid": "Mark as paid",
+    "viewPaymentLink": "View payment link",
+    "generatePaymentLink": "Generate payment link",
+    "sendPaymentLink": "Send payment link",
+    "sending": "Sending…",
+    "cancel": "Cancel"
+  },
+  "confirm": {
+    "markPaid": {
+      "title": "Mark as paid?",
+      "description": "Confirm you received this invoice manually. The status changes to paid.",
+      "confirm": "Mark as paid"
+    },
+    "cancel": {
+      "title": "Cancel invoice?",
+      "description": "The invoice will be canceled and can no longer be paid by the client.",
+      "confirm": "Cancel invoice",
+      "back": "Back"
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation, Trans } from 'react-i18next'
 import { Download, Bell, Share } from 'lucide-react'
 import { useCurrentUser } from '@/hooks/useAuth'
 import { pushApi } from '@/api'
@@ -51,6 +52,7 @@ function BannerCard({ icon: Icon, color, title, children, actions }) {
 //   2. iOS install instructions (no native prompt on Safari)
 //   3. Enable notifications
 export default function AppBanners() {
+  const { t } = useTranslation('layout')
   const { data: me } = useCurrentUser()
   const authed = !!me?.user
   const vapidKey = me?.vapid_public_key
@@ -117,11 +119,11 @@ export default function AppBanners() {
   // 1. Android / Chrome install
   if (deferredPrompt && !installed && !installSnooze) {
     return (
-      <BannerCard icon={Download} color="#7C3AED" title="Instalar agencios">
-        Adicione o app à tela inicial para abrir como aplicativo.
+      <BannerCard icon={Download} color="#7C3AED" title={t('banners.installTitle')}>
+        {t('banners.installDescription')}
         <div className="mt-2.5 flex gap-2">
-          <Button size="sm" variant="ghost" onClick={snoozeInstall}>Agora não</Button>
-          <Button size="sm" onClick={handleInstall}>Instalar</Button>
+          <Button size="sm" variant="ghost" onClick={snoozeInstall}>{t('banners.notNow')}</Button>
+          <Button size="sm" onClick={handleInstall}>{t('banners.install')}</Button>
         </div>
       </BannerCard>
     )
@@ -133,12 +135,12 @@ export default function AppBanners() {
       <BannerCard
         icon={Share}
         color="#0EA5E9"
-        title="Instalar agencios"
+        title={t('banners.installTitle')}
         actions={
           <Button size="sm" variant="outline" onClick={() => { localStorage.setItem(IOS_KEY, '1'); setIosDismissed(true) }}>OK</Button>
         }
       >
-        Toque em <strong className="text-ink">Compartilhar</strong> e depois em <strong className="text-ink">“Adicionar à Tela de Início”</strong>.
+        <Trans t={t} i18nKey="banners.iosInstructions" components={{ b: <strong className="text-ink" /> }} />
       </BannerCard>
     )
   }
@@ -146,11 +148,11 @@ export default function AppBanners() {
   // 3. Enable notifications
   if (notifPermission === 'default' && vapidKey && !notifDismissed) {
     return (
-      <BannerCard icon={Bell} color="#EC4899" title="Ativar notificações">
-        Receba avisos de tickets, prazos e publicações.
+      <BannerCard icon={Bell} color="#EC4899" title={t('banners.notificationsTitle')}>
+        {t('banners.notificationsDescription')}
         <div className="mt-2.5 flex gap-2">
-          <Button size="sm" variant="ghost" onClick={() => { localStorage.setItem(NOTIF_KEY, '1'); setNotifDismissed(true) }}>Agora não</Button>
-          <Button size="sm" onClick={enableNotifications}>Permitir</Button>
+          <Button size="sm" variant="ghost" onClick={() => { localStorage.setItem(NOTIF_KEY, '1'); setNotifDismissed(true) }}>{t('banners.notNow')}</Button>
+          <Button size="sm" onClick={enableNotifications}>{t('banners.allow')}</Button>
         </div>
       </BannerCard>
     )

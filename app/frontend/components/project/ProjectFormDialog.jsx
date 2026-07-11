@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Sparkles, Check } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose,
@@ -16,13 +17,7 @@ import { maskCurrency, centsFromMasked, brl } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 
 const PALETTE = ['#7C3AED', '#EC4899', '#0EA5E9', '#10B981', '#F59E0B', '#6366F1', '#F43F5E', '#14B8A6']
-const STATUS_OPTIONS = [
-  { value: 'draft', label: 'Rascunho' },
-  { value: 'active', label: 'Ativa' },
-  { value: 'paused', label: 'Pausada' },
-  { value: 'archived', label: 'Arquivada' },
-  { value: 'completed', label: 'Finalizada' },
-]
+const STATUS_OPTIONS = ['draft', 'active', 'paused', 'archived', 'completed']
 const blankForm = () => ({
   client_id: '', name: '', description: '', color: PALETTE[0], status: 'draft',
   starts_on: '', ends_on: '', budget: '', settings: normalizeProjectSettings(null),
@@ -44,6 +39,7 @@ const fromProject = (p) => ({
 // Self-contained: owns the create/update mutations. `onSaved(project)` fires on
 // success (e.g. to navigate to the new project or into its strategy planner).
 export function ProjectFormDialog({ open, onOpenChange, project = null, onSaved }) {
+  const { t } = useTranslation('projects')
   const editing = !!project
   const { create, update } = useProjectMutations()
   const mutation = editing ? update : create
@@ -84,24 +80,24 @@ export function ProjectFormDialog({ open, onOpenChange, project = null, onSaved 
           <div className="mb-1 flex size-11 items-center justify-center rounded-2xl" style={{ background: '#10B98116', color: '#10B981' }}>
             <Sparkles size={22} strokeWidth={2.2} />
           </div>
-          <DialogTitle>{editing ? 'Editar campanha' : 'Nova campanha'}</DialogTitle>
-          <DialogDescription>Agrupe tickets sob uma campanha de um cliente.</DialogDescription>
+          <DialogTitle>{editing ? t('form.editTitle') : t('form.createTitle')}</DialogTitle>
+          <DialogDescription>{t('form.description')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-3.5">
           <div className="space-y-1.5">
-            <Label>Cliente</Label>
-            <ClientSelect variant="field" value={form.client_id} onChange={(v) => set('client_id')(v || '')} placeholder="Selecione o cliente" />
+            <Label>{t('form.client')}</Label>
+            <ClientSelect variant="field" value={form.client_id} onChange={(v) => set('client_id')(v || '')} placeholder={t('form.clientPlaceholder')} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="pj-name">Nome</Label>
-            <Input id="pj-name" required value={form.name} onChange={(e) => set('name')(e.target.value)} placeholder="Ex: Campanha de verão" />
+            <Label htmlFor="pj-name">{t('form.name')}</Label>
+            <Input id="pj-name" required value={form.name} onChange={(e) => set('name')(e.target.value)} placeholder={t('form.namePlaceholder')} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="pj-desc">Descrição</Label>
-            <Textarea id="pj-desc" value={form.description} onChange={(e) => set('description')(e.target.value)} placeholder="Objetivo e escopo da campanha…" />
+            <Label htmlFor="pj-desc">{t('form.descriptionLabel')}</Label>
+            <Textarea id="pj-desc" value={form.description} onChange={(e) => set('description')(e.target.value)} placeholder={t('form.descriptionPlaceholder')} />
           </div>
           <div className="space-y-2">
-            <Label>Cor</Label>
+            <Label>{t('form.color')}</Label>
             <div className="flex flex-wrap gap-2">
               {PALETTE.map((c) => (
                 <button
@@ -110,7 +106,7 @@ export function ProjectFormDialog({ open, onOpenChange, project = null, onSaved 
                   onClick={() => set('color')(c)}
                   className={cn('flex size-9 items-center justify-center rounded-xl transition-transform hover:scale-110', form.color === c && 'ring-2 ring-offset-2 ring-offset-surface')}
                   style={{ background: c, '--tw-ring-color': c }}
-                  aria-label={`Cor ${c}`}
+                  aria-label={t('form.colorAria', { color: c })}
                 >
                   {form.color === c && <Check size={16} className="text-white" strokeWidth={3} />}
                 </button>
@@ -119,39 +115,39 @@ export function ProjectFormDialog({ open, onOpenChange, project = null, onSaved 
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Status</Label>
+              <Label>{t('form.status')}</Label>
               <Select value={form.status} onValueChange={set('status')}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {STATUS_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                  {STATUS_OPTIONS.map((v) => <SelectItem key={v} value={v}>{t(`status.${v}`)}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="pj-budget">Orçamento (R$)</Label>
-              <Input id="pj-budget" inputMode="decimal" value={form.budget} onChange={(e) => set('budget')(maskCurrency(e.target.value))} placeholder="0,00" />
+              <Label htmlFor="pj-budget">{t('form.budget')}</Label>
+              <Input id="pj-budget" inputMode="decimal" value={form.budget} onChange={(e) => set('budget')(maskCurrency(e.target.value))} placeholder={t('form.budgetPlaceholder')} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="pj-start">Início</Label>
-              <DatePicker id="pj-start" value={form.starts_on} onChange={set('starts_on')} placeholder="Data de início" />
+              <Label htmlFor="pj-start">{t('form.startsOn')}</Label>
+              <DatePicker id="pj-start" value={form.starts_on} onChange={set('starts_on')} placeholder={t('form.startsOnPlaceholder')} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="pj-end">Fim</Label>
-              <DatePicker id="pj-end" value={form.ends_on} onChange={set('ends_on')} placeholder="Data de fim" />
+              <Label htmlFor="pj-end">{t('form.endsOn')}</Label>
+              <DatePicker id="pj-end" value={form.ends_on} onChange={set('ends_on')} placeholder={t('form.endsOnPlaceholder')} />
             </div>
           </div>
           {!editing && (
             <div className="space-y-2 border-t border-border pt-3.5">
-              <SectionLabel>Configurações</SectionLabel>
+              <SectionLabel>{t('form.settingsSection')}</SectionLabel>
               <ProjectSettingsFields value={form.settings} onChange={set('settings')} resetKey={open} />
             </div>
           )}
           <DialogFooter>
-            <DialogClose asChild><Button type="button" variant="ghost">Cancelar</Button></DialogClose>
+            <DialogClose asChild><Button type="button" variant="ghost">{t('form.cancel')}</Button></DialogClose>
             <Button type="submit" disabled={mutation.isPending || !form.client_id}>
-              {mutation.isPending ? 'Salvando…' : editing ? 'Salvar' : 'Criar campanha'}
+              {mutation.isPending ? t('form.saving') : editing ? t('form.save') : t('form.create')}
             </Button>
           </DialogFooter>
         </form>

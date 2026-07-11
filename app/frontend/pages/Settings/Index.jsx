@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   Settings, Palette, Users2, Plug, Save, AtSign, Sparkles, UserPlus,
   Link2, Check, Wallet, Copy, ShieldCheck,
@@ -34,6 +35,7 @@ const ROLE_VARIANT = { owner: 'default', admin: 'soft', manager: 'success', memb
 
 // ── Brand tab ──────────────────────────────────────────────────
 function BrandTab({ data, mutation }) {
+  const { t } = useTranslation('settings')
   const setting = data?.setting || {}
   const workspace = data?.workspace || {}
   const brandAssets = useSettingsBrandAssetsMutation()
@@ -80,56 +82,56 @@ function BrandTab({ data, mutation }) {
       <div className="space-y-6 lg:col-span-2">
         <Card>
           <CardHeader>
-            <CardTitle>Identidade da agência</CardTitle>
-            <CardDescription>Logo, nome, voz e @ usados em legendas e criativos.</CardDescription>
+            <CardTitle>{t('brand.identity.title')}</CardTitle>
+            <CardDescription>{t('brand.identity.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Logo</Label>
+              <Label>{t('brand.identity.logoLabel')}</Label>
               <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-border bg-surface-muted/40 p-3 transition hover:border-brand/50">
                 <div className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-lg bg-surface text-ink-faint ring-1 ring-border">
                   {logoPreview ? <img src={logoPreview} alt="" className="size-full object-contain" /> : <ImageIcon size={20} />}
                 </div>
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-ink-secondary">
-                    {logoFile ? logoFile.name : (workspace.logo_url ? 'Logo atual' : 'Escolher imagem')}
+                    {logoFile ? logoFile.name : (workspace.logo_url ? t('brand.identity.currentLogo') : t('brand.identity.chooseImage'))}
                   </p>
-                  <p className="text-xs text-ink-faint">PNG, JPG ou SVG</p>
+                  <p className="text-xs text-ink-faint">{t('brand.identity.logoHint')}</p>
                 </div>
                 <input type="file" accept="image/*" className="hidden" onChange={(e) => setLogoFile(e.target.files?.[0] || null)} />
               </label>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="st-name">Nome da agência</Label>
-              <Input id="st-name" value={form.name} onChange={(e) => set('name')(e.target.value)} placeholder="Sua Agência" />
+              <Label htmlFor="st-name">{t('brand.identity.nameLabel')}</Label>
+              <Input id="st-name" value={form.name} onChange={(e) => set('name')(e.target.value)} placeholder={t('brand.identity.namePlaceholder')} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="st-handle">@ padrão</Label>
+              <Label htmlFor="st-handle">{t('brand.identity.handleLabel')}</Label>
               <div className="relative">
                 <AtSign size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
-                <Input id="st-handle" value={form.default_handle} onChange={(e) => set('default_handle')(e.target.value)} className="pl-9" placeholder="suaagencia" />
+                <Input id="st-handle" value={form.default_handle} onChange={(e) => set('default_handle')(e.target.value)} className="pl-9" placeholder={t('brand.identity.handlePlaceholder')} />
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="st-voice">Voz da marca</Label>
-              <Textarea id="st-voice" value={form.brand_voice} onChange={(e) => set('brand_voice')(e.target.value)} placeholder="Descreva o tom e a personalidade da marca…" className="min-h-24" />
+              <Label htmlFor="st-voice">{t('brand.identity.voiceLabel')}</Label>
+              <Textarea id="st-voice" value={form.brand_voice} onChange={(e) => set('brand_voice')(e.target.value)} placeholder={t('brand.identity.voicePlaceholder')} className="min-h-24" />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="st-tone">Tom de comunicação</Label>
-              <Input id="st-tone" value={form.brand_tone} onChange={(e) => set('brand_tone')(e.target.value)} placeholder="Ex: descontraído, inspirador" />
+              <Label htmlFor="st-tone">{t('brand.identity.toneLabel')}</Label>
+              <Input id="st-tone" value={form.brand_tone} onChange={(e) => set('brand_tone')(e.target.value)} placeholder={t('brand.identity.tonePlaceholder')} />
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Cores da marca</CardTitle>
-            <CardDescription>Aplicadas em criativos gerados e na identidade visual.</CardDescription>
+            <CardTitle>{t('brand.colors.title')}</CardTitle>
+            <CardDescription>{t('brand.colors.description')}</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-4">
             {[
-              { key: 'brand_primary_color', label: 'Cor primária' },
-              { key: 'brand_secondary_color', label: 'Cor secundária' },
+              { key: 'brand_primary_color', label: t('brand.colors.primary') },
+              { key: 'brand_secondary_color', label: t('brand.colors.secondary') },
             ].map(({ key, label }) => (
               <div key={key} className="space-y-1.5">
                 <Label>{label}</Label>
@@ -155,8 +157,8 @@ function BrandTab({ data, mutation }) {
         <Card>
           <CardContent className="flex items-center justify-between gap-4 p-5">
             <div>
-              <p className="font-display text-base font-bold text-ink">Publicação automática</p>
-              <p className="text-sm text-ink-muted">Publicar posts automaticamente quando chegarem ao horário agendado.</p>
+              <p className="font-display text-base font-bold text-ink">{t('brand.autoPublish.title')}</p>
+              <p className="text-sm text-ink-muted">{t('brand.autoPublish.description')}</p>
             </div>
             <Switch checked={!!form.auto_publish_default} onCheckedChange={set('auto_publish_default')} />
           </CardContent>
@@ -164,7 +166,7 @@ function BrandTab({ data, mutation }) {
 
         <div className="flex justify-end">
           <Button type="submit" size="lg" disabled={saving}>
-            <Save size={18} /> {saving ? 'Salvando…' : 'Salvar alterações'}
+            <Save size={18} /> {saving ? t('brand.saving') : t('brand.save')}
           </Button>
         </div>
       </div>
@@ -172,14 +174,14 @@ function BrandTab({ data, mutation }) {
       {/* Live preview */}
       <div className="lg:col-span-1">
         <div className="sticky top-4">
-          <Label className="mb-2 block">Pré-visualização</Label>
+          <Label className="mb-2 block">{t('brand.preview')}</Label>
           <Card className="overflow-hidden">
             <div className="h-24 w-full" style={{ background: `linear-gradient(135deg, ${form.brand_primary_color}, ${form.brand_secondary_color})` }} />
             <CardContent className="-mt-8 pt-0">
               <div className="flex size-16 items-center justify-center overflow-hidden rounded-2xl text-white shadow-lg ring-4 ring-surface" style={{ background: form.brand_primary_color }}>
                 {logoPreview ? <img src={logoPreview} alt="" className="size-full object-contain" /> : <Sparkles size={28} />}
               </div>
-              <h3 className="mt-3 font-display text-lg font-extrabold text-ink">{form.name || 'Sua Agência'}</h3>
+              <h3 className="mt-3 font-display text-lg font-extrabold text-ink">{form.name || t('brand.identity.namePlaceholder')}</h3>
               {form.default_handle && <p className="text-sm font-semibold" style={{ color: form.brand_primary_color }}>@{form.default_handle}</p>}
               {form.brand_voice && <p className="mt-2 line-clamp-3 text-sm text-ink-muted">{form.brand_voice}</p>}
               <div className="mt-4 flex gap-2">
@@ -196,6 +198,7 @@ function BrandTab({ data, mutation }) {
 
 // ── Team tab ───────────────────────────────────────────────────
 function TeamTab() {
+  const { t } = useTranslation('settings')
   const { data: members, isLoading } = useWorkspaceMembers()
   const { invite } = useWorkspaceMutations()
   const [email, setEmail] = useState('')
@@ -218,15 +221,15 @@ function TeamTab() {
   }
 
   const copyLink = async () => {
-    if (await copy(link)) toast.success('Link copiado!')
+    if (await copy(link)) toast.success(t('team.linkCopied'))
   }
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       <Card className="lg:col-span-2">
         <CardHeader>
-          <CardTitle>Equipe</CardTitle>
-          <CardDescription>Membros com acesso a este workspace.</CardDescription>
+          <CardTitle>{t('team.title')}</CardTitle>
+          <CardDescription>{t('team.description')}</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
@@ -238,7 +241,7 @@ function TeamTab() {
                   <div className="flex items-center gap-3">
                     <Avatar name={m.name} src={m.avatar_url} size={40} />
                     <div>
-                      <p className="font-semibold text-ink">{m.name || 'Membro'}</p>
+                      <p className="font-semibold text-ink">{m.name || t('team.memberFallback')}</p>
                       <p className="text-xs text-ink-muted">{m.email}</p>
                     </div>
                   </div>
@@ -255,17 +258,17 @@ function TeamTab() {
           <div className="mb-1 flex size-10 items-center justify-center rounded-xl bg-brand-soft text-brand">
             <UserPlus size={20} />
           </div>
-          <CardTitle>Convidar</CardTitle>
-          <CardDescription>Gere um link de convite para um novo membro.</CardDescription>
+          <CardTitle>{t('team.inviteTitle')}</CardTitle>
+          <CardDescription>{t('team.inviteDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={submit} className="space-y-3.5">
             <div className="space-y-1.5">
-              <Label htmlFor="inv-email">E-mail</Label>
-              <Input id="inv-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="pessoa@email.com" />
+              <Label htmlFor="inv-email">{t('team.emailLabel')}</Label>
+              <Input id="inv-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('team.emailPlaceholder')} />
             </div>
             <div className="space-y-1.5">
-              <Label>Papel</Label>
+              <Label>{t('team.roleLabel')}</Label>
               <Select value={role} onValueChange={setRole}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -276,14 +279,14 @@ function TeamTab() {
               </Select>
             </div>
             <Button type="submit" className="w-full" disabled={invite.isPending}>
-              <UserPlus size={16} /> {invite.isPending ? 'Gerando…' : 'Gerar convite'}
+              <UserPlus size={16} /> {invite.isPending ? t('team.generating') : t('team.generateInvite')}
             </Button>
           </form>
 
           {link && (
             <div className="mt-4 rounded-xl border border-emerald/30 bg-emerald/8 p-3">
               <p className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-emerald">
-                <Check size={13} /> Convite gerado — compartilhe o link:
+                <Check size={13} /> {t('team.inviteGenerated')}
               </p>
               <div className="flex items-center gap-2">
                 <code className="flex-1 truncate rounded-lg bg-surface px-2 py-1.5 font-mono text-xs text-ink-secondary">{link}</code>
@@ -299,14 +302,15 @@ function TeamTab() {
 
 // ── Integrations tab ───────────────────────────────────────────
 function IntegrationCard({ icon: Icon, color, name, connected, sub, onConnect, onDisconnect, connectPending, disconnectPending }) {
+  const { t } = useTranslation('settings')
   return (
     <Card className="flex flex-col p-5">
       <div className="flex items-start justify-between gap-2">
         <IconTile icon={Icon} color={color} size="sm" className="size-11" iconSize={22} />
         {connected ? (
-          <Badge variant="success"><Check size={12} /> Conectado</Badge>
+          <Badge variant="success"><Check size={12} /> {t('integrations.connected')}</Badge>
         ) : (
-          <Badge variant="muted">Desconectado</Badge>
+          <Badge variant="muted">{t('integrations.disconnected')}</Badge>
         )}
       </div>
       <h3 className="mt-3 font-display text-base font-bold text-ink">{name}</h3>
@@ -315,17 +319,17 @@ function IntegrationCard({ icon: Icon, color, name, connected, sub, onConnect, o
         {connected ? (
           <>
             <Button variant="outline" size="sm" className="flex-1" disabled>
-              <ShieldCheck size={15} /> Ativo
+              <ShieldCheck size={15} /> {t('integrations.active')}
             </Button>
             {onDisconnect && (
               <Button variant="ghost" size="sm" className="text-danger" onClick={onDisconnect} disabled={disconnectPending}>
-                {disconnectPending ? 'Desconectando…' : 'Desconectar'}
+                {disconnectPending ? t('integrations.disconnecting') : t('integrations.disconnect')}
               </Button>
             )}
           </>
         ) : (
           <Button variant="solid" size="sm" className="w-full" onClick={onConnect} disabled={connectPending}>
-            <Link2 size={15} /> {connectPending ? 'Abrindo…' : 'Conectar'}
+            <Link2 size={15} /> {connectPending ? t('integrations.opening') : t('integrations.connect')}
           </Button>
         )}
       </div>
@@ -334,6 +338,7 @@ function IntegrationCard({ icon: Icon, color, name, connected, sub, onConnect, o
 }
 
 function IntegrationsTab() {
+  const { t } = useTranslation('settings')
   const { data: setting } = useSettings()
 
   const s = setting?.setting || setting || {}
@@ -343,17 +348,17 @@ function IntegrationsTab() {
       <section>
         <div className="mb-3 flex items-center gap-2">
           <Plug size={18} className="text-emerald" />
-          <h2 className="font-display text-lg font-bold text-ink">Serviços</h2>
+          <h2 className="font-display text-lg font-bold text-ink">{t('integrations.servicesTitle')}</h2>
         </div>
-        {/* Google Calendar é pessoal (reuniões são do usuário) — conecta em /conta. */}
+        {/* Google Calendar is personal (meetings belong to the user) — connect it in /conta. */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <IntegrationCard
             icon={Wallet}
             color="#10B981"
             name="Mercado Pago"
             connected={!!s.mercadopago_connected}
-            sub="Cobre seus clientes via Pix."
-            onConnect={() => toast.info('Conexão indisponível nesta demonstração.')}
+            sub={t('integrations.mercadopago.description')}
+            onConnect={() => toast.info(t('integrations.demoUnavailable'))}
           />
         </div>
       </section>
@@ -367,6 +372,7 @@ const TAB_TO_SEG = { brand: '', team: 'equipe', integrations: 'integracoes' }
 const SEG_TO_TAB = { equipe: 'team', integracoes: 'integrations' }
 
 export default function SettingsIndex() {
+  const { t } = useTranslation('settings')
   const { tab: seg } = useParams()
   const navigate = useNavigate()
   const { data, isLoading } = useSettings()
@@ -383,18 +389,18 @@ export default function SettingsIndex() {
   return (
     <Page>
       <PageHeader
-        eyebrow="Workspace"
-        title="Configurações"
+        eyebrow={t('page.eyebrow')}
+        title={t('page.title')}
         icon={Settings}
         color="#7C3AED"
-        description="Marca, equipe e integrações do workspace."
+        description={t('page.description')}
       />
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="mb-6">
-          <TabsTrigger value="brand"><Palette size={15} /> Marca</TabsTrigger>
-          <TabsTrigger value="team"><Users2 size={15} /> Equipe</TabsTrigger>
-          <TabsTrigger value="integrations"><Plug size={15} /> Integrações</TabsTrigger>
+          <TabsTrigger value="brand"><Palette size={15} /> {t('tabs.brand')}</TabsTrigger>
+          <TabsTrigger value="team"><Users2 size={15} /> {t('tabs.team')}</TabsTrigger>
+          <TabsTrigger value="integrations"><Plug size={15} /> {t('tabs.integrations')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="brand" className="animate-rise">

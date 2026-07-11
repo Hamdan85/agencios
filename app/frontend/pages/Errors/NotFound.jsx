@@ -1,17 +1,19 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { ErrorScene } from '@/components/errors/ErrorScene'
 
 export default function NotFound() {
+  const { t } = useTranslation('errors')
   return (
     <ErrorScene
       code="404"
-      title="Essa página não existe"
-      description="O endereço pode ter mudado ou nunca ter existido. Enquanto isso, que tal pular uns obstáculos?"
+      title={t('notFound.title')}
+      description={t('notFound.description')}
       actions={(
         <>
-          <Button asChild size="lg"><Link to="/painel">Voltar para o painel</Link></Button>
-          <Button variant="ghost" size="lg" onClick={() => window.history.back()}>Voltar</Button>
+          <Button asChild size="lg"><Link to="/painel">{t('actions.backToDashboard')}</Link></Button>
+          <Button variant="ghost" size="lg" onClick={() => window.history.back()}>{t('actions.back')}</Button>
         </>
       )}
     />

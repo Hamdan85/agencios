@@ -1,5 +1,6 @@
 import { useInfiniteQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { ticketsApi, workspaceApi } from '@/api'
 import { keys } from '@/api/queryKeys'
@@ -40,15 +41,16 @@ export const useTicketsList = (filters = {}) =>
   })
 
 export function useTicketArchiveMutations() {
+  const { t } = useTranslation('tickets')
   const qc = useQueryClient()
   const inv = () => invalidateTicketSurfaces(qc, { ticketsList: true, projects: true })
   return {
-    archive: useMutation({ mutationFn: ticketsApi.archive, onSuccess: () => { inv(); toast.success('Ticket arquivado.') }, onError: onErr('Erro ao arquivar.') }),
-    unarchive: useMutation({ mutationFn: ticketsApi.unarchive, onSuccess: () => { inv(); toast.success('Ticket restaurado.') }, onError: onErr('Erro ao restaurar.') }),
+    archive: useMutation({ mutationFn: ticketsApi.archive, onSuccess: () => { inv(); toast.success(t('toasts.archived')) }, onError: onErr(t('toasts.archiveError')) }),
+    unarchive: useMutation({ mutationFn: ticketsApi.unarchive, onSuccess: () => { inv(); toast.success(t('toasts.restored')) }, onError: onErr(t('toasts.restoreError')) }),
     assign: useMutation({
       mutationFn: ({ id, assigneeId }) => ticketsApi.update(id, { assignee_id: assigneeId }),
       onSuccess: inv,
-      onError: onErr('Erro ao atribuir responsável.'),
+      onError: onErr(t('toasts.assignError')),
     }),
   }
 }
@@ -56,14 +58,15 @@ export function useTicketArchiveMutations() {
 // Permanently delete a set of tickets (hard delete). Refreshes every surface a
 // ticket can appear on — the global list, the board, and project detail.
 export function useTicketBulkDelete() {
+  const { t } = useTranslation('tickets')
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (ids) => ticketsApi.bulkDestroy(ids),
     onSuccess: (data) => {
       invalidateTicketSurfaces(qc, { ticketsList: true, projects: true })
       const n = data?.deleted_count ?? 0
-      toast.success(n === 1 ? 'Ticket excluído.' : `${n} tickets excluídos.`)
+      toast.success(t('toasts.deleted', { count: n }))
     },
-    onError: onErr('Erro ao excluir os tickets.'),
+    onError: onErr(t('toasts.deleteError')),
   })
 }

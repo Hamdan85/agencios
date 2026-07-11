@@ -1,17 +1,19 @@
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 // Mensal / Anual segmented control for the plan pickers (paywall + billing).
 // Controlled: `value` is 'month' | 'year'; `onChange` receives the new interval.
 // `discountPercent` renders a small savings pill on the "Anual" segment.
 export function IntervalToggle({ value, onChange, discountPercent, className }) {
+  const { t } = useTranslation('billing')
   const options = [
-    { key: 'month', label: 'Mensal' },
-    { key: 'year', label: 'Anual' },
+    { key: 'month', label: t('plan.monthly') },
+    { key: 'year', label: t('plan.annual') },
   ]
   return (
     <div
       role="tablist"
-      aria-label="Ciclo de cobrança"
+      aria-label={t('intervalToggle.ariaLabel')}
       className={cn(
         'inline-flex items-center gap-1 rounded-full border border-border bg-surface p-1',
         className,

@@ -160,7 +160,9 @@
     "assetAdded": "Element added ✨",
     "assetAddError": "Couldn't add the element.",
     "assetRemoved": "Element removed",
-    "assetRemoveError": "Couldn't remove the element."
+    "assetRemoveError": "Couldn't remove the element.",
+    "sceneAnnotation": "- Scene {{scene}}: {{note}}",
+    "notesByScene": "Notes by scene:\n{{notes}}"
   },
   "strategy": {
     "startError": "Error starting the planning session.",
@@ -173,5 +175,6 @@
     "fallbackReply": "Got it! Let me put this together and I'll bring you the proposal.",
     "chatError": "Strategy chat error.",
     "errorBubble": "⚠️ Something went wrong. Try again."
-  }
+  },
+  "strategyChatError": "Error in the strategy chat."
 }

@@ -1,6 +1,7 @@
 import { Folder, Building2, User } from 'lucide-react'
 import { AsyncCombobox } from '@/components/ui/async-combobox'
 import { projectsApi, clientsApi, workspaceApi } from '@/api'
+import i18n from '@/i18n'
 
 // ── Reusable entity pickers ──────────────────────────────────────────────
 // Thin, pre-wired wrappers over AsyncCombobox so client / project / assignee
@@ -8,7 +9,7 @@ import { projectsApi, clientsApi, workspaceApi } from '@/api'
 // inherit every AsyncCombobox prop: pass `variant="field"` for forms (default
 // `pill` for filter bars), `initialOption` to show a label before fetch, etc.
 
-export function ProjectSelect({ placeholder = 'Campanha', listParams, ...props }) {
+export function ProjectSelect({ placeholder = i18n.t('ui:entitySelect.project'), listParams, ...props }) {
   return (
     <AsyncCombobox
       placeholder={placeholder}
@@ -25,7 +26,7 @@ export function ProjectSelect({ placeholder = 'Campanha', listParams, ...props }
 // Only ACTIVE clients are selectable — archived clients are read-only and
 // can't receive new work (campaigns, reuniões, criativos). Pass
 // `listParams={{ status: undefined }}` if a caller ever needs everything.
-export function ClientSelect({ placeholder = 'Cliente', listParams, ...props }) {
+export function ClientSelect({ placeholder = i18n.t('ui:entitySelect.client'), listParams, ...props }) {
   return (
     <AsyncCombobox
       placeholder={placeholder}
@@ -39,7 +40,7 @@ export function ClientSelect({ placeholder = 'Cliente', listParams, ...props }) 
   )
 }
 
-export function AssigneeSelect({ placeholder = 'Responsável', listParams, ...props }) {
+export function AssigneeSelect({ placeholder = i18n.t('ui:entitySelect.assignee'), listParams, ...props }) {
   return (
     <AsyncCombobox
       placeholder={placeholder}

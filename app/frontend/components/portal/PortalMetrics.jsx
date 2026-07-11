@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Eye, Users, Heart, Megaphone, Bookmark, MessageCircle, Share2, ExternalLink, BarChart3 } from 'lucide-react'
 import { StatCard } from '@/components/ui/page-header'
 import { SectionLabel } from '@/components/ui/section-label'
@@ -31,13 +32,14 @@ function Panel({ title, color, className, children }) {
 // A small pulsing "ao vivo" indicator — the portal metrics update in real time via
 // the PortalChannel push, so surface that liveness with the agency accent.
 function LiveDot({ accent }) {
+  const { t } = useTranslation('portal')
   return (
     <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-ink-muted">
       <span className="relative flex size-2">
         <span className="absolute inline-flex size-full animate-ping rounded-full opacity-60" style={{ background: accent }} />
         <span className="relative inline-flex size-2 rounded-full" style={{ background: accent }} />
       </span>
-      ao vivo
+      {t('metrics.live')}
     </span>
   )
 }
@@ -46,6 +48,7 @@ function LiveDot({ accent }) {
 // same PostsOverview payload as the internal "Desempenho" dashboard and stays live
 // through the token-authorized PortalChannel push.
 export default function PortalMetrics({ token, projectId, accent = '#7C3AED' }) {
+  const { t } = useTranslation('portal')
   const { data, isLoading } = usePortalMetrics(token, projectId)
   usePortalChannel(token, projectId)
 
@@ -64,8 +67,8 @@ export default function PortalMetrics({ token, projectId, accent = '#7C3AED' }) 
     return (
       <EmptyState
         icon={BarChart3}
-        title="Sem posts publicados nesta campanha ainda"
-        description="As métricas de alcance, visualizações e engajamento aparecem aqui assim que as publicações forem ao ar."
+        title={t('metrics.emptyTitle')}
+        description={t('metrics.emptyBody')}
         color={accent}
       />
     )
@@ -78,36 +81,36 @@ export default function PortalMetrics({ token, projectId, accent = '#7C3AED' }) 
     value: n.views,
     color: channelMeta(n.provider).color,
   }))
-  const byType = (overview.by_type || []).map((t) => ({
-    label: creativeMeta(t.creative_type).label,
-    value: t.views,
-    color: creativeMeta(t.creative_type).color,
-    icon: creativeMeta(t.creative_type).icon,
+  const byType = (overview.by_type || []).map((it) => ({
+    label: creativeMeta(it.creative_type).label,
+    value: it.views,
+    color: creativeMeta(it.creative_type).color,
+    icon: creativeMeta(it.creative_type).icon,
   }))
   const topPosts = overview.top_posts || []
 
   // Secondary engagement KPIs — only surface the ones the network actually reported.
   const detailStats = [
-    { key: 'likes', label: 'Curtidas', value: k.likes, icon: Heart, color: '#EC4899' },
-    { key: 'comments', label: 'Comentários', value: k.comments, icon: MessageCircle, color: '#F59E0B' },
-    { key: 'shares', label: 'Compartilhamentos', value: k.shares, icon: Share2, color: '#10B981' },
-    { key: 'saves', label: 'Salvamentos', value: k.saves, icon: Bookmark, color: '#6366F1' },
+    { key: 'likes', label: t('metrics.likes'), value: k.likes, icon: Heart, color: '#EC4899' },
+    { key: 'comments', label: t('metrics.comments'), value: k.comments, icon: MessageCircle, color: '#F59E0B' },
+    { key: 'shares', label: t('metrics.shares'), value: k.shares, icon: Share2, color: '#10B981' },
+    { key: 'saves', label: t('metrics.saves'), value: k.saves, icon: Bookmark, color: '#6366F1' },
   ].filter((s) => s.value != null)
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <SectionLabel as="h2" className="text-ink-secondary">Desempenho da campanha</SectionLabel>
+        <SectionLabel as="h2" className="text-ink-secondary">{t('metrics.title')}</SectionLabel>
         <LiveDot accent={accent} />
       </div>
 
       {/* Primary KPI row */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        <StatCard label="Alcance" value={compact(k.reach)} icon={Users} color={accent} />
-        <StatCard label="Visualizações" value={compact(k.views)} icon={Eye} color="#7C3AED" />
-        <StatCard label="Engajamento" value={compact(k.engagement)} icon={Heart} color="#EC4899" />
-        <StatCard label="Publicações" value={num(k.posts_count)} icon={Megaphone} color="#6366F1" />
-        <StatCard label="Taxa de engajamento" value={`${num(Math.round(rate * 10) / 10)}%`} icon={Heart} color="#10B981" sub="engajamento / alcance" />
+        <StatCard label={t('metrics.reach')} value={compact(k.reach)} icon={Users} color={accent} />
+        <StatCard label={t('metrics.views')} value={compact(k.views)} icon={Eye} color="#7C3AED" />
+        <StatCard label={t('metrics.engagement')} value={compact(k.engagement)} icon={Heart} color="#EC4899" />
+        <StatCard label={t('metrics.posts')} value={num(k.posts_count)} icon={Megaphone} color="#6366F1" />
+        <StatCard label={t('metrics.engagementRate')} value={`${num(Math.round(rate * 10) / 10)}%`} icon={Heart} color="#10B981" sub={t('metrics.engagementRateSub')} />
       </div>
 
       {/* Secondary engagement KPIs, when reported */}
@@ -121,23 +124,23 @@ export default function PortalMetrics({ token, projectId, accent = '#7C3AED' }) 
 
       {/* Trend + network split */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <Panel title="Tendência" color="#7C3AED" className="lg:col-span-2">
+        <Panel title={t('metrics.trend')} color="#7C3AED" className="lg:col-span-2">
           <LineTrend data={overview.timeseries || []} keys={['views', 'engagement', 'reach']} />
         </Panel>
-        <Panel title="Por rede" color={accent}>
-          <DonutBreakdown data={byNetwork} legend unit="Visualizações" />
+        <Panel title={t('metrics.byNetwork')} color={accent}>
+          <DonutBreakdown data={byNetwork} legend unit={t('metrics.views')} />
         </Panel>
       </div>
 
       {/* Format ranking */}
-      <Panel title="Por formato" color="#EC4899">
+      <Panel title={t('metrics.byFormat')} color="#EC4899">
         <RankBars data={byType} />
       </Panel>
 
       {/* Top posts */}
-      <Panel title="Melhores publicações" color="#10B981">
+      <Panel title={t('metrics.topPosts')} color="#10B981">
         {topPosts.length === 0 ? (
-          <p className="rounded-xl bg-surface-muted/50 px-4 py-6 text-center text-sm text-ink-muted">Sem publicações no período</p>
+          <p className="rounded-xl bg-surface-muted/50 px-4 py-6 text-center text-sm text-ink-muted">{t('metrics.noPostsInPeriod')}</p>
         ) : (
           <ul className="divide-y divide-border">
             {topPosts.map((p, i) => (
@@ -159,10 +162,10 @@ export default function PortalMetrics({ token, projectId, accent = '#7C3AED' }) 
                 </div>
                 <div className="shrink-0 text-right">
                   <p className="font-display text-sm font-bold tabular-nums text-ink">{compact(p.views)}</p>
-                  <p className="text-[11px] font-medium text-ink-muted">{compact(p.engagement)} engaj.</p>
+                  <p className="text-[11px] font-medium text-ink-muted">{t('metrics.engagementShort', { value: compact(p.engagement) })}</p>
                 </div>
                 {p.permalink && (
-                  <a href={p.permalink} target="_blank" rel="noreferrer" className="shrink-0 text-ink-muted transition-colors hover:text-ink" title="Abrir na rede">
+                  <a href={p.permalink} target="_blank" rel="noreferrer" className="shrink-0 text-ink-muted transition-colors hover:text-ink" title={t('metrics.openOnNetwork')}>
                     <ExternalLink size={15} />
                   </a>
                 )}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
   ArrowLeft, Wallet, CalendarRange, ListChecks, KanbanSquare, Pencil, Building2,
@@ -44,12 +45,12 @@ import TicketDrawer from '@/components/ticket/TicketDrawer'
 import { NewTicketDialog } from '@/components/board/NewTicketDialog'
 import { brl, date, shortDt, compact } from '@/lib/formatters'
 
-const STATUS = {
-  draft: { label: 'Rascunho', variant: 'muted' },
-  active: { label: 'Ativa', variant: 'success' },
-  paused: { label: 'Pausada', variant: 'warning' },
-  archived: { label: 'Arquivada', variant: 'muted' },
-  completed: { label: 'Finalizada', variant: 'soft' },
+const STATUS_VARIANT = {
+  draft: 'muted',
+  active: 'success',
+  paused: 'warning',
+  archived: 'muted',
+  completed: 'soft',
 }
 
 // Ticket filters live in the URL (?status=…&channel=…&q=…) so a project's
@@ -81,6 +82,7 @@ function GhostTicketRow({ g }) {
 // its tickets. Rendered only while a batch is active; refreshes off the board
 // channel (autopilot_batch_started / step / completed → invalidate `projects`).
 function AutopilotProgress({ batch }) {
+  const { t } = useTranslation('projects')
   if (!batch) return null
   const total = batch.total || 0
   const done = Math.min(batch.done || 0, total)
@@ -90,13 +92,13 @@ function AutopilotProgress({ batch }) {
     <div className="mb-6 rounded-2xl border border-brand/25 bg-brand-soft/40 p-4">
       <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
         <span className="inline-flex items-center gap-2 text-sm font-bold text-brand">
-          <InlineSpinner size={15} /> Piloto automático em andamento
+          <InlineSpinner size={15} /> {t('autopilot.inProgress')}
         </span>
         <span className="text-xs font-semibold text-ink-secondary">
-          {done} de {total} {total === 1 ? 'ticket' : 'tickets'}
+          {t('autopilot.progress', { done, count: total })}
           {failed > 0 && (
             <span className="ml-2 inline-flex items-center gap-1 text-danger">
-              <AlertTriangle size={12} /> {failed} com falha
+              <AlertTriangle size={12} /> {t('autopilot.failedCount', { count: failed })}
             </span>
           )}
         </span>
@@ -115,6 +117,7 @@ const TAB_TO_SEG = { tickets: '', config: 'configuracoes' }
 const SEG_TO_TAB = { configuracoes: 'config' }
 
 export default function ProjectShow() {
+  const { t, i18n } = useTranslation('projects')
   const { id, tab: seg } = useParams()
   const navigate = useNavigate()
   const tab = SEG_TO_TAB[seg] || 'tickets'
@@ -171,9 +174,9 @@ export default function ProjectShow() {
     onSuccess: () => {
       invalidateTicketSurfaces(qc, { projects: true })
       analytics.track(EVENTS.TICKET_CREATED)
-      toast.success('Ticket criado!')
+      toast.success(t('toasts.ticketCreated'))
     },
-    onError: (err) => toast.error(err?.error || 'Erro ao criar ticket.'),
+    onError: (err) => toast.error(err?.error || t('toasts.ticketCreateError')),
   })
 
   if (isLoading) return <PageLoader />
@@ -184,7 +187,7 @@ export default function ProjectShow() {
   // it stops — completed / failed / cancelled — so the GO button comes back).
   const autopilotBatch = data?.autopilot || null
   const color = project.color || '#7C3AED'
-  const st = STATUS[project.status] || STATUS.active
+  const statusVariant = STATUS_VARIANT[project.status] || STATUS_VARIANT.active
   const hasRange = project.starts_on || project.ends_on
   const hasFilters = Object.values(filters).some(Boolean)
   const isDraft = project.status === 'draft'
@@ -228,10 +231,10 @@ export default function ProjectShow() {
   // An additive plan can mix creates/edits/removals — summarize what applying does.
   const opsSummary = (() => {
     if (!persistedAdditive) return null
-    const t = persistedPlan.tickets || []
-    const n = (op) => t.filter((c) => (c.op || 'create') === op).length
-    return [[n('create'), 'a adicionar'], [n('update'), 'a editar'], [n('remove'), 'a remover']]
-      .filter(([c]) => c > 0).map(([c, label]) => `${c} ${label}`).join(' · ')
+    const list = persistedPlan.tickets || []
+    const n = (op) => list.filter((c) => (c.op || 'create') === op).length
+    return [[n('create'), 'opsToAdd'], [n('update'), 'opsToEdit'], [n('remove'), 'opsToRemove']]
+      .filter(([c]) => c > 0).map(([c, key]) => t(`plan.${key}`, { count: c })).join(' · ')
   })()
   const hasRemoval = persistedAdditive && (persistedPlan.tickets || []).some((c) => c.op === 'remove')
 
@@ -239,9 +242,9 @@ export default function ProjectShow() {
 
   const handleFinalize = async () => {
     const ok = await confirm({
-      title: 'Finalizar campanha?',
-      description: 'Vamos encerrar a campanha e gerar o relatório de auditoria com o resumo da produção.',
-      confirmLabel: 'Finalizar',
+      title: t('confirm.finalize.title'),
+      description: t('confirm.finalize.description'),
+      confirmLabel: t('confirm.finalize.confirm'),
       icon: CheckCircle2,
       tone: '#10B981',
     })
@@ -255,15 +258,15 @@ export default function ProjectShow() {
   const handleArchiveToggle = () => {
     update.mutate(
       { id, data: { status: isArchived ? 'active' : 'archived' } },
-      { onSuccess: () => toast.success(isArchived ? 'Campanha reativada.' : 'Campanha arquivada.') },
+      { onSuccess: () => toast.success(isArchived ? t('toasts.reactivated') : t('toasts.archived')) },
     )
   }
 
   const handleDelete = async () => {
     const ok = await confirm({
-      title: 'Excluir campanha?',
-      description: 'Isso remove a campanha e todos os seus tickets. Esta ação não pode ser desfeita.',
-      confirmLabel: 'Excluir campanha',
+      title: t('confirm.delete.title'),
+      description: t('confirm.delete.description'),
+      confirmLabel: t('confirm.delete.confirm'),
       destructive: true,
     })
     if (!ok) return
@@ -283,7 +286,7 @@ export default function ProjectShow() {
   return (
     <Page>
       <Link to="/campanhas" className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-muted transition hover:text-brand">
-        <ArrowLeft size={16} /> Campanhas
+        <ArrowLeft size={16} /> {t('show.back')}
       </Link>
 
       {/* Hero */}
@@ -294,13 +297,13 @@ export default function ProjectShow() {
             <IconTile icon={KanbanSquare} color={color} tint="1A" iconSize={26} className="sm:size-14" />
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="font-display text-xl font-extrabold tracking-tight text-ink sm:text-2xl">{project.name || 'Campanha'}</h1>
-                <Badge variant={st.variant}>{st.label}</Badge>
+                <h1 className="font-display text-xl font-extrabold tracking-tight text-ink sm:text-2xl">{project.name || t('show.fallbackName')}</h1>
+                <Badge variant={statusVariant}>{t(`status.${project.status}`)}</Badge>
                 {reportGenerating && (
-                  <Badge variant="soft"><InlineSpinner size={11} /> Gerando auditoria…</Badge>
+                  <Badge variant="soft"><InlineSpinner size={11} /> {t('show.generatingAudit')}</Badge>
                 )}
                 {reportFailed && (
-                  <Badge variant="danger"><AlertTriangle size={11} /> Falha ao gerar auditoria</Badge>
+                  <Badge variant="danger"><AlertTriangle size={11} /> {t('show.auditFailed')}</Badge>
                 )}
               </div>
               {project.client_name && (
@@ -318,26 +321,26 @@ export default function ProjectShow() {
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2 sm:justify-start">
             {!isCompleted && (
-              <Button variant="outline" className="w-10 justify-center px-0 sm:w-auto sm:justify-start sm:px-4" aria-label="Planejar conteúdo com IA" onClick={() => setStrategyOpen(true)}>
-                <Sparkles size={16} /> <span className="hidden sm:inline">Planejar conteúdo com IA</span>
+              <Button variant="outline" className="w-10 justify-center px-0 sm:w-auto sm:justify-start sm:px-4" aria-label={t('strategy.title')} onClick={() => setStrategyOpen(true)}>
+                <Sparkles size={16} /> <span className="hidden sm:inline">{t('strategy.title')}</span>
               </Button>
             )}
-            <Button variant="outline" className="w-10 justify-center px-0 sm:w-auto sm:justify-start sm:px-4" aria-label="Editar" onClick={() => setEditOpen(true)}>
-              <Pencil size={16} /> <span className="hidden sm:inline">Editar</span>
+            <Button variant="outline" className="w-10 justify-center px-0 sm:w-auto sm:justify-start sm:px-4" aria-label={t('show.edit')} onClick={() => setEditOpen(true)}>
+              <Pencil size={16} /> <span className="hidden sm:inline">{t('show.edit')}</span>
             </Button>
             {project.latest_report_id && reportReady && (
-              <Button asChild variant="outline" className="w-10 justify-center px-0 sm:w-auto sm:justify-start sm:px-4" aria-label="Ver relatório">
-                <Link to={`/relatorios/${project.latest_report_id}`}><FileText size={16} /> <span className="hidden sm:inline">Ver relatório</span></Link>
+              <Button asChild variant="outline" className="w-10 justify-center px-0 sm:w-auto sm:justify-start sm:px-4" aria-label={t('show.viewReport')}>
+                <Link to={`/relatorios/${project.latest_report_id}`}><FileText size={16} /> <span className="hidden sm:inline">{t('show.viewReport')}</span></Link>
               </Button>
             )}
             {isDraft && (
-              <Button variant="outline" className="w-10 justify-center px-0 sm:w-auto sm:justify-start sm:px-4" aria-label="Enviar escopo ao cliente" onClick={() => setScopeOpen(true)}>
-                <Send size={16} /> <span className="hidden sm:inline">Enviar escopo ao cliente</span>
+              <Button variant="outline" className="w-10 justify-center px-0 sm:w-auto sm:justify-start sm:px-4" aria-label={t('scope.title')} onClick={() => setScopeOpen(true)}>
+                <Send size={16} /> <span className="hidden sm:inline">{t('scope.title')}</span>
               </Button>
             )}
             {isDraft && (
-              <Button className="w-10 justify-center px-0 sm:w-auto sm:justify-start sm:px-4" aria-label="Iniciar campanha" onClick={handleStart} disabled={start.isPending}>
-                <Play size={16} /> <span className="hidden sm:inline">Iniciar campanha</span>
+              <Button className="w-10 justify-center px-0 sm:w-auto sm:justify-start sm:px-4" aria-label={t('show.start')} onClick={handleStart} disabled={start.isPending}>
+                <Play size={16} /> <span className="hidden sm:inline">{t('show.start')}</span>
               </Button>
             )}
             {!isCompleted && (
@@ -350,30 +353,30 @@ export default function ProjectShow() {
               />
             )}
             {!isCompleted && !isDraft && (
-              <Button className="w-10 justify-center px-0 sm:w-auto sm:justify-start sm:px-4" aria-label="Finalizar campanha" onClick={handleFinalize} disabled={finalize.isPending}>
-                <CheckCircle2 size={16} /> <span className="hidden sm:inline">Finalizar campanha</span>
+              <Button className="w-10 justify-center px-0 sm:w-auto sm:justify-start sm:px-4" aria-label={t('show.finalize')} onClick={handleFinalize} disabled={finalize.isPending}>
+                <CheckCircle2 size={16} /> <span className="hidden sm:inline">{t('show.finalize')}</span>
               </Button>
             )}
             {isCompleted && (
-              <Button className="w-10 justify-center px-0 sm:w-auto sm:justify-start sm:px-4" aria-label="Iniciar cobrança" onClick={() => setBillingOpen(true)}>
-                <Receipt size={16} /> <span className="hidden sm:inline">Iniciar cobrança</span>
+              <Button className="w-10 justify-center px-0 sm:w-auto sm:justify-start sm:px-4" aria-label={t('show.startBilling')} onClick={() => setBillingOpen(true)}>
+                <Receipt size={16} /> <span className="hidden sm:inline">{t('show.startBilling')}</span>
               </Button>
             )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" aria-label="Mais ações">
+                <Button variant="outline" size="icon" aria-label={t('show.moreActions')}>
                   <MoreHorizontal size={16} />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-44">
                 <DropdownMenuItem onSelect={() => setScopeOpen(true)}>
-                  <Send size={15} /> Enviar escopo ao cliente
+                  <Send size={15} /> {t('scope.title')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={handleArchiveToggle}>
-                  {isArchived ? <><ArchiveRestore size={15} /> Reativar</> : <><Archive size={15} /> Arquivar</>}
+                  {isArchived ? <><ArchiveRestore size={15} /> {t('show.reactivate')}</> : <><Archive size={15} /> {t('show.archive')}</>}
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={handleDelete} className="text-danger focus:text-danger">
-                  <Trash2 size={15} /> Excluir
+                  <Trash2 size={15} /> {t('show.delete')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -382,7 +385,7 @@ export default function ProjectShow() {
 
         <div className="flex flex-wrap justify-end gap-2 border-t border-border bg-surface-muted/50 px-5 py-3.5 sm:justify-start sm:px-6 sm:py-4">
           <ColorBadge color={color} tint="14" className="px-3 py-1.5 text-sm">
-            <ListChecks size={15} /> {project.tickets_count ?? tickets.length} tickets
+            <ListChecks size={15} /> {t('ticketsCount', { count: project.tickets_count ?? tickets.length })}
           </ColorBadge>
           {project.budget_cents != null && (
             <Badge variant="success" className="gap-1.5 px-3 py-1.5 text-sm tracking-normal">
@@ -400,14 +403,14 @@ export default function ProjectShow() {
             <>
               {Number.isFinite(Number(latestReport.overall_score)) && (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo/12 px-3 py-1.5 text-sm font-bold text-indigo">
-                  <Target size={15} /> Nota {Number(latestReport.overall_score).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}/10
+                  <Target size={15} /> {t('show.score', { score: Number(latestReport.overall_score).toLocaleString(i18n.language, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) })}
                 </span>
               )}
               <span className="inline-flex items-center gap-1.5 rounded-full bg-sky/12 px-3 py-1.5 text-sm font-bold text-sky">
-                <Eye size={15} /> {compact(reportKpis.views)} visualizações
+                <Eye size={15} /> {t('show.views', { value: compact(reportKpis.views) })}
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-pink/12 px-3 py-1.5 text-sm font-bold text-pink">
-                <Heart size={15} /> {compact(reportKpis.engagement)} engajamento
+                <Heart size={15} /> {t('show.engagement', { value: compact(reportKpis.engagement) })}
               </span>
             </>
           )}
@@ -416,8 +419,8 @@ export default function ProjectShow() {
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="mb-5">
-          <TabsTrigger value="tickets"><FolderKanban size={15} /> Tickets</TabsTrigger>
-          <TabsTrigger value="config"><Settings size={15} /> Configurações</TabsTrigger>
+          <TabsTrigger value="tickets"><FolderKanban size={15} /> {t('show.tabTickets')}</TabsTrigger>
+          <TabsTrigger value="config"><Settings size={15} /> {t('show.tabSettings')}</TabsTrigger>
         </TabsList>
         <TabsContent value="tickets" className="animate-rise">
 
@@ -434,25 +437,25 @@ export default function ProjectShow() {
             <div>
               <p className="text-sm font-semibold text-ink">
                 {persistedAdditive
-                  ? `Alterações propostas · ${opsSummary || 'nenhuma'}`
-                  : `Plano proposto pronto · ${persistedPlan.tickets.length} tickets`}
+                  ? t('plan.proposedChanges', { summary: opsSummary || t('plan.none') })
+                  : t('plan.proposedReady', { count: persistedPlan.tickets.length })}
               </p>
               <p className="text-xs text-ink-muted">
                 {persistedAdditive
-                  ? (hasRemoval ? 'Revise no chat ou aplique — inclui remoção de ticket.' : 'Revise no chat ou aplique à campanha.')
-                  : 'Revise no chat ou aplique para criar os tickets.'}
+                  ? (hasRemoval ? t('plan.reviewOrApplyRemoval') : t('plan.reviewOrApply'))
+                  : t('plan.reviewOrApplyCreate')}
               </p>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => discardStrategy.mutate(strategySession.id)} disabled={discardStrategy.isPending}>
-              Descartar
+              {t('plan.discard')}
             </Button>
             <Button variant="outline" size="sm" onClick={() => setStrategyOpen(true)}>
-              <Sparkles size={15} /> Revisar
+              <Sparkles size={15} /> {t('plan.review')}
             </Button>
             <Button size="sm" onClick={() => applyStrategy.mutate(strategySession.id)} disabled={applyStrategy.isPending}>
-              <CheckCircle2 size={15} /> {applyStrategy.isPending ? 'Aplicando…' : 'Aplicar'}
+              <CheckCircle2 size={15} /> {applyStrategy.isPending ? t('plan.applying') : t('plan.apply')}
             </Button>
           </div>
         </div>
@@ -462,10 +465,10 @@ export default function ProjectShow() {
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <ListChecks size={18} style={{ color }} />
-          <h2 className="font-display text-lg font-bold text-ink">Tickets</h2>
+          <h2 className="font-display text-lg font-bold text-ink">{t('show.ticketsHeading')}</h2>
         </div>
         <Button size="sm" onClick={() => setTicketOpen(true)}>
-          <Plus size={16} /> Novo ticket
+          <Plus size={16} /> {t('show.newTicket')}
         </Button>
       </div>
 
@@ -477,7 +480,7 @@ export default function ProjectShow() {
           onClear={selection.clear}
         >
           <Button variant="destructive" size="sm" className="gap-1.5" onClick={() => setConfirmDeleteOpen(true)}>
-            <Trash2 size={15} /> Excluir
+            <Trash2 size={15} /> {t('show.delete')}
           </Button>
         </SelectionBar>
       ) : (
@@ -501,17 +504,17 @@ export default function ProjectShow() {
           <EmptyState
             icon={ListChecks}
             color={color}
-            title="Nenhum ticket corresponde aos filtros"
-            description="Ajuste ou limpe os filtros para ver mais tickets desta campanha."
-            action={<Button variant="outline" onClick={() => setFilters({})}>Limpar filtros</Button>}
+            title={t('show.emptyFiltered.title')}
+            description={t('show.emptyFiltered.description')}
+            action={<Button variant="outline" onClick={() => setFilters({})}>{t('show.emptyFiltered.clear')}</Button>}
           />
         ) : (
           <EmptyState
             icon={KanbanSquare}
             color={color}
-            title="Sem tickets nesta campanha"
-            description="Crie o primeiro ticket desta campanha para começar a produção."
-            action={<Button onClick={() => setTicketOpen(true)}><Plus size={16} /> Novo ticket</Button>}
+            title={t('show.emptyNone.title')}
+            description={t('show.emptyNone.description')}
+            action={<Button onClick={() => setTicketOpen(true)}><Plus size={16} /> {t('show.newTicket')}</Button>}
           />
         )
       ) : (
@@ -593,9 +596,9 @@ export default function ProjectShow() {
         onOpenChange={setConfirmDeleteOpen}
         icon={Trash2}
         destructive
-        title={selection.count === 1 ? 'Excluir ticket?' : `Excluir ${selection.count} tickets?`}
-        description="Esta ação é permanente e não pode ser desfeita. Os tickets e todo o seu conteúdo (subtarefas, criativos, posts) serão removidos."
-        confirmLabel="Excluir"
+        title={t('confirm.bulkDelete.title', { count: selection.count })}
+        description={t('confirm.bulkDelete.description')}
+        confirmLabel={t('confirm.bulkDelete.confirm')}
         loading={bulkDelete.isPending}
         onConfirm={confirmBulkDelete}
       />

@@ -90,6 +90,7 @@
       "unitCredits": "cr.",
       "unitGenerations": "gen.",
       "tooltip": "{{date}} · Total {{total}} {{unit}}",
+      "tooltipKind": " · {{label}}: {{value}}",
       "total": "Total"
     },
     "recent": {
@@ -158,6 +159,15 @@
     "cardRequired": "Card required to start",
     "prepaidCredits": "Prepaid credits for video and image",
     "footer": "No free tier. Videos, images and carousels consume credits (1 credit = R$ 1); AI text and captions are included. Cancel anytime."
+  },
+  "createWorkspace": {
+    "title": "New workspace",
+    "description": "Create a new agency. You'll be the owner and be taken into it automatically.",
+    "nameLabel": "Workspace name",
+    "namePlaceholder": "My Agency",
+    "cancel": "Cancel",
+    "creating": "Creating…",
+    "create": "Create workspace"
   },
   "invoiceForm": {
     "title": "New invoice",

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { Receipt, Check, Link2, CheckCircle2, Send } from 'lucide-react'
 import {
@@ -24,6 +25,7 @@ const EMPTY_FORM = { client_id: '', amount: '', description: '', due_date: '', p
 // cliente" action instead of just closing — the same for both entry points
 // since this component is shared.
 export function InvoiceFormDialog({ open, onOpenChange, initialClientId = '', initialProjectIds = [] }) {
+  const { t } = useTranslation('billing')
   const [form, setForm] = useState(EMPTY_FORM)
   const [created, setCreated] = useState(null)
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }))
@@ -88,7 +90,7 @@ export function InvoiceFormDialog({ open, onOpenChange, initialClientId = '', in
             <div className="mb-1 flex size-11 items-center justify-center rounded-2xl bg-emerald/12 text-emerald">
               <CheckCircle2 size={22} strokeWidth={2.2} />
             </div>
-            <DialogTitle>Cobrança criada!</DialogTitle>
+            <DialogTitle>{t('invoiceForm.created')}</DialogTitle>
             <DialogDescription>
               {created.client_name ? `${created.client_name} · ` : ''}{brl(created.amount_cents)}
             </DialogDescription>
@@ -96,11 +98,11 @@ export function InvoiceFormDialog({ open, onOpenChange, initialClientId = '', in
           {paymentLinksAvailable && (
             <Button className="w-full" onClick={() => sendPaymentLink.mutate(created.id)} disabled={sendPaymentLink.isPending}>
               <Send size={16} />
-              {sendPaymentLink.isPending ? 'Enviando…' : alreadySent ? 'Reenviar ao cliente' : 'Enviar ao cliente'}
+              {sendPaymentLink.isPending ? t('invoiceForm.sending') : alreadySent ? t('invoiceForm.resendToClient') : t('invoiceForm.sendToClient')}
             </Button>
           )}
           <DialogFooter>
-            <Button variant="ghost" onClick={() => onOpenChange(false)}>Fechar</Button>
+            <Button variant="ghost" onClick={() => onOpenChange(false)}>{t('invoiceForm.close')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -114,22 +116,22 @@ export function InvoiceFormDialog({ open, onOpenChange, initialClientId = '', in
           <div className="mb-1 flex size-11 items-center justify-center rounded-2xl" style={{ background: '#F9731616', color: '#F97316' }}>
             <Receipt size={22} strokeWidth={2.2} />
           </div>
-          <DialogTitle>Nova cobrança</DialogTitle>
-          <DialogDescription>Registre uma cobrança para um cliente. Depois você pode gerar um link de pagamento ou marcá-la como paga.</DialogDescription>
+          <DialogTitle>{t('invoiceForm.title')}</DialogTitle>
+          <DialogDescription>{t('invoiceForm.description')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-3.5">
           <div className="space-y-1.5">
-            <Label>Cliente</Label>
+            <Label>{t('invoiceForm.client')}</Label>
             <ClientSelect
               variant="field"
               value={form.client_id}
               onChange={(v) => setForm((f) => ({ ...f, client_id: v || '', project_ids: [] }))}
-              placeholder="Selecione o cliente"
+              placeholder={t('invoiceForm.clientPlaceholder')}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="iv-amount">Valor</Label>
+              <Label htmlFor="iv-amount">{t('invoiceForm.amount')}</Label>
               <div className="relative">
                 <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-medium text-ink-muted">R$</span>
                 <Input
@@ -144,17 +146,17 @@ export function InvoiceFormDialog({ open, onOpenChange, initialClientId = '', in
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="iv-due">Vencimento</Label>
-              <DatePicker id="iv-due" value={form.due_date} onChange={set('due_date')} placeholder="Selecione o vencimento" />
+              <Label htmlFor="iv-due">{t('invoiceForm.dueDate')}</Label>
+              <DatePicker id="iv-due" value={form.due_date} onChange={set('due_date')} placeholder={t('invoiceForm.dueDatePlaceholder')} />
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="iv-desc">Descrição</Label>
-            <Textarea id="iv-desc" value={form.description} onChange={(e) => set('description')(e.target.value)} placeholder="Serviços prestados…" />
+            <Label htmlFor="iv-desc">{t('invoiceForm.descriptionLabel')}</Label>
+            <Textarea id="iv-desc" value={form.description} onChange={(e) => set('description')(e.target.value)} placeholder={t('invoiceForm.descriptionPlaceholder')} />
           </div>
           {form.client_id && clientProjects.length > 0 && (
             <div className="space-y-1.5">
-              <Label>Campanhas (opcional)</Label>
+              <Label>{t('invoiceForm.projects')}</Label>
               <div className="flex flex-wrap gap-2">
                 {clientProjects.map((p) => {
                   const active = form.project_ids.includes(p.id)
@@ -183,17 +185,17 @@ export function InvoiceFormDialog({ open, onOpenChange, initialClientId = '', in
                   <Link2 size={15} />
                 </span>
                 <div>
-                  <p className="text-sm font-semibold text-ink">Gerar com link de pagamento</p>
-                  <p className="text-xs text-ink-muted">Gera o link no Mercado Pago e envia por e-mail ao cliente.</p>
+                  <p className="text-sm font-semibold text-ink">{t('invoiceForm.paymentLink.title')}</p>
+                  <p className="text-xs text-ink-muted">{t('invoiceForm.paymentLink.description')}</p>
                 </div>
               </div>
               <Switch checked={form.send_payment_link} onCheckedChange={set('send_payment_link')} />
             </div>
           )}
           <DialogFooter>
-            <DialogClose asChild><Button type="button" variant="ghost">Cancelar</Button></DialogClose>
+            <DialogClose asChild><Button type="button" variant="ghost">{t('invoiceForm.cancel')}</Button></DialogClose>
             <Button type="submit" disabled={create.isPending}>
-              {create.isPending ? 'Registrando…' : 'Registrar cobrança'}
+              {create.isPending ? t('invoiceForm.submitting') : t('invoiceForm.submit')}
             </Button>
           </DialogFooter>
         </form>

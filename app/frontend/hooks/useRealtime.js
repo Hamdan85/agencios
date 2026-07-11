@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { consumer } from '@/lib/cable'
 import { keys } from '@/api/queryKeys'
@@ -73,17 +74,18 @@ export function useTicketChannel(ticketId, onEvent) {
 const AI_FILL_TIMEOUT_MS = 150_000
 
 export function useAiFillStatus(id) {
+  const { t } = useTranslation('ui')
   const qc = useQueryClient()
   const [filling, setFilling] = useState(false)
 
   useEffect(() => {
     if (!filling) return undefined
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       setFilling(false)
-      toast.error('A IA está demorando mais que o normal. Tente atualizar novamente.')
+      toast.error(t('aiFill.timeout'))
     }, AI_FILL_TIMEOUT_MS)
-    return () => clearTimeout(t)
-  }, [filling])
+    return () => clearTimeout(timer)
+  }, [filling, t])
 
   useEffect(() => {
     if (!id) return undefined
@@ -96,16 +98,16 @@ export function useAiFillStatus(id) {
             setFilling(false)
             qc.invalidateQueries({ queryKey: keys.ticket(id) })
             qc.invalidateQueries({ queryKey: ['board'] })
-            toast.success('IA atualizou o ticket ✨')
+            toast.success(t('aiFill.done'))
           } else if (d?.event === 'ai_fill_failed') {
             setFilling(false)
-            toast.error('A IA não conseguiu atualizar os campos. Tente novamente.')
+            toast.error(t('aiFill.failed'))
           }
         },
       },
     )
     return () => sub.unsubscribe()
-  }, [id, qc])
+  }, [id, qc, t])
   return [filling, setFilling]
 }
 

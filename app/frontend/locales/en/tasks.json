@@ -1,0 +1,44 @@
+{
+  "header": {
+    "eyebrowGlobal": "You",
+    "eyebrowTeam": "Management",
+    "title": "My tasks",
+    "descriptionGlobal": "Everything assigned to you, across all your teams.",
+    "descriptionTeam": "Your subtasks across every ticket in this team.",
+    "pendingCount_one": "{{count}} pending",
+    "pendingCount_other": "{{count}} pending"
+  },
+  "tabs": {
+    "pending": "Pending",
+    "overdue": "Overdue",
+    "completed": "Completed"
+  },
+  "empty": {
+    "pending": {
+      "title": "All caught up!",
+      "description": "You have no pending tasks. Nice work."
+    },
+    "overdue": {
+      "title": "No overdue tasks",
+      "description": "Nothing late here — keep it up."
+    },
+    "completed": {
+      "title": "Nothing completed yet",
+      "description": "Tasks you finish show up here."
+    }
+  },
+  "searchPlaceholder": "Search tasks…",
+  "noResults": {
+    "title": "No results",
+    "description": "Nothing found for “{{query}}”."
+  },
+  "row": {
+    "openAria": "Open {{title}}",
+    "ticketFallbackLower": "ticket",
+    "reopen": "Reopen task",
+    "complete": "Complete task",
+    "untitled": "Untitled",
+    "ticketBadge": "Ticket",
+    "hours": "{{count}}h"
+  }
+}

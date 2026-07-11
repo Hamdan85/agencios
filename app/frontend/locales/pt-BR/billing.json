@@ -90,6 +90,7 @@
       "unitCredits": "cr.",
       "unitGenerations": "ger.",
       "tooltip": "{{date}} · Total {{total}} {{unit}}",
+      "tooltipKind": " · {{label}}: {{value}}",
       "total": "Total"
     },
     "recent": {
@@ -158,6 +159,15 @@
     "cardRequired": "Cartão obrigatório para iniciar",
     "prepaidCredits": "Créditos pré-pagos para vídeo e imagem",
     "footer": "Sem plano gratuito. Vídeos, imagens e carrosséis consomem créditos (1 crédito = R$ 1); textos e legendas com IA são inclusos. Cancele quando quiser."
+  },
+  "createWorkspace": {
+    "title": "Novo workspace",
+    "description": "Crie uma nova agência. Você será o owner e entrará nela automaticamente.",
+    "nameLabel": "Nome do workspace",
+    "namePlaceholder": "Minha Agência",
+    "cancel": "Cancelar",
+    "creating": "Criando…",
+    "create": "Criar workspace"
   },
   "invoiceForm": {
     "title": "Nova cobrança",

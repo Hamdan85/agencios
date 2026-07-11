@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 
 // The 4-color Google "G". Inlined so we don't pull a new icon dependency; the
@@ -16,20 +17,21 @@ function GoogleMark() {
 // "Continuar com Google" — a full-page navigation to the backend OAuth start
 // endpoint (the user isn't authenticated yet, so no XHR/popup). `returnTo` is an
 // optional same-origin path to land on after sign-in (validated server-side).
-export default function GoogleAuth({ label = 'Continuar com Google', returnTo = null }) {
+export default function GoogleAuth({ label, returnTo = null }) {
+  const { t } = useTranslation('auth')
   const href = returnTo ? `/auth/google?return_to=${encodeURIComponent(returnTo)}` : '/auth/google'
 
   return (
     <>
       <div className="my-4 flex items-center gap-3">
         <span className="h-px flex-1 bg-border" />
-        <span className="text-xs font-medium text-ink-faint">ou</span>
+        <span className="text-xs font-medium text-ink-faint">{t('google.or')}</span>
         <span className="h-px flex-1 bg-border" />
       </div>
       <Button asChild variant="outline" size="lg" className="w-full">
         <a href={href}>
           <GoogleMark />
-          {label}
+          {label || t('google.continue')}
         </a>
       </Button>
     </>

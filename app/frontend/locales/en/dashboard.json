@@ -1,0 +1,56 @@
+{
+  "greeting": {
+    "morning": "Good morning",
+    "afternoon": "Good afternoon",
+    "evening": "Good evening",
+    "fallbackName": "there"
+  },
+  "genStatus": {
+    "ready": "Ready",
+    "generating": "Generating",
+    "queued": "Queued",
+    "failed": "Failed"
+  },
+  "hero": {
+    "workspaceFallback": "Your agency",
+    "subtitle": "Here's your agency's pulse today. Move work through the funnel and keep everything live.",
+    "newTicket": "New ticket",
+    "studio": "Studio"
+  },
+  "stats": {
+    "activeTickets": { "label": "Active tickets", "sub": "in production now" },
+    "clients": { "label": "Clients", "sub": "in your book" },
+    "projects": { "label": "Campaigns", "sub": "in progress" },
+    "scheduledPosts": { "label": "Scheduled posts", "sub": "in the queue" },
+    "openInvoices": { "label": "Open invoices", "sub": "pending" },
+    "revenue": { "label": "Revenue", "sub": "received" }
+  },
+  "funnel": {
+    "title": "Production funnel",
+    "subtitle": "{{count}} tickets spread across the 7 stages",
+    "openBoard": "Open board"
+  },
+  "meetings": {
+    "title": "Upcoming meetings",
+    "viewAll": "View all",
+    "emptyTitle": "No meetings scheduled",
+    "emptyDescription": "When you schedule meetings, they show up here.",
+    "schedule": "Schedule meeting",
+    "fallbackTitle": "Meeting",
+    "join": "Join"
+  },
+  "generations": {
+    "title": "Recent generations",
+    "studio": "Studio",
+    "emptyTitle": "No generations yet",
+    "emptyDescription": "Generate carousels, videos, and images with AI in the Studio.",
+    "openStudio": "Open Studio"
+  },
+  "shortcuts": {
+    "title": "Shortcuts",
+    "tickets": { "label": "Tickets", "hint": "Production funnel" },
+    "studio": { "label": "Studio", "hint": "Generate creatives" },
+    "calendar": { "label": "Calendar", "hint": "Posts and meetings" },
+    "clients": { "label": "Clients", "hint": "Your book" }
+  }
+}

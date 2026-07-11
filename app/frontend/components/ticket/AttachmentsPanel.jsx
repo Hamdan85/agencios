@@ -1,4 +1,5 @@
 import { lazy, Suspense, useRef, useState } from 'react'
+import { useTranslation, Trans } from 'react-i18next'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -24,6 +25,7 @@ const MediaViewer = lazy(() => import('./MediaViewer'))
 // One file in the grid: image/video preview when available, otherwise a colored
 // icon tile. Clicking the body opens the media viewer; the ⋯ menu manages it.
 function FileTile({ att, onOpen, onRename, onRemove }) {
+  const { t } = useTranslation('ticket')
   const meta = attachmentKindMeta(att.kind)
   const Icon = meta.icon
   const rawThumb = att.kind === 'image' ? (att.preview_url || att.url) : (att.kind === 'video' ? att.preview_url : null)
@@ -38,7 +40,7 @@ function FileTile({ att, onOpen, onRename, onRemove }) {
         type="button"
         onClick={() => onOpen(att)}
         className="block w-full text-left"
-        aria-label={`Abrir ${att.display_name}`}
+        aria-label={t('attachments.open', { name: att.display_name })}
       >
         <div className="relative aspect-[4/3] overflow-hidden" style={{ background: `${meta.color}12` }}>
           {thumb ? (
@@ -77,7 +79,7 @@ function FileTile({ att, onOpen, onRename, onRemove }) {
             <button
               type="button"
               className="flex size-7 items-center justify-center rounded-lg bg-white/90 text-ink-secondary shadow-sm backdrop-blur transition hover:text-ink"
-              aria-label="Ações do arquivo"
+              aria-label={t('attachments.fileActions')}
             >
               <MoreVertical size={15} />
             </button>
@@ -85,15 +87,15 @@ function FileTile({ att, onOpen, onRename, onRemove }) {
           <DropdownMenuContent align="end" className="min-w-40">
             <DropdownMenuItem asChild>
               <a href={att.url} download={att.filename} target="_blank" rel="noreferrer">
-                <Download size={14} /> Baixar
+                <Download size={14} /> {t('actions.download')}
               </a>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onRename(att)}>
-              <Pencil size={14} /> Renomear
+              <Pencil size={14} /> {t('actions.rename')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => onRemove(att)} className="text-danger focus:text-danger">
-              <Trash2 size={14} /> Excluir
+              <Trash2 size={14} /> {t('actions.delete')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -114,6 +116,7 @@ export default function AttachmentsPanel({
   onRemove,
   uploading = false,
 }) {
+  const { t } = useTranslation('ticket')
   const items = attachments || []
   const inputRef = useRef(null)
   const [dragging, setDragging] = useState(false)
@@ -165,17 +168,17 @@ export default function AttachmentsPanel({
         <div className="flex items-center gap-2.5">
           <IconTile icon={Paperclip} color="#0EA5E9" size="sm" tint="18" strokeWidth={2.3} />
           <div>
-            <h3 className="font-display text-base font-bold text-ink">Arquivos</h3>
+            <h3 className="font-display text-base font-bold text-ink">{t('attachments.title')}</h3>
             <p className="text-xs text-ink-muted">
               {items.length > 0
-                ? `${items.length} arquivo${items.length > 1 ? 's' : ''} neste ticket`
-                : 'Anexe vídeos, imagens, PDFs e documentos.'}
+                ? t('attachments.count', { count: items.length })
+                : t('attachments.hint')}
             </p>
           </div>
         </div>
         <Button size="sm" variant="outline" onClick={pick} disabled={uploading}>
           {uploading ? <Spinner size={14} /> : <UploadCloud size={14} />}
-          Enviar arquivo
+          {t('attachments.upload')}
         </Button>
         <input ref={inputRef} type="file" multiple hidden onChange={onInputChange} />
       </div>
@@ -196,8 +199,8 @@ export default function AttachmentsPanel({
           >
             <EmptyState
               icon={dragging ? FileUp : Paperclip}
-              title={dragging ? 'Solte para enviar' : 'Nenhum arquivo ainda'}
-              description="Arraste arquivos para cá ou clique para enviar — vídeos, imagens, PDFs, planilhas e documentos."
+              title={dragging ? t('attachments.dropToUpload') : t('attachments.empty.title')}
+              description={t('attachments.empty.description')}
               color="#0EA5E9"
             />
           </div>
@@ -221,8 +224,8 @@ export default function AttachmentsPanel({
               )}
             >
               <UploadCloud size={15} />
-              Arraste mais arquivos para cá ou
-              <button type="button" onClick={pick} className="font-semibold text-brand hover:underline">selecione</button>
+              {t('attachments.dropMorePrefix')}
+              <button type="button" onClick={pick} className="font-semibold text-brand hover:underline">{t('attachments.dropMoreAction')}</button>
             </div>
           </>
         )}
@@ -245,18 +248,18 @@ export default function AttachmentsPanel({
         <DialogContent>
           <form onSubmit={submitRename}>
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2"><Pencil size={17} /> Renomear arquivo</DialogTitle>
-              <DialogDescription>Defina um nome de exibição e uma descrição opcional.</DialogDescription>
+              <DialogTitle className="flex items-center gap-2"><Pencil size={17} /> {t('attachments.renameTitle')}</DialogTitle>
+              <DialogDescription>{t('attachments.renameDescription')}</DialogDescription>
             </DialogHeader>
             <div className="grid gap-3 py-3">
-              <Input name="title" placeholder="Nome de exibição" defaultValue={renaming?.title || ''} autoFocus />
-              <Textarea name="description" placeholder="Descrição (opcional)" defaultValue={renaming?.description || ''} />
+              <Input name="title" placeholder={t('attachments.displayName')} defaultValue={renaming?.title || ''} autoFocus />
+              <Textarea name="description" placeholder={t('attachments.descriptionOptional')} defaultValue={renaming?.description || ''} />
             </div>
             <DialogFooter>
               <DialogClose asChild>
-                <Button type="button" variant="ghost" size="sm">Cancelar</Button>
+                <Button type="button" variant="ghost" size="sm">{t('actions.cancel')}</Button>
               </DialogClose>
-              <Button type="submit" size="sm">Salvar</Button>
+              <Button type="submit" size="sm">{t('actions.save')}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -266,16 +269,16 @@ export default function AttachmentsPanel({
       <Dialog open={!!removing} onOpenChange={(o) => !o && setRemoving(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-danger"><Trash2 size={17} /> Excluir arquivo</DialogTitle>
+            <DialogTitle className="flex items-center gap-2 text-danger"><Trash2 size={17} /> {t('attachments.deleteTitle')}</DialogTitle>
             <DialogDescription>
-              Remover <strong className="text-ink">{removing?.display_name}</strong>? Esta ação não pode ser desfeita.
+              <Trans t={t} i18nKey="attachments.deleteDescription" values={{ name: removing?.display_name }} components={{ strong: <strong className="text-ink" /> }} />
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <DialogClose asChild>
-              <Button type="button" variant="ghost" size="sm">Cancelar</Button>
+              <Button type="button" variant="ghost" size="sm">{t('actions.cancel')}</Button>
             </DialogClose>
-            <Button type="button" variant="destructive" size="sm" onClick={confirmRemove}>Excluir</Button>
+            <Button type="button" variant="destructive" size="sm" onClick={confirmRemove}>{t('actions.delete')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

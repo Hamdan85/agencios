@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { socialApi, meetingsApi, invoicesApi, settingsApi, billingApi, creditsApi, pricingApi, accountApi } from '@/api'
@@ -18,6 +19,7 @@ export const useSocialAccounts = (clientId) =>
 // Connect opens the network's OAuth flow in a popup. When the popup callback
 // posts an 'oauth_connected' message, we close the popup and refresh the client.
 export function useSocialAccountMutations(clientId) {
+  const { t } = useTranslation('settings')
   const qc = useQueryClient()
   const inv = () => qc.invalidateQueries({ queryKey: keys.client(clientId) })
   const [connecting, setConnecting] = useState(false)
@@ -58,11 +60,11 @@ export function useSocialAccountMutations(clientId) {
       try { if (popup && !popup.closed) popup.close() } catch { /* cross-origin */ }
       if (payload?.error) {
         toast.error(payload.error === 'no_instagram'
-          ? 'Esta Página não tem uma conta Instagram Business vinculada.'
-          : 'Erro ao conectar. Tente novamente.')
+          ? t('social.noInstagram')
+          : t('social.connectError'))
       } else {
         inv()
-        toast.success('Conta conectada com sucesso!')
+        toast.success(t('social.connected'))
       }
     }
 
@@ -97,7 +99,7 @@ export function useSocialAccountMutations(clientId) {
       })
       .catch((err) => {
         try { popup?.close() } catch { /* cross-origin */ }
-        toast.error(err?.error || 'Não foi possível iniciar a conexão.')
+        toast.error(err?.error || t('social.startError'))
       })
       .finally(() => setConnecting(false))
   }
@@ -107,13 +109,13 @@ export function useSocialAccountMutations(clientId) {
     connecting,
     disconnect: useMutation({
       mutationFn: (id) => socialApi.destroy(clientId, id),
-      onSuccess: () => { inv(); toast.success('Conta desconectada.') },
-      onError: onErr('Erro ao desconectar.'),
+      onSuccess: () => { inv(); toast.success(t('social.disconnected')) },
+      onError: onErr(t('social.disconnectError')),
     }),
     reconnect: useMutation({
       mutationFn: (id) => socialApi.reconnect(clientId, id),
-      onSuccess: () => { inv(); toast.success('Conta reconectada.') },
-      onError: onErr('Erro ao reconectar.'),
+      onSuccess: () => { inv(); toast.success(t('social.reconnected')) },
+      onError: onErr(t('social.reconnectError')),
     }),
   }
 }
@@ -123,12 +125,13 @@ export const useMeetings = (filters = {}) =>
   useQuery({ queryKey: keys.meetings(filters), queryFn: () => meetingsApi.list(filters), select: (d) => d.meetings })
 
 export function useMeetingMutations() {
+  const { t } = useTranslation('settings')
   const qc = useQueryClient()
   const inv = () => { qc.invalidateQueries({ queryKey: ['meetings'] }); qc.invalidateQueries({ queryKey: ['calendar'] }) }
   return {
-    create: useMutation({ mutationFn: meetingsApi.create, onSuccess: () => { inv(); analytics.track(EVENTS.MEETING_SCHEDULED); toast.success('Reunião agendada!') }, onError: onErr('Erro.') }),
-    update: useMutation({ mutationFn: ({ id, data }) => meetingsApi.update(id, data), onSuccess: inv, onError: onErr('Erro.') }),
-    destroy: useMutation({ mutationFn: meetingsApi.destroy, onSuccess: inv, onError: onErr('Erro.') }),
+    create: useMutation({ mutationFn: meetingsApi.create, onSuccess: () => { inv(); analytics.track(EVENTS.MEETING_SCHEDULED); toast.success(t('meetings.scheduled')) }, onError: onErr(t('generic')) }),
+    update: useMutation({ mutationFn: ({ id, data }) => meetingsApi.update(id, data), onSuccess: inv, onError: onErr(t('generic')) }),
+    destroy: useMutation({ mutationFn: meetingsApi.destroy, onSuccess: inv, onError: onErr(t('generic')) }),
   }
 }
 
@@ -137,14 +140,15 @@ export const useInvoices = (filters = {}) =>
   useQuery({ queryKey: keys.invoices(filters), queryFn: () => invoicesApi.list(filters), select: (d) => d.invoices })
 
 export function useInvoiceMutations() {
+  const { t } = useTranslation('settings')
   const qc = useQueryClient()
   const inv = () => qc.invalidateQueries({ queryKey: ['invoices'] })
   return {
-    create: useMutation({ mutationFn: invoicesApi.create, onSuccess: () => { inv(); analytics.track(EVENTS.INVOICE_CREATED); toast.success('Cobrança criada!') }, onError: onErr('Erro.') }),
-    cancel: useMutation({ mutationFn: invoicesApi.cancel, onSuccess: inv, onError: onErr('Erro.') }),
-    markPaid: useMutation({ mutationFn: invoicesApi.markPaid, onSuccess: () => { inv(); toast.success('Cobrança marcada como paga.') }, onError: onErr('Erro.') }),
-    paymentLink: useMutation({ mutationFn: invoicesApi.paymentLink, onSuccess: () => { inv(); toast.success('Link de pagamento gerado!') }, onError: onErr('Erro ao gerar link.') }),
-    sendPaymentLink: useMutation({ mutationFn: invoicesApi.sendPaymentLink, onSuccess: () => { inv(); toast.success('Link de pagamento enviado ao cliente!') }, onError: onErr('Erro ao enviar o link.') }),
+    create: useMutation({ mutationFn: invoicesApi.create, onSuccess: () => { inv(); analytics.track(EVENTS.INVOICE_CREATED); toast.success(t('invoices.created')) }, onError: onErr(t('generic')) }),
+    cancel: useMutation({ mutationFn: invoicesApi.cancel, onSuccess: inv, onError: onErr(t('generic')) }),
+    markPaid: useMutation({ mutationFn: invoicesApi.markPaid, onSuccess: () => { inv(); toast.success(t('invoices.markedPaid')) }, onError: onErr(t('generic')) }),
+    paymentLink: useMutation({ mutationFn: invoicesApi.paymentLink, onSuccess: () => { inv(); toast.success(t('invoices.linkGenerated')) }, onError: onErr(t('invoices.linkError')) }),
+    sendPaymentLink: useMutation({ mutationFn: invoicesApi.sendPaymentLink, onSuccess: () => { inv(); toast.success(t('invoices.linkSent')) }, onError: onErr(t('invoices.linkSendError')) }),
   }
 }
 
@@ -154,6 +158,7 @@ export const useSettings = () => useQuery({ queryKey: keys.settings(), queryFn: 
 // Google Calendar is a personal integration (meetings are user-level): the
 // connection lives on the user, surfaced on /conta and read from /me.
 export function useGoogleCalendarMutations() {
+  const { t } = useTranslation('settings')
   const qc = useQueryClient()
   const inv = () => qc.invalidateQueries({ queryKey: keys.me() })
 
@@ -169,10 +174,10 @@ export function useGoogleCalendarMutations() {
       window.removeEventListener('message', onMessage)
       if (popup && !popup.closed) popup.close()
       if (e.data.error) {
-        toast.error('Erro ao conectar o Google Calendar.')
+        toast.error(t('calendar.connectError'))
       } else {
         inv()
-        toast.success('Google Calendar conectado!')
+        toast.success(t('calendar.connected'))
       }
     }
     window.addEventListener('message', onMessage)
@@ -182,37 +187,40 @@ export function useGoogleCalendarMutations() {
     connect: useMutation({
       mutationFn: accountApi.calendarAuthorizeUrl,
       onSuccess: (d) => { if (d?.url) openCalendarPopup(d.url) },
-      onError: onErr('Não foi possível iniciar a conexão.'),
+      onError: onErr(t('social.startError')),
     }),
     disconnect: useMutation({
       mutationFn: accountApi.calendarDisconnect,
-      onSuccess: () => { inv(); toast.success('Google Calendar desconectado.') },
-      onError: onErr('Erro ao desconectar.'),
+      onSuccess: () => { inv(); toast.success(t('calendar.disconnected')) },
+      onError: onErr(t('social.disconnectError')),
     }),
   }
 }
 
 export function useSettingsMutation() {
+  const { t } = useTranslation('settings')
   const qc = useQueryClient()
   return useMutation({
     mutationFn: settingsApi.update,
-    onSuccess: () => { qc.invalidateQueries({ queryKey: keys.settings() }); qc.invalidateQueries({ queryKey: keys.me() }); toast.success('Configurações salvas!') },
-    onError: onErr('Erro ao salvar.'),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: keys.settings() }); qc.invalidateQueries({ queryKey: keys.me() }); toast.success(t('settings.saved')) },
+    onError: onErr(t('settings.saveError')),
   })
 }
 
 export function useSettingsBrandAssetsMutation() {
+  const { t } = useTranslation('settings')
   const qc = useQueryClient()
   return useMutation({
     mutationFn: settingsApi.uploadBrandAssets,
     onSuccess: () => { qc.invalidateQueries({ queryKey: keys.settings() }); qc.invalidateQueries({ queryKey: keys.me() }) },
-    onError: onErr('Erro ao enviar o logo.'),
+    onError: onErr(t('settings.logoError')),
   })
 }
 
 // ── Billing ────────────────────────────────────────────────────
 export const useBilling = () => useQuery({ queryKey: keys.billing(), queryFn: billingApi.get })
 export function useBillingMutations() {
+  const { t } = useTranslation('settings')
   const qc = useQueryClient()
   const inv = () => { qc.invalidateQueries({ queryKey: keys.billing() }); qc.invalidateQueries({ queryKey: keys.me() }) }
   return {
@@ -230,7 +238,7 @@ export function useBillingMutations() {
         analytics.track(EVENTS.SUBSCRIBE, { plan })
         if (data?.url) window.location.href = data.url
       },
-      onError: onErr('Erro ao iniciar o checkout.'),
+      onError: onErr(t('billing.checkoutError')),
     }),
     // change_plan returns EITHER { checkout_url } (redirect — new subscriber) OR
     // { subscription } (existing subscriber swapped the plan). Handle both.
@@ -245,21 +253,21 @@ export function useBillingMutations() {
         analytics.track(EVENTS.SUBSCRIBE, { plan })
         if (data?.checkout_url) { window.location.href = data.checkout_url; return }
         inv()
-        toast.success('Plano atualizado!')
+        toast.success(t('billing.planUpdated'))
       },
-      onError: onErr('Erro.'),
+      onError: onErr(t('generic')),
     }),
-    cancel: useMutation({ mutationFn: billingApi.cancel, onSuccess: () => { inv(); toast.success('Assinatura cancelada ao fim do período.') }, onError: onErr('Erro.') }),
-    reactivate: useMutation({ mutationFn: billingApi.reactivate, onSuccess: () => { inv(); toast.success('Assinatura reativada!') }, onError: onErr('Erro.') }),
+    cancel: useMutation({ mutationFn: billingApi.cancel, onSuccess: () => { inv(); toast.success(t('billing.canceled')) }, onError: onErr(t('generic')) }),
+    reactivate: useMutation({ mutationFn: billingApi.reactivate, onSuccess: () => { inv(); toast.success(t('billing.reactivated')) }, onError: onErr(t('generic')) }),
     // Opens the Stripe customer portal when the backend returns a url (payment
     // method / invoices). No-op if the portal isn't configured yet.
     portal: useMutation({
       mutationFn: billingApi.portal,
       onSuccess: (data) => {
         if (data?.url) window.location.href = data.url
-        else toast.info('Portal de pagamento indisponível no momento.')
+        else toast.info(t('billing.portalUnavailable'))
       },
-      onError: onErr('Erro ao abrir o portal.'),
+      onError: onErr(t('billing.portalError')),
     }),
   }
 }
@@ -278,12 +286,13 @@ export const useCreditUsage = (params = {}) =>
   })
 
 export function useCreditsMutations() {
+  const { t } = useTranslation('settings')
   return {
     // Buy a credit pack via Stripe Checkout — redirects to the returned url.
     checkout: useMutation({
       mutationFn: creditsApi.checkout,
       onSuccess: (data) => { if (data?.url) window.location.href = data.url },
-      onError: onErr('Erro ao iniciar a compra de créditos.'),
+      onError: onErr(t('credits.checkoutError')),
     }),
   }
 }

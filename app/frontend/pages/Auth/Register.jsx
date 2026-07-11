@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation, Trans } from 'react-i18next'
 import { User, Mail, Lock, Building2, ArrowRight } from 'lucide-react'
 import AuthShell from './AuthShell'
 import GoogleAuth from './GoogleAuth'
@@ -16,6 +17,7 @@ const Field = ({ icon: Icon, ...props }) => (
 )
 
 export default function Register() {
+  const { t } = useTranslation('auth')
   const navigate = useNavigate()
   const register = useRegister()
   const [form, setForm] = useState({ name: '', email: '', password: '', workspace_name: '' })
@@ -27,44 +29,48 @@ export default function Register() {
     setError(null)
     register.mutate(form, {
       onSuccess: () => navigate('/painel'),
-      onError: (err) => setError(err.error || 'Não foi possível criar a conta.'),
+      onError: (err) => setError(err.error || t('register.error')),
     })
   }
 
   return (
     <AuthShell
-      title="Crie sua agência"
-      subtitle="Em segundos você tem o quadro, o calendário e o estúdio prontos."
-      footer={<>Já tem conta? <Link to="/login" className="font-bold text-brand hover:underline">Entrar</Link></>}
+      title={t('register.title')}
+      subtitle={t('register.subtitle')}
+      footer={<>{t('register.hasAccount')} <Link to="/login" className="font-bold text-brand hover:underline">{t('register.loginLink')}</Link></>}
     >
       <form onSubmit={submit} className="space-y-4">
         <div className="space-y-1.5">
-          <Label>Seu nome</Label>
-          <Field icon={User} required value={form.name} onChange={set('name')} placeholder="Maria Silva" autoFocus />
+          <Label>{t('register.nameLabel')}</Label>
+          <Field icon={User} required value={form.name} onChange={set('name')} placeholder={t('register.namePlaceholder')} autoFocus />
         </div>
         <div className="space-y-1.5">
-          <Label>Nome da agência</Label>
-          <Field icon={Building2} value={form.workspace_name} onChange={set('workspace_name')} placeholder="Estúdio Criativo" />
+          <Label>{t('register.agencyLabel')}</Label>
+          <Field icon={Building2} value={form.workspace_name} onChange={set('workspace_name')} placeholder={t('register.agencyPlaceholder')} />
         </div>
         <div className="space-y-1.5">
-          <Label>E-mail</Label>
-          <Field icon={Mail} type="email" required value={form.email} onChange={set('email')} placeholder="voce@agencia.com" />
+          <Label>{t('fields.email')}</Label>
+          <Field icon={Mail} type="email" required value={form.email} onChange={set('email')} placeholder={t('fields.emailPlaceholder')} />
         </div>
         <div className="space-y-1.5">
-          <Label>Senha</Label>
-          <Field icon={Lock} type="password" required minLength={6} value={form.password} onChange={set('password')} placeholder="mínimo 6 caracteres" />
+          <Label>{t('fields.password')}</Label>
+          <Field icon={Lock} type="password" required minLength={6} value={form.password} onChange={set('password')} placeholder={t('fields.passwordPlaceholder')} />
         </div>
         {error && <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm font-medium text-danger">{error}</p>}
         <Button type="submit" size="lg" className="w-full" disabled={register.isPending}>
-          {register.isPending ? 'Criando…' : <>Criar conta <ArrowRight size={18} /></>}
+          {register.isPending ? t('register.submitting') : <>{t('register.submit')} <ArrowRight size={18} /></>}
         </Button>
-        <GoogleAuth label="Criar conta com Google" />
-        <p className="text-center text-xs text-ink-faint">14 dias de teste · sem cartão</p>
+        <GoogleAuth label={t('register.withGoogle')} />
+        <p className="text-center text-xs text-ink-faint">{t('register.trialNote')}</p>
         <p className="text-center text-xs text-ink-faint">
-          Ao criar conta, você concorda com os{' '}
-          <a href="/termos" className="font-semibold text-ink-muted hover:text-brand hover:underline">Termos de Uso</a>{' '}
-          e a{' '}
-          <a href="/privacidade" className="font-semibold text-ink-muted hover:text-brand hover:underline">Política de Privacidade</a>.
+          <Trans
+            t={t}
+            i18nKey="register.terms"
+            components={{
+              termsLink: <a href="/termos" className="font-semibold text-ink-muted hover:text-brand hover:underline" />,
+              privacyLink: <a href="/privacidade" className="font-semibold text-ink-muted hover:text-brand hover:underline" />,
+            }}
+          />
         </p>
       </form>
     </AuthShell>

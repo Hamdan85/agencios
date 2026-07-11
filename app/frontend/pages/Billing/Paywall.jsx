@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Check, Crown, Users2, Sparkles, Rocket, Zap, ShieldCheck, Coins, LogOut, Settings,
 } from 'lucide-react'
@@ -24,6 +25,7 @@ const PLAN_GRADIENT = {
 }
 
 function PaywallPlan({ plan, highlight, interval, discountPercent, onSubscribe, pending }) {
+  const { t } = useTranslation('billing')
   const meta = PLAN_META[plan.key] || { label: plan.name, color: '#7C3AED' }
   const Icon = PLAN_ICON[plan.key] || Sparkles
   const gradient = PLAN_GRADIENT[plan.key] || 'linear-gradient(135deg, #7C3AED, #EC4899)'
@@ -39,7 +41,7 @@ function PaywallPlan({ plan, highlight, interval, discountPercent, onSubscribe, 
       {highlight && (
         <div className="absolute right-0 top-0 z-10">
           <span className="inline-block rounded-bl-xl bg-brand px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
-            Mais popular
+            {t('paywall.mostPopular')}
           </span>
         </div>
       )}
@@ -48,27 +50,27 @@ function PaywallPlan({ plan, highlight, interval, discountPercent, onSubscribe, 
           <IconTile icon={Icon} color="#FFFFFF" tint="33" size="sm" className="size-11 backdrop-blur" iconSize={22} />
           {annual && discountPercent > 0 && (
             <ColorBadge color="#FFFFFF" tint="33" className="py-1 text-[11px] backdrop-blur">
-              Economize {discountPercent}%
+              {t('plan.save', { percent: discountPercent })}
             </ColorBadge>
           )}
         </div>
         <h3 className="mt-3 font-display text-xl font-extrabold">{plan.name || meta.label}</h3>
         <div className="mt-1 flex items-baseline gap-1">
           <span className="font-display text-3xl font-extrabold tracking-tight">{brl(displayCents)}</span>
-          <span className="text-sm font-semibold text-white/80">/mês</span>
+          <span className="text-sm font-semibold text-white/80">{t('plan.perMonth')}</span>
         </div>
         {annual && plan.annual_price_cents != null && (
-          <p className="mt-0.5 text-xs font-medium text-white/75">{brl(plan.annual_price_cents)}/ano · cobrado anualmente</p>
+          <p className="mt-0.5 text-xs font-medium text-white/75">{t('plan.annualBilledYearly', { price: brl(plan.annual_price_cents) })}</p>
         )}
         <div className="mt-2 flex flex-wrap items-center gap-1.5 text-sm font-medium text-white/90">
           {plan.seats != null && (
             <span className="inline-flex items-center gap-1.5">
-              <Users2 size={14} /> {plan.seats} {plan.seats === 1 ? 'assento' : 'assentos'}
+              <Users2 size={14} /> {t('plan.seats', { count: plan.seats })}
             </span>
           )}
           {plan.included_credits != null && (
             <span className="inline-flex items-center gap-1.5">
-              <Coins size={14} /> {plan.included_credits} créditos/mês
+              <Coins size={14} /> {t('paywall.creditsPerMonth', { count: plan.included_credits })}
             </span>
           )}
         </div>
@@ -90,10 +92,10 @@ function PaywallPlan({ plan, highlight, interval, discountPercent, onSubscribe, 
           onClick={() => onSubscribe(plan.key)}
           disabled={pending}
         >
-          <Zap size={16} /> Assinar {plan.name || meta.label}
+          <Zap size={16} /> {t('plan.subscribe', { name: plan.name || meta.label })}
         </Button>
         {annual && (
-          <p className="mt-2 text-center text-xs text-ink-muted">Cobrado uma vez por ano</p>
+          <p className="mt-2 text-center text-xs text-ink-muted">{t('paywall.billedOncePerYear')}</p>
         )}
       </CardContent>
     </Card>
@@ -105,6 +107,7 @@ function PaywallPlan({ plan, highlight, interval, discountPercent, onSubscribe, 
 // Stripe Checkout. Everything else in the app is blocked behind this — only
 // /assinatura, /configuracoes and logout stay reachable.
 export default function Paywall() {
+  const { t } = useTranslation('billing')
   const { data, isLoading } = useBilling()
   const { checkout } = useBillingMutations()
   const { data: me } = useCurrentUser()
@@ -133,10 +136,10 @@ export default function Paywall() {
         </span>
         <div className="flex items-center gap-1.5">
           <Button asChild variant="ghost" size="sm">
-            <Link to="/configuracoes"><Settings size={15} /> Configurações</Link>
+            <Link to="/configuracoes"><Settings size={15} /> {t('paywall.settings')}</Link>
           </Button>
           <Button variant="ghost" size="sm" className="text-danger hover:bg-danger/10 hover:text-danger" onClick={() => logout.mutate()}>
-            <LogOut size={15} /> Sair
+            <LogOut size={15} /> {t('paywall.logout')}
           </Button>
         </div>
       </header>
@@ -145,24 +148,23 @@ export default function Paywall() {
         {/* Hero */}
         <div className="mx-auto max-w-2xl text-center">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-3.5 py-1.5 text-xs font-bold text-brand">
-            <Sparkles size={13} /> Ative seu workspace
+            <Sparkles size={13} /> {t('paywall.activateWorkspace')}
           </span>
           <h1 className="mt-5 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
-            Escolha um plano para começar
+            {t('paywall.chooseTitle')}
           </h1>
           <p className="mx-auto mt-3 max-w-xl text-ink-muted">
-            Sua conta{me?.workspace?.name ? ` (${me.workspace.name})` : ''} ainda não tem um plano ativo.
-            Assine para liberar o quadro, o estúdio de criação e todas as integrações.
+            {t('paywall.noActivePlan', { workspaceSuffix: me?.workspace?.name ? ` (${me.workspace.name})` : '' })}
           </p>
           <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5 text-sm font-semibold text-ink-secondary">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5">
-              <ShieldCheck size={15} className="text-emerald" /> {trialDays} dias de teste
+              <ShieldCheck size={15} className="text-emerald" /> {t('paywall.trialDays', { count: trialDays })}
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5">
-              <Zap size={15} className="text-amber" /> Cartão obrigatório para iniciar
+              <Zap size={15} className="text-amber" /> {t('paywall.cardRequired')}
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5">
-              <Coins size={15} className="text-brand" /> Créditos pré-pagos para vídeo e imagem
+              <Coins size={15} className="text-brand" /> {t('paywall.prepaidCredits')}
             </span>
           </div>
         </div>
@@ -190,8 +192,7 @@ export default function Paywall() {
         </div>
 
         <p className="mt-8 text-center text-sm text-ink-muted">
-          Sem plano gratuito. Vídeos, imagens e carrosséis consomem créditos (1 crédito = R$ 1);
-          textos e legendas com IA são inclusos. Cancele quando quiser.
+          {t('paywall.footer')}
         </p>
       </div>
     </div>

@@ -1,0 +1,72 @@
+{
+  "page": {
+    "eyebrow": "Financeiro",
+    "title": "Cobranças",
+    "description": "Cobranças da agência para seus clientes.",
+    "newInvoice": "Nova cobrança"
+  },
+  "status": {
+    "draft": "Rascunho",
+    "open": "Em aberto",
+    "paid": "Pago",
+    "overdue": "Vencida",
+    "canceled": "Cancelada"
+  },
+  "filters": {
+    "all": "Todas",
+    "open": "Em aberto",
+    "paid": "Pagas",
+    "overdue": "Vencidas",
+    "draft": "Rascunhos",
+    "canceled": "Canceladas"
+  },
+  "stats": {
+    "open": { "label": "Em aberto", "sub": "aguardando pagamento" },
+    "paid": { "label": "Total pago", "sub": "cobranças quitadas" },
+    "overdue": { "label": "Vencidas" }
+  },
+  "empty": {
+    "noneTitle": "Nenhuma cobrança",
+    "noneDescription": "Registre a primeira cobrança para um cliente.",
+    "filteredTitle": "Nada neste filtro",
+    "filteredDescription": "Tente outro status."
+  },
+  "paymentDialog": {
+    "title": "Link de pagamento",
+    "subtitle": "Cobrança de {{name}}",
+    "subtitleFallback": "Cobrança",
+    "mpLink": "Link Mercado Pago",
+    "copyLink": "Copiar link",
+    "sendToClient": "Enviar ao cliente",
+    "sending": "Enviando…",
+    "openPage": "Abrir página de pagamento",
+    "autoNote": "Ou envie o link acima ao cliente — a baixa é automática após o pagamento.",
+    "generating": "Gerando o link de pagamento…"
+  },
+  "row": {
+    "clientFallback": "Cliente",
+    "due": "Venc. {{date}}",
+    "paymentLink": "Link de pagamento",
+    "generateLink": "Gerar link",
+    "generating": "Gerando…",
+    "markPaid": "Marcar como paga",
+    "viewPaymentLink": "Ver link de pagamento",
+    "generatePaymentLink": "Gerar link de pagamento",
+    "sendPaymentLink": "Enviar link de pagamento",
+    "sending": "Enviando…",
+    "cancel": "Cancelar"
+  },
+  "confirm": {
+    "markPaid": {
+      "title": "Marcar como paga?",
+      "description": "Confirme o recebimento manual desta cobrança. O status muda para paga.",
+      "confirm": "Marcar como paga"
+    },
+    "cancel": {
+      "title": "Cancelar cobrança?",
+      "description": "A cobrança será cancelada e não poderá mais ser paga pelo cliente.",
+      "confirm": "Cancelar cobrança",
+      "back": "Voltar"
+    }
+  }
+}

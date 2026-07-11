@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Receipt, Plus, MoreHorizontal, Ban, Wallet, Link2, CheckCircle2,
   CircleDollarSign, AlertTriangle, FileText, ExternalLink, Hash, Send,
 } from 'lucide-react'
+import i18n from '@/i18n'
 import { useInvoices, useInvoiceMutations, useSettings } from '@/hooks/useData'
 import { PageHeader, StatCard } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
@@ -28,25 +30,26 @@ import { brl, date, relativeDay } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 
 const STATUS_META = {
-  draft: { label: 'Rascunho', variant: 'muted', dot: '#94A3B8' },
-  open: { label: 'Em aberto', variant: 'default', dot: '#0EA5E9' },
-  paid: { label: 'Pago', variant: 'success', dot: '#10B981' },
-  overdue: { label: 'Vencida', variant: 'danger', dot: '#F43F5E' },
-  canceled: { label: 'Cancelada', variant: 'muted', dot: '#94A3B8' },
+  draft: { get label() { return i18n.t('invoices:status.draft') }, variant: 'muted', dot: '#94A3B8' },
+  open: { get label() { return i18n.t('invoices:status.open') }, variant: 'default', dot: '#0EA5E9' },
+  paid: { get label() { return i18n.t('invoices:status.paid') }, variant: 'success', dot: '#10B981' },
+  overdue: { get label() { return i18n.t('invoices:status.overdue') }, variant: 'danger', dot: '#F43F5E' },
+  canceled: { get label() { return i18n.t('invoices:status.canceled') }, variant: 'muted', dot: '#94A3B8' },
 }
 const statusMeta = (s) => STATUS_META[s] || STATUS_META.draft
 
 const FILTERS = [
-  { value: 'all', label: 'Todas' },
-  { value: 'open', label: 'Em aberto' },
-  { value: 'paid', label: 'Pagas' },
-  { value: 'overdue', label: 'Vencidas' },
-  { value: 'draft', label: 'Rascunhos' },
-  { value: 'canceled', label: 'Canceladas' },
+  { value: 'all', get label() { return i18n.t('invoices:filters.all') } },
+  { value: 'open', get label() { return i18n.t('invoices:filters.open') } },
+  { value: 'paid', get label() { return i18n.t('invoices:filters.paid') } },
+  { value: 'overdue', get label() { return i18n.t('invoices:filters.overdue') } },
+  { value: 'draft', get label() { return i18n.t('invoices:filters.draft') } },
+  { value: 'canceled', get label() { return i18n.t('invoices:filters.canceled') } },
 ]
 
 // ── Payment link dialog ────────────────────────────────────────
 function PaymentLinkDialog({ invoice, open, onOpenChange, onSendPaymentLink, sending }) {
+  const { t } = useTranslation('invoices')
   const charge = invoice?.charge
   const link = charge?.payment_link
 
@@ -55,8 +58,8 @@ function PaymentLinkDialog({ invoice, open, onOpenChange, onSendPaymentLink, sen
       <DialogContent>
         <DialogHeader>
           <IconTile icon={Link2} color="#0EA5E9" iconSize={22} className="mb-1 size-11" />
-          <DialogTitle>Link de pagamento</DialogTitle>
-          <DialogDescription>{invoice?.client_name ? `Cobrança de ${invoice.client_name}` : 'Cobrança'}</DialogDescription>
+          <DialogTitle>{t('paymentDialog.title')}</DialogTitle>
+          <DialogDescription>{invoice?.client_name ? t('paymentDialog.subtitle', { name: invoice.client_name }) : t('paymentDialog.subtitleFallback')}</DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col items-center gap-4">
@@ -67,30 +70,30 @@ function PaymentLinkDialog({ invoice, open, onOpenChange, onSendPaymentLink, sen
           {link ? (
             <>
               <div className="w-full space-y-2">
-                <Label>Link Mercado Pago</Label>
+                <Label>{t('paymentDialog.mpLink')}</Label>
                 <div className="flex items-start gap-2 rounded-xl border border-border bg-surface-muted p-3">
                   <code className="max-h-24 flex-1 overflow-y-auto break-all font-mono text-xs text-ink-secondary no-scrollbar">{link}</code>
                 </div>
               </div>
 
               <div className="flex w-full gap-2">
-                <CopyButton value={link} label="Copiar link" className="flex-1" />
+                <CopyButton value={link} label={t('paymentDialog.copyLink')} className="flex-1" />
                 {onSendPaymentLink && (
                   <Button onClick={() => onSendPaymentLink(invoice)} disabled={sending} className="flex-1">
-                    <Send size={16} /> {sending ? 'Enviando…' : 'Enviar ao cliente'}
+                    <Send size={16} /> {sending ? t('paymentDialog.sending') : t('paymentDialog.sendToClient')}
                   </Button>
                 )}
               </div>
 
               <a href={link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:underline">
-                Abrir página de pagamento <ExternalLink size={14} />
+                {t('paymentDialog.openPage')} <ExternalLink size={14} />
               </a>
 
-              <p className="text-center text-xs text-ink-muted">Ou envie o link acima ao cliente — a baixa é automática após o pagamento.</p>
+              <p className="text-center text-xs text-ink-muted">{t('paymentDialog.autoNote')}</p>
             </>
           ) : (
             <p className="rounded-xl bg-surface-muted px-4 py-6 text-center text-sm text-ink-muted">
-              Gerando o link de pagamento…
+              {t('paymentDialog.generating')}
             </p>
           )}
         </div>
@@ -101,6 +104,7 @@ function PaymentLinkDialog({ invoice, open, onOpenChange, onSendPaymentLink, sen
 
 // ── Invoice row ────────────────────────────────────────────────
 function InvoiceRow({ invoice, onMarkPaid, onCancel, onGenerateLink, onShowLink, onSendPaymentLink, generating, sending, paymentLinksAvailable }) {
+  const { t } = useTranslation('invoices')
   const m = statusMeta(invoice.status)
   const rel = relativeDay(invoice.due_date)
   const canAct = !['paid', 'canceled'].includes(invoice.status)
@@ -113,7 +117,7 @@ function InvoiceRow({ invoice, onMarkPaid, onCancel, onGenerateLink, onShowLink,
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <p className="truncate font-medium text-ink">
-              {invoice.client_name || 'Cliente'}
+              {invoice.client_name || t('row.clientFallback')}
             </p>
             <Badge variant={m.variant}>{m.label}</Badge>
           </div>
@@ -133,18 +137,18 @@ function InvoiceRow({ invoice, onMarkPaid, onCancel, onGenerateLink, onShowLink,
           <p className="font-display text-lg font-extrabold tracking-tight text-ink">{brl(invoice.amount_cents)}</p>
           {invoice.due_date && (
             <p className={cn('text-xs font-medium', rel?.tone === 'danger' ? 'text-danger' : 'text-ink-muted')}>
-              Venc. {date(invoice.due_date)}{rel ? ` · ${rel.text}` : ''}
+              {t('row.due', { date: date(invoice.due_date) })}{rel ? ` · ${rel.text}` : ''}
             </p>
           )}
         </div>
 
         {canAct && (link ? (
           <Button variant="outline" size="sm" onClick={() => onShowLink(invoice)}>
-            <Link2 size={15} /> Link de pagamento
+            <Link2 size={15} /> {t('row.paymentLink')}
           </Button>
         ) : (
           <Button variant="outline" size="sm" onClick={() => onGenerateLink(invoice)} disabled={generating}>
-            <Link2 size={15} /> {generating ? 'Gerando…' : 'Gerar link'}
+            <Link2 size={15} /> {generating ? t('row.generating') : t('row.generateLink')}
           </Button>
         ))}
 
@@ -156,16 +160,16 @@ function InvoiceRow({ invoice, onMarkPaid, onCancel, onGenerateLink, onShowLink,
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem disabled={!canAct} onSelect={() => canAct && onMarkPaid(invoice)}>
-              <CheckCircle2 /> Marcar como paga
+              <CheckCircle2 /> {t('row.markPaid')}
             </DropdownMenuItem>
             {canAct && (link ? (
-              <DropdownMenuItem onSelect={() => onShowLink(invoice)}><Link2 /> Ver link de pagamento</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => onShowLink(invoice)}><Link2 /> {t('row.viewPaymentLink')}</DropdownMenuItem>
             ) : (
-              <DropdownMenuItem onSelect={() => onGenerateLink(invoice)}><Link2 /> Gerar link de pagamento</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => onGenerateLink(invoice)}><Link2 /> {t('row.generatePaymentLink')}</DropdownMenuItem>
             ))}
             {canAct && paymentLinksAvailable && (
               <DropdownMenuItem disabled={sending} onSelect={() => onSendPaymentLink(invoice)}>
-                <Send /> {sending ? 'Enviando…' : 'Enviar link de pagamento'}
+                <Send /> {sending ? t('row.sending') : t('row.sendPaymentLink')}
               </DropdownMenuItem>
             )}
             <DropdownMenuItem
@@ -173,7 +177,7 @@ function InvoiceRow({ invoice, onMarkPaid, onCancel, onGenerateLink, onShowLink,
               onSelect={() => canAct && onCancel(invoice)}
               className="text-danger data-[highlighted]:text-danger"
             >
-              <Ban /> Cancelar
+              <Ban /> {t('row.cancel')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -183,6 +187,7 @@ function InvoiceRow({ invoice, onMarkPaid, onCancel, onGenerateLink, onShowLink,
 }
 
 export default function InvoicesIndex() {
+  const { t } = useTranslation('invoices')
   const { data: invoices, isLoading } = useInvoices()
   const { cancel, markPaid, paymentLink, sendPaymentLink } = useInvoiceMutations()
   const { data: settings } = useSettings()
@@ -214,9 +219,9 @@ export default function InvoicesIndex() {
 
   const onMarkPaid = async (inv) => {
     const ok = await confirm({
-      title: 'Marcar como paga?',
-      description: 'Confirme o recebimento manual desta cobrança. O status muda para paga.',
-      confirmLabel: 'Marcar como paga',
+      title: t('confirm.markPaid.title'),
+      description: t('confirm.markPaid.description'),
+      confirmLabel: t('confirm.markPaid.confirm'),
       icon: CheckCircle2,
       tone: '#10B981',
     })
@@ -224,10 +229,10 @@ export default function InvoicesIndex() {
   }
   const onCancel = async (inv) => {
     const ok = await confirm({
-      title: 'Cancelar cobrança?',
-      description: 'A cobrança será cancelada e não poderá mais ser paga pelo cliente.',
-      confirmLabel: 'Cancelar cobrança',
-      cancelLabel: 'Voltar',
+      title: t('confirm.cancel.title'),
+      description: t('confirm.cancel.description'),
+      confirmLabel: t('confirm.cancel.confirm'),
+      cancelLabel: t('confirm.cancel.back'),
       destructive: true,
     })
     if (ok) cancel.mutate(inv.id)
@@ -242,18 +247,18 @@ export default function InvoicesIndex() {
   return (
     <Page>
       <PageHeader
-        eyebrow="Financeiro"
-        title="Cobranças"
+        eyebrow={t('page.eyebrow')}
+        title={t('page.title')}
         icon={Receipt}
         color="#F97316"
-        description="Cobranças da agência para seus clientes."
-        actions={<Button onClick={() => setCreateOpen(true)}><Plus size={18} /> Nova cobrança</Button>}
+        description={t('page.description')}
+        actions={<Button onClick={() => setCreateOpen(true)}><Plus size={18} /> {t('page.newInvoice')}</Button>}
       />
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard label="Em aberto" value={brl(stats.open)} icon={CircleDollarSign} color="#0EA5E9" sub="aguardando pagamento" />
-        <StatCard label="Total pago" value={brl(stats.paid)} icon={Wallet} color="#10B981" sub="cobranças quitadas" />
-        <StatCard label="Vencidas" value={stats.overdueCount} icon={AlertTriangle} color="#F43F5E" sub={brl(stats.overdueSum)} />
+        <StatCard label={t('stats.open.label')} value={brl(stats.open)} icon={CircleDollarSign} color="#0EA5E9" sub={t('stats.open.sub')} />
+        <StatCard label={t('stats.paid.label')} value={brl(stats.paid)} icon={Wallet} color="#10B981" sub={t('stats.paid.sub')} />
+        <StatCard label={t('stats.overdue.label')} value={stats.overdueCount} icon={AlertTriangle} color="#F43F5E" sub={brl(stats.overdueSum)} />
       </div>
 
       <div className="mb-5 overflow-x-auto no-scrollbar">
@@ -268,9 +273,9 @@ export default function InvoicesIndex() {
         <EmptyState
           icon={FileText}
           color="#F97316"
-          title={list.length === 0 ? 'Nenhuma cobrança' : 'Nada neste filtro'}
-          description={list.length === 0 ? 'Registre a primeira cobrança para um cliente.' : 'Tente outro status.'}
-          action={list.length === 0 ? <Button onClick={() => setCreateOpen(true)}><Plus size={18} /> Nova cobrança</Button> : null}
+          title={list.length === 0 ? t('empty.noneTitle') : t('empty.filteredTitle')}
+          description={list.length === 0 ? t('empty.noneDescription') : t('empty.filteredDescription')}
+          action={list.length === 0 ? <Button onClick={() => setCreateOpen(true)}><Plus size={18} /> {t('page.newInvoice')}</Button> : null}
         />
       ) : (
         <Card className="divide-y divide-border">

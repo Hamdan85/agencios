@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { toast } from 'sonner'
+import i18n from '@/i18n'
 
 function getCsrfToken() {
   return document.querySelector('meta[name="csrf-token"]')?.content
@@ -54,10 +55,10 @@ api.interceptors.response.use(
         // paywall guard (which reads workspace.billing_active) takes over.
         window.__queryClient?.invalidateQueries({ queryKey: ['me'] })
       } else if (data?.code === 'insufficient_credits') {
-        toast.error('Créditos insuficientes', {
-          description: 'Compre créditos para continuar gerando vídeos e imagens.',
+        toast.error(i18n.t('ui:apiErrors.insufficientCreditsTitle'), {
+          description: i18n.t('ui:apiErrors.insufficientCreditsDescription'),
           action: {
-            label: 'Comprar créditos',
+            label: i18n.t('ui:apiErrors.buyCredits'),
             onClick: () => { window.location.href = '/assinatura' },
           },
         })

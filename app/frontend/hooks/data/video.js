@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { studioApi, videoScenesApi } from '@/api'
 import { keys } from '@/api/queryKeys'
@@ -9,6 +10,7 @@ import { onErr } from './shared'
 // gathers context and decides when to build. Returns { creative } to open the
 // editor on.
 export function useStartVideo() {
+  const { t } = useTranslation('studio')
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ params }) => studioApi.startVideo(params),
@@ -17,7 +19,7 @@ export function useStartVideo() {
       qc.invalidateQueries({ queryKey: ['creatives'] })
       analytics.track(EVENTS.CREATIVE_GENERATED, { kind: 'video', source: 'studio', phase: 'interview' })
     },
-    onError: onErr('Não foi possível abrir o editor de vídeo.'),
+    onError: onErr(t('videoEditor.openError')),
   })
 }
 
@@ -46,6 +48,7 @@ export function useVideoScenes(creativeId, { enabled = true } = {}) {
 }
 
 export function useEditScene(creativeId) {
+  const { t } = useTranslation('studio')
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ id, data }) => videoScenesApi.update(id, data),
@@ -54,14 +57,15 @@ export function useEditScene(creativeId) {
       qc.invalidateQueries({ queryKey: ['creatives'] })
       qc.invalidateQueries({ queryKey: ['tickets'] })
       if (variables?.data?.prompt) qc.invalidateQueries({ queryKey: ['credits'] }) // a prompt change re-renders (charged)
-      toast.success(variables?.data?.prompt ? 'Refazendo a cena…' : 'Cena atualizada')
+      toast.success(variables?.data?.prompt ? t('videoEditor.sceneRedoing') : t('videoEditor.sceneUpdated'))
     },
-    onError: onErr('Não foi possível editar a cena.'),
+    onError: onErr(t('videoEditor.sceneEditError')),
   })
 }
 
 // Approve the draft: re-render the whole storyboard with the final model.
 export function useFinalizeVideo(creativeId) {
+  const { t } = useTranslation('studio')
   const qc = useQueryClient()
   return useMutation({
     mutationFn: () => videoScenesApi.finalize(creativeId),
@@ -73,9 +77,9 @@ export function useFinalizeVideo(creativeId) {
       }))
       qc.invalidateQueries({ queryKey: ['creatives'] })
       qc.invalidateQueries({ queryKey: ['credits'] }) // the upgrade spent credits
-      toast.success('Gerando em alta qualidade ✨')
+      toast.success(t('videoEditor.finalizeStarted'))
     },
-    onError: onErr('Não foi possível iniciar o upgrade.'),
+    onError: onErr(t('videoEditor.finalizeError')),
   })
 }
 
@@ -83,6 +87,7 @@ export function useFinalizeVideo(creativeId) {
 // re-render one/some/all scenes. The response carries the fresh scenes + the
 // full message history, which we write straight into the scenes query cache.
 export function useVideoChat(creativeId) {
+  const { t } = useTranslation('studio')
   const qc = useQueryClient()
   return useMutation({
     mutationKey: ['video-chat', creativeId],
@@ -96,8 +101,8 @@ export function useVideoChat(creativeId) {
     // Pinned scene annotations are rendered the same way the server stores them.
     onMutate: ({ message, referenceUrls = [], annotations = [] }) => {
       const prev = qc.getQueryData(['video-scenes', creativeId])
-      const notes = annotations.map((a) => `- Cena ${a.scene}: ${a.note}`).join('\n')
-      const content = annotations.length ? [message, `Notas por cena:\n${notes}`].filter(Boolean).join('\n\n') : message
+      const notes = annotations.map((a) => t('videoEditor.sceneAnnotation', { scene: a.scene, note: a.note })).join('\n')
+      const content = annotations.length ? [message, t('videoEditor.notesByScene', { notes })].filter(Boolean).join('\n\n') : message
       qc.setQueryData(['video-scenes', creativeId], (cur) => ({
         ...(cur || {}),
         // Show the attached references as thumbnails right away (server echoes them back).
@@ -107,7 +112,7 @@ export function useVideoChat(creativeId) {
     },
     onError: (err, _msg, ctx) => {
       if (ctx?.prev) qc.setQueryData(['video-scenes', creativeId], ctx.prev)
-      onErr('Não foi possível conversar com o editor.')(err)
+      onErr(t('videoEditor.chatError'))(err)
     },
     onSuccess: (data) => {
       qc.setQueryData(['video-scenes', creativeId], (prev) => ({
@@ -141,6 +146,7 @@ export function useVideoAssets(creativeId, { enabled = true } = {}) {
 // (and don't re-render the video — the new image is used on the next render);
 // music is a free re-search + re-mix. The response carries the fresh element list.
 export function useRegenerateAsset(creativeId) {
+  const { t } = useTranslation('studio')
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ type, prompt, ref_url }) => videoScenesApi.regenerateAsset(creativeId, { type, prompt, ref_url }),
@@ -149,9 +155,9 @@ export function useRegenerateAsset(creativeId) {
       // A music change re-mixes the composed file → refresh the scenes/preview.
       if (variables?.type === 'music') qc.invalidateQueries({ queryKey: ['video-scenes', creativeId] })
       else qc.invalidateQueries({ queryKey: ['credits'] }) // an image generation was charged
-      toast.success(variables?.type === 'music' ? 'Trilha atualizada ✨' : 'Elemento regenerado ✨')
+      toast.success(variables?.type === 'music' ? t('videoEditor.musicUpdated') : t('videoEditor.assetRegenerated'))
     },
-    onError: onErr('Não foi possível regenerar o elemento.'),
+    onError: onErr(t('videoEditor.assetRegenerateError')),
   })
 }
 
@@ -167,26 +173,28 @@ export function useAssetLibrary(creativeId, { enabled = true } = {}) {
 // Add an element (uploaded URL or a library asset) under a role — free, no
 // re-render (used on the next render). Response carries the fresh element list.
 export function useAddAsset(creativeId) {
+  const { t } = useTranslation('studio')
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ url, role, description }) => videoScenesApi.addAsset(creativeId, { url, role, description }),
     onSuccess: (data) => {
       if (data.assets) qc.setQueryData(['video-assets', creativeId], { assets: data.assets })
-      toast.success('Elemento adicionado ✨')
+      toast.success(t('videoEditor.assetAdded'))
     },
-    onError: onErr('Não foi possível adicionar o elemento.'),
+    onError: onErr(t('videoEditor.assetAddError')),
   })
 }
 
 // Remove an element from the video — free, no re-render.
 export function useRemoveAsset(creativeId) {
+  const { t } = useTranslation('studio')
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ key }) => videoScenesApi.removeAsset(creativeId, { key }),
     onSuccess: (data) => {
       if (data.assets) qc.setQueryData(['video-assets', creativeId], { assets: data.assets })
-      toast.success('Elemento removido')
+      toast.success(t('videoEditor.assetRemoved'))
     },
-    onError: onErr('Não foi possível remover o elemento.'),
+    onError: onErr(t('videoEditor.assetRemoveError')),
   })
 }

@@ -89,6 +89,7 @@ function creativeToAttachments(creative) {
 // Root is a clickable <div> (not a <button>) so the delete control can nest as
 // a real <button> without invalid interactive-element nesting.
 function CreativeCard({ creative, onClick, onDelete, onEditScenes, deleting }) {
+  const { t } = useTranslation('ticket')
   const m = creativeMeta(creative?.creative_type)
   // While generating, the first rendered scene stands in (preview_url) so the
   // card shows the video taking shape instead of a blind spinner.
@@ -129,7 +130,7 @@ function CreativeCard({ creative, onClick, onDelete, onEditScenes, deleting }) {
               </div>
               {(generating || failed) && (
                 <span className={cn('text-[11px] font-medium', failed ? 'text-danger' : 'text-ink-muted')}>
-                  {generating ? 'Gerando…' : 'Falhou'}
+                  {generating ? t('creatives.generating') : t('creatives.failed')}
                 </span>
               )}
             </div>
@@ -139,7 +140,7 @@ function CreativeCard({ creative, onClick, onDelete, onEditScenes, deleting }) {
           {onDelete && !generating && (
             <button
               type="button"
-              aria-label="Excluir criativo"
+              aria-label={t('creatives.deleteAria')}
               disabled={deleting}
               onClick={(e) => { e.stopPropagation(); onDelete(creative) }}
               className="absolute right-2 top-2 z-10 grid size-7 place-items-center rounded-full bg-white/90 text-ink-muted opacity-100 shadow-sm backdrop-blur transition focus:opacity-100 focus:outline-none hover:bg-danger hover:text-white disabled:opacity-50 sm:opacity-0 sm:group-hover:opacity-100"
@@ -153,16 +154,16 @@ function CreativeCard({ creative, onClick, onDelete, onEditScenes, deleting }) {
           {onEditScenes && (
             <button
               type="button"
-              aria-label="Editar cenas"
+              aria-label={t('creatives.editScenesAria')}
               onClick={(e) => { e.stopPropagation(); onEditScenes(creative) }}
               className="absolute left-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-brand px-2.5 py-1 text-[11px] font-bold text-white shadow-sm transition hover:bg-brand/90"
             >
-              <Film size={12} /> Cenas
+              <Film size={12} /> {t('creatives.scenes')}
             </button>
           )}
           {hasAssets && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/20 group-hover:opacity-100">
-              <Badge className="bg-white/90 px-3 py-1 tracking-normal text-ink shadow">Ver</Badge>
+              <Badge className="bg-white/90 px-3 py-1 tracking-normal text-ink shadow">{t('creatives.view')}</Badge>
             </div>
           )}
         </div>
@@ -183,18 +184,19 @@ function CreativeCard({ creative, onClick, onDelete, onEditScenes, deleting }) {
 
 // The "Adicionar criativo" split action — generate / upload / use-from-studio.
 function AddCreativeMenu({ trigger, onGenerateOpen, onUploadOpen, onPickerOpen }) {
+  const { t } = useTranslation('ticket')
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-56">
         <DropdownMenuItem onClick={onGenerateOpen}>
-          <Sparkles size={14} /> Gerar com IA
+          <Sparkles size={14} /> {t('creatives.generateWithAi')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onUploadOpen}>
-          <UploadCloud size={14} /> Enviar arquivo
+          <UploadCloud size={14} /> {t('creatives.uploadFile')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onPickerOpen}>
-          <LibraryBig size={14} /> Usar do estúdio
+          <LibraryBig size={14} /> {t('creatives.useFromStudio')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -204,6 +206,7 @@ function AddCreativeMenu({ trigger, onGenerateOpen, onUploadOpen, onPickerOpen }
 // Upload dialog — attaches an image/video file straight to the ticket as a
 // creative, picking the creative type up front (drives the network-fit spec).
 function UploadDialog({ open, onOpenChange, onUpload, uploading, types = [] }) {
+  const { t } = useTranslation('ticket')
   // Only the types that make sense for this ticket; fall back to feed_image.
   const options = types.length ? types : ['feed_image']
   const [creativeType, setCreativeType] = useState(options[0])
@@ -229,13 +232,13 @@ function UploadDialog({ open, onOpenChange, onUpload, uploading, types = [] }) {
         <form onSubmit={submit}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <UploadCloud size={18} className="text-brand" /> Enviar arquivo
+              <UploadCloud size={18} className="text-brand" /> {t('creatives.upload.title')}
             </DialogTitle>
-            <DialogDescription>Envie uma peça já pronta — imagem ou vídeo.</DialogDescription>
+            <DialogDescription>{t('creatives.upload.description')}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-3.5 py-2">
             <div className="space-y-1.5">
-              <Label>Tipo de criativo</Label>
+              <Label>{t('creatives.upload.typeLabel')}</Label>
               {/* Switching type may make already-picked files incompatible — clear them. */}
               <Select value={creativeType} onValueChange={(v) => { setCreativeType(v); setFiles([]) }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -247,7 +250,7 @@ function UploadDialog({ open, onOpenChange, onUpload, uploading, types = [] }) {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Arquivo</Label>
+              <Label>{t('creatives.upload.fileLabel')}</Label>
               <input
                 ref={inputRef}
                 type="file"
@@ -258,8 +261,8 @@ function UploadDialog({ open, onOpenChange, onUpload, uploading, types = [] }) {
                   const picked = Array.from(e.target.files || [])
                   const ok = picked.filter((f) => fileMatchesCreativeType(f, creativeType))
                   if (ok.length < picked.length) {
-                    const label = CREATIVE_TYPE_META[creativeType]?.label || 'esse tipo'
-                    toast.error(`Arquivo incompatível: ${label} não aceita esse formato.`)
+                    const label = CREATIVE_TYPE_META[creativeType]?.label || t('creatives.upload.thatType')
+                    toast.error(t('creatives.upload.incompatible', { label }))
                   }
                   setFiles(ok)
                 }}
@@ -271,22 +274,22 @@ function UploadDialog({ open, onOpenChange, onUpload, uploading, types = [] }) {
               >
                 <UploadCloud size={15} />
                 {files.length > 0
-                  ? `${files.length} arquivo${files.length > 1 ? 's' : ''} selecionado${files.length > 1 ? 's' : ''}`
-                  : 'Selecionar imagem ou vídeo'}
+                  ? t('creatives.upload.selected', { count: files.length })
+                  : t('creatives.upload.select')}
               </button>
             </div>
             <div className="space-y-1.5">
-              <Label>Legenda (opcional)</Label>
-              <Textarea value={caption} onChange={(e) => setCaption(e.target.value)} rows={2} placeholder="Uma nota sobre esta peça…" />
+              <Label>{t('creatives.upload.captionLabel')}</Label>
+              <Textarea value={caption} onChange={(e) => setCaption(e.target.value)} rows={2} placeholder={t('creatives.upload.captionPlaceholder')} />
             </div>
           </div>
           <DialogFooter>
             <DialogClose asChild>
-              <Button type="button" variant="ghost" size="sm">Cancelar</Button>
+              <Button type="button" variant="ghost" size="sm">{t('actions.cancel')}</Button>
             </DialogClose>
             <Button type="submit" size="sm" disabled={!files.length || uploading}>
               {uploading ? <Spinner size={14} className="border-white/30 border-t-white" /> : <UploadCloud size={14} />}
-              Enviar
+              {t('creatives.upload.submit')}
             </Button>
           </DialogFooter>
         </form>
@@ -299,6 +302,7 @@ function UploadDialog({ open, onOpenChange, onUpload, uploading, types = [] }) {
 // to this ticket. Searchable by name/caption and restricted to the ticket's
 // SUPPORTED types, so unsupported pieces never appear as choices.
 function StudioPickerDialog({ open, onOpenChange, onAttach, attaching, supportedTypes = [] }) {
+  const { t } = useTranslation('ticket')
   const [q, setQ] = useState('')
   const filters = {
     unassigned: true,
@@ -320,9 +324,9 @@ function StudioPickerDialog({ open, onOpenChange, onAttach, attaching, supported
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <LibraryBig size={18} className="text-brand" /> Usar criativo do estúdio
+            <LibraryBig size={18} className="text-brand" /> {t('creatives.picker.title')}
           </DialogTitle>
-          <DialogDescription>Anexe a este ticket uma peça já gerada no estúdio (apenas dos tipos que este ticket aceita).</DialogDescription>
+          <DialogDescription>{t('creatives.picker.description')}</DialogDescription>
         </DialogHeader>
 
         <div className="relative">
@@ -330,7 +334,7 @@ function StudioPickerDialog({ open, onOpenChange, onAttach, attaching, supported
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Buscar por nome ou legenda…"
+            placeholder={t('creatives.picker.searchPlaceholder')}
             className="w-full rounded-xl border border-border bg-surface py-2 pl-9 pr-3 text-sm text-ink outline-none focus:ring-2 focus:ring-brand/40"
           />
         </div>
@@ -340,10 +344,10 @@ function StudioPickerDialog({ open, onOpenChange, onAttach, attaching, supported
         ) : items.length === 0 ? (
           <EmptyState
             icon={LibraryBig}
-            title={q ? 'Nada encontrado' : 'Nada disponível'}
+            title={q ? t('creatives.picker.emptySearchTitle') : t('creatives.picker.emptyTitle')}
             description={q
-              ? 'Nenhuma peça do estúdio (dos tipos aceitos) corresponde à busca.'
-              : 'Nenhum criativo livre dos tipos que este ticket aceita — gere um no estúdio ou ajuste o escopo.'}
+              ? t('creatives.picker.emptySearchDescription')
+              : t('creatives.picker.emptyDescription')}
             color="#7C3AED"
           />
         ) : (
@@ -378,7 +382,7 @@ function StudioPickerDialog({ open, onOpenChange, onAttach, attaching, supported
         )}
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="ghost" size="sm">Cancelar</Button>
+            <Button variant="ghost" size="sm">{t('actions.cancel')}</Button>
           </DialogClose>
         </DialogFooter>
       </DialogContent>
@@ -391,6 +395,7 @@ export default function CreativesPanel({
   onAttach, attaching = false, onDelete, deleting = false,
   creativeTypes = [], channels = [],
 }) {
+  const { t } = useTranslation('ticket')
   // Only offer uploading the types that make sense for this ticket (its scoped
   // types, fitting its channels) — a reel/TikTok ticket never offers a carousel.
   const uploadTypes = uploadableTypesForTicket(creativeTypes, channels)
@@ -464,9 +469,9 @@ export default function CreativesPanel({
         <div className="flex items-center gap-2.5">
           <IconTile icon={ImagePlus} size="sm" tint="18" strokeWidth={2.3} />
           <div>
-            <h3 className="font-display text-base font-bold text-ink">Criativos</h3>
+            <h3 className="font-display text-base font-bold text-ink">{t('creatives.title')}</h3>
             <p className="text-xs text-ink-muted">
-              {items.length > 0 ? `${items.length} criativo${items.length > 1 ? 's' : ''}` : 'Gere, envie ou use uma peça do estúdio.'}
+              {items.length > 0 ? t('creatives.count', { count: items.length }) : t('creatives.hint')}
             </p>
           </div>
         </div>
@@ -477,7 +482,7 @@ export default function CreativesPanel({
           trigger={(
             <Button size="sm" disabled={busy}>
               {busy ? <Spinner size={14} className="border-white/30 border-t-white" /> : <Sparkles size={14} />}
-              Adicionar criativo
+              {t('creatives.add')}
               <ChevronDown size={13} />
             </Button>
           )}
@@ -488,15 +493,15 @@ export default function CreativesPanel({
         {displayItems.length === 0 ? (
           <EmptyState
             icon={ImagePlus}
-            title="Nenhum criativo ainda"
-            description="Gere com IA, envie um arquivo ou use uma peça já gerada no estúdio."
+            title={t('creatives.empty.title')}
+            description={t('creatives.empty.description')}
             color="#7C3AED"
             action={(
               <AddCreativeMenu
                 onGenerateOpen={() => setOpen(true)}
                 onUploadOpen={() => setUploadOpen(true)}
                 onPickerOpen={() => setPickerOpen(true)}
-                trigger={<Button size="sm" disabled={busy}><Sparkles size={14} /> Adicionar criativo <ChevronDown size={13} /></Button>}
+                trigger={<Button size="sm" disabled={busy}><Sparkles size={14} /> {t('creatives.add')} <ChevronDown size={13} /></Button>}
               />
             )}
           />
@@ -534,14 +539,14 @@ export default function CreativesPanel({
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Sparkles size={18} className="text-brand" /> Gerar criativo
+              <Sparkles size={18} className="text-brand" /> {t('creatives.generateTitle')}
             </DialogTitle>
-            <DialogDescription>Escolha o tipo de peça e confirme — a geração consome créditos.</DialogDescription>
+            <DialogDescription>{t('creatives.generateDescription')}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-2.5">
             {generatable.length === 0 && (
               <p className="rounded-2xl border border-dashed border-border bg-surface px-4 py-6 text-center text-sm text-ink-muted">
-                Nenhum tipo de peça gerável para os canais e tipos deste ticket. Envie um arquivo ou ajuste o escopo.
+                {t('creatives.nothingGeneratable')}
               </p>
             )}
             {generatable.map((g) => {
@@ -573,11 +578,11 @@ export default function CreativesPanel({
                     if (credits === null) {
                       // Pricing still loading — fall back to the metered/free hint.
                       return kindMeta?.metered
-                        ? <Badge variant="warning" className="px-2 text-[10px] tracking-normal">Metrado</Badge>
-                        : <Badge variant="success" className="bg-emerald/15 px-2 text-[10px] tracking-normal">Grátis</Badge>
+                        ? <Badge variant="warning" className="px-2 text-[10px] tracking-normal">{t('creatives.metered')}</Badge>
+                        : <Badge variant="success" className="bg-emerald/15 px-2 text-[10px] tracking-normal">{t('creatives.free')}</Badge>
                     }
                     if (credits <= 0) {
-                      return <Badge variant="success" className="bg-emerald/15 px-2 text-[10px] tracking-normal">Grátis</Badge>
+                      return <Badge variant="success" className="bg-emerald/15 px-2 text-[10px] tracking-normal">{t('creatives.free')}</Badge>
                     }
                     return (
                       <Badge variant="warning" className="whitespace-nowrap px-2 text-[10px] tracking-normal">
@@ -591,11 +596,11 @@ export default function CreativesPanel({
           </div>
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="ghost" size="sm">Cancelar</Button>
+              <Button variant="ghost" size="sm">{t('actions.cancel')}</Button>
             </DialogClose>
             <Button size="sm" onClick={fire} disabled={!selectedKind || generating}>
               {generating ? <Spinner size={14} className="border-white/30 border-t-white" /> : <Sparkles size={14} />}
-              Gerar
+              {t('creatives.generate')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -615,15 +620,15 @@ export default function CreativesPanel({
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Trash2 size={18} className="text-danger" /> Excluir criativo
+              <Trash2 size={18} className="text-danger" /> {t('creatives.deleteTitle')}
             </DialogTitle>
             <DialogDescription>
-              Esta ação não pode ser desfeita. O criativo “{pendingDelete?.name || creativeMeta(pendingDelete?.creative_type).label}” será removido permanentemente.
+              {t('creatives.deleteDescription', { name: pendingDelete?.name || creativeMeta(pendingDelete?.creative_type).label })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="ghost" size="sm">Cancelar</Button>
+              <Button variant="ghost" size="sm">{t('actions.cancel')}</Button>
             </DialogClose>
             <Button
               variant="destructive"
@@ -632,7 +637,7 @@ export default function CreativesPanel({
               onClick={() => { onDelete?.(pendingDelete.id); setPendingDelete(null) }}
             >
               {deleting ? <Spinner size={14} className="border-white/30 border-t-white" /> : <Trash2 size={14} />}
-              Excluir
+              {t('actions.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

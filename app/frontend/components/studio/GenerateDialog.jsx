@@ -573,16 +573,17 @@ function Field({ label, htmlFor, count, max, action, children }) {
 // The prompt wand: hands the draft + full video context to the AI and streams
 // a sharper prompt back into the field.
 function ImproveWand({ onClick, improving, disabled }) {
+  const { t } = useTranslation('studio')
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled || !!improving}
-      title="Melhorar esse prompt"
+      title={t('improve.title')}
       className="inline-flex items-center gap-1 text-[11px] font-bold text-brand transition hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
     >
       {improving ? <InlineSpinner size={12} /> : <Wand2 size={12} />}
-      {improving === 'thinking' ? 'Melhorando…' : improving === 'typing' ? 'Escrevendo…' : 'Melhorar'}
+      {improving === 'thinking' ? t('improve.improving') : improving === 'typing' ? t('improve.typing') : t('improve.cta')}
     </button>
   )
 }
@@ -599,6 +600,7 @@ function PromptShimmer() {
 }
 
 function GeneratingState({ color, label, video = false }) {
+  const { t } = useTranslation('studio')
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
       <div className="relative grid size-16 place-items-center rounded-2xl" style={{ background: `${color}14`, color }}>
@@ -607,23 +609,24 @@ function GeneratingState({ color, label, video = false }) {
       </div>
       {/* Video opens an interview (no generation yet) — don't say "gerando". */}
       <p className="font-display text-lg font-bold text-ink">
-        {video ? 'Abrindo o editor…' : `Gerando ${label.toLowerCase()}…`}
+        {video ? t('generating.openingEditor') : t('generating.title', { kind: label.toLowerCase() })}
       </p>
       <p className="max-w-xs text-sm text-ink-muted">
-        {video ? 'Vou fazer algumas perguntas para acertar o vídeo.' : 'A IA está criando seu criativo. Isso leva alguns instantes.'}
+        {video ? t('generating.videoBody') : t('generating.body')}
       </p>
     </div>
   )
 }
 
 function SuccessState() {
+  const { t } = useTranslation('studio')
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
       <div className="grid size-16 place-items-center rounded-2xl bg-emerald/12 text-emerald">
         <CheckCircle2 size={32} strokeWidth={2.4} />
       </div>
-      <p className="font-display text-lg font-bold text-ink">Geração enviada!</p>
-      <p className="max-w-xs text-sm text-ink-muted">Acompanhe o progresso em “Gerações recentes”.</p>
+      <p className="font-display text-lg font-bold text-ink">{t('success.title')}</p>
+      <p className="max-w-xs text-sm text-ink-muted">{t('success.body')}</p>
     </div>
   )
 }

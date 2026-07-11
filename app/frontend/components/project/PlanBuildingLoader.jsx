@@ -1,27 +1,29 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 // The phases the strategist moves through — cycled as ambient copy so the wait
 // feels like watching the plan take shape rather than a dead spinner.
-const PHASES = [
-  'Lendo o contexto da marca…',
-  'Desenhando a cadência do mês…',
-  'Escolhendo os ganchos certos…',
-  'Escrevendo os briefings…',
-  'Agendando as postagens…',
-  'Estimando as tarefas de produção…',
-  'Dando os retoques finais…',
+const PHASE_KEYS = [
+  'readingBrandContext',
+  'designingCadence',
+  'choosingHooks',
+  'writingBriefs',
+  'schedulingPosts',
+  'estimatingTasks',
+  'finishingTouches',
 ]
 
 // A mesmerizing "the agent is building your plan" animation: a drifting aurora,
 // a breathing spark medallion ringed by pulsing halos and orbiting particles,
 // and cycling status copy. Pure CSS/GPU transforms — no deps, seek-safe.
 export function PlanBuildingLoader({ className }) {
+  const { t } = useTranslation('projects')
   const [phase, setPhase] = useState(0)
   useEffect(() => {
-    const t = setInterval(() => setPhase((p) => (p + 1) % PHASES.length), 2100)
-    return () => clearInterval(t)
+    const id = setInterval(() => setPhase((p) => (p + 1) % PHASE_KEYS.length), 2100)
+    return () => clearInterval(id)
   }, [])
 
   return (
@@ -70,7 +72,7 @@ export function PlanBuildingLoader({ className }) {
         {/* Cycling phase copy */}
         <div className="flex min-h-[20px] items-center">
           <span key={phase} className="text-sm font-semibold text-ink-secondary [animation:pb-fade_2.1s_ease-in-out]">
-            {PHASES[phase]}
+            {t(`loader.${PHASE_KEYS[phase]}`)}
           </span>
         </div>
 

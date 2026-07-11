@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Building2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,6 +16,7 @@ const ACCENT = '#6366F1'
 // membership, settings and a trialing subscription, switches the session into
 // the new workspace, and the mutation hard-loads the dashboard.
 export default function CreateWorkspaceDialog({ open, onOpenChange }) {
+  const { t } = useTranslation('billing')
   const { create } = useWorkspaceMutations()
   const [name, setName] = useState('')
 
@@ -32,29 +34,29 @@ export default function CreateWorkspaceDialog({ open, onOpenChange }) {
       <DialogContent className="max-w-md">
         <DialogHeader>
           <IconTile icon={Building2} color={ACCENT} className="mb-1 size-11" iconSize={22} />
-          <DialogTitle>Novo workspace</DialogTitle>
+          <DialogTitle>{t('createWorkspace.title')}</DialogTitle>
           <DialogDescription>
-            Crie uma nova agência. Você será o owner e entrará nela automaticamente.
+            {t('createWorkspace.description')}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="ws-name">Nome do workspace</Label>
+            <Label htmlFor="ws-name">{t('createWorkspace.nameLabel')}</Label>
             <Input
               id="ws-name"
               autoFocus
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Minha Agência"
+              placeholder={t('createWorkspace.namePlaceholder')}
             />
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={close}>Cancelar</Button>
+            <Button type="button" variant="ghost" onClick={close}>{t('createWorkspace.cancel')}</Button>
             <Button type="submit" disabled={!name.trim() || create.isPending}>
-              {create.isPending ? 'Criando…' : 'Criar workspace'}
+              {create.isPending ? t('createWorkspace.creating') : t('createWorkspace.create')}
             </Button>
           </DialogFooter>
         </form>

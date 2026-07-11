@@ -1,9 +1,11 @@
 import { lazy, Suspense, useState, useMemo, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   Sparkles, GalleryHorizontalEnd, Video, Image as ImageIcon,
   Images, Trash2,
 } from 'lucide-react'
+import i18n from '@/i18n'
 import { useStudio, useGenerate, useStartVideo, useWorkspaceCreativesInfinite, useCreativeMutations } from '@/hooks/useData'
 import { useCurrentUser } from '@/hooks/useAuth'
 import { useGenerationsChannel } from '@/hooks/useRealtime'
@@ -30,17 +32,18 @@ const isSceneEditable = (c) => c?.source === 'generated' && ['ugc_video', 'reel'
 const HERO = '#F43F5E'
 
 const GENERATORS = [
-  { kind: 'carousel', icon: GalleryHorizontalEnd, title: 'Carrossel', subtitle: 'Viral · ideia, texto ou link', color: '#7C3AED' },
-  { kind: 'video', icon: Video, title: 'Vídeo', subtitle: 'Avatar falando ou produto a partir de fotos', color: '#F43F5E' },
-  { kind: 'image', icon: ImageIcon, title: 'Imagem', subtitle: 'Imagem original via prompt', color: '#0EA5E9' },
+  { kind: 'carousel', icon: GalleryHorizontalEnd, color: '#7C3AED' },
+  { kind: 'video', icon: Video, color: '#F43F5E' },
+  { kind: 'image', icon: ImageIcon, color: '#0EA5E9' },
 ]
 
 const CREATIVE_STATUS_META = {
-  generating: { label: 'Gerando…', variant: 'warning' },
-  failed: { label: 'Falhou', variant: 'danger' },
+  generating: { get label() { return i18n.t('studio:gallery.status.generating') }, variant: 'warning' },
+  failed: { get label() { return i18n.t('studio:gallery.status.failed') }, variant: 'danger' },
 }
 
 export default function StudioIndex() {
+  const { t } = useTranslation('studio')
   const { data: studio, isLoading } = useStudio()
   const { data: me } = useCurrentUser()
   const workspaceId = me?.workspace?.id
@@ -73,11 +76,11 @@ export default function StudioIndex() {
   return (
     <Page className="animate-rise">
       <PageHeader
-        eyebrow="Criação"
-        title="Estúdio"
+        eyebrow={t('page.eyebrow')}
+        title={t('page.title')}
         icon={Sparkles}
         color={HERO}
-        description="Gere criativos com IA no padrão da marca do cliente e gerencie sua biblioteca."
+        description={t('page.description')}
       />
 
       {/* Generators — the primary action */}
@@ -86,8 +89,8 @@ export default function StudioIndex() {
           <GeneratorCard
             key={g.kind}
             icon={g.icon}
-            title={g.title}
-            subtitle={g.subtitle}
+            title={t(`generators.${g.kind}.title`)}
+            subtitle={t(`generators.${g.kind}.subtitle`)}
             color={g.color}
             onClick={() => setDialogKind(g.kind)}
           />
@@ -119,6 +122,7 @@ export default function StudioIndex() {
 
 // ── Creatives gallery ──────────────────────────────────────────────
 function CreativesGallery() {
+  const { t } = useTranslation('studio')
   const [q, setQ] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const [clientFilter, setClientFilter] = useState('')
@@ -147,9 +151,9 @@ function CreativesGallery() {
 
   const handleDelete = async (creative) => {
     const ok = await confirm({
-      title: 'Excluir criativo?',
-      description: 'Esta ação não pode ser desfeita.',
-      confirmLabel: 'Excluir',
+      title: t('gallery.deleteTitle'),
+      description: t('gallery.deleteDescription'),
+      confirmLabel: t('gallery.deleteConfirm'),
       destructive: true,
     })
     if (ok) mutations.destroy.mutate(creative.id)
@@ -166,9 +170,9 @@ function CreativesGallery() {
 
   const typeOptions = Object.entries(CREATIVE_TYPE_META).map(([key, m]) => ({ value: key, label: m.label, icon: m.icon, color: m.color }))
   const filterSpec = [
-    { key: 'type', type: 'options', label: 'Tipo', options: typeOptions },
+    { key: 'type', type: 'options', label: t('gallery.filterType'), options: typeOptions },
     ...(clients.length > 0
-      ? [{ key: 'client_id', type: 'options', label: 'Cliente', options: clients.map((c) => ({ value: String(c.id), label: c.name })) }]
+      ? [{ key: 'client_id', type: 'options', label: t('gallery.filterClient'), options: clients.map((c) => ({ value: String(c.id), label: c.name })) }]
       : []),
   ]
   const filterValues = { type: typeFilter || undefined, client_id: clientFilter || undefined }
@@ -186,7 +190,7 @@ function CreativesGallery() {
         search
         searchValue={q}
         onSearch={(v) => setQ(v || '')}
-        searchPlaceholder="Buscar por nome ou legenda…"
+        searchPlaceholder={t('gallery.searchPlaceholder')}
         filters={filterSpec}
         values={filterValues}
         onChange={onFilterChange}
@@ -200,8 +204,8 @@ function CreativesGallery() {
         <EmptyState
           icon={Images}
           color={HERO}
-          title="Nenhum criativo ainda"
-          description="Gere um carrossel, vídeo ou imagem com IA usando os geradores acima."
+          title={t('gallery.empty.title')}
+          description={t('gallery.empty.description')}
         />
       ) : (
         <>
@@ -272,6 +276,7 @@ function creativeToAttachments(creative) {
 
 // ── Gallery card ───────────────────────────────────────────────────
 function GalleryCard({ creative, onClick, onDelete }) {
+  const { t } = useTranslation('studio')
   const m = creativeMeta(creative.creative_type)
   const st = CREATIVE_STATUS_META[creative.status]
   // While a video is still generating, the first rendered scene stands in as the
@@ -286,7 +291,7 @@ function GalleryCard({ creative, onClick, onDelete }) {
         onClick={onClick}
         className="relative block w-full"
         style={{ paddingBottom: '100%' }}
-        aria-label={`Ver ${m.label}`}
+        aria-label={t('gallery.view', { type: m.label })}
       >
         <div className="absolute inset-0 overflow-hidden" style={{ background: `${m.color}12` }}>
           {thumb ? (
@@ -311,7 +316,7 @@ function GalleryCard({ creative, onClick, onDelete }) {
           {creative.source === 'generated' && (
             <div className="absolute right-2 top-2">
               <span className="inline-flex items-center gap-1 rounded-full bg-white/85 px-1.5 py-0.5 text-[10px] font-bold text-brand shadow-sm backdrop-blur">
-                <Sparkles size={9} /> IA
+                <Sparkles size={9} /> {t('gallery.aiBadge')}
               </span>
             </div>
           )}
@@ -330,7 +335,7 @@ function GalleryCard({ creative, onClick, onDelete }) {
           type="button"
           onClick={(e) => { e.stopPropagation(); onDelete() }}
           className="flex size-7 items-center justify-center rounded-lg bg-surface/90 shadow backdrop-blur hover:bg-danger/10"
-          title="Remover"
+          title={t('gallery.remove')}
         >
           <Trash2 size={13} className="text-danger" />
         </button>

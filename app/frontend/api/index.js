@@ -1,4 +1,5 @@
 import api from './client'
+import i18n from '@/i18n'
 
 export const authApi = {
   me: () => api.get('/me'),
@@ -414,7 +415,7 @@ export const strategyApi = {
         else if (event === 'generating') onGenerating?.()
         else if (event === 'proposal') onProposal?.(payload.plan)
         else if (event === 'done') done = { status: payload.status }
-        else if (event === 'error') throw new Error(payload.message || 'Erro no chat de estratégia.')
+        else if (event === 'error') throw new Error(payload.message || i18n.t('studio:strategyChatError'))
       }
     }
     return done

@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { pieceName, slotLabel } from '@/lib/creativeName'
 
-const QUICK_PICKS = ['Trocar as cores', 'Ajustar o texto', 'Mudar a imagem', 'Refazer do zero']
-
 // Branded, in-UI change request (never a native prompt). Scoped to one media-type
 // slot: when the slot has more than one option, the client points at the exact
 // piece to redo — only that one is regenerated with the feedback.
 export default function RequestChangesDialog({ open, onOpenChange, slot, accent, onSubmit, pending }) {
+  const { t } = useTranslation('portal')
+  const quickPicks = [t('dialog.quickPicks.swapColors'), t('dialog.quickPicks.adjustText'), t('dialog.quickPicks.changeImage'), t('dialog.quickPicks.redoFromScratch')]
   const options = slot?.options || []
   const [creativeId, setCreativeId] = useState(options[0]?.id)
   const [feedback, setFeedback] = useState('')
@@ -26,13 +27,13 @@ export default function RequestChangesDialog({ open, onOpenChange, slot, accent,
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Pedir ajustes</DialogTitle>
+          <DialogTitle>{t('card.requestChanges')}</DialogTitle>
           <p className="text-sm text-ink-muted">{slot ? slotLabel(slot.creative_type) : ''}</p>
         </DialogHeader>
 
         {options.length > 1 && (
           <div>
-            <label className="mb-1.5 block text-xs font-semibold text-ink-muted">Sobre qual opção?</label>
+            <label className="mb-1.5 block text-xs font-semibold text-ink-muted">{t('dialog.whichOption')}</label>
             <div className="flex flex-wrap gap-2">
               {options.map((o, i) => (
                 <button key={o.id} type="button" onClick={() => setCreativeId(o.id)}
@@ -47,13 +48,13 @@ export default function RequestChangesDialog({ open, onOpenChange, slot, accent,
         )}
 
         <div>
-          <label className="mb-1.5 block text-xs font-semibold text-ink-muted">O que você gostaria de ajustar?</label>
+          <label className="mb-1.5 block text-xs font-semibold text-ink-muted">{t('dialog.whatToAdjust')}</label>
           <textarea autoFocus rows={4} value={feedback} onChange={(e) => setFeedback(e.target.value)}
-            placeholder="Descreva os ajustes que a equipe deve fazer…"
+            placeholder={t('dialog.placeholder')}
             className="w-full resize-none rounded-xl border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:ring-2"
             style={{ '--tw-ring-color': accent }} />
           <div className="mt-2 flex flex-wrap gap-1.5">
-            {QUICK_PICKS.map((p) => (
+            {quickPicks.map((p) => (
               <button key={p} type="button" onClick={() => addPick(p)}
                 className="rounded-full border border-border px-2.5 py-1 text-xs text-ink-muted transition hover:bg-surface-muted">
                 {p}
@@ -63,9 +64,9 @@ export default function RequestChangesDialog({ open, onOpenChange, slot, accent,
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={pending}>Cancelar</Button>
+          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={pending}>{t('dialog.cancel')}</Button>
           <Button onClick={submit} disabled={pending || !feedback.trim()} style={{ background: accent }}>
-            {pending ? 'Enviando…' : 'Enviar ajuste'}
+            {pending ? t('dialog.sending') : t('dialog.send')}
           </Button>
         </DialogFooter>
       </DialogContent>

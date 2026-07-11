@@ -1,17 +1,20 @@
 import * as React from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   addMonths, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay,
   isSameMonth, isToday, parse, startOfMonth, startOfWeek, subMonths,
 } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
+import { ptBR, enUS } from 'date-fns/locale'
+import i18n from '@/i18n'
 import { CalendarDays, ChevronLeft, ChevronRight, Clock, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   Popover, PopoverTrigger, PopoverContent,
 } from '@/components/ui/popover'
 
-const WEEKDAYS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s)
+// The date-fns locale to match the active app language.
+const dfLocale = () => (String(i18n.language || '').startsWith('pt') ? ptBR : enUS)
 
 // Parse a stored value string into a Date, tolerating empties / bad input.
 function parseValue(value, withTime) {
@@ -31,6 +34,8 @@ const triggerClass = (empty) =>
 
 // ── The month grid, shared by both pickers ────────────────────────────────
 function MonthGrid({ selected, onPick }) {
+  const { t } = useTranslation('ui')
+  const weekdays = t('datePicker.weekdays').split(',')
   const [view, setView] = React.useState(selected || new Date())
 
   // Re-center on the selected value whenever it changes (e.g. popover reopens).
@@ -49,25 +54,25 @@ function MonthGrid({ selected, onPick }) {
           type="button"
           onClick={() => setView((v) => subMonths(v, 1))}
           className="grid size-7 place-items-center rounded-lg text-ink-muted transition hover:bg-surface-muted hover:text-ink"
-          aria-label="Mês anterior"
+          aria-label={t('datePicker.prevMonth')}
         >
           <ChevronLeft size={16} />
         </button>
         <span className="text-sm font-bold text-ink">
-          {cap(format(view, 'MMMM yyyy', { locale: ptBR }))}
+          {cap(format(view, 'MMMM yyyy', { locale: dfLocale() }))}
         </span>
         <button
           type="button"
           onClick={() => setView((v) => addMonths(v, 1))}
           className="grid size-7 place-items-center rounded-lg text-ink-muted transition hover:bg-surface-muted hover:text-ink"
-          aria-label="Próximo mês"
+          aria-label={t('datePicker.nextMonth')}
         >
           <ChevronRight size={16} />
         </button>
       </div>
 
       <div className="mb-1 grid grid-cols-7">
-        {WEEKDAYS.map((d, i) => (
+        {weekdays.map((d, i) => (
           <span key={i} className="grid h-7 place-items-center text-[11px] font-bold uppercase text-ink-faint">
             {d}
           </span>
@@ -104,8 +109,9 @@ function MonthGrid({ selected, onPick }) {
 
 // ── Date-only picker — value/onChange use the 'yyyy-MM-dd' string ──────────
 export function DatePicker({
-  value, onChange, placeholder = 'Selecione uma data', id, className, disabled, align = 'start',
+  value, onChange, placeholder, id, className, disabled, align = 'start',
 }) {
+  const { t } = useTranslation('ui')
   const [open, setOpen] = React.useState(false)
   const selected = parseValue(value, false)
 
@@ -120,13 +126,13 @@ export function DatePicker({
         <button type="button" id={id} disabled={disabled} className={cn(triggerClass(!selected), className)}>
           <CalendarDays size={16} className="shrink-0 text-ink-muted" />
           <span className="flex-1 truncate">
-            {selected ? cap(format(selected, "dd 'de' MMM 'de' yyyy", { locale: ptBR })) : placeholder}
+            {selected ? cap(format(selected, t('datePicker.dateFormat'), { locale: dfLocale() })) : (placeholder ?? t('datePicker.selectDate'))}
           </span>
           {selected && !disabled && (
             <span
               role="button"
               tabIndex={-1}
-              aria-label="Limpar data"
+              aria-label={t('datePicker.clearDate')}
               onClick={(e) => { e.stopPropagation(); onChange?.('') }}
               className="grid size-5 place-items-center rounded-md text-ink-faint transition hover:bg-surface-muted hover:text-ink"
             >
@@ -144,8 +150,9 @@ export function DatePicker({
 
 // ── Date + time picker — value/onChange use the 'yyyy-MM-ddTHH:mm' string ──
 export function DateTimePicker({
-  value, onChange, placeholder = 'Selecione data e hora', id, className, disabled, align = 'start',
+  value, onChange, placeholder, id, className, disabled, align = 'start',
 }) {
+  const { t } = useTranslation('ui')
   const [open, setOpen] = React.useState(false)
   const selected = parseValue(value, true)
   const hh = selected ? format(selected, 'HH') : '09'
@@ -171,13 +178,13 @@ export function DateTimePicker({
         <button type="button" id={id} disabled={disabled} className={cn(triggerClass(!selected), className)}>
           <CalendarDays size={16} className="shrink-0 text-ink-muted" />
           <span className="flex-1 truncate">
-            {selected ? cap(format(selected, "dd MMM yyyy 'às' HH:mm", { locale: ptBR })) : placeholder}
+            {selected ? cap(format(selected, t('datePicker.dateTimeFormat'), { locale: dfLocale() })) : (placeholder ?? t('datePicker.selectDateTime'))}
           </span>
           {selected && !disabled && (
             <span
               role="button"
               tabIndex={-1}
-              aria-label="Limpar data"
+              aria-label={t('datePicker.clearDate')}
               onClick={(e) => { e.stopPropagation(); onChange?.('') }}
               className="grid size-5 place-items-center rounded-md text-ink-faint transition hover:bg-surface-muted hover:text-ink"
             >
@@ -190,14 +197,14 @@ export function DateTimePicker({
         <MonthGrid selected={selected} onPick={pickDay} />
         <div className="mt-3 flex items-center gap-2 border-t border-border pt-3">
           <Clock size={15} className="text-ink-muted" />
-          <span className="text-xs font-semibold text-ink-muted">Horário</span>
+          <span className="text-xs font-semibold text-ink-muted">{t('datePicker.time')}</span>
           <div className="ml-auto flex items-center gap-1">
             <input
               inputMode="numeric"
               value={hh}
               onChange={(e) => setTime(clampPad(e.target.value, 23), mm)}
               className="h-9 w-12 rounded-lg border border-border bg-surface-muted text-center text-sm font-bold text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
-              aria-label="Hora"
+              aria-label={t('datePicker.hour')}
             />
             <span className="font-bold text-ink-muted">:</span>
             <input
@@ -205,7 +212,7 @@ export function DateTimePicker({
               value={mm}
               onChange={(e) => setTime(hh, clampPad(e.target.value, 59))}
               className="h-9 w-12 rounded-lg border border-border bg-surface-muted text-center text-sm font-bold text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
-              aria-label="Minuto"
+              aria-label={t('datePicker.minute')}
             />
           </div>
         </div>
@@ -215,7 +222,7 @@ export function DateTimePicker({
             onClick={() => setOpen(false)}
             className="rounded-lg bg-brand px-3 py-1.5 text-xs font-bold text-white transition hover:brightness-105"
           >
-            Concluir
+            {t('datePicker.done')}
           </button>
         </div>
       </PopoverContent>

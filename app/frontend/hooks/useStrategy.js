@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { strategyApi } from '@/api'
 import { keys } from '@/api/queryKeys'
@@ -17,16 +18,18 @@ export function useStrategySession(projectId, { enabled = true } = {}) {
 
 // Start (or resume) a session — used when the user opens the planner.
 export function useStartStrategy(projectId) {
+  const { t } = useTranslation('studio')
   const qc = useQueryClient()
   return useMutation({
     mutationFn: () => strategyApi.start(projectId),
     onSuccess: (d) => qc.setQueryData(keys.strategy(projectId), d),
-    onError: (err) => toast.error(err?.error || 'Erro ao iniciar o planejamento.'),
+    onError: (err) => toast.error(err?.error || t('strategy.startError')),
   })
 }
 
 // Approve the proposed plan → create the scheduled tickets + subtasks.
 export function useApplyStrategy(projectId) {
+  const { t } = useTranslation('studio')
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (sessionId) => strategyApi.apply(sessionId),
@@ -36,24 +39,25 @@ export function useApplyStrategy(projectId) {
       qc.invalidateQueries({ queryKey: keys.project(projectId) })
       qc.invalidateQueries({ queryKey: ['projects'] })
       toast.success(d.count > 0
-        ? `${d.count} ticket(s) criado(s) a partir da estratégia ✨`
-        : 'Alterações aplicadas à campanha ✨')
+        ? t('strategy.applySuccess', { count: d.count })
+        : t('strategy.applySuccessNoTickets'))
     },
-    onError: (err) => toast.error(err?.error || 'Erro ao aplicar o plano.'),
+    onError: (err) => toast.error(err?.error || t('strategy.applyError')),
   })
 }
 
 // Discard a proposed plan (mark the session discarded) so it stops surfacing.
 export function useDiscardStrategy(projectId) {
+  const { t } = useTranslation('studio')
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (sessionId) => strategyApi.discard(sessionId),
     onSuccess: () => {
       qc.setQueryData(keys.strategy(projectId), { strategy_session: null })
       qc.invalidateQueries({ queryKey: keys.strategy(projectId) })
-      toast.success('Plano descartado.')
+      toast.success(t('strategy.discarded'))
     },
-    onError: (err) => toast.error(err?.error || 'Erro ao descartar o plano.'),
+    onError: (err) => toast.error(err?.error || t('strategy.discardError')),
   })
 }
 
@@ -74,6 +78,7 @@ const seedCards = (s) => (
 const seedAdditive = (s) => s?.status === 'proposed' && s?.proposed_plan?.mode === 'append'
 
 export function useStrategyPlan(projectId, session) {
+  const { t } = useTranslation('studio')
   const qc = useQueryClient()
   const sessionId = session?.id
   const [cards, setCards] = useState(() => seedCards(session))
@@ -142,9 +147,9 @@ export function useStrategyPlan(projectId, session) {
       setCreating(false)
       setGenerating(false)
       revisingKey.current = null
-      toast.error('Não consegui montar o plano agora. Tente pedir novamente.')
+      toast.error(t('strategy.buildFailed'))
     },
-  }), [qc, projectId])
+  }), [qc, projectId, t])
   useStrategyChannel(sessionId, handlers)
 
   return { cards, creating, generating, additive }
@@ -153,6 +158,7 @@ export function useStrategyPlan(projectId, session) {
 // Drives the CHAT only: local transcript + streaming send. The plan/proposal is
 // owned by useStrategyPlan (the table), fed by the same channel.
 export function useStrategyChat(projectId, session) {
+  const { t } = useTranslation('studio')
   const qc = useQueryClient()
   const [messages, setMessages] = useState(() => session?.messages || [])
   const [streaming, setStreaming] = useState(false)
@@ -195,11 +201,11 @@ export function useStrategyChat(projectId, session) {
           setPending(acc)
         },
       })
-      setMessages((m) => [...m, { role: 'assistant', content: acc || 'Certo! Deixa eu montar isso e já te trago a proposta.' }])
+      setMessages((m) => [...m, { role: 'assistant', content: acc || t('strategy.fallbackReply') }])
     } catch (err) {
       if (err?.name !== 'AbortError') {
-        toast.error(err?.message || 'Erro no chat de estratégia.')
-        setMessages((m) => [...m, { role: 'assistant', content: '⚠️ Ocorreu um erro. Tente novamente.' }])
+        toast.error(err?.message || t('strategy.chatError'))
+        setMessages((m) => [...m, { role: 'assistant', content: t('strategy.errorBubble') }])
       }
     } finally {
       setPending('')
@@ -209,7 +215,7 @@ export function useStrategyChat(projectId, session) {
       // the project so its header/dates reflect immediately.
       qc.invalidateQueries({ queryKey: keys.project(projectId) })
     }
-  }, [streaming, qc, projectId])
+  }, [streaming, qc, projectId, t])
 
   return { messages, streaming, pending, send, reset, appendAssistant }
 }

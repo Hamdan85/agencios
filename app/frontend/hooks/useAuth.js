@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { authApi, accountApi } from '@/api'
 import { keys } from '@/api/queryKeys'
@@ -75,6 +76,7 @@ export function useLogout() {
 // Profile + avatar mutations return the full `/me` payload, so we prime the
 // cache with it directly (no refetch needed).
 export function useUpdateAccount() {
+  const { t } = useTranslation('ui')
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (data) => accountApi.update(data),
@@ -85,38 +87,41 @@ export function useUpdateAccount() {
         // Server-rendered copy (API errors, system notes) changes language too.
         qc.invalidateQueries()
       }
-      toast.success('Perfil atualizado.')
+      toast.success(t('account.profileUpdated'))
     },
-    onError: (e) => toast.error(e?.error || 'Erro ao atualizar o perfil.'),
+    onError: (e) => toast.error(e?.error || t('account.profileError')),
   })
 }
 
 export function useUpdateAvatar() {
+  const { t } = useTranslation('ui')
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (file) => accountApi.updateAvatar(file),
-    onSuccess: (data) => { qc.setQueryData(keys.me(), data); toast.success('Foto atualizada.') },
-    onError: (e) => toast.error(e?.error || 'Erro ao enviar a foto.'),
+    onSuccess: (data) => { qc.setQueryData(keys.me(), data); toast.success(t('account.avatarUpdated')) },
+    onError: (e) => toast.error(e?.error || t('account.avatarError')),
   })
 }
 
 export function useUpdatePassword() {
+  const { t } = useTranslation('ui')
   return useMutation({
     mutationFn: (data) => accountApi.updatePassword(data),
-    onSuccess: () => toast.success('Senha alterada.'),
-    onError: (e) => toast.error(e?.error || 'Erro ao alterar a senha.'),
+    onSuccess: () => toast.success(t('account.passwordChanged')),
+    onError: (e) => toast.error(e?.error || t('account.passwordError')),
   })
 }
 
 export function useRequestEmailChange() {
+  const { t } = useTranslation('ui')
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (data) => accountApi.changeEmail(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: keys.me() })
-      toast.success('Enviamos um link de confirmação para o novo e-mail.')
+      toast.success(t('account.emailChangeSent'))
     },
-    onError: (e) => toast.error(e?.error || 'Erro ao solicitar a troca de e-mail.'),
+    onError: (e) => toast.error(e?.error || t('account.emailChangeError')),
   })
 }
 

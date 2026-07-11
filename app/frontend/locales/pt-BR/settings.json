@@ -1,0 +1,114 @@
+{
+  "page": {
+    "eyebrow": "Workspace",
+    "title": "Configurações",
+    "description": "Marca, equipe e integrações do workspace."
+  },
+  "tabs": {
+    "brand": "Marca",
+    "team": "Equipe",
+    "integrations": "Integrações"
+  },
+  "brand": {
+    "identity": {
+      "title": "Identidade da agência",
+      "description": "Logo, nome, voz e @ usados em legendas e criativos.",
+      "logoLabel": "Logo",
+      "currentLogo": "Logo atual",
+      "chooseImage": "Escolher imagem",
+      "logoHint": "PNG, JPG ou SVG",
+      "nameLabel": "Nome da agência",
+      "namePlaceholder": "Sua Agência",
+      "handleLabel": "@ padrão",
+      "handlePlaceholder": "suaagencia",
+      "voiceLabel": "Voz da marca",
+      "voicePlaceholder": "Descreva o tom e a personalidade da marca…",
+      "toneLabel": "Tom de comunicação",
+      "tonePlaceholder": "Ex: descontraído, inspirador"
+    },
+    "colors": {
+      "title": "Cores da marca",
+      "description": "Aplicadas em criativos gerados e na identidade visual.",
+      "primary": "Cor primária",
+      "secondary": "Cor secundária"
+    },
+    "autoPublish": {
+      "title": "Publicação automática",
+      "description": "Publicar posts automaticamente quando chegarem ao horário agendado."
+    },
+    "preview": "Pré-visualização",
+    "save": "Salvar alterações",
+    "saving": "Salvando…"
+  },
+  "team": {
+    "title": "Equipe",
+    "description": "Membros com acesso a este workspace.",
+    "memberFallback": "Membro",
+    "inviteTitle": "Convidar",
+    "inviteDescription": "Gere um link de convite para um novo membro.",
+    "emailLabel": "E-mail",
+    "emailPlaceholder": "pessoa@email.com",
+    "roleLabel": "Papel",
+    "generateInvite": "Gerar convite",
+    "generating": "Gerando…",
+    "inviteGenerated": "Convite gerado — compartilhe o link:",
+    "linkCopied": "Link copiado!"
+  },
+  "integrations": {
+    "servicesTitle": "Serviços",
+    "connected": "Conectado",
+    "disconnected": "Desconectado",
+    "active": "Ativo",
+    "connect": "Conectar",
+    "opening": "Abrindo…",
+    "disconnect": "Desconectar",
+    "disconnecting": "Desconectando…",
+    "demoUnavailable": "Conexão indisponível nesta demonstração.",
+    "mercadopago": {
+      "description": "Cobre seus clientes via Pix."
+    }
+  },
+  "generic": "Erro.",
+  "social": {
+    "noInstagram": "Esta Página não tem uma conta Instagram Business vinculada.",
+    "connectError": "Erro ao conectar. Tente novamente.",
+    "connected": "Conta conectada com sucesso!",
+    "startError": "Não foi possível iniciar a conexão.",
+    "disconnected": "Conta desconectada.",
+    "disconnectError": "Erro ao desconectar.",
+    "reconnected": "Conta reconectada.",
+    "reconnectError": "Erro ao reconectar."
+  },
+  "meetings": {
+    "scheduled": "Reunião agendada!"
+  },
+  "invoices": {
+    "created": "Cobrança criada!",
+    "markedPaid": "Cobrança marcada como paga.",
+    "linkGenerated": "Link de pagamento gerado!",
+    "linkError": "Erro ao gerar link.",
+    "linkSent": "Link de pagamento enviado ao cliente!",
+    "linkSendError": "Erro ao enviar o link."
+  },
+  "calendar": {
+    "connectError": "Erro ao conectar o Google Calendar.",
+    "connected": "Google Calendar conectado!",
+    "disconnected": "Google Calendar desconectado."
+  },
+  "settings": {
+    "saved": "Configurações salvas!",
+    "saveError": "Erro ao salvar.",
+    "logoError": "Erro ao enviar o logo."
+  },
+  "billing": {
+    "checkoutError": "Erro ao iniciar o checkout.",
+    "planUpdated": "Plano atualizado!",
+    "canceled": "Assinatura cancelada ao fim do período.",
+    "reactivated": "Assinatura reativada!",
+    "portalUnavailable": "Portal de pagamento indisponível no momento.",
+    "portalError": "Erro ao abrir o portal."
+  },
+  "credits": {
+    "checkoutError": "Erro ao iniciar a compra de créditos."
+  }
+}

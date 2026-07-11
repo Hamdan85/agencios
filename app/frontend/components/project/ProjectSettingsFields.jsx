@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ShieldCheck, Rocket, CalendarClock } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 
 const WEEKDAYS = [
-  { v: 1, label: 'Seg' }, { v: 2, label: 'Ter' }, { v: 3, label: 'Qua' },
-  { v: 4, label: 'Qui' }, { v: 5, label: 'Sex' }, { v: 6, label: 'Sáb' }, { v: 0, label: 'Dom' },
+  { v: 1, key: 'mon' }, { v: 2, key: 'tue' }, { v: 3, key: 'wed' },
+  { v: 4, key: 'thu' }, { v: 5, key: 'fri' }, { v: 6, key: 'sat' }, { v: 0, key: 'sun' },
 ]
 
 // Mirror of Tickets::ProjectSettings#defaults — the client-side defaults for a
@@ -43,6 +44,7 @@ export function normalizeProjectSettings(raw) {
 // updated object. `resetKey` reseeds the free-text "times" buffer (e.g. on
 // dialog open or when switching to another project).
 export function ProjectSettingsFields({ value, onChange, resetKey }) {
+  const { t } = useTranslation('projects')
   const s = value
   const w = s.posting_window
   const [timesText, setTimesText] = useState(w.times.join(', '))
@@ -60,7 +62,7 @@ export function ProjectSettingsFields({ value, onChange, resetKey }) {
   })
   const onTimes = (text) => {
     setTimesText(text)
-    patchWindow({ times: text.split(',').map((t) => t.trim()).filter(Boolean) })
+    patchWindow({ times: text.split(',').map((x) => x.trim()).filter(Boolean) })
   }
 
   return (
@@ -69,8 +71,8 @@ export function ProjectSettingsFields({ value, onChange, resetKey }) {
         <div className="flex items-start gap-3">
           <ShieldCheck className="mt-0.5 text-brand" size={20} />
           <div className="flex-1">
-            <p className="font-semibold text-ink">Exigir aprovação do cliente</p>
-            <p className="text-sm text-ink-muted">O GO para em Produção e o cliente recebe o link de aprovação por e-mail.</p>
+            <p className="font-semibold text-ink">{t('settings.requireApproval.title')}</p>
+            <p className="text-sm text-ink-muted">{t('settings.requireApproval.description')}</p>
           </div>
           <Switch checked={s.require_client_approval} onCheckedChange={(v) => onChange({ ...s, require_client_approval: v })} />
         </div>
@@ -80,8 +82,8 @@ export function ProjectSettingsFields({ value, onChange, resetKey }) {
         <div className="flex items-start gap-3">
           <Rocket className="mt-0.5 text-brand" size={20} />
           <div className="flex-1">
-            <p className="font-semibold text-ink">Publicar após aprovação</p>
-            <p className="text-sm text-ink-muted">Quando todos os criativos forem aprovados, o post é agendado automaticamente.</p>
+            <p className="font-semibold text-ink">{t('settings.autoPublish.title')}</p>
+            <p className="text-sm text-ink-muted">{t('settings.autoPublish.description')}</p>
           </div>
           <Switch checked={s.auto_publish_after_approval} onCheckedChange={(v) => onChange({ ...s, auto_publish_after_approval: v })} />
         </div>
@@ -90,20 +92,20 @@ export function ProjectSettingsFields({ value, onChange, resetKey }) {
       <Card className="p-5">
         <div className="mb-3 flex items-center gap-2">
           <CalendarClock className="text-brand" size={20} />
-          <p className="font-semibold text-ink">Janela de postagem</p>
+          <p className="font-semibold text-ink">{t('settings.postingWindow.title')}</p>
         </div>
         <div className="mb-3 flex flex-wrap gap-1.5">
           {WEEKDAYS.map((d) => (
             <button key={d.v} type="button" onClick={() => toggleDay(d.v)}
               className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${w.weekdays.includes(d.v) ? 'bg-brand text-white' : 'bg-surface-muted text-ink-muted'}`}>
-              {d.label}
+              {t(`settings.weekdays.${d.key}`)}
             </button>
           ))}
         </div>
-        <label className="mb-1 block text-xs font-medium text-ink-muted">Horários (separados por vírgula)</label>
+        <label className="mb-1 block text-xs font-medium text-ink-muted">{t('settings.postingWindow.times')}</label>
         <input value={timesText} onChange={(e) => onTimes(e.target.value)} placeholder="09:00, 12:00, 18:00"
           className="mb-3 w-full rounded-xl border border-border bg-surface px-3.5 py-2.5 text-sm" />
-        <label className="mb-1 block text-xs font-medium text-ink-muted">Intervalo mínimo entre posts (min)</label>
+        <label className="mb-1 block text-xs font-medium text-ink-muted">{t('settings.postingWindow.minGap')}</label>
         <input type="number" value={w.min_gap_minutes} onChange={(e) => patchWindow({ min_gap_minutes: Number(e.target.value) || 0 })}
           className="w-full rounded-xl border border-border bg-surface px-3.5 py-2.5 text-sm" />
       </Card>

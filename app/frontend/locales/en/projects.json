@@ -151,7 +151,8 @@
       "times": "Times (comma-separated)",
       "minGap": "Minimum gap between posts (min)"
     },
-    "save": "Save settings"
+    "save": "Save settings",
+    "saving": "Saving…"
   },
   "scope": {
     "title": "Send scope to client",
@@ -185,5 +186,8 @@
       "description": "This action is permanent and cannot be undone. The tickets and all of their content (subtasks, creatives, posts) will be removed.",
       "confirm": "Delete"
     }
+  },
+  "sendScope": {
+    "hint": "Up to 4 emails. Press Enter or comma to add."
   }
 }

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { X, CheckSquare, ImageIcon, Inbox, CalendarClock } from 'lucide-react'
 import { usePortalBoard } from '@/hooks/useData'
 import { useUrlParam } from '@/hooks/useUrlState'
@@ -56,11 +57,12 @@ function ProgressBar({ done, total, accent }) {
 // A single read-only card on the client board. No drag handles, no links —
 // clicking surfaces the informational detail sheet via `onOpen`.
 function PortalTicketCard({ ticket, accent, onOpen }) {
+  const { t } = useTranslation('portal')
   if (!ticket) return null
   const channels = ticket.channels || []
   const creativeTypes = ticket.creative_types || []
   const creatives = Number(ticket.creatives_count) || 0
-  const title = ticket.title || 'Sem título'
+  const title = ticket.title || t('board.untitled')
 
   return (
     <div
@@ -83,7 +85,7 @@ function PortalTicketCard({ ticket, accent, onOpen }) {
 
       {(creativeTypes.length > 0 || channels.length > 0) && (
         <div className="mb-3 flex flex-wrap items-center gap-1.5 pl-1.5">
-          {creativeTypes.map((t) => <CreativeTypeChip key={t} type={t} />)}
+          {creativeTypes.map((ct) => <CreativeTypeChip key={ct} type={ct} />)}
           {channels.length > 0 && <ChannelIcons channels={channels} size={12} max={5} />}
         </div>
       )}
@@ -208,6 +210,7 @@ function CreativesStage({ creatives, accent }) {
 // client cares about on the right; on mobile it stacks. Purely informational
 // (no edit affordances) — the client follows the work, they don't change it.
 function PortalTicketSheet({ ticket, accent, open, onOpenChange }) {
+  const { t: tr } = useTranslation('portal')
   const t = ticket || {}
   const channels = t.channels || []
   const creativeTypes = t.creative_types || []
@@ -221,8 +224,8 @@ function PortalTicketSheet({ ticket, accent, open, onOpenChange }) {
       <SheetContent side="right" className="gap-0 p-0 sm:max-w-3xl">
         <div className="flex items-start justify-between gap-3 border-b border-border px-6 py-5">
           <div className="min-w-0">
-            <SheetTitle className="text-lg leading-snug">{t.title || 'Sem título'}</SheetTitle>
-            <SheetDescription className="sr-only">Detalhes da tarefa</SheetDescription>
+            <SheetTitle className="text-lg leading-snug">{t.title || tr('board.untitled')}</SheetTitle>
+            <SheetDescription className="sr-only">{tr('board.sheetDescription')}</SheetDescription>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <ReadOnlyStatusPill status={t.status} label={t.status_label} size="sm" />
               {t.scheduled_at && (
@@ -234,7 +237,7 @@ function PortalTicketSheet({ ticket, accent, open, onOpenChange }) {
           </div>
           <SheetClose
             className="flex size-8 shrink-0 items-center justify-center rounded-lg text-ink-muted transition hover:bg-surface-muted hover:text-ink focus:outline-none"
-            aria-label="Fechar"
+            aria-label={tr('board.close')}
           >
             <X size={18} />
           </SheetClose>
@@ -257,12 +260,12 @@ function PortalTicketSheet({ ticket, accent, open, onOpenChange }) {
           >
             {!hasCreatives && (
               <div className="rounded-xl border border-dashed border-border bg-surface-muted/40 px-4 py-6 text-center text-sm text-ink-muted">
-                Os criativos aparecem aqui assim que a equipe finalizar a produção.
+                {tr('board.creativesPending')}
               </div>
             )}
 
             {creativeTypes.length > 0 && (
-              <DetailBlock label="Formatos">
+              <DetailBlock label={tr('labels.formats')}>
                 <div className="flex flex-wrap items-center gap-1.5">
                   {creativeTypes.map((ct) => <CreativeTypeChip key={ct} type={ct} />)}
                 </div>
@@ -270,25 +273,25 @@ function PortalTicketSheet({ ticket, accent, open, onOpenChange }) {
             )}
 
             {channels.length > 0 && (
-              <DetailBlock label="Canais">
+              <DetailBlock label={tr('labels.channels')}>
                 <ChannelIcons channels={channels} size={16} max={8} />
               </DetailBlock>
             )}
 
             {objective && (
-              <DetailBlock label="Objetivo">
+              <DetailBlock label={tr('labels.objective')}>
                 <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink-secondary">{objective}</p>
               </DetailBlock>
             )}
 
             {brief && (
-              <DetailBlock label="Briefing">
+              <DetailBlock label={tr('labels.brief')}>
                 <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink-secondary">{brief}</p>
               </DetailBlock>
             )}
 
             {Number(t.subtasks_count) > 0 && (
-              <DetailBlock label="Progresso">
+              <DetailBlock label={tr('labels.progress')}>
                 <ProgressBar done={t.subtasks_done} total={t.subtasks_count} accent={accent} />
               </DetailBlock>
             )}
@@ -305,6 +308,7 @@ function PortalTicketSheet({ ticket, accent, open, onOpenChange }) {
 // shareable and the browser Back button closes it, mirroring the main app's
 // `?ticket` drawer. Themed with the per-agency `accent` color.
 export default function PortalBoard({ token, projectId, accent = '#7C3AED' }) {
+  const { t } = useTranslation('portal')
   const { data, isLoading } = usePortalBoard(token, projectId)
   const [activeId, setActiveId] = useUrlParam('tarefa')
 
@@ -346,8 +350,8 @@ export default function PortalBoard({ token, projectId, accent = '#7C3AED' }) {
       <div className="flex min-h-0 flex-1 items-center justify-center p-4">
         <EmptyState
           icon={Inbox}
-          title="Ainda não há conteúdo nesta campanha"
-          description="Assim que a equipe começar a produzir, os cards aparecem aqui."
+          title={t('board.emptyTitle')}
+          description={t('board.emptyBody')}
           color={accent}
         />
       </div>

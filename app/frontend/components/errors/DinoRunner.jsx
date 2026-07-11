@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 
 const WIDTH = 600
 const HEIGHT = 200
@@ -13,6 +14,7 @@ const OBSTACLE_COLORS = ['#8B5CF6', '#EC4899', '#0EA5E9', '#F59E0B']
 // as the vanilla version at public/errors/dino.js — kept separate because that
 // one runs on static error pages outside the Vite bundle.
 export function DinoRunner() {
+  const { t } = useTranslation('errors')
   const canvasRef = useRef(null)
   const hintRef = useRef(null)
 
@@ -134,8 +136,8 @@ export function DinoRunner() {
       drawRunner()
       obstacles.forEach(drawObstacle)
       drawScore()
-      if (state === 'idle') drawCenteredMessage(['Pressione espaço ou toque para começar'])
-      else if (state === 'over') drawCenteredMessage([`Fim de jogo — pontuação ${score}`, 'Pressione espaço ou toque para tentar de novo'])
+      if (state === 'idle') drawCenteredMessage([t('dino.start')])
+      else if (state === 'over') drawCenteredMessage([t('dino.gameOver', { score }), t('dino.retry')])
     }
 
     function loop(timestamp) {
@@ -199,7 +201,7 @@ export function DinoRunner() {
     document.addEventListener('keydown', handleKeydown)
     canvas.addEventListener('pointerdown', handlePointerdown)
     document.addEventListener('visibilitychange', handleVisibility)
-    if (hintRef.current) hintRef.current.textContent = 'Espaço, ↑ ou toque no jogo para pular os obstáculos'
+    if (hintRef.current) hintRef.current.textContent = t('dino.hint')
 
     render(0)
 
@@ -209,6 +211,7 @@ export function DinoRunner() {
       canvas.removeEventListener('pointerdown', handlePointerdown)
       document.removeEventListener('visibilitychange', handleVisibility)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
@@ -220,7 +223,7 @@ export function DinoRunner() {
         className="w-full max-w-xl cursor-pointer rounded-2xl border border-white/10 bg-white/5"
         style={{ aspectRatio: `${WIDTH} / ${HEIGHT}` }}
       />
-      <p ref={hintRef} className="text-xs text-white/40">Carregando o jogo…</p>
+      <p ref={hintRef} className="text-xs text-white/40">{t('dino.loading')}</p>
     </div>
   )
 }

@@ -1,0 +1,44 @@
+{
+  "header": {
+    "eyebrowGlobal": "Você",
+    "eyebrowTeam": "Gestão",
+    "title": "Minhas tarefas",
+    "descriptionGlobal": "Tudo o que está atribuído a você, em todos os seus times.",
+    "descriptionTeam": "Suas subtarefas em todos os tickets deste time.",
+    "pendingCount_one": "{{count}} pendente",
+    "pendingCount_other": "{{count}} pendentes"
+  },
+  "tabs": {
+    "pending": "Pendentes",
+    "overdue": "Vencidas",
+    "completed": "Concluídas"
+  },
+  "empty": {
+    "pending": {
+      "title": "Tudo em dia!",
+      "description": "Você não tem tarefas pendentes. Bom trabalho."
+    },
+    "overdue": {
+      "title": "Nenhuma tarefa vencida",
+      "description": "Sem atrasos por aqui — continue assim."
+    },
+    "completed": {
+      "title": "Nada concluído ainda",
+      "description": "As tarefas que você finalizar aparecem aqui."
+    }
+  },
+  "searchPlaceholder": "Buscar tarefas…",
+  "noResults": {
+    "title": "Nenhum resultado",
+    "description": "Nada encontrado para “{{query}}”."
+  },
+  "row": {
+    "openAria": "Abrir {{title}}",
+    "ticketFallbackLower": "ticket",
+    "reopen": "Reabrir tarefa",
+    "complete": "Concluir tarefa",
+    "untitled": "Sem título",
+    "ticketBadge": "Ticket",
+    "hours": "{{count}}h"
+  }
+}

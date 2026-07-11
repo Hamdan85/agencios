@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   ListChecks, ListTodo, Search, CheckCircle2, Circle, AlarmClock, Inbox,
   ArrowUpRight, CalendarClock, PartyPopper, Building2,
@@ -16,15 +17,15 @@ import { relativeDay, shortDt } from '@/lib/formatters'
 const HERO = '#F59E0B'
 
 const TABS = [
-  { key: 'pending', label: 'Pendentes', countKey: 'pending', color: '#0EA5E9' },
-  { key: 'overdue', label: 'Vencidas', countKey: 'overdue', color: '#F43F5E' },
-  { key: 'completed', label: 'Concluídas', countKey: 'completed', color: '#10B981' },
+  { key: 'pending', countKey: 'pending', color: '#0EA5E9' },
+  { key: 'overdue', countKey: 'overdue', color: '#F43F5E' },
+  { key: 'completed', countKey: 'completed', color: '#10B981' },
 ]
 
-const EMPTY = {
-  pending: { icon: CheckCircle2, title: 'Tudo em dia!', description: 'Você não tem tarefas pendentes. Bom trabalho.' },
-  overdue: { icon: PartyPopper, title: 'Nenhuma tarefa vencida', description: 'Sem atrasos por aqui — continue assim.' },
-  completed: { icon: Inbox, title: 'Nada concluído ainda', description: 'As tarefas que você finalizar aparecem aqui.' },
+const EMPTY_ICON = {
+  pending: CheckCircle2,
+  overdue: PartyPopper,
+  completed: Inbox,
 }
 
 function isOverdue(task) {
@@ -36,6 +37,7 @@ function isOverdue(task) {
 // aggregating the user's subtasks across every team. Without it, the page is scoped
 // to the active workspace (/tarefas).
 export default function TasksIndex({ scope } = {}) {
+  const { t } = useTranslation('tasks')
   const global = scope === 'all_workspaces'
   const [tab, setTab] = useState('pending')
   const [query, setQuery] = useState('')
@@ -59,22 +61,20 @@ export default function TasksIndex({ scope } = {}) {
 
   const sentinelRef = useInfiniteScroll({ hasNextPage, isFetchingNextPage, fetchNextPage, deps: [tasks.length] })
 
-  const emptyMeta = EMPTY[tab]
+  const emptyIcon = EMPTY_ICON[tab]
 
   return (
     <Page className="animate-rise">
       <PageHeader
-        eyebrow={global ? 'Você' : 'Gestão'}
-        title="Minhas tarefas"
+        eyebrow={global ? t('header.eyebrowGlobal') : t('header.eyebrowTeam')}
+        title={t('header.title')}
         icon={global ? ListTodo : ListChecks}
         color={HERO}
-        description={global
-          ? 'Tudo o que está atribuído a você, em todos os seus times.'
-          : 'Suas subtarefas em todos os tickets deste time.'}
+        description={global ? t('header.descriptionGlobal') : t('header.descriptionTeam')}
         actions={
           <span className="inline-flex items-center gap-2 rounded-xl bg-amber/15 px-3.5 py-2 font-display text-sm font-extrabold text-[#B45309]">
             <AlarmClock size={16} strokeWidth={2.4} />
-            {counts.pending} pendente{counts.pending === 1 ? '' : 's'}
+            {t('header.pendingCount', { count: counts.pending })}
           </span>
         }
       />
@@ -82,23 +82,23 @@ export default function TasksIndex({ scope } = {}) {
       {/* Tab pills + search — one row */}
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          {TABS.map((t) => {
-            const active = tab === t.key
-            const count = counts[t.countKey] ?? 0
+          {TABS.map((tabItem) => {
+            const active = tab === tabItem.key
+            const count = counts[tabItem.countKey] ?? 0
             return (
               <button
-                key={t.key}
+                key={tabItem.key}
                 type="button"
-                onClick={() => setTab(t.key)}
+                onClick={() => setTab(tabItem.key)}
                 className={cn(
                   'inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm font-bold transition-all',
                   active
                     ? 'border-transparent text-white shadow-sm'
                     : 'border-border bg-surface text-ink-secondary hover:border-strong hover:text-ink',
                 )}
-                style={active ? { background: t.color } : undefined}
+                style={active ? { background: tabItem.color } : undefined}
               >
-                {t.label}
+                {t(`tabs.${tabItem.key}`)}
                 <span
                   className={cn(
                     'grid min-w-5 place-items-center rounded-full px-1 text-[11px] tabular-nums',
@@ -112,7 +112,7 @@ export default function TasksIndex({ scope } = {}) {
           })}
         </div>
 
-        <SearchInput value={query} onChange={setQuery} placeholder="Buscar tarefas…" className="w-full sm:w-64" />
+        <SearchInput value={query} onChange={setQuery} placeholder={t('searchPlaceholder')} className="w-full sm:w-64" />
       </div>
 
       {/* Task list */}
@@ -120,9 +120,9 @@ export default function TasksIndex({ scope } = {}) {
         <div className="flex justify-center py-16"><Spinner size={28} /></div>
       ) : tasks.length === 0 ? (
         q ? (
-          <EmptyState icon={Search} color={HERO} title="Nenhum resultado" description={`Nada encontrado para “${q}”.`} />
+          <EmptyState icon={Search} color={HERO} title={t('noResults.title')} description={t('noResults.description', { query: q })} />
         ) : (
-          <EmptyState icon={emptyMeta.icon} color={TABS.find((t) => t.key === tab)?.color} title={emptyMeta.title} description={emptyMeta.description} />
+          <EmptyState icon={emptyIcon} color={TABS.find((tabItem) => tabItem.key === tab)?.color} title={t(`empty.${tab}.title`)} description={t(`empty.${tab}.description`)} />
         )
       ) : (
         <>
@@ -141,6 +141,7 @@ export default function TasksIndex({ scope } = {}) {
 
 // ── Task row ───────────────────────────────────────────────────────
 function TaskRow({ task, overdue, showWorkspace, onOpenTicket, onToggle }) {
+  const { t } = useTranslation('tasks')
   const done = !!task.done
   const projectColor = task.project_color || '#7C3AED'
   const due = relativeDay(task.due_date)
@@ -155,7 +156,7 @@ function TaskRow({ task, overdue, showWorkspace, onOpenTicket, onToggle }) {
       onKeyDown={canOpen ? (e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); open() } } : undefined}
       role={canOpen ? 'button' : undefined}
       tabIndex={canOpen ? 0 : undefined}
-      aria-label={canOpen ? `Abrir ${task.ticket_title || 'ticket'}` : undefined}
+      aria-label={canOpen ? t('row.openAria', { title: task.ticket_title || t('row.ticketFallbackLower') }) : undefined}
       className={cn(
         'group relative flex items-center gap-3.5 overflow-hidden rounded-2xl border bg-surface p-3.5 transition-all lift',
         canOpen && 'cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/30',
@@ -171,7 +172,7 @@ function TaskRow({ task, overdue, showWorkspace, onOpenTicket, onToggle }) {
         type="button"
         onClick={(e) => { e.stopPropagation(); onToggle() }}
         aria-pressed={done}
-        aria-label={done ? 'Reabrir tarefa' : 'Concluir tarefa'}
+        aria-label={done ? t('row.reopen') : t('row.complete')}
         className={cn(
           'grid size-7 shrink-0 place-items-center rounded-xl border-2 transition-all active:scale-90',
           done
@@ -185,7 +186,7 @@ function TaskRow({ task, overdue, showWorkspace, onOpenTicket, onToggle }) {
       {/* body */}
       <div className="min-w-0 flex-1">
         <p className={cn('truncate font-display text-[15px] font-semibold leading-snug text-ink', done && 'text-ink-muted line-through')}>
-          {task.title || 'Sem título'}
+          {task.title || t('row.untitled')}
         </p>
         <div className="mt-1.5 flex flex-wrap items-center gap-2">
           {showWorkspace && task.workspace_name && (
@@ -204,7 +205,7 @@ function TaskRow({ task, overdue, showWorkspace, onOpenTicket, onToggle }) {
             // Non-interactive label — the whole row is the click target (opens the
             // ticket, switching teams first for cross-workspace items).
             <Badge variant="muted" className="max-w-[16rem] truncate px-2 text-[11px] tracking-normal group-hover:bg-brand-soft group-hover:text-brand">
-              <span className="truncate">{task.ticket_title || 'Ticket'}</span>
+              <span className="truncate">{task.ticket_title || t('row.ticketBadge')}</span>
               <ArrowUpRight size={11} strokeWidth={2.6} className="shrink-0" />
             </Badge>
           )}
@@ -230,7 +231,7 @@ function TaskRow({ task, overdue, showWorkspace, onOpenTicket, onToggle }) {
             {!done && due ? due.text : shortDt(task.due_date)}
           </span>
           {task.estimate_hours != null && (
-            <span className="text-[10.5px] font-semibold text-ink-muted">{task.estimate_hours}h</span>
+            <span className="text-[10.5px] font-semibold text-ink-muted">{t('row.hours', { count: task.estimate_hours })}</span>
           )}
         </div>
       )}

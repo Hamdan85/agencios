@@ -6,6 +6,7 @@ import { InlineSpinner } from '@/components/ui/feedback'
 import { Bubble, TypingDots, ChatComposer } from '@/components/ui/chat'
 import { useStartStrategy, useApplyStrategy, useStrategyChat } from '@/hooks/useStrategy'
 import { useStrategyChannel } from '@/hooks/useRealtime'
+import { useTranslation } from 'react-i18next'
 
 // A senior social-media agent that chats to turn a content cadence into
 // scheduled tickets. Docked as a NON-MODAL right drawer so the project's list
@@ -15,6 +16,7 @@ import { useStrategyChannel } from '@/hooks/useRealtime'
 // `cards` + `generating` come from the page's useStrategyPlan (the table owns the
 // live plan); the drawer is purely the chat + the approve control.
 export function StrategyDrawer({ open, onOpenChange, projectId, session, cards = [], generating = false, additive = false }) {
+  const { t } = useTranslation('projects')
   const start = useStartStrategy(projectId)
   const apply = useApplyStrategy(projectId)
   const { messages, streaming, pending, send, reset, appendAssistant } = useStrategyChat(projectId, session)
@@ -111,7 +113,7 @@ export function StrategyDrawer({ open, onOpenChange, projectId, session, cards =
               <Sparkles size={18} strokeWidth={2.3} />
             </span>
             <div>
-              <SheetTitle className="text-base">Planejar conteúdo com IA</SheetTitle>
+              <SheetTitle className="text-base">{t('strategy.title')}</SheetTitle>
               <SheetDescription className="mt-0.5 text-xs">
                 Descreva a estratégia de conteúdo. O estrategista monta os tickets já agendados, com tarefas estimadas.
               </SheetDescription>

@@ -6,6 +6,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { ChipsInput } from '@/components/ui/chips-input'
+import { useTranslation } from 'react-i18next'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -14,6 +15,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 // still editable/removable — it doesn't have to be the client's registered
 // address).
 export function SendScopeDialog({ open, onOpenChange, project, mutation }) {
+  const { t } = useTranslation('projects')
   const [recipients, setRecipients] = useState([])
 
   useEffect(() => {
@@ -44,7 +46,7 @@ export function SendScopeDialog({ open, onOpenChange, project, mutation }) {
           <div className="space-y-1.5">
             <Label>Destinatários</Label>
             <ChipsInput value={recipients} onChange={setRecipients} placeholder="email@cliente.com" max={4} />
-            <p className="text-xs text-ink-faint">Até 4 e-mails. Pressione Enter ou vírgula para adicionar.</p>
+            <p className="text-xs text-ink-faint">{t('sendScope.hint')}</p>
           </div>
           <DialogFooter>
             <DialogClose asChild><Button type="button" variant="ghost">Cancelar</Button></DialogClose>

@@ -1,4 +1,5 @@
 import { useRouteError } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { ErrorScene } from '@/components/errors/ErrorScene'
 
@@ -6,18 +7,19 @@ import { ErrorScene } from '@/components/errors/ErrorScene'
 // throws. Reloading re-mounts the router from scratch, which clears most
 // transient render-crash state.
 export default function ServerError() {
+  const { t } = useTranslation('errors')
   const error = useRouteError()
   if (import.meta.env.DEV && error) console.error(error)
 
   return (
     <ErrorScene
       code="500"
-      title="Algo deu errado por aqui"
-      description="Já fomos avisados e estamos de olho nisso. Tente recarregar a página — ou desconte a frustração no jogo abaixo."
+      title={t('serverError.title')}
+      description={t('serverError.description')}
       actions={(
         <>
-          <Button size="lg" onClick={() => window.location.reload()}>Recarregar</Button>
-          <Button variant="ghost" size="lg" onClick={() => { window.location.href = '/painel' }}>Voltar para o painel</Button>
+          <Button size="lg" onClick={() => window.location.reload()}>{t('actions.reload')}</Button>
+          <Button variant="ghost" size="lg" onClick={() => { window.location.href = '/painel' }}>{t('actions.backToDashboard')}</Button>
         </>
       )}
     />

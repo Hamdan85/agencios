@@ -55,6 +55,7 @@
     "bulletList": "Bullet list",
     "orderedList": "Numbered list",
     "quote": "Quote",
+    "link": "Link",
     "write": "Write…"
   },
   "filterBar": {
@@ -94,5 +95,15 @@
     "timeout": "The AI is taking longer than usual. Try refreshing again.",
     "done": "AI updated the ticket ✨",
     "failed": "The AI couldn't update the fields. Please try again."
+  },
+  "account": {
+    "profileUpdated": "Profile updated.",
+    "profileError": "Couldn't update the profile.",
+    "avatarUpdated": "Photo updated.",
+    "avatarError": "Couldn't upload the photo.",
+    "passwordChanged": "Password changed.",
+    "passwordError": "Couldn't change the password.",
+    "emailChangeSent": "We sent a confirmation link to the new email.",
+    "emailChangeError": "Couldn't request the email change."
   }
 }

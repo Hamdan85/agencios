@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { FileBarChart } from 'lucide-react'
 import { usePortalReport } from '@/hooks/useData'
 import { portalApi } from '@/api'
@@ -9,6 +10,7 @@ import ReportToolbar from '@/components/report/ReportToolbar'
 // sees (shared ReportDeck), with honest generating / absent states, plus the
 // export/print toolbar (branded PDF download + print).
 export default function PortalReportTab({ token, projectId, accent = '#7C3AED' }) {
+  const { t } = useTranslation('portal')
   const { data, isLoading } = usePortalReport(token, projectId)
 
   if (isLoading) {
@@ -19,15 +21,15 @@ export default function PortalReportTab({ token, projectId, accent = '#7C3AED' }
     return (
       <div className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-surface p-12 text-center">
         <InlineSpinner size={28} style={{ color: accent }} />
-        <h2 className="font-display text-lg font-bold text-ink">Gerando o relatório…</h2>
-        <p className="text-sm text-ink-muted">Estamos preparando o relatório desta campanha. Ele aparece aqui automaticamente.</p>
+        <h2 className="font-display text-lg font-bold text-ink">{t('report.generatingTitle')}</h2>
+        <p className="text-sm text-ink-muted">{t('report.generatingBody')}</p>
       </div>
     )
   }
 
   if (!data?.report) {
-    return <EmptyState icon={FileBarChart} title="Relatório ainda não disponível"
-      description="O relatório é gerado quando a campanha é finalizada." />
+    return <EmptyState icon={FileBarChart} title={t('report.notAvailableTitle')}
+      description={t('report.notAvailableBody')} />
   }
 
   return (
@@ -35,7 +37,7 @@ export default function PortalReportTab({ token, projectId, accent = '#7C3AED' }
       <div className="mb-4 flex justify-end">
         <ReportToolbar
           pdfUrl={portalApi.reportPdfUrl(token, projectId)}
-          filename={`relatorio-${data.report.project_name || 'campanha'}.pdf`}
+          filename={t('report.filename', { name: data.report.project_name || t('report.filenameFallback') })}
           accent={accent}
         />
       </div>

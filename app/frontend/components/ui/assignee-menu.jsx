@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Check, UserPlus } from 'lucide-react'
 import { Avatar } from '@/components/ui/avatar'
 import {
@@ -14,6 +15,7 @@ export function AssigneeMenu({
   members = [], value = null, name = null, avatarUrl = null,
   onSelect, disabled = false, size = 26, align = 'end',
 }) {
+  const { t } = useTranslation('ui')
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -26,16 +28,16 @@ export function AssigneeMenu({
               ? 'hover:opacity-80'
               : 'border border-dashed border-ink-faint/60 text-ink-faint hover:border-brand hover:bg-brand/5 hover:text-brand',
           )}
-          aria-label={name ? `Responsável: ${name}` : 'Atribuir responsável'}
-          title={name || 'Atribuir responsável'}
+          aria-label={name ? t('assignee.labeled', { name }) : t('assignee.assign')}
+          title={name || t('assignee.assign')}
         >
           {name ? <Avatar name={name} src={avatarUrl} size={size} /> : <UserPlus size={Math.round(size * 0.52)} />}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align={align} className="max-h-72 min-w-48 overflow-y-auto">
-        <DropdownMenuLabel>Atribuir a</DropdownMenuLabel>
+        <DropdownMenuLabel>{t('assignee.assignTo')}</DropdownMenuLabel>
         <DropdownMenuItem onClick={() => onSelect?.(null)} disabled={disabled}>
-          <span className="text-ink-muted">Sem responsável</span>
+          <span className="text-ink-muted">{t('assignee.unassigned')}</span>
           {value == null && <Check size={14} className="ml-auto !text-brand" />}
         </DropdownMenuItem>
         <DropdownMenuSeparator />

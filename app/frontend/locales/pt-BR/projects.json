@@ -151,7 +151,8 @@
       "times": "Horários (separados por vírgula)",
       "minGap": "Intervalo mínimo entre posts (min)"
     },
-    "save": "Salvar configurações"
+    "save": "Salvar configurações",
+    "saving": "Salvando…"
   },
   "scope": {
     "title": "Enviar escopo ao cliente",
@@ -185,5 +186,8 @@
       "description": "Esta ação é permanente e não pode ser desfeita. Os tickets e todo o seu conteúdo (subtarefas, criativos, posts) serão removidos.",
       "confirm": "Excluir"
     }
+  },
+  "sendScope": {
+    "hint": "Até 4 e-mails. Pressione Enter ou vírgula para adicionar."
   }
 }

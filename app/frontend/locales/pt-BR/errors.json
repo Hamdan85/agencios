@@ -12,11 +12,13 @@
     "description": "Não conseguimos falar com o agencios agora. Assim que a internet voltar, a página volta ao normal sozinha — ou pule uns obstáculos enquanto isso."
   },
   "serverError": {
+    "title": "Algo deu errado por aqui",
     "description": "Já fomos avisados e estamos de olho nisso. Tente recarregar a página — ou desconte a frustração no jogo abaixo."
   },
   "actions": {
     "backToDashboard": "Voltar para o painel",
-    "back": "Voltar"
+    "back": "Voltar",
+    "reload": "Recarregar"
   },
   "dino": {
     "start": "Pressione espaço ou toque para começar",

@@ -109,5 +109,12 @@
     "cancel": "Cancelar",
     "create": "Criar workspace",
     "creating": "Criando…"
+  },
+  "language": {
+    "title": "Idioma",
+    "description": "Idioma da interface, e-mails e notificações.",
+    "label": "Idioma",
+    "ptBR": "Português (Brasil)",
+    "en": "English"
   }
 }
