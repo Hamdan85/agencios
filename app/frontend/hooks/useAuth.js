@@ -82,7 +82,7 @@ export function useUpdateAccount() {
     mutationFn: (data) => accountApi.update(data),
     onSuccess: (data, variables) => {
       qc.setQueryData(keys.me(), data)
-      if (variables?.user?.locale) {
+      if (variables?.locale) {
         applyLocale(data?.user?.locale)
         // Server-rendered copy (API errors, system notes) changes language too.
         qc.invalidateQueries()

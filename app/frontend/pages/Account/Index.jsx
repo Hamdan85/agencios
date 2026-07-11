@@ -100,7 +100,7 @@ function ProfileTab({ user }) {
               <Label htmlFor="ac-locale">{t('language.label')}</Label>
               <Select
                 value={user?.locale || 'pt-BR'}
-                onValueChange={(locale) => updateAccount.mutate({ user: { locale } })}
+                onValueChange={(locale) => updateAccount.mutate({ locale })}
               >
                 <SelectTrigger id="ac-locale" className="w-full sm:w-72"><SelectValue /></SelectTrigger>
                 <SelectContent>
