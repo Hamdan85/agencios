@@ -9,13 +9,26 @@ require 'rails_helper'
 RSpec.describe 'i18n hardcoded copy guard' do
   COVERED_PATHS = %w[
     app/controllers/api
+    app/controllers/admin
     app/controllers/concerns
+    app/controllers/mcp
+    app/helpers
     app/jobs
     app/mailers
     app/serializers
+    app/services/concerns
     app/services/controllers
+    app/services/mcp
     app/services/operations
   ].freeze
+
+  # Deliberately NOT covered (intentional PT that is not user-facing UI copy):
+  #   app/services/prompts  — prompt-engineering scaffolding + JSON field hints
+  #                           (the OUTPUT language is localized via Prompts::Base)
+  #   app/services/vendors  — technical exceptions mapped to generic messages by
+  #                           the API error handler + AI fallback stubs
+  #   app/models/pricing.rb — plan `name` fallback ('Agência'); localized by key
+  #                           at read time via Pricing#localize_name
 
   PT_CHARS = /[ãáàâçéêíóôõúÃÁÀÂÇÉÊÍÓÔÕÚ]/
 

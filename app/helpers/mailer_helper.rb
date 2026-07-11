@@ -22,15 +22,12 @@ module MailerHelper
     danger: '#F43F5E'
   }.freeze
 
-  # The 7 funnel statuses → user-facing PT-BR label + signature color.
-  STATUS_LABELS = {
-    'ideation' => ['Ideação', '#F59E0B'],
-    'scoping' => ['Escopo', '#0EA5E9'],
-    'production' => ['Produção', '#7C3AED'],
-    'scheduled' => ['Agendado',                '#EC4899'],
-    'published' => ['Postado / Monitorando',   '#10B981'],
-    'retrospective' => ['Retrospectiva', '#6366F1'],
-    'done' => ['Concluído', '#14B8A6']
+  # The 7 funnel statuses → signature color. The label is localized per-recipient
+  # via mailers.status.* (mailers already render inside with_recipient_locale).
+  STATUS_COLORS = {
+    'ideation' => '#F59E0B', 'scoping' => '#0EA5E9', 'production' => '#7C3AED',
+    'scheduled' => '#EC4899', 'published' => '#10B981', 'retrospective' => '#6366F1',
+    'done' => '#14B8A6'
   }.freeze
 
   # Absolute base URL for links + assets in emails (no request context).
@@ -100,11 +97,11 @@ module MailerHelper
   end
 
   def status_label(status)
-    STATUS_LABELS.dig(status.to_s, 0) || status.to_s.humanize
+    I18n.t("mailers.status.#{status}", default: status.to_s.humanize)
   end
 
   def status_color(status)
-    STATUS_LABELS.dig(status.to_s, 1) || BRAND[:violet]
+    STATUS_COLORS[status.to_s] || BRAND[:violet]
   end
 
   # Money in cents → "R$ 1.234,56" (matches the frontend `brl()` formatter).
@@ -126,6 +123,6 @@ module MailerHelper
   def email_datetime(value)
     return '—' if value.blank?
 
-    value.strftime('%d/%m/%Y às %H:%M')
+    I18n.l(value, format: :email)
   end
 end

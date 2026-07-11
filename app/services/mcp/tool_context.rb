@@ -33,9 +33,10 @@ module Mcp
       membership = user.membership_for(workspace)
       raise NotAMember, "You are not a member of '#{workspace_ref}'." if membership.nil?
       unless workspace.mcp_available?
+        plan_locale = I18n.available_locales.find { |l| l.to_s == user.locale.to_s } || I18n.default_locale
         raise PlanRequired,
-              "O workspace '#{workspace.slug}' precisa de um plano Agência ou Enterprise com assinatura " \
-              "ativa para ser operado pelo Claude. Ative em #{SystemConfig.app_host}/assinatura."
+              I18n.t('api.mcp.plan_required_workspace', slug: workspace.slug,
+                     host: SystemConfig.app_host, locale: plan_locale)
       end
 
       with_current(actor: user, workspace: workspace, membership: membership, &block)

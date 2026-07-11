@@ -99,7 +99,7 @@ RSpec.describe 'Tickets list, search & archive', type: :request do
 
       expect(Post.exists?(scheduled.id)).to be(false)   # canceled
       expect(Post.exists?(published.id)).to be(true)    # history preserved
-      expect(@reel.notes.order(:created_at).last.body).to include('agendamento(s) de publicação cancelado(s)')
+      expect(@reel.notes.order(:created_at).last.display_body).to include('agendamento(s) de publicação cancelado(s)')
     end
 
     it 'clears the done column (bulk archive) for a manager' do

@@ -101,9 +101,8 @@ module Mcp
     end
 
     def billing_required_message
-      "Para usar o agencios no Claude você precisa de um workspace com assinatura ativa " \
-        "(plano Agência ou Enterprise). Ative sua assinatura em #{SystemConfig.app_host}/assinatura " \
-        'e conecte novamente.'
+      mcp_locale = I18n.available_locales.find { |l| l.to_s == @actor&.locale.to_s } || I18n.default_locale
+      I18n.t('api.mcp.billing_required', host: SystemConfig.app_host, locale: mcp_locale)
     end
 
     # --- Tool result envelopes (MCP tools/call result shape) -----------------

@@ -1,380 +1,392 @@
+---
 pt-BR:
   mailers:
     layout:
-      preheader_default: "agencios — o sistema operacional da sua agência."
-      sent_by_agency_html: "Enviado por <strong style=\"color:#564F6F;\">%{name}</strong> via agencios, a plataforma operacional da sua agência."
-      sent_by_agencios_html: "Enviado por <strong style=\"color:#564F6F;\">agencios</strong> — o sistema operacional da sua agência."
-      automated_email_html: "Este é um e-mail automático enviado de <a href=\"mailto:nao-responda@agencios.app\" style=\"color:#8B86A3; text-decoration:underline;\">nao-responda@agencios.app</a>. Por favor, não responda a esta mensagem."
-      sent_by_agency_text: "Enviado por %{name} via agencios, a plataforma operacional da sua agência."
-      agencios_tagline_text: "agencios — o sistema operacional da sua agência."
-      automated_email_text: "E-mail automático enviado de nao-responda@agencios.app. Não responda a esta mensagem."
+      preheader_default: agencios — o sistema operacional da sua agência.
+      sent_by_agency_html: Enviado por <strong style="color:#564F6F;">%{name}</strong> via agencios, a plataforma operacional da sua agência.
+      sent_by_agencios_html: Enviado por <strong style="color:#564F6F;">agencios</strong> — o sistema operacional da sua agência.
+      automated_email_html: Este é um e-mail automático enviado de <a href="mailto:nao-responda@agencios.app" style="color:#8B86A3; text-decoration:underline;">nao-responda@agencios.app</a>. Por favor, não responda a esta mensagem.
+      sent_by_agency_text: Enviado por %{name} via agencios, a plataforma operacional da sua agência.
+      agencios_tagline_text: agencios — o sistema operacional da sua agência.
+      automated_email_text: E-mail automático enviado de nao-responda@agencios.app. Não responda a esta mensagem.
     common:
-      hello: "Olá"
-      open_ticket: "Abrir ticket"
+      hello: Olá
+      open_ticket: Abrir ticket
     auth:
       welcome:
-        subject: "Bem-vindo à agencios 🎉"
-        preheader: "Sua conta está pronta. Bem-vindo à agencios."
-        eyebrow: "Bem-vindo"
-        body_html: "Sua conta na <strong>agencios</strong> está pronta — o sistema operacional da sua agência de conteúdo. Centralize clientes, campanhas, o quadro de produção, calendário, criativos gerados por IA e cobranças, tudo em um só lugar."
-        button: "Abrir meu painel"
-        footer: "Para começar, crie seu primeiro cliente e abra um ticket no quadro — é por ali que o trabalho flui, da ideação à publicação."
-        text_body: "Sua conta na agencios está pronta — o sistema operacional da sua agência de conteúdo. Centralize clientes, campanhas, o quadro de produção, calendário, criativos e cobranças em um só lugar."
-        text_button: "Abra seu painel"
-        text_footer: "Para começar, crie seu primeiro cliente e abra um ticket no quadro."
+        subject: "Bem-vindo à agencios \U0001F389"
+        preheader: Sua conta está pronta. Bem-vindo à agencios.
+        eyebrow: Bem-vindo
+        body_html: Sua conta na <strong>agencios</strong> está pronta — o sistema operacional da sua agência de conteúdo. Centralize clientes, campanhas, o quadro de produção, calendário, criativos gerados por IA e cobranças, tudo em um só lugar.
+        button: Abrir meu painel
+        footer: Para começar, crie seu primeiro cliente e abra um ticket no quadro — é por ali que o trabalho flui, da ideação à publicação.
+        text_body: Sua conta na agencios está pronta — o sistema operacional da sua agência de conteúdo. Centralize clientes, campanhas, o quadro de produção, calendário, criativos e cobranças em um só lugar.
+        text_button: Abra seu painel
+        text_footer: Para começar, crie seu primeiro cliente e abra um ticket no quadro.
       confirm_email:
-        subject: "Confirme seu e-mail na agencios"
-        preheader: "Confirme seu endereço de e-mail para ativar sua conta."
-        eyebrow: "Confirmação"
-        heading: "Confirme seu e-mail"
-        body_html: "Para ativar sua conta na <strong>agencios</strong> e proteger seu acesso, confirme que este é o seu endereço de e-mail."
-        button: "Confirmar e-mail"
-        note: "Este link expira em 24 horas. Se você não criou uma conta na agencios, ignore este e-mail."
-        text_body: "Para ativar sua conta na agencios, confirme seu endereço de e-mail:"
-        text_note: "Este link expira em 24 horas. Se você não criou uma conta, ignore este e-mail."
+        subject: Confirme seu e-mail na agencios
+        preheader: Confirme seu endereço de e-mail para ativar sua conta.
+        eyebrow: Confirmação
+        heading: Confirme seu e-mail
+        body_html: Para ativar sua conta na <strong>agencios</strong> e proteger seu acesso, confirme que este é o seu endereço de e-mail.
+        button: Confirmar e-mail
+        note: Este link expira em 24 horas. Se você não criou uma conta na agencios, ignore este e-mail.
+        text_body: 'Para ativar sua conta na agencios, confirme seu endereço de e-mail:'
+        text_note: Este link expira em 24 horas. Se você não criou uma conta, ignore este e-mail.
       confirm_email_change:
-        subject: "Confirme seu novo e-mail na agencios"
-        preheader: "Confirme seu novo endereço de e-mail na agencios."
-        eyebrow: "Segurança"
-        heading: "Confirme seu novo e-mail"
-        body_html: "Recebemos um pedido para alterar o e-mail da sua conta na <strong>agencios</strong> para <strong>%{email}</strong>. Confirme abaixo para concluir a troca."
-        button: "Confirmar novo e-mail"
-        note: "Este link expira em 24 horas. Se você não solicitou esta alteração, ignore este e-mail — seu e-mail atual permanece o mesmo."
-        text_body: "Recebemos um pedido para alterar o e-mail da sua conta na agencios para %{email}."
-        text_prompt: "Confirme a troca aqui:"
-        text_note: "Este link expira em 24 horas. Se você não solicitou, ignore este e-mail — seu e-mail atual permanece o mesmo."
+        subject: Confirme seu novo e-mail na agencios
+        preheader: Confirme seu novo endereço de e-mail na agencios.
+        eyebrow: Segurança
+        heading: Confirme seu novo e-mail
+        body_html: Recebemos um pedido para alterar o e-mail da sua conta na <strong>agencios</strong> para <strong>%{email}</strong>. Confirme abaixo para concluir a troca.
+        button: Confirmar novo e-mail
+        note: Este link expira em 24 horas. Se você não solicitou esta alteração, ignore este e-mail — seu e-mail atual permanece o mesmo.
+        text_body: Recebemos um pedido para alterar o e-mail da sua conta na agencios para %{email}.
+        text_prompt: 'Confirme a troca aqui:'
+        text_note: Este link expira em 24 horas. Se você não solicitou, ignore este e-mail — seu e-mail atual permanece o mesmo.
       password_reset:
-        subject: "Redefinição de senha — agencios"
-        preheader: "Redefina sua senha da agencios. O link expira em 20 minutos."
-        eyebrow: "Segurança"
-        heading: "Redefinição de senha"
-        body_html: "Recebemos um pedido para redefinir a senha da sua conta na <strong>agencios</strong>. Clique no botão abaixo para criar uma nova senha."
-        button: "Redefinir minha senha"
-        note: "Este link expira em 20 minutos. Se você não solicitou a redefinição, ignore este e-mail — sua senha permanece a mesma."
-        text_body: "Recebemos um pedido para redefinir a senha da sua conta na agencios."
-        text_prompt: "Crie uma nova senha aqui:"
-        text_note: "Este link expira em 20 minutos. Se você não solicitou, ignore este e-mail."
+        subject: Redefinição de senha — agencios
+        preheader: Redefina sua senha da agencios. O link expira em 20 minutos.
+        eyebrow: Segurança
+        heading: Redefinição de senha
+        body_html: Recebemos um pedido para redefinir a senha da sua conta na <strong>agencios</strong>. Clique no botão abaixo para criar uma nova senha.
+        button: Redefinir minha senha
+        note: Este link expira em 20 minutos. Se você não solicitou a redefinição, ignore este e-mail — sua senha permanece a mesma.
+        text_body: Recebemos um pedido para redefinir a senha da sua conta na agencios.
+        text_prompt: 'Crie uma nova senha aqui:'
+        text_note: Este link expira em 20 minutos. Se você não solicitou, ignore este e-mail.
       password_changed:
-        subject: "Sua senha foi alterada"
-        preheader: "Sua senha da agencios foi alterada."
-        eyebrow: "Segurança"
-        heading: "Sua senha foi alterada"
-        body_html: "A senha da sua conta na <strong>agencios</strong> foi alterada com sucesso."
-        body2_html: "Se foi você, nenhuma ação é necessária. <strong>Se não reconhece esta alteração</strong>, redefina sua senha imediatamente e entre em contato com o suporte."
-        button: "Ir para o login"
-        text_body: "A senha da sua conta na agencios foi alterada com sucesso."
-        text_body2: "Se foi você, nenhuma ação é necessária."
-        text_body3: "Se não reconhece esta alteração, redefina sua senha imediatamente:"
+        subject: Sua senha foi alterada
+        preheader: Sua senha da agencios foi alterada.
+        eyebrow: Segurança
+        heading: Sua senha foi alterada
+        body_html: A senha da sua conta na <strong>agencios</strong> foi alterada com sucesso.
+        body2_html: Se foi você, nenhuma ação é necessária. <strong>Se não reconhece esta alteração</strong>, redefina sua senha imediatamente e entre em contato com o suporte.
+        button: Ir para o login
+        text_body: A senha da sua conta na agencios foi alterada com sucesso.
+        text_body2: Se foi você, nenhuma ação é necessária.
+        text_body3: 'Se não reconhece esta alteração, redefina sua senha imediatamente:'
     approval:
       review:
-        subject: "Aprove o conteúdo — %{project}"
-        preheader: "Revise e aprove os criativos de %{project}."
-        eyebrow: "Aprovação"
-        heading: "Conteúdo pronto para sua aprovação"
-        body_html: "Preparamos o conteúdo de <strong>%{project}</strong> e gostaríamos da sua aprovação. É rápido: revise cada criativo e aprove — ou peça ajustes."
-        button: "Revisar e aprovar"
-        note: "Assim que tudo estiver aprovado, agendamos a publicação automaticamente."
-        text_body: "O conteúdo de %{project} está pronto para sua aprovação. Revise e aprove (ou peça ajustes) aqui:"
+        subject: Aprove o conteúdo — %{project}
+        preheader: Revise e aprove os criativos de %{project}.
+        eyebrow: Aprovação
+        heading: Conteúdo pronto para sua aprovação
+        body_html: 'Preparamos o conteúdo de <strong>%{project}</strong> e gostaríamos da sua aprovação. É rápido: revise cada criativo e aprove — ou peça ajustes.'
+        button: Revisar e aprovar
+        note: Assim que tudo estiver aprovado, agendamos a publicação automaticamente.
+        text_body: 'O conteúdo de %{project} está pronto para sua aprovação. Revise e aprove (ou peça ajustes) aqui:'
     approval_decision:
       decided:
-        subject_approved: "Cliente aprovou — %{project}"
-        subject_changes: "Cliente pediu ajustes — %{project}"
-        preheader_approved: "Aprovado"
-        preheader_changes: "Ajustes solicitados"
-        eyebrow_approved: "Aprovado pelo cliente"
-        eyebrow_changes: "Ajustes solicitados"
-        heading_approved: "O cliente aprovou o conteúdo"
-        heading_changes: "O cliente pediu ajustes"
-        default_client: "O cliente"
-        verb_approved: "aprovou"
-        verb_changes: "pediu ajustes em"
+        subject_approved: Cliente aprovou — %{project}
+        subject_changes: Cliente pediu ajustes — %{project}
+        preheader_approved: Aprovado
+        preheader_changes: Ajustes solicitados
+        eyebrow_approved: Aprovado pelo cliente
+        eyebrow_changes: Ajustes solicitados
+        heading_approved: O cliente aprovou o conteúdo
+        heading_changes: O cliente pediu ajustes
+        default_client: O cliente
+        verb_approved: aprovou
+        verb_changes: pediu ajustes em
         piece_suffix: " — peça: %{type}"
-        feedback_label: "Feedback do cliente"
-        feedback_label_text: "Feedback do cliente:"
-        button_approved: "Ver conteúdo"
-        button_changes: "Tratar os ajustes"
-        note_approved: "O conteúdo seguiu para a fase de publicação."
-        note_changes: "O conteúdo continua na fase de produção aguardando os ajustes."
+        feedback_label: Feedback do cliente
+        feedback_label_text: 'Feedback do cliente:'
+        button_approved: Ver conteúdo
+        button_changes: Tratar os ajustes
+        note_approved: O conteúdo seguiu para a fase de publicação.
+        note_changes: O conteúdo continua na fase de produção aguardando os ajustes.
     creative:
       kinds:
-        carousel: "Carrossel"
-        video: "Vídeo"
-        image: "Imagem"
-        default: "Criativo"
+        carousel: Carrossel
+        video: Vídeo
+        image: Imagem
+        default: Criativo
       ready:
         subject: "%{kind} pronto ✨"
-        preheader: "Seu %{kind} gerado está pronto."
-        eyebrow: "Estúdio"
+        preheader: Seu %{kind} gerado está pronto.
+        eyebrow: Estúdio
         heading: "%{kind} pronto ✨"
-        body_html: "A geração que você iniciou foi concluída e seu <strong>%{kind}</strong> já está disponível."
-        button: "Ver criativo"
-        text_body: "Seu %{kind} gerado está pronto e já disponível."
-        text_button: "Ver criativo"
+        body_html: A geração que você iniciou foi concluída e seu <strong>%{kind}</strong> já está disponível.
+        button: Ver criativo
+        text_body: Seu %{kind} gerado está pronto e já disponível.
+        text_button: Ver criativo
       failed:
-        subject: "Não foi possível gerar seu %{kind}"
-        preheader: "Não foi possível concluir a geração do seu %{kind}."
-        eyebrow: "Estúdio"
-        heading: "Geração não concluída"
-        body_html: "Infelizmente não conseguimos concluir a geração do seu <strong>%{kind}</strong>. Nenhuma cobrança de uso foi registrada por esta tentativa."
-        button: "Tentar novamente"
-        text_body: "Não conseguimos concluir a geração do seu %{kind}. Nenhuma cobrança de uso foi registrada por esta tentativa."
-        text_reason: "Detalhe:"
-        text_button: "Tentar novamente"
+        subject: Não foi possível gerar seu %{kind}
+        preheader: Não foi possível concluir a geração do seu %{kind}.
+        eyebrow: Estúdio
+        heading: Geração não concluída
+        body_html: Infelizmente não conseguimos concluir a geração do seu <strong>%{kind}</strong>. Nenhuma cobrança de uso foi registrada por esta tentativa.
+        button: Tentar novamente
+        text_body: Não conseguimos concluir a geração do seu %{kind}. Nenhuma cobrança de uso foi registrada por esta tentativa.
+        text_reason: 'Detalhe:'
+        text_button: Tentar novamente
     credit_alert:
       insufficient:
-        subject: "Créditos insuficientes — ação pendente"
-        preheader: "Faltam créditos para uma ação no seu workspace."
-        eyebrow: "Créditos"
-        heading: "Créditos insuficientes"
-        body_intro: "Uma ação que depende de créditos não pôde ser executada"
-        body_required_html: "São necessários <strong>%{count} créditos</strong>."
-        body_outro: "Compre créditos para que o conteúdo seja gerado."
-        button: "Comprar créditos"
-        note: "A solicitação fica aguardando — assim que houver saldo, é só gerar novamente."
-        text_required: "São necessários %{count} créditos."
-        text_outro: "Compre créditos para que o conteúdo seja gerado:"
+        subject: Créditos insuficientes — ação pendente
+        preheader: Faltam créditos para uma ação no seu workspace.
+        eyebrow: Créditos
+        heading: Créditos insuficientes
+        body_intro: Uma ação que depende de créditos não pôde ser executada
+        body_required_html: São necessários <strong>%{count} créditos</strong>.
+        body_outro: Compre créditos para que o conteúdo seja gerado.
+        button: Comprar créditos
+        note: A solicitação fica aguardando — assim que houver saldo, é só gerar novamente.
+        text_required: São necessários %{count} créditos.
+        text_outro: 'Compre créditos para que o conteúdo seja gerado:'
     digest:
       daily_tickets:
-        subject: "Seus tickets de hoje — %{date}"
+        subject: Seus tickets de hoje — %{date}
         preheader: "%{count} ticket(s) para trabalhar hoje."
-        eyebrow: "Digest diário"
-        heading: "Seus tickets de hoje"
-        intro: "Aqui está o que precisa da sua atenção em %{date}."
-        empty: "Nenhum ticket vencendo ou atrasado hoje."
-        overdue: "Atrasado"
-        due_today: "Vence hoje"
-        button: "Abrir o quadro"
-        text_heading: "Seus tickets de hoje — %{date}"
-        text_open_board: "Abrir o quadro:"
+        eyebrow: Digest diário
+        heading: Seus tickets de hoje
+        intro: Aqui está o que precisa da sua atenção em %{date}.
+        empty: Nenhum ticket vencendo ou atrasado hoje.
+        overdue: Atrasado
+        due_today: Vence hoje
+        button: Abrir o quadro
+        text_heading: Seus tickets de hoje — %{date}
+        text_open_board: 'Abrir o quadro:'
     invitation:
       roles:
-        owner: "Proprietário"
-        admin: "Administrador"
-        manager: "Gerente"
-        member: "Membro"
-        guest: "Convidado"
+        owner: Proprietário
+        admin: Administrador
+        manager: Gerente
+        member: Membro
+        guest: Convidado
       invite:
-        subject: "Você foi convidado para a %{workspace} na agencios"
-        preheader: "Você foi convidado para a %{workspace} na agencios."
-        eyebrow: "Convite"
-        heading: "Você foi convidado 🎉"
+        subject: Você foi convidado para a %{workspace} na agencios
+        preheader: Você foi convidado para a %{workspace} na agencios.
+        eyebrow: Convite
+        heading: "Você foi convidado \U0001F389"
         invited_by_html: "<strong>%{name}</strong> convidou você"
-        invited_generic: "Você foi convidado"
-        body_html: "para participar da <strong>%{workspace}</strong> na <strong>agencios</strong> como <strong>%{role}</strong>."
-        button: "Aceitar convite"
-        note: "Se você não esperava este convite, pode ignorar este e-mail com segurança."
+        invited_generic: Você foi convidado
+        body_html: para participar da <strong>%{workspace}</strong> na <strong>agencios</strong> como <strong>%{role}</strong>.
+        button: Aceitar convite
+        note: Se você não esperava este convite, pode ignorar este e-mail com segurança.
         text_invited_by: "%{name} convidou você"
-        text_body: "para participar da %{workspace} na agencios como %{role}."
-        text_accept: "Aceite o convite:"
-        text_note: "Se você não esperava este convite, ignore este e-mail."
+        text_body: para participar da %{workspace} na agencios como %{role}.
+        text_accept: 'Aceite o convite:'
+        text_note: Se você não esperava este convite, ignore este e-mail.
     invoice:
       fields:
-        reference: "Referência"
-        description: "Descrição"
-        due_date: "Vencimento"
-        due_on: "Venceu em"
-        total: "Total"
-        amount_paid: "Valor pago"
-      mercadopago_secure: "Pagamento processado com segurança via Mercado Pago (Pix, boleto ou cartão)."
+        reference: Referência
+        description: Descrição
+        due_date: Vencimento
+        due_on: Venceu em
+        total: Total
+        amount_paid: Valor pago
+      mercadopago_secure: Pagamento processado com segurança via Mercado Pago (Pix, boleto ou cartão).
       mercadopago_short: "(Mercado Pago — Pix, boleto ou cartão)"
-      pay_now: "Pagar agora"
+      pay_now: Pagar agora
       created:
-        subject: "Nova cobrança da %{workspace} — %{amount}"
-        preheader: "Nova cobrança de %{amount} da %{workspace}."
-        eyebrow: "Cobrança"
-        heading: "Nova cobrança"
-        body_html: "A <strong>%{workspace}</strong> emitiu uma nova cobrança para você."
-        instructions_next: "As instruções de pagamento serão enviadas em seguida."
-        text_body: "A %{workspace} emitiu uma nova cobrança para você."
+        subject: Nova cobrança da %{workspace} — %{amount}
+        preheader: Nova cobrança de %{amount} da %{workspace}.
+        eyebrow: Cobrança
+        heading: Nova cobrança
+        body_html: A <strong>%{workspace}</strong> emitiu uma nova cobrança para você.
+        instructions_next: As instruções de pagamento serão enviadas em seguida.
+        text_body: A %{workspace} emitiu uma nova cobrança para você.
       payment_link:
-        subject: "Link de pagamento — %{workspace} — %{amount}"
-        preheader: "Link de pagamento da sua cobrança de %{amount} — %{workspace}."
-        eyebrow: "Cobrança"
-        heading: "Link de pagamento"
-        body_html: "Segue o link para pagar sua cobrança com a <strong>%{workspace}</strong>."
-        text_body: "Segue o link para pagar sua cobrança com a %{workspace}."
+        subject: Link de pagamento — %{workspace} — %{amount}
+        preheader: Link de pagamento da sua cobrança de %{amount} — %{workspace}.
+        eyebrow: Cobrança
+        heading: Link de pagamento
+        body_html: Segue o link para pagar sua cobrança com a <strong>%{workspace}</strong>.
+        text_body: Segue o link para pagar sua cobrança com a %{workspace}.
       paid:
-        subject: "Pagamento confirmado — %{amount}"
-        preheader: "Recebemos seu pagamento de %{amount}. Obrigado!"
-        eyebrow: "Recibo"
-        heading: "Pagamento confirmado 💸"
-        body_html: "Recebemos seu pagamento. Obrigado por contar com a <strong>%{workspace}</strong>!"
-        keep_receipt: "Guarde este e-mail como comprovante."
-        text_body: "Recebemos seu pagamento. Obrigado por contar com a %{workspace}!"
+        subject: Pagamento confirmado — %{amount}
+        preheader: Recebemos seu pagamento de %{amount}. Obrigado!
+        eyebrow: Recibo
+        heading: "Pagamento confirmado \U0001F4B8"
+        body_html: Recebemos seu pagamento. Obrigado por contar com a <strong>%{workspace}</strong>!
+        keep_receipt: Guarde este e-mail como comprovante.
+        text_body: Recebemos seu pagamento. Obrigado por contar com a %{workspace}!
       overdue:
-        subject: "Cobrança em atraso — %{amount}"
-        preheader: "Sua cobrança de %{amount} está em atraso."
-        eyebrow: "Cobrança"
-        heading: "Cobrança em atraso"
-        body_html: "Identificamos que a cobrança abaixo, emitida pela <strong>%{workspace}</strong>, está em aberto após o vencimento."
-        button: "Regularizar pagamento"
-        note: "Se você já efetuou o pagamento, por favor desconsidere este aviso."
-        text_body: "A cobrança abaixo, emitida pela %{workspace}, está em aberto após o vencimento."
-        text_note: "Se você já pagou, por favor desconsidere este aviso."
+        subject: Cobrança em atraso — %{amount}
+        preheader: Sua cobrança de %{amount} está em atraso.
+        eyebrow: Cobrança
+        heading: Cobrança em atraso
+        body_html: Identificamos que a cobrança abaixo, emitida pela <strong>%{workspace}</strong>, está em aberto após o vencimento.
+        button: Regularizar pagamento
+        note: Se você já efetuou o pagamento, por favor desconsidere este aviso.
+        text_body: A cobrança abaixo, emitida pela %{workspace}, está em aberto após o vencimento.
+        text_note: Se você já pagou, por favor desconsidere este aviso.
       canceled:
-        subject: "Cobrança cancelada — %{workspace}"
-        preheader: "Sua cobrança da %{workspace} foi cancelada."
-        eyebrow: "Cobrança"
-        heading: "Cobrança cancelada"
-        body_html: "A cobrança <strong>%{reference}</strong> no valor de <strong>%{amount}</strong>, emitida pela <strong>%{workspace}</strong>, foi cancelada. Nenhum pagamento é necessário."
-        note: "Se tiver qualquer dúvida, fale diretamente com a %{workspace}."
-        text_body: "A cobrança %{reference} no valor de %{amount}, emitida pela %{workspace}, foi cancelada. Nenhum pagamento é necessário."
-        text_note: "Em caso de dúvida, fale diretamente com a %{workspace}."
+        subject: Cobrança cancelada — %{workspace}
+        preheader: Sua cobrança da %{workspace} foi cancelada.
+        eyebrow: Cobrança
+        heading: Cobrança cancelada
+        body_html: A cobrança <strong>%{reference}</strong> no valor de <strong>%{amount}</strong>, emitida pela <strong>%{workspace}</strong>, foi cancelada. Nenhum pagamento é necessário.
+        note: Se tiver qualquer dúvida, fale diretamente com a %{workspace}.
+        text_body: A cobrança %{reference} no valor de %{amount}, emitida pela %{workspace}, foi cancelada. Nenhum pagamento é necessário.
+        text_note: Em caso de dúvida, fale diretamente com a %{workspace}.
     meeting:
       invitation:
-        subject: "Reunião agendada: %{title} — %{datetime}"
+        subject: 'Reunião agendada: %{title} — %{datetime}'
         preheader: "%{title} — %{datetime}."
-        eyebrow: "Reunião"
-        heading: "Reunião agendada"
-        body_html: "A <strong>%{workspace}</strong> agendou uma reunião com você."
-        field_start: "Início"
-        field_end: "Término"
-        button: "Entrar no Google Meet"
+        eyebrow: Reunião
+        heading: Reunião agendada
+        body_html: A <strong>%{workspace}</strong> agendou uma reunião com você.
+        field_start: Início
+        field_end: Término
+        button: Entrar no Google Meet
         agenda_html: "<strong>Pauta:</strong> %{notes}"
-        text_body: "A %{workspace} agendou uma reunião com você."
-        text_start: "Início:"
-        text_end: "Término:"
-        text_join: "Entrar no Google Meet:"
-        text_agenda: "Pauta:"
+        text_body: A %{workspace} agendou uma reunião com você.
+        text_start: 'Início:'
+        text_end: 'Término:'
+        text_join: 'Entrar no Google Meet:'
+        text_agenda: 'Pauta:'
     note:
       mention:
-        subject: "%{author} mencionou você em \"%{title}\""
-        someone: "Alguém"
+        subject: '%{author} mencionou você em "%{title}"'
+        someone: Alguém
         preheader: "%{author} mencionou você em %{title}."
-        eyebrow: "Menção"
-        heading: "Você foi mencionado"
+        eyebrow: Menção
+        heading: Você foi mencionado
         body_html: "<strong>%{author}</strong> mencionou você em um comentário no ticket <strong>%{title}</strong>:"
-        note: "Você recebeu este e-mail porque foi mencionado neste ticket."
-        text_body: "%{author} mencionou você em um comentário no ticket \"%{title}\":"
-        text_note: "Você recebeu este e-mail porque foi mencionado neste ticket."
+        note: Você recebeu este e-mail porque foi mencionado neste ticket.
+        text_body: '%{author} mencionou você em um comentário no ticket "%{title}":'
+        text_note: Você recebeu este e-mail porque foi mencionado neste ticket.
     post:
       published:
-        subject: "Post publicado em %{provider} ✅"
-        preheader: "Seu post foi publicado em %{provider}."
-        eyebrow: "Publicação"
-        heading: "Post publicado ✅"
-        body_html: "O post do ticket <strong>%{title}</strong> foi publicado com sucesso em <strong>%{provider}</strong>. A partir de agora, as métricas começam a ser monitoradas automaticamente."
-        button: "Ver publicação"
-        follow_html: "Acompanhe o desempenho no <a href=\"%{url}\" style=\"color:#7C3AED;\">ticket</a>."
-        text_body: "O post do ticket \"%{title}\" foi publicado com sucesso em %{provider}."
-        text_monitoring: "As métricas começam a ser monitoradas automaticamente."
-        text_view: "Ver publicação:"
+        subject: Post publicado em %{provider} ✅
+        preheader: Seu post foi publicado em %{provider}.
+        eyebrow: Publicação
+        heading: Post publicado ✅
+        body_html: O post do ticket <strong>%{title}</strong> foi publicado com sucesso em <strong>%{provider}</strong>. A partir de agora, as métricas começam a ser monitoradas automaticamente.
+        button: Ver publicação
+        follow_html: Acompanhe o desempenho no <a href="%{url}" style="color:#7C3AED;">ticket</a>.
+        text_body: O post do ticket "%{title}" foi publicado com sucesso em %{provider}.
+        text_monitoring: As métricas começam a ser monitoradas automaticamente.
+        text_view: 'Ver publicação:'
       failed:
-        subject: "Falha ao publicar em %{provider}"
-        preheader: "Falha ao publicar o post em %{provider}."
-        eyebrow: "Publicação"
-        heading: "Falha na publicação"
-        body_html: "Não foi possível publicar o post do ticket <strong>%{title}</strong> em <strong>%{provider}</strong>."
-        retry_hint: "Revise a conta conectada e o conteúdo no ticket e tente publicar novamente."
-        button: "Abrir ticket"
-        text_body: "Não foi possível publicar o post do ticket \"%{title}\" em %{provider}."
-        text_reason: "Detalhe:"
-        text_retry: "Revise a conta conectada e o conteúdo, e tente novamente:"
+        subject: Falha ao publicar em %{provider}
+        preheader: Falha ao publicar o post em %{provider}.
+        eyebrow: Publicação
+        heading: Falha na publicação
+        body_html: Não foi possível publicar o post do ticket <strong>%{title}</strong> em <strong>%{provider}</strong>.
+        retry_hint: Revise a conta conectada e o conteúdo no ticket e tente publicar novamente.
+        button: Abrir ticket
+        text_body: Não foi possível publicar o post do ticket "%{title}" em %{provider}.
+        text_reason: 'Detalhe:'
+        text_retry: 'Revise a conta conectada e o conteúdo, e tente novamente:'
     project:
       creative_types:
-        reel: "Reel"
-        feed_image: "Imagem"
-        carousel: "Carrossel"
-        story: "Story"
-        ugc_video: "Vídeo UGC"
-        ad: "Anúncio"
-        thumbnail: "Thumbnail"
-        cover: "Capa"
+        reel: Reel
+        feed_image: Imagem
+        carousel: Carrossel
+        story: Story
+        ugc_video: Vídeo UGC
+        ad: Anúncio
+        thumbnail: Thumbnail
+        cover: Capa
       scope_summary:
-        subject: "Escopo de conteúdo — %{project}"
-        preheader: "Escopo de conteúdo da campanha %{project} — %{items}."
-        eyebrow: "Escopo"
-        heading: "Escopo de conteúdo"
-        body_html: "Segue o panorama do conteúdo planejado para <strong>%{project}</strong>."
-        empty: "Nenhum ticket criado nesta campanha ainda."
-        date_tbd: "Data a definir"
-        footer: "Datas sujeitas a ajustes durante a produção."
-        text_body: "Segue o panorama do conteúdo planejado para %{project}."
+        subject: Escopo de conteúdo — %{project}
+        preheader: Escopo de conteúdo da campanha %{project} — %{items}.
+        eyebrow: Escopo
+        heading: Escopo de conteúdo
+        body_html: Segue o panorama do conteúdo planejado para <strong>%{project}</strong>.
+        empty: Nenhum ticket criado nesta campanha ainda.
+        date_tbd: Data a definir
+        footer: Datas sujeitas a ajustes durante a produção.
+        text_body: Segue o panorama do conteúdo planejado para %{project}.
     report:
       deck:
-        subject: "Relatório da campanha — %{project}"
-        preheader: "O relatório da campanha %{project} está pronto — em anexo (PDF)."
-        eyebrow: "Relatório"
-        heading: "Relatório da campanha %{project}"
-        body_html: "Fechamos a campanha <strong>%{project}</strong> e preparamos o relatório completo de desempenho — números, destaques, gargalos e o plano de ação. Ele está <strong>em anexo neste e-mail</strong> (PDF)."
-        button: "Abrir minha central"
-        note: "Na sua central você acompanha esta e as demais campanhas a qualquer momento."
-        text_heading: "Relatório da campanha %{project}"
-        text_body: "Fechamos a campanha %{project} e preparamos o relatório completo de desempenho. Ele está em anexo neste e-mail (PDF)."
-        text_open: "Abra sua central:"
+        subject: Relatório da campanha — %{project}
+        preheader: O relatório da campanha %{project} está pronto — em anexo (PDF).
+        eyebrow: Relatório
+        heading: Relatório da campanha %{project}
+        body_html: Fechamos a campanha <strong>%{project}</strong> e preparamos o relatório completo de desempenho — números, destaques, gargalos e o plano de ação. Ele está <strong>em anexo neste e-mail</strong> (PDF).
+        button: Abrir minha central
+        note: Na sua central você acompanha esta e as demais campanhas a qualquer momento.
+        text_heading: Relatório da campanha %{project}
+        text_body: Fechamos a campanha %{project} e preparamos o relatório completo de desempenho. Ele está em anexo neste e-mail (PDF).
+        text_open: 'Abra sua central:'
     subscription:
       plans:
-        solo: "Solo"
-        agencia: "Agência"
-        enterprise: "Enterprise"
+        solo: Solo
+        agencia: Agência
+        enterprise: Enterprise
       trial_ending:
-        subject: "Seu teste da agencios termina em breve"
-        preheader: "Seu período de teste da agencios termina em breve."
-        eyebrow: "Assinatura"
-        heading: "Seu teste termina em breve"
-        body_prefix_html: "O período de teste da <strong>%{workspace}</strong> na agencios"
-        ends_on_html: "termina em <strong>%{date}</strong>"
-        ends_soon: "está chegando ao fim"
-        body2_html: "Para continuar com o plano <strong>%{plan}</strong> sem interrupções, adicione uma forma de pagamento."
-        button: "Gerenciar assinatura"
-        text_body_prefix: "O período de teste da %{workspace} na agencios"
-        text_ends_on: "termina em %{date}"
-        text_body2: "Para continuar com o plano %{plan} sem interrupções, adicione uma forma de pagamento:"
+        subject: Seu teste da agencios termina em breve
+        preheader: Seu período de teste da agencios termina em breve.
+        eyebrow: Assinatura
+        heading: Seu teste termina em breve
+        body_prefix_html: O período de teste da <strong>%{workspace}</strong> na agencios
+        ends_on_html: termina em <strong>%{date}</strong>
+        ends_soon: está chegando ao fim
+        body2_html: Para continuar com o plano <strong>%{plan}</strong> sem interrupções, adicione uma forma de pagamento.
+        button: Gerenciar assinatura
+        text_body_prefix: O período de teste da %{workspace} na agencios
+        text_ends_on: termina em %{date}
+        text_body2: 'Para continuar com o plano %{plan} sem interrupções, adicione uma forma de pagamento:'
       payment_failed:
-        subject: "Falha no pagamento da sua assinatura agencios"
-        preheader: "Não conseguimos processar o pagamento da sua assinatura."
-        eyebrow: "Assinatura"
-        heading: "Falha no pagamento"
-        body_html: "Não conseguimos processar o pagamento da assinatura <strong>%{plan}</strong> da <strong>%{workspace}</strong>."
-        body2: "Para evitar a suspensão do acesso, atualize sua forma de pagamento. Faremos uma nova tentativa automaticamente nos próximos dias."
-        button: "Atualizar pagamento"
-        text_body: "Não conseguimos processar o pagamento da assinatura %{plan} da %{workspace}."
-        text_body2: "Para evitar a suspensão do acesso, atualize sua forma de pagamento:"
-        text_retry: "Faremos uma nova tentativa automaticamente nos próximos dias."
+        subject: Falha no pagamento da sua assinatura agencios
+        preheader: Não conseguimos processar o pagamento da sua assinatura.
+        eyebrow: Assinatura
+        heading: Falha no pagamento
+        body_html: Não conseguimos processar o pagamento da assinatura <strong>%{plan}</strong> da <strong>%{workspace}</strong>.
+        body2: Para evitar a suspensão do acesso, atualize sua forma de pagamento. Faremos uma nova tentativa automaticamente nos próximos dias.
+        button: Atualizar pagamento
+        text_body: Não conseguimos processar o pagamento da assinatura %{plan} da %{workspace}.
+        text_body2: 'Para evitar a suspensão do acesso, atualize sua forma de pagamento:'
+        text_retry: Faremos uma nova tentativa automaticamente nos próximos dias.
       canceled:
-        subject: "Sua assinatura agencios foi cancelada"
-        preheader: "Sua assinatura agencios foi cancelada."
-        eyebrow: "Assinatura"
-        heading: "Assinatura cancelada"
-        body_html: "A assinatura <strong>%{plan}</strong> da <strong>%{workspace}</strong> foi cancelada. Você ainda pode acessar seus dados, mas os recursos pagos ficam indisponíveis."
-        body2: "Mudou de ideia? Você pode reativar a qualquer momento."
-        button: "Reativar assinatura"
-        text_body: "A assinatura %{plan} da %{workspace} foi cancelada."
-        text_body_note: "Você ainda pode acessar seus dados, mas os recursos pagos ficam indisponíveis."
-        text_body2: "Mudou de ideia? Reative a qualquer momento:"
+        subject: Sua assinatura agencios foi cancelada
+        preheader: Sua assinatura agencios foi cancelada.
+        eyebrow: Assinatura
+        heading: Assinatura cancelada
+        body_html: A assinatura <strong>%{plan}</strong> da <strong>%{workspace}</strong> foi cancelada. Você ainda pode acessar seus dados, mas os recursos pagos ficam indisponíveis.
+        body2: Mudou de ideia? Você pode reativar a qualquer momento.
+        button: Reativar assinatura
+        text_body: A assinatura %{plan} da %{workspace} foi cancelada.
+        text_body_note: Você ainda pode acessar seus dados, mas os recursos pagos ficam indisponíveis.
+        text_body2: 'Mudou de ideia? Reative a qualquer momento:'
     subtask:
       assigned:
-        subject: "Nova tarefa atribuída a você: %{title}"
-        preheader: "Uma tarefa foi atribuída a você: %{title}."
-        eyebrow: "Tarefa"
-        heading: "Nova tarefa para você"
+        subject: 'Nova tarefa atribuída a você: %{title}'
+        preheader: 'Uma tarefa foi atribuída a você: %{title}.'
+        eyebrow: Tarefa
+        heading: Nova tarefa para você
         assigned_by_html: "<strong>%{name}</strong> atribuiu"
-        assigned_generic: "Foi atribuída"
-        body_suffix_html: "uma tarefa a você no ticket <strong>%{title}</strong>."
-        field_due: "Prazo"
-        button: "Ver no ticket"
-        note: "Suas tarefas ficam reunidas em “Minhas tarefas”."
+        assigned_generic: Foi atribuída
+        body_suffix_html: uma tarefa a você no ticket <strong>%{title}</strong>.
+        field_due: Prazo
+        button: Ver no ticket
+        note: Suas tarefas ficam reunidas em “Minhas tarefas”.
         text_assigned_by: "%{name} atribuiu"
-        text_assigned_generic: "Foi atribuída"
-        text_body_suffix: "uma tarefa a você no ticket \"%{title}\":"
-        text_due: "Prazo:"
-        text_view: "Ver no ticket:"
+        text_assigned_generic: Foi atribuída
+        text_body_suffix: 'uma tarefa a você no ticket "%{title}":'
+        text_due: 'Prazo:'
+        text_view: 'Ver no ticket:'
     ticket:
       assigned:
-        subject: "Novo ticket atribuído a você: %{title}"
-        preheader: "Um ticket foi atribuído a você: %{title}."
-        eyebrow: "Ticket"
-        heading: "Novo ticket para você"
+        subject: 'Novo ticket atribuído a você: %{title}'
+        preheader: 'Um ticket foi atribuído a você: %{title}.'
+        eyebrow: Ticket
+        heading: Novo ticket para você
         assigned_by_html: "<strong>%{name}</strong> atribuiu"
-        assigned_generic: "Foi atribuído"
-        body_suffix: "um ticket a você."
-        field_campaign: "Campanha"
-        field_status: "Status"
-        field_due: "Prazo"
-        button: "Abrir ticket"
+        assigned_generic: Foi atribuído
+        body_suffix: um ticket a você.
+        field_campaign: Campanha
+        field_status: Status
+        field_due: Prazo
+        button: Abrir ticket
         text_assigned_by: "%{name} atribuiu"
-        text_assigned_generic: "Foi atribuído"
-        text_body_suffix: "um ticket a você:"
-        text_campaign: "Campanha:"
-        text_status: "Status:"
-        text_due: "Prazo:"
+        text_assigned_generic: Foi atribuído
+        text_body_suffix: 'um ticket a você:'
+        text_campaign: 'Campanha:'
+        text_status: 'Status:'
+        text_due: 'Prazo:'
+    status:
+      ideation: Ideação
+      scoping: Escopo
+      production: Produção
+      scheduled: Agendado
+      published: Postado / Monitorando
+      retrospective: Retrospectiva
+      done: Concluído
+  time:
+    formats:
+      email: "%d/%m/%Y às %H:%M"

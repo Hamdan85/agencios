@@ -8,11 +8,14 @@ module Operations
     class Grant < Operations::Base
       include BroadcastsBalance
 
-      def initialize(workspace:, amount:, expires_at:, description: nil)
-        @workspace   = workspace
-        @amount      = amount.to_i
-        @expires_at  = expires_at
-        @description = description
+      def initialize(workspace:, amount:, expires_at:, description: nil,
+                     description_key: nil, description_params: {})
+        @workspace          = workspace
+        @amount             = amount.to_i
+        @expires_at         = expires_at
+        @description        = description
+        @description_key    = description_key
+        @description_params = description_params
       end
 
       def call
@@ -29,7 +32,9 @@ module Operations
             amount: @amount, granted_delta: @amount, purchased_delta: 0,
             balance_after: wallet.granted_balance + wallet.purchased_balance,
             expires_at: @expires_at,
-            description: @description, description_key: (@description ? nil : 'credits.ledger.plan_monthly')
+            description: @description,
+            description_key: (@description ? nil : (@description_key || 'credits.ledger.plan_monthly')),
+            description_params: @description_params
           )
           wallet
         end

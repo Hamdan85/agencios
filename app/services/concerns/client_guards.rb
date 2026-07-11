@@ -18,8 +18,7 @@ module ClientGuards
   # Raises when the given client (possibly nil) is archived.
   def ensure_client_active!(client)
     if client&.status_archived?
-      raise Operations::Errors::Invalid,
-            "O cliente \"#{client.name}\" está arquivado. Reative o cliente para criar trabalho novo para ele."
+      raise Operations::Errors::Invalid, I18n.t('api.clients.archived', name: client.name)
     end
 
     client

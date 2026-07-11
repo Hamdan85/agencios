@@ -27,9 +27,7 @@ module Mcp
     # WWW-Authenticate challenge (that would make Claude try to start OAuth). Just
     # fail closed with a JSON-RPC error.
     def connector_unauthorized
-      message = 'Invalid connector token. Copy a fresh URL from agencios → ' \
-                'Minha conta → Conexões → Conector do Claude.'
-      render json: rpc_error(nil, -32_001, message), status: :unauthorized
+      render json: rpc_error(nil, -32_001, I18n.t('api.mcp.invalid_token')), status: :unauthorized
     end
   end
 end

@@ -1,280 +1,286 @@
+---
 pt-BR:
   admin:
     menu:
-      tenants: 'Tenants'
-      platform: 'Plataforma'
-      pricing: 'Preços'
+      tenants: Tenants
+      platform: Plataforma
+      pricing: Preços
     common:
-      'yes': 'Sim'
-      'no': 'Não'
-      yes_tag: 'sim'
-      no_tag: 'não'
-      workspace: 'Workspace'
-      user: 'Usuário'
-      role: 'Papel'
-      client: 'Cliente'
-      generation: 'Geração'
-      cost_usd: 'Custo (US$)'
-      impersonate_confirm: 'Entrar como %{email}?'
+      'yes': Sim
+      'no': Não
+      yes_tag: sim
+      no_tag: não
+      workspace: Workspace
+      user: Usuário
+      role: Papel
+      client: Cliente
+      generation: Geração
+      cost_usd: Custo (US$)
+      impersonate_confirm: Entrar como %{email}?
     ai_config:
       op_labels:
-        summarize_ticket: 'Resumo do ticket'
-        fill_fields: 'Preencher campos (Gerar com IA)'
-        build_scope: 'Montar escopo (subtarefas)'
-        synthesize_positioning: 'Sintetizar posicionamento'
-        extract_client_from_url: 'Extrair cliente de URL'
-        carousel_copy: 'Copy de carrossel'
-        project_audit: 'Auditoria de campanha'
-        draft_retrospective: 'Rascunho de retrospectiva'
-        strategy_planner: 'Planejador de estratégia (chat)'
-        strategy_plan: 'Planejador de estratégia (gerar plano)'
-        video_storyboard: 'Storyboard de vídeo'
-        video_editor: 'Editor de vídeo (chat)'
-        improve_video_prompt: 'Melhorar prompt de vídeo'
+        summarize_ticket: Resumo do ticket
+        fill_fields: Preencher campos (Gerar com IA)
+        build_scope: Montar escopo (subtarefas)
+        synthesize_positioning: Sintetizar posicionamento
+        extract_client_from_url: Extrair cliente de URL
+        carousel_copy: Copy de carrossel
+        project_audit: Auditoria de campanha
+        draft_retrospective: Rascunho de retrospectiva
+        strategy_planner: Planejador de estratégia (chat)
+        strategy_plan: Planejador de estratégia (gerar plano)
+        video_storyboard: Storyboard de vídeo
+        video_editor: Editor de vídeo (chat)
+        improve_video_prompt: Melhorar prompt de vídeo
     video_config:
       mode_labels:
-        avatar: 'Avatar UGC (pessoa falando)'
-        product: 'Produto (a partir de fotos)'
-        character: 'Personagem (mascote/animado, recorrente)'
-        scene: 'Cena / B-roll (lugares, momentos, lifestyle)'
-        motion: 'Motion / gráfico (abstrato, energético)'
+        avatar: Avatar UGC (pessoa falando)
+        product: Produto (a partir de fotos)
+        character: Personagem (mascote/animado, recorrente)
+        scene: Cena / B-roll (lugares, momentos, lifestyle)
+        motion: Motion / gráfico (abstrato, energético)
       music_mood_labels:
-        upbeat: 'Animada'
-        calm: 'Calma'
-        corporate: 'Corporativa'
-        energetic: 'Energética'
-        emotional: 'Emocional'
-        epic: 'Épica'
-        playful: 'Divertida'
-        cinematic: 'Cinematográfica'
+        upbeat: Animada
+        calm: Calma
+        corporate: Corporativa
+        energetic: Energética
+        emotional: Emocional
+        epic: Épica
+        playful: Divertida
+        cinematic: Cinematográfica
       music_provider_labels:
-        jamendo: 'Jamendo (royalty-free)'
-        epidemic_sound: 'Epidemic Sound (licenciado)'
+        jamendo: Jamendo (royalty-free)
+        epidemic_sound: Epidemic Sound (licenciado)
     ai_configs:
-      menu: 'IA (modelos)'
-      provider_section: 'Provedor'
-      provider_auto: 'Auto (detecta pela chave configurada)'
-      provider_openrouter: 'OpenRouter (vários modelos)'
-      provider_anthropic: 'Anthropic (direto)'
-      provider_hint: 'A chave da API continua nas credentials — aqui só se escolhe o provedor.'
-      default_model_section: 'Modelo padrão'
-      default_model_label: 'Modelo padrão'
+      menu: IA (modelos)
+      provider_section: Provedor
+      provider_auto: Auto (detecta pela chave configurada)
+      provider_openrouter: OpenRouter (vários modelos)
+      provider_anthropic: Anthropic (direto)
+      provider_hint: A chave da API continua nas credentials — aqui só se escolhe o provedor.
+      default_model_section: Modelo padrão
+      default_model_label: Modelo padrão
       default_model_hint: 'Slug do OpenRouter usado quando a operação não tem um modelo próprio. Ex.: anthropic/claude-sonnet-4.5, openai/gpt-5-mini, google/gemini-2.5-flash.'
-      per_operation_section: 'Modelo por operação (deixe vazio para usar o padrão)'
-      op_placeholder: 'padrão (%{model})'
+      per_operation_section: Modelo por operação (deixe vazio para usar o padrão)
+      op_placeholder: padrão (%{model})
     video_configs:
-      menu: 'Vídeo (motores)'
-      provider_section: 'Provedor'
-      provider_auto: 'Auto (OpenRouter)'
-      provider_openrouter: 'OpenRouter (vários modelos)'
-      provider_hint: 'A chave da API fica nas credentials — aqui só o provedor.'
-      models_section: 'Modelos de vídeo (só dois) — a plataforma renderiza a PRÉVIA no modelo de rascunho e, na aprovação, re-renderiza no modelo final. O modo (avatar/produto/…) não muda o modelo.'
-      draft_model_label: 'Modelo de rascunho (prévia)'
+      menu: Vídeo (motores)
+      provider_section: Provedor
+      provider_auto: Auto (OpenRouter)
+      provider_openrouter: OpenRouter (vários modelos)
+      provider_hint: A chave da API fica nas credentials — aqui só o provedor.
+      models_section: Modelos de vídeo (só dois) — a plataforma renderiza a PRÉVIA no modelo de rascunho e, na aprovação, re-renderiza no modelo final. O modo (avatar/produto/…) não muda o modelo.
+      draft_model_label: Modelo de rascunho (prévia)
       draft_model_hint: 'Slug de vídeo do OpenRouter rápido/barato para iterar. Ex.: %{model}, bytedance/seedance-2.0.'
-      final_model_label: 'Modelo final (renderização)'
+      final_model_label: Modelo final (renderização)
       final_model_hint: 'Slug de vídeo do OpenRouter de melhor qualidade (áudio nativo). Ex.: %{model}, kwaivgi/kling-v3.'
-      max_duration_label: 'Duração máxima (s)'
-      max_duration_hint: 'Teto de segundos por vídeo (protege custo).'
-      music_provider_section: 'Provedor de música'
-      music_provider_hint: 'Fonte da trilha buscada pelo storyboard (Vendors::Music). Jamendo é royalty-free e funciona já; Epidemic Sound é licenciado e só baixa faixas quando a conta da API tem permissão de download. A chave fica nas credentials.'
-      music_tracks_section: 'Trilhas de música por clima (fallback do catálogo) — usadas quando o provedor não acha nada. URL público do MP3 + título/crédito.'
-      music_url_label: '%{mood} — URL'
-      music_title_label: '%{mood} — título/crédito'
-      voices_section: 'Vozes'
+      max_duration_label: Duração máxima (s)
+      max_duration_hint: Teto de segundos por vídeo (protege custo).
+      music_provider_section: Provedor de música
+      music_provider_hint: Fonte da trilha buscada pelo storyboard (Vendors::Music). Jamendo é royalty-free e funciona já; Epidemic Sound é licenciado e só baixa faixas quando a conta da API tem permissão de download. A chave fica nas credentials.
+      music_tracks_section: Trilhas de música por clima (fallback do catálogo) — usadas quando o provedor não acha nada. URL público do MP3 + título/crédito.
+      music_url_label: "%{mood} — URL"
+      music_title_label: "%{mood} — título/crédito"
+      voices_section: Vozes
       voices_link_text: 'As vozes (Cartesia) têm aba própria: '
-      voices_link_label: 'Vídeo — vozes'
+      voices_link_label: Vídeo — vozes
     voices:
-      menu: 'Vídeo — vozes'
-      title: 'Vídeo — vozes'
-      imported: '%{count} vozes importadas da Cartesia.'
-      none_imported: 'Nenhuma voz importada (verifique a credencial cartesia.api_key).'
-      settings_saved: 'Configurações de voz salvas.'
-      default_set: 'Voz padrão definida (%{id}).'
-      import_action: 'Importar vozes da Cartesia'
-      settings_panel: 'Configurações de voz'
+      menu: Vídeo — vozes
+      title: Vídeo — vozes
+      imported: "%{count} vozes importadas da Cartesia."
+      none_imported: Nenhuma voz importada (verifique a credencial cartesia.api_key).
+      settings_saved: Configurações de voz salvas.
+      default_set: Voz padrão definida (%{id}).
+      import_action: Importar vozes da Cartesia
+      settings_panel: Configurações de voz
       settings_intro: 'As vozes vêm AUTOMATICAMENTE da biblioteca da Cartesia — o storyboard escolhe a que combina com o personagem. Os campos abaixo são OPCIONAIS: use para forçar/renomear vozes ou definir um padrão. A chave da API fica nas credentials.'
-      default_voice_label: 'voice_id padrão (senão usa a 1ª voz PT da Cartesia)'
-      dub_label: ' Dublar na pós (garante a voz mesmo se o modelo não sincronizar)'
-      dub_hint: 'Desligado = a voz vai como referência de áudio pro modelo lip-sincar.'
+      default_voice_label: voice_id padrão (senão usa a 1ª voz PT da Cartesia)
+      dub_label: " Dublar na pós (garante a voz mesmo se o modelo não sincronizar)"
+      dub_hint: Desligado = a voz vai como referência de áudio pro modelo lip-sincar.
       catalog_label: 'Vozes fixas (opcional — uma por linha: rótulo = voice_id)'
-      catalog_placeholder: "Feminina jovem BR = <voice_id>\nMasculina grave BR = <voice_id>"
-      save_settings: 'Salvar configurações de voz'
-      available_panel: 'Vozes disponíveis (%{count})'
-      none_found: 'Nenhuma voz encontrada. Clique em “Importar vozes da Cartesia” (precisa da credencial cartesia.api_key).'
-      col_default: 'Padrão'
-      default_tag: 'padrão'
-      use: 'Usar'
-      col_name: 'Nome'
-      col_gender: 'Gênero'
-      col_country: 'País'
-      col_description: 'Descrição'
+      catalog_placeholder: |-
+        Feminina jovem BR = <voice_id>
+        Masculina grave BR = <voice_id>
+      save_settings: Salvar configurações de voz
+      available_panel: Vozes disponíveis (%{count})
+      none_found: Nenhuma voz encontrada. Clique em “Importar vozes da Cartesia” (precisa da credencial cartesia.api_key).
+      col_default: Padrão
+      default_tag: padrão
+      use: Usar
+      col_name: Nome
+      col_gender: Gênero
+      col_country: País
+      col_description: Descrição
     workspaces:
-      menu: 'Workspaces'
-      godfathered_section: 'Cortesia (godfathered)'
-      godfathered_hint: 'Acesso vitalício grátis — ignora o paywall e os limites de assentos/clientes.'
-      credit_limit_label: 'Limite de créditos mensais'
-      credit_limit_hint: 'Créditos de geração (vídeo/imagem) por mês para este workspace godfathered. Em branco = ilimitado. Só se aplica quando "godfathered" está ativo.'
-      filter_name: 'Nome contém'
-      filter_slug: 'Slug contém'
-      col_plan: 'Plano'
-      col_status: 'Status'
-      col_access: 'Acesso'
-      access_yes: 'sim'
-      access_blocked: 'bloqueado'
-      col_credits: 'Créditos'
-      credits_per_month: '%{available} / %{limit} · mês'
-      col_seats: 'Assentos'
-      row_godfathered: 'Godfathered'
-      row_credit_limit: 'Limite de créditos mensais'
-      credit_limit_per_month: '%{limit} / mês'
-      unlimited: 'ilimitado'
-      row_access: 'Acesso liberado'
-      access_granted_no: 'Não (bloqueado)'
-      row_owner: 'Dono'
-      row_clients: 'Clientes'
-      subscription_panel: 'Assinatura'
-      sub_plan: 'Plano'
-      sub_status: 'Status'
-      sub_card: 'Cartão no arquivo'
-      sub_seats: 'Assentos'
-      sub_trial_ends: 'Trial termina'
-      sub_period_end: 'Período atual até'
-      sub_cancel_at: 'Cancela em'
-      sub_customer: 'Stripe customer'
-      sub_subscription: 'Stripe subscription'
-      no_subscription: 'Sem assinatura.'
-      credits_panel: 'Créditos'
-      credits_available: 'Disponível'
-      credits_available_godfathered: '%{available} / %{limit} (godfathered, mês)'
-      credits_infinite_godfathered: '∞ (godfathered)'
-      credits_granted: 'Do plano (granted)'
-      credits_purchased: 'Comprados (purchased)'
-      credits_granted_expires: 'Granted expira em'
-      no_wallet: 'Sem carteira.'
-      grant_100: 'Creditar +100 (cortesia)'
-      grant_500: 'Creditar +500 (cortesia)'
-      members_panel: 'Membros'
-      invite_member: 'Convidar membro'
-      impersonate_owner: 'Personificar dono'
-      credits_granted_notice: '%{amount} créditos concedidos.'
-      invite_email_required: 'Informe um e-mail.'
-      invite_sent: 'Convite enviado para %{email}.'
+      menu: Workspaces
+      godfathered_section: Cortesia (godfathered)
+      godfathered_hint: Acesso vitalício grátis — ignora o paywall e os limites de assentos/clientes.
+      credit_limit_label: Limite de créditos mensais
+      credit_limit_hint: Créditos de geração (vídeo/imagem) por mês para este workspace godfathered. Em branco = ilimitado. Só se aplica quando "godfathered" está ativo.
+      filter_name: Nome contém
+      filter_slug: Slug contém
+      col_plan: Plano
+      col_status: Status
+      col_access: Acesso
+      access_yes: sim
+      access_blocked: bloqueado
+      col_credits: Créditos
+      credits_per_month: "%{available} / %{limit} · mês"
+      col_seats: Assentos
+      row_godfathered: Godfathered
+      row_credit_limit: Limite de créditos mensais
+      credit_limit_per_month: "%{limit} / mês"
+      unlimited: ilimitado
+      row_access: Acesso liberado
+      access_granted_no: Não (bloqueado)
+      row_owner: Dono
+      row_clients: Clientes
+      subscription_panel: Assinatura
+      sub_plan: Plano
+      sub_status: Status
+      sub_card: Cartão no arquivo
+      sub_seats: Assentos
+      sub_trial_ends: Trial termina
+      sub_period_end: Período atual até
+      sub_cancel_at: Cancela em
+      sub_customer: Stripe customer
+      sub_subscription: Stripe subscription
+      no_subscription: Sem assinatura.
+      credits_panel: Créditos
+      credits_available: Disponível
+      credits_available_godfathered: "%{available} / %{limit} (godfathered, mês)"
+      credits_infinite_godfathered: "∞ (godfathered)"
+      credits_granted: Do plano (granted)
+      credits_purchased: Comprados (purchased)
+      credits_granted_expires: Granted expira em
+      no_wallet: Sem carteira.
+      grant_100: Creditar +100 (cortesia)
+      grant_500: Creditar +500 (cortesia)
+      members_panel: Membros
+      invite_member: Convidar membro
+      impersonate_owner: Personificar dono
+      credits_granted_notice: "%{amount} créditos concedidos."
+      invite_email_required: Informe um e-mail.
+      invite_sent: Convite enviado para %{email}.
     subscriptions:
-      menu: 'Assinaturas'
-      scope_active: 'Ativas'
-      scope_trialing: 'Em trial'
-      scope_past_due: 'Inadimplentes'
-      scope_canceled: 'Canceladas'
-      col_card: 'Cartão'
-      col_access: 'Acesso'
-      row_access: 'Acesso liberado'
-      row_card: 'Cartão no arquivo'
+      menu: Assinaturas
+      scope_active: Ativas
+      scope_trialing: Em trial
+      scope_past_due: Inadimplentes
+      scope_canceled: Canceladas
+      col_card: Cartão
+      col_access: Acesso
+      row_access: Acesso liberado
+      row_card: Cartão no arquivo
     users:
-      menu: 'Usuários'
-      filter_email: 'E-mail contém'
-      filter_name: 'Nome contém'
-      col_team: 'Equipe'
-      team_staff: 'staff'
-      col_confirmed: 'Confirmado'
-      col_workspaces: 'Workspaces'
-      impersonate: 'Personificar'
-      row_team: 'Equipe (staff)'
-      row_email_confirmed: 'E-mail confirmado'
-      email_confirmed_yes: 'Sim (%{at})'
-      row_google: 'Google conectado'
-      workspaces_panel: 'Workspaces'
-      ws_since: 'Desde'
-      impersonate_this: 'Personificar este usuário'
+      menu: Usuários
+      filter_email: E-mail contém
+      filter_name: Nome contém
+      col_team: Equipe
+      team_staff: staff
+      col_confirmed: Confirmado
+      col_workspaces: Workspaces
+      impersonate: Personificar
+      row_team: Equipe (staff)
+      row_email_confirmed: E-mail confirmado
+      email_confirmed_yes: Sim (%{at})
+      row_google: Google conectado
+      workspaces_panel: Workspaces
+      ws_since: Desde
+      impersonate_this: Personificar este usuário
     ai_usage:
-      menu: 'Custo de IA'
-      scope_today: 'Hoje'
-      scope_7d: '7 dias'
-      scope_30d: '30 dias'
-      scope_month: 'Este mês'
-      col_tokens: 'Tokens (in/out)'
-      col_units: 'Unidades'
-      col_subject: 'Sujeito'
-      sidebar_title: 'Resumo de custo'
+      menu: Custo de IA
+      scope_today: Hoje
+      scope_7d: 7 dias
+      scope_30d: 30 dias
+      scope_month: Este mês
+      col_tokens: Tokens (in/out)
+      col_units: Unidades
+      col_subject: Sujeito
+      sidebar_title: Resumo de custo
       sidebar_total: 'Total: '
-      sidebar_by_provider: 'Por provider'
-      sidebar_top_operations: 'Top operations'
+      sidebar_by_provider: Por provider
+      sidebar_top_operations: Top operations
       chart:
-        empty: 'Sem uso de IA nos últimos %{days} dias para o filtro atual.'
-        calls: 'chamadas'
-        input_tokens: 'tokens entrada'
-        output: 'saída'
+        empty: Sem uso de IA nos últimos %{days} dias para o filtro atual.
+        calls: chamadas
+        input_tokens: tokens entrada
+        output: saída
         period_total: 'Total do período:'
-        panel_title: 'Uso e custo — últimos %{days} dias (filtros aplicados)'
+        panel_title: Uso e custo — últimos %{days} dias (filtros aplicados)
     dashboard:
-      ai_cost_panel: 'Custo de IA — este mês'
+      ai_cost_panel: Custo de IA — este mês
       total: 'Total: '
-      top_operations_panel: 'Top operations — este mês'
-      recent_panel: 'Últimas chamadas de IA'
+      top_operations_panel: Top operations — este mês
+      recent_panel: Últimas chamadas de IA
     generations:
-      menu: 'Gerações'
-      scope_videos: 'Vídeos'
-      scope_images: 'Imagens'
-      scope_carousels: 'Carrosséis'
-      scope_failed: 'Falhas'
-      col_cost: 'Custo (¢US$)'
-      credits_panel: 'Créditos desta geração'
+      menu: Gerações
+      scope_videos: Vídeos
+      scope_images: Imagens
+      scope_carousels: Carrosséis
+      scope_failed: Falhas
+      col_cost: Custo (¢US$)
+      credits_panel: Créditos desta geração
     credit_transactions:
-      menu: 'Créditos (ledger)'
-      scope_debits: 'Débitos'
-      scope_purchases: 'Compras'
-      scope_grants: 'Concessões'
-      col_amount: 'Valor'
-      col_balance: 'Saldo após'
+      menu: Créditos (ledger)
+      scope_debits: Débitos
+      scope_purchases: Compras
+      scope_grants: Concessões
+      col_amount: Valor
+      col_balance: Saldo após
     memberships:
-      menu: 'Membros'
+      menu: Membros
     social_accounts:
-      menu: 'Contas sociais'
-      scope_expired: 'Token expirado'
-      scope_revoked: 'Revogadas'
-      col_token_expires: 'Token expira'
-      col_expired: 'Expirado?'
-      row_token_expires: 'Token expira em'
-      row_token_expired: 'Token expirado?'
+      menu: Contas sociais
+      scope_expired: Token expirado
+      scope_revoked: Revogadas
+      col_token_expires: Token expira
+      col_expired: Expirado?
+      row_token_expires: Token expira em
+      row_token_expired: Token expirado?
     pricing_plans:
-      menu: 'Planos'
-      sync_action: 'Sincronizar com o Stripe'
-      sync_confirm: 'Garante o Product + Prices (mensal + anual) no Stripe com estes valores.'
-      sync_notice: 'Plano %{key} sincronizado com o Stripe (mensal + anual). Novos checkouts já usam o novo valor; assinantes atuais mantêm o preço antigo.'
+      menu: Planos
+      sync_action: Sincronizar com o Stripe
+      sync_confirm: Garante o Product + Prices (mensal + anual) no Stripe com estes valores.
+      sync_notice: Plano %{key} sincronizado com o Stripe (mensal + anual). Novos checkouts já usam o novo valor; assinantes atuais mantêm o preço antigo.
       not_configured: 'Stripe não configurado: %{message}'
       sync_failed: 'Falha ao sincronizar com o Stripe: %{message}'
-      col_monthly: 'Mensal (BRL)'
-      col_annual: 'Anual (BRL)'
-      col_included_credits: 'Créditos inclusos'
-      col_stripe_price: 'Stripe price'
-      not_synced: '— não sincronizado'
-      row_monthly: 'Preço mensal (BRL)'
-      row_annual: 'Preço anual (BRL)'
-      row_features: 'Recursos'
-      show_note: 'Salvar um plano sincroniza o Product + Prices (mensal e anual) no Stripe automaticamente. Uma mudança de preço cria um Price novo e arquiva o antigo (assinantes atuais mantêm o preço).'
-      plan_section: 'Plano (fonte da verdade do preço)'
-      plan_section_hint: 'Ao salvar, os preços são publicados no Stripe automaticamente (um Price novo por mudança de valor). O valor definido aqui é o que o cliente paga.'
-      key_hint: 'Chave estável (solo/agencia/enterprise). Referenciada por Subscription#plan.'
-      price_cents_label: 'Preço MENSAL em centavos (BRL)'
-      annual_price_cents_label: 'Preço ANUAL em centavos (BRL) — 0 = calcula 12× mensal − desconto'
-      annual_price_cents_hint: '0 usa o desconto anual fixo (%{percent}%).'
-      included_credits_label: 'Créditos mensais inclusos'
-      features_text_label: 'Recursos (um por linha)'
-      stripe_section: 'Stripe (preenchido automaticamente pela sincronização)'
-      stripe_product_hint: 'ID do Product (criado/atualizado ao salvar).'
-      stripe_lookup_hint: 'lookup_key do Price MENSAL (estável — transferido para o novo Price).'
-      stripe_price_id_label: 'Stripe price id mensal (cacheado)'
-      stripe_annual_lookup_hint: 'lookup_key do Price ANUAL.'
-      stripe_annual_price_id_label: 'Stripe price id anual (cacheado)'
-      display_section: 'Exibição'
-      save_not_configured: 'Plano salvo, mas o Stripe não está configurado (%{message}) — não sincronizado.'
+      col_monthly: Mensal (BRL)
+      col_annual: Anual (BRL)
+      col_included_credits: Créditos inclusos
+      col_stripe_price: Stripe price
+      not_synced: "— não sincronizado"
+      row_monthly: Preço mensal (BRL)
+      row_annual: Preço anual (BRL)
+      row_features: Recursos
+      show_note: Salvar um plano sincroniza o Product + Prices (mensal e anual) no Stripe automaticamente. Uma mudança de preço cria um Price novo e arquiva o antigo (assinantes atuais mantêm o preço).
+      plan_section: Plano (fonte da verdade do preço)
+      plan_section_hint: Ao salvar, os preços são publicados no Stripe automaticamente (um Price novo por mudança de valor). O valor definido aqui é o que o cliente paga.
+      key_hint: Chave estável (solo/agencia/enterprise). Referenciada por Subscription#plan.
+      price_cents_label: Preço MENSAL em centavos (BRL)
+      annual_price_cents_label: Preço ANUAL em centavos (BRL) — 0 = calcula 12× mensal − desconto
+      annual_price_cents_hint: 0 usa o desconto anual fixo (%{percent}%).
+      included_credits_label: Créditos mensais inclusos
+      features_text_label: Recursos (um por linha)
+      stripe_section: Stripe (preenchido automaticamente pela sincronização)
+      stripe_product_hint: ID do Product (criado/atualizado ao salvar).
+      stripe_lookup_hint: lookup_key do Price MENSAL (estável — transferido para o novo Price).
+      stripe_price_id_label: Stripe price id mensal (cacheado)
+      stripe_annual_lookup_hint: lookup_key do Price ANUAL.
+      stripe_annual_price_id_label: Stripe price id anual (cacheado)
+      display_section: Exibição
+      save_not_configured: Plano salvo, mas o Stripe não está configurado (%{message}) — não sincronizado.
       save_sync_failed: 'Plano salvo, mas a sincronização com o Stripe falhou: %{message}'
     pricing_packs:
-      menu: 'Pacotes de crédito'
-      col_price: 'Preço (BRL)'
-      col_price_per_credit: 'R$/crédito'
-      pack_section: 'Pacote de crédito'
-      price_cents_label: 'Preço em centavos (BRL)'
-      credits_label: 'Créditos concedidos (com bônus de volume)'
+      menu: Pacotes de crédito
+      col_price: Preço (BRL)
+      col_price_per_credit: R$/crédito
+      pack_section: Pacote de crédito
+      price_cents_label: Preço em centavos (BRL)
+      credits_label: Créditos concedidos (com bônus de volume)
+    impersonation:
+      cannot_staff: Não é possível personificar outro membro da equipe.
+      ended: Personificação encerrada.
   credits:
     ledger:
-      staff_courtesy: 'Cortesia da equipe agencios (+%{amount})'
+      staff_courtesy: Cortesia da equipe agencios (+%{amount})

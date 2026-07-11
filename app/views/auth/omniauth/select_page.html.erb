@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Escolha a Página</title>
+  <title><%= t('pages.oauth_select.title') %></title>
   <style>
     body { font-family: system-ui, sans-serif; margin: 0; min-height: 100vh; background: #f8f7ff; color: #3b2f6e; display: flex; align-items: center; justify-content: center; }
     .box { width: 100%; max-width: 420px; padding: 1.75rem; }
@@ -24,13 +24,9 @@
 </head>
 <body>
   <div class="box">
-    <h1>Escolha qual Página conectar</h1>
+    <h1><%= t('pages.oauth_select.heading') %></h1>
     <p class="sub">
-      <% if @network == "instagram" %>
-        Selecione a Página do Facebook que tem a conta do Instagram que você quer conectar a este cliente.
-      <% else %>
-        Selecione a Página do Facebook para conectar a este cliente.
-      <% end %>
+      <%= @network == "instagram" ? t('pages.oauth_select.sub_instagram') : t('pages.oauth_select.sub_facebook') %>
     </p>
 
     <div class="pages">
@@ -41,11 +37,11 @@
                 <%= "disabled" unless ig_ok %>>
           <span class="dot <%= "none" unless page[:has_ig] %>"></span>
           <span class="meta">
-            <span class="name"><%= page[:name].presence || "Página #{page[:id]}" %></span>
+            <span class="name"><%= page[:name].presence || t('pages.oauth_select.page_fallback', id: page[:id]) %></span>
             <% if page[:has_ig] %>
               <span class="ig">Instagram: @<%= page[:ig_username].presence || page[:id] %></span>
             <% else %>
-              <span class="ig none">Sem conta Instagram Business vinculada</span>
+              <span class="ig none"><%= t('pages.oauth_select.no_ig') %></span>
             <% end %>
           </span>
         </button>
@@ -54,8 +50,7 @@
 
     <% if @network == "instagram" && @pages.none? { |p| p[:has_ig] } %>
       <p class="note">
-        Nenhuma destas Páginas tem uma conta Instagram Business/Creator vinculada. Vincule uma
-        conta Instagram à Página nas configurações do Facebook e tente novamente.
+        <%= t('pages.oauth_select.none_with_ig') %>
       </p>
     <% end %>
   </div>

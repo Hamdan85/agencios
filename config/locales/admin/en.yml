@@ -1,280 +1,286 @@
+---
 en:
   admin:
     menu:
-      tenants: 'Tenants'
-      platform: 'Platform'
-      pricing: 'Pricing'
+      tenants: Tenants
+      platform: Platform
+      pricing: Pricing
     common:
       'yes': 'Yes'
       'no': 'No'
       yes_tag: 'yes'
       no_tag: 'no'
-      workspace: 'Workspace'
-      user: 'User'
-      role: 'Role'
-      client: 'Client'
-      generation: 'Generation'
-      cost_usd: 'Cost (US$)'
-      impersonate_confirm: 'Sign in as %{email}?'
+      workspace: Workspace
+      user: User
+      role: Role
+      client: Client
+      generation: Generation
+      cost_usd: Cost (US$)
+      impersonate_confirm: Sign in as %{email}?
     ai_config:
       op_labels:
-        summarize_ticket: 'Ticket summary'
-        fill_fields: 'Fill fields (Generate with AI)'
-        build_scope: 'Build scope (subtasks)'
-        synthesize_positioning: 'Synthesize positioning'
-        extract_client_from_url: 'Extract client from URL'
-        carousel_copy: 'Carousel copy'
-        project_audit: 'Campaign audit'
-        draft_retrospective: 'Retrospective draft'
-        strategy_planner: 'Strategy planner (chat)'
-        strategy_plan: 'Strategy planner (generate plan)'
-        video_storyboard: 'Video storyboard'
-        video_editor: 'Video editor (chat)'
-        improve_video_prompt: 'Improve video prompt'
+        summarize_ticket: Ticket summary
+        fill_fields: Fill fields (Generate with AI)
+        build_scope: Build scope (subtasks)
+        synthesize_positioning: Synthesize positioning
+        extract_client_from_url: Extract client from URL
+        carousel_copy: Carousel copy
+        project_audit: Campaign audit
+        draft_retrospective: Retrospective draft
+        strategy_planner: Strategy planner (chat)
+        strategy_plan: Strategy planner (generate plan)
+        video_storyboard: Video storyboard
+        video_editor: Video editor (chat)
+        improve_video_prompt: Improve video prompt
     video_config:
       mode_labels:
-        avatar: 'UGC avatar (person talking)'
-        product: 'Product (from photos)'
-        character: 'Character (mascot/animated, recurring)'
-        scene: 'Scene / B-roll (places, moments, lifestyle)'
-        motion: 'Motion / graphic (abstract, energetic)'
+        avatar: UGC avatar (person talking)
+        product: Product (from photos)
+        character: Character (mascot/animated, recurring)
+        scene: Scene / B-roll (places, moments, lifestyle)
+        motion: Motion / graphic (abstract, energetic)
       music_mood_labels:
-        upbeat: 'Upbeat'
-        calm: 'Calm'
-        corporate: 'Corporate'
-        energetic: 'Energetic'
-        emotional: 'Emotional'
-        epic: 'Epic'
-        playful: 'Playful'
-        cinematic: 'Cinematic'
+        upbeat: Upbeat
+        calm: Calm
+        corporate: Corporate
+        energetic: Energetic
+        emotional: Emotional
+        epic: Epic
+        playful: Playful
+        cinematic: Cinematic
       music_provider_labels:
-        jamendo: 'Jamendo (royalty-free)'
-        epidemic_sound: 'Epidemic Sound (licensed)'
+        jamendo: Jamendo (royalty-free)
+        epidemic_sound: Epidemic Sound (licensed)
     ai_configs:
-      menu: 'AI (models)'
-      provider_section: 'Provider'
-      provider_auto: 'Auto (detect from the configured key)'
-      provider_openrouter: 'OpenRouter (several models)'
-      provider_anthropic: 'Anthropic (direct)'
-      provider_hint: 'The API key stays in credentials — here you only choose the provider.'
-      default_model_section: 'Default model'
-      default_model_label: 'Default model'
+      menu: AI (models)
+      provider_section: Provider
+      provider_auto: Auto (detect from the configured key)
+      provider_openrouter: OpenRouter (several models)
+      provider_anthropic: Anthropic (direct)
+      provider_hint: The API key stays in credentials — here you only choose the provider.
+      default_model_section: Default model
+      default_model_label: Default model
       default_model_hint: 'OpenRouter slug used when an operation has no model of its own. E.g.: anthropic/claude-sonnet-4.5, openai/gpt-5-mini, google/gemini-2.5-flash.'
-      per_operation_section: 'Model per operation (leave blank to use the default)'
-      op_placeholder: 'default (%{model})'
+      per_operation_section: Model per operation (leave blank to use the default)
+      op_placeholder: default (%{model})
     video_configs:
-      menu: 'Video (engines)'
-      provider_section: 'Provider'
-      provider_auto: 'Auto (OpenRouter)'
-      provider_openrouter: 'OpenRouter (several models)'
-      provider_hint: 'The API key stays in credentials — here just the provider.'
-      models_section: 'Video models (only two) — the platform renders the PREVIEW on the draft model and, on approval, re-renders on the final model. The mode (avatar/product/…) does not change the model.'
-      draft_model_label: 'Draft model (preview)'
+      menu: Video (engines)
+      provider_section: Provider
+      provider_auto: Auto (OpenRouter)
+      provider_openrouter: OpenRouter (several models)
+      provider_hint: The API key stays in credentials — here just the provider.
+      models_section: Video models (only two) — the platform renders the PREVIEW on the draft model and, on approval, re-renders on the final model. The mode (avatar/product/…) does not change the model.
+      draft_model_label: Draft model (preview)
       draft_model_hint: 'Fast/cheap OpenRouter video slug for iterating. E.g.: %{model}, bytedance/seedance-2.0.'
-      final_model_label: 'Final model (render)'
+      final_model_label: Final model (render)
       final_model_hint: 'Highest-quality OpenRouter video slug (native audio). E.g.: %{model}, kwaivgi/kling-v3.'
-      max_duration_label: 'Max duration (s)'
-      max_duration_hint: 'Cap in seconds per video (protects cost).'
-      music_provider_section: 'Music provider'
-      music_provider_hint: 'Source of the track fetched by the storyboard (Vendors::Music). Jamendo is royalty-free and works right away; Epidemic Sound is licensed and only downloads tracks when the API account has download permission. The key stays in credentials.'
-      music_tracks_section: 'Music tracks by mood (catalog fallback) — used when the provider finds nothing. Public MP3 URL + title/credit.'
-      music_url_label: '%{mood} — URL'
-      music_title_label: '%{mood} — title/credit'
-      voices_section: 'Voices'
+      max_duration_label: Max duration (s)
+      max_duration_hint: Cap in seconds per video (protects cost).
+      music_provider_section: Music provider
+      music_provider_hint: Source of the track fetched by the storyboard (Vendors::Music). Jamendo is royalty-free and works right away; Epidemic Sound is licensed and only downloads tracks when the API account has download permission. The key stays in credentials.
+      music_tracks_section: Music tracks by mood (catalog fallback) — used when the provider finds nothing. Public MP3 URL + title/credit.
+      music_url_label: "%{mood} — URL"
+      music_title_label: "%{mood} — title/credit"
+      voices_section: Voices
       voices_link_text: 'Voices (Cartesia) have their own tab: '
-      voices_link_label: 'Video — voices'
+      voices_link_label: Video — voices
     voices:
-      menu: 'Video — voices'
-      title: 'Video — voices'
-      imported: '%{count} voices imported from Cartesia.'
-      none_imported: 'No voices imported (check the cartesia.api_key credential).'
-      settings_saved: 'Voice settings saved.'
-      default_set: 'Default voice set (%{id}).'
-      import_action: 'Import voices from Cartesia'
-      settings_panel: 'Voice settings'
+      menu: Video — voices
+      title: Video — voices
+      imported: "%{count} voices imported from Cartesia."
+      none_imported: No voices imported (check the cartesia.api_key credential).
+      settings_saved: Voice settings saved.
+      default_set: Default voice set (%{id}).
+      import_action: Import voices from Cartesia
+      settings_panel: Voice settings
       settings_intro: 'Voices come AUTOMATICALLY from the Cartesia library — the storyboard picks the one that fits each character. The fields below are OPTIONAL: use them to force/rename voices or set a default. The API key stays in credentials.'
-      default_voice_label: 'default voice_id (otherwise uses the 1st PT Cartesia voice)'
-      dub_label: ' Dub in post (guarantees the voice even if the model does not sync)'
-      dub_hint: 'Off = the voice is sent as an audio reference for the model to lip-sync.'
+      default_voice_label: default voice_id (otherwise uses the 1st PT Cartesia voice)
+      dub_label: " Dub in post (guarantees the voice even if the model does not sync)"
+      dub_hint: Off = the voice is sent as an audio reference for the model to lip-sync.
       catalog_label: 'Fixed voices (optional — one per line: label = voice_id)'
-      catalog_placeholder: "Young female BR = <voice_id>\nDeep male BR = <voice_id>"
-      save_settings: 'Save voice settings'
-      available_panel: 'Available voices (%{count})'
-      none_found: 'No voices found. Click “Import voices from Cartesia” (needs the cartesia.api_key credential).'
-      col_default: 'Default'
-      default_tag: 'default'
-      use: 'Use'
-      col_name: 'Name'
-      col_gender: 'Gender'
-      col_country: 'Country'
-      col_description: 'Description'
+      catalog_placeholder: |-
+        Young female BR = <voice_id>
+        Deep male BR = <voice_id>
+      save_settings: Save voice settings
+      available_panel: Available voices (%{count})
+      none_found: No voices found. Click “Import voices from Cartesia” (needs the cartesia.api_key credential).
+      col_default: Default
+      default_tag: default
+      use: Use
+      col_name: Name
+      col_gender: Gender
+      col_country: Country
+      col_description: Description
     workspaces:
-      menu: 'Workspaces'
-      godfathered_section: 'Courtesy (godfathered)'
-      godfathered_hint: 'Free lifetime access — bypasses the paywall and the seat/client limits.'
-      credit_limit_label: 'Monthly credit limit'
-      credit_limit_hint: 'Generation credits (video/image) per month for this godfathered workspace. Blank = unlimited. Only applies when "godfathered" is active.'
-      filter_name: 'Name contains'
-      filter_slug: 'Slug contains'
-      col_plan: 'Plan'
-      col_status: 'Status'
-      col_access: 'Access'
+      menu: Workspaces
+      godfathered_section: Courtesy (godfathered)
+      godfathered_hint: Free lifetime access — bypasses the paywall and the seat/client limits.
+      credit_limit_label: Monthly credit limit
+      credit_limit_hint: Generation credits (video/image) per month for this godfathered workspace. Blank = unlimited. Only applies when "godfathered" is active.
+      filter_name: Name contains
+      filter_slug: Slug contains
+      col_plan: Plan
+      col_status: Status
+      col_access: Access
       access_yes: 'yes'
-      access_blocked: 'blocked'
-      col_credits: 'Credits'
-      credits_per_month: '%{available} / %{limit} · month'
-      col_seats: 'Seats'
-      row_godfathered: 'Godfathered'
-      row_credit_limit: 'Monthly credit limit'
-      credit_limit_per_month: '%{limit} / month'
-      unlimited: 'unlimited'
-      row_access: 'Access granted'
-      access_granted_no: 'No (blocked)'
-      row_owner: 'Owner'
-      row_clients: 'Clients'
-      subscription_panel: 'Subscription'
-      sub_plan: 'Plan'
-      sub_status: 'Status'
-      sub_card: 'Card on file'
-      sub_seats: 'Seats'
-      sub_trial_ends: 'Trial ends'
-      sub_period_end: 'Current period until'
-      sub_cancel_at: 'Cancels at'
-      sub_customer: 'Stripe customer'
-      sub_subscription: 'Stripe subscription'
-      no_subscription: 'No subscription.'
-      credits_panel: 'Credits'
-      credits_available: 'Available'
-      credits_available_godfathered: '%{available} / %{limit} (godfathered, month)'
-      credits_infinite_godfathered: '∞ (godfathered)'
-      credits_granted: 'From plan (granted)'
-      credits_purchased: 'Purchased'
-      credits_granted_expires: 'Granted expires at'
-      no_wallet: 'No wallet.'
-      grant_100: 'Credit +100 (courtesy)'
-      grant_500: 'Credit +500 (courtesy)'
-      members_panel: 'Members'
-      invite_member: 'Invite member'
-      impersonate_owner: 'Impersonate owner'
-      credits_granted_notice: '%{amount} credits granted.'
-      invite_email_required: 'Enter an email.'
-      invite_sent: 'Invitation sent to %{email}.'
+      access_blocked: blocked
+      col_credits: Credits
+      credits_per_month: "%{available} / %{limit} · month"
+      col_seats: Seats
+      row_godfathered: Godfathered
+      row_credit_limit: Monthly credit limit
+      credit_limit_per_month: "%{limit} / month"
+      unlimited: unlimited
+      row_access: Access granted
+      access_granted_no: No (blocked)
+      row_owner: Owner
+      row_clients: Clients
+      subscription_panel: Subscription
+      sub_plan: Plan
+      sub_status: Status
+      sub_card: Card on file
+      sub_seats: Seats
+      sub_trial_ends: Trial ends
+      sub_period_end: Current period until
+      sub_cancel_at: Cancels at
+      sub_customer: Stripe customer
+      sub_subscription: Stripe subscription
+      no_subscription: No subscription.
+      credits_panel: Credits
+      credits_available: Available
+      credits_available_godfathered: "%{available} / %{limit} (godfathered, month)"
+      credits_infinite_godfathered: "∞ (godfathered)"
+      credits_granted: From plan (granted)
+      credits_purchased: Purchased
+      credits_granted_expires: Granted expires at
+      no_wallet: No wallet.
+      grant_100: Credit +100 (courtesy)
+      grant_500: Credit +500 (courtesy)
+      members_panel: Members
+      invite_member: Invite member
+      impersonate_owner: Impersonate owner
+      credits_granted_notice: "%{amount} credits granted."
+      invite_email_required: Enter an email.
+      invite_sent: Invitation sent to %{email}.
     subscriptions:
-      menu: 'Subscriptions'
-      scope_active: 'Active'
-      scope_trialing: 'In trial'
-      scope_past_due: 'Past due'
-      scope_canceled: 'Canceled'
-      col_card: 'Card'
-      col_access: 'Access'
-      row_access: 'Access granted'
-      row_card: 'Card on file'
+      menu: Subscriptions
+      scope_active: Active
+      scope_trialing: In trial
+      scope_past_due: Past due
+      scope_canceled: Canceled
+      col_card: Card
+      col_access: Access
+      row_access: Access granted
+      row_card: Card on file
     users:
-      menu: 'Users'
-      filter_email: 'Email contains'
-      filter_name: 'Name contains'
-      col_team: 'Team'
-      team_staff: 'staff'
-      col_confirmed: 'Confirmed'
-      col_workspaces: 'Workspaces'
-      impersonate: 'Impersonate'
-      row_team: 'Team (staff)'
-      row_email_confirmed: 'Email confirmed'
-      email_confirmed_yes: 'Yes (%{at})'
-      row_google: 'Google connected'
-      workspaces_panel: 'Workspaces'
-      ws_since: 'Since'
-      impersonate_this: 'Impersonate this user'
+      menu: Users
+      filter_email: Email contains
+      filter_name: Name contains
+      col_team: Team
+      team_staff: staff
+      col_confirmed: Confirmed
+      col_workspaces: Workspaces
+      impersonate: Impersonate
+      row_team: Team (staff)
+      row_email_confirmed: Email confirmed
+      email_confirmed_yes: Yes (%{at})
+      row_google: Google connected
+      workspaces_panel: Workspaces
+      ws_since: Since
+      impersonate_this: Impersonate this user
     ai_usage:
-      menu: 'AI cost'
-      scope_today: 'Today'
-      scope_7d: '7 days'
-      scope_30d: '30 days'
-      scope_month: 'This month'
-      col_tokens: 'Tokens (in/out)'
-      col_units: 'Units'
-      col_subject: 'Subject'
-      sidebar_title: 'Cost summary'
+      menu: AI cost
+      scope_today: Today
+      scope_7d: 7 days
+      scope_30d: 30 days
+      scope_month: This month
+      col_tokens: Tokens (in/out)
+      col_units: Units
+      col_subject: Subject
+      sidebar_title: Cost summary
       sidebar_total: 'Total: '
-      sidebar_by_provider: 'By provider'
-      sidebar_top_operations: 'Top operations'
+      sidebar_by_provider: By provider
+      sidebar_top_operations: Top operations
       chart:
-        empty: 'No AI usage in the last %{days} days for the current filter.'
-        calls: 'calls'
-        input_tokens: 'input tokens'
-        output: 'output'
+        empty: No AI usage in the last %{days} days for the current filter.
+        calls: calls
+        input_tokens: input tokens
+        output: output
         period_total: 'Period total:'
-        panel_title: 'Usage and cost — last %{days} days (filters applied)'
+        panel_title: Usage and cost — last %{days} days (filters applied)
     dashboard:
-      ai_cost_panel: 'AI cost — this month'
+      ai_cost_panel: AI cost — this month
       total: 'Total: '
-      top_operations_panel: 'Top operations — this month'
-      recent_panel: 'Latest AI calls'
+      top_operations_panel: Top operations — this month
+      recent_panel: Latest AI calls
     generations:
-      menu: 'Generations'
-      scope_videos: 'Videos'
-      scope_images: 'Images'
-      scope_carousels: 'Carousels'
-      scope_failed: 'Failures'
-      col_cost: 'Cost (¢US$)'
-      credits_panel: 'Credits for this generation'
+      menu: Generations
+      scope_videos: Videos
+      scope_images: Images
+      scope_carousels: Carousels
+      scope_failed: Failures
+      col_cost: Cost (¢US$)
+      credits_panel: Credits for this generation
     credit_transactions:
-      menu: 'Credits (ledger)'
-      scope_debits: 'Debits'
-      scope_purchases: 'Purchases'
-      scope_grants: 'Grants'
-      col_amount: 'Amount'
-      col_balance: 'Balance after'
+      menu: Credits (ledger)
+      scope_debits: Debits
+      scope_purchases: Purchases
+      scope_grants: Grants
+      col_amount: Amount
+      col_balance: Balance after
     memberships:
-      menu: 'Members'
+      menu: Members
     social_accounts:
-      menu: 'Social accounts'
-      scope_expired: 'Token expired'
-      scope_revoked: 'Revoked'
-      col_token_expires: 'Token expires'
-      col_expired: 'Expired?'
-      row_token_expires: 'Token expires at'
-      row_token_expired: 'Token expired?'
+      menu: Social accounts
+      scope_expired: Token expired
+      scope_revoked: Revoked
+      col_token_expires: Token expires
+      col_expired: Expired?
+      row_token_expires: Token expires at
+      row_token_expired: Token expired?
     pricing_plans:
-      menu: 'Plans'
-      sync_action: 'Sync with Stripe'
-      sync_confirm: 'Ensures the Product + Prices (monthly + annual) in Stripe with these values.'
-      sync_notice: 'Plan %{key} synced with Stripe (monthly + annual). New checkouts already use the new value; current subscribers keep the old price.'
+      menu: Plans
+      sync_action: Sync with Stripe
+      sync_confirm: Ensures the Product + Prices (monthly + annual) in Stripe with these values.
+      sync_notice: Plan %{key} synced with Stripe (monthly + annual). New checkouts already use the new value; current subscribers keep the old price.
       not_configured: 'Stripe not configured: %{message}'
       sync_failed: 'Failed to sync with Stripe: %{message}'
-      col_monthly: 'Monthly (BRL)'
-      col_annual: 'Annual (BRL)'
-      col_included_credits: 'Included credits'
-      col_stripe_price: 'Stripe price'
-      not_synced: '— not synced'
-      row_monthly: 'Monthly price (BRL)'
-      row_annual: 'Annual price (BRL)'
-      row_features: 'Features'
-      show_note: 'Saving a plan syncs the Product + Prices (monthly and annual) in Stripe automatically. A price change creates a new Price and archives the old one (current subscribers keep the price).'
-      plan_section: 'Plan (source of truth for the price)'
-      plan_section_hint: 'On save, the prices are published to Stripe automatically (a new Price per value change). The value set here is what the customer pays.'
-      key_hint: 'Stable key (solo/agencia/enterprise). Referenced by Subscription#plan.'
-      price_cents_label: 'MONTHLY price in cents (BRL)'
-      annual_price_cents_label: 'ANNUAL price in cents (BRL) — 0 = computes 12× monthly − discount'
-      annual_price_cents_hint: '0 uses the fixed annual discount (%{percent}%).'
-      included_credits_label: 'Monthly included credits'
-      features_text_label: 'Features (one per line)'
-      stripe_section: 'Stripe (filled in automatically by the sync)'
-      stripe_product_hint: 'Product ID (created/updated on save).'
-      stripe_lookup_hint: 'lookup_key of the MONTHLY Price (stable — transferred to the new Price).'
-      stripe_price_id_label: 'Stripe monthly price id (cached)'
-      stripe_annual_lookup_hint: 'lookup_key of the ANNUAL Price.'
-      stripe_annual_price_id_label: 'Stripe annual price id (cached)'
-      display_section: 'Display'
-      save_not_configured: 'Plan saved, but Stripe is not configured (%{message}) — not synced.'
+      col_monthly: Monthly (BRL)
+      col_annual: Annual (BRL)
+      col_included_credits: Included credits
+      col_stripe_price: Stripe price
+      not_synced: "— not synced"
+      row_monthly: Monthly price (BRL)
+      row_annual: Annual price (BRL)
+      row_features: Features
+      show_note: Saving a plan syncs the Product + Prices (monthly and annual) in Stripe automatically. A price change creates a new Price and archives the old one (current subscribers keep the price).
+      plan_section: Plan (source of truth for the price)
+      plan_section_hint: On save, the prices are published to Stripe automatically (a new Price per value change). The value set here is what the customer pays.
+      key_hint: Stable key (solo/agencia/enterprise). Referenced by Subscription#plan.
+      price_cents_label: MONTHLY price in cents (BRL)
+      annual_price_cents_label: ANNUAL price in cents (BRL) — 0 = computes 12× monthly − discount
+      annual_price_cents_hint: 0 uses the fixed annual discount (%{percent}%).
+      included_credits_label: Monthly included credits
+      features_text_label: Features (one per line)
+      stripe_section: Stripe (filled in automatically by the sync)
+      stripe_product_hint: Product ID (created/updated on save).
+      stripe_lookup_hint: lookup_key of the MONTHLY Price (stable — transferred to the new Price).
+      stripe_price_id_label: Stripe monthly price id (cached)
+      stripe_annual_lookup_hint: lookup_key of the ANNUAL Price.
+      stripe_annual_price_id_label: Stripe annual price id (cached)
+      display_section: Display
+      save_not_configured: Plan saved, but Stripe is not configured (%{message}) — not synced.
       save_sync_failed: 'Plan saved, but the sync with Stripe failed: %{message}'
     pricing_packs:
-      menu: 'Credit packs'
-      col_price: 'Price (BRL)'
-      col_price_per_credit: 'R$/credit'
-      pack_section: 'Credit pack'
-      price_cents_label: 'Price in cents (BRL)'
-      credits_label: 'Credits granted (with volume bonus)'
+      menu: Credit packs
+      col_price: Price (BRL)
+      col_price_per_credit: R$/credit
+      pack_section: Credit pack
+      price_cents_label: Price in cents (BRL)
+      credits_label: Credits granted (with volume bonus)
+    impersonation:
+      cannot_staff: Can't impersonate another staff member.
+      ended: Impersonation ended.
   credits:
     ledger:
-      staff_courtesy: 'agencios team courtesy (+%{amount})'
+      staff_courtesy: agencios team courtesy (+%{amount})

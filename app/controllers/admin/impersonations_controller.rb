@@ -14,7 +14,7 @@ module Admin
       staff = current_staff_user
       target = User.find(params[:user_id])
 
-      return redirect_to('/admin', alert: 'Não é possível personificar outro membro da equipe.') if target.staff?
+      return redirect_to('/admin', alert: I18n.t('admin.impersonation.cannot_staff')) if target.staff?
 
       original_token = cookies.signed[:session_id]
       session = new_session_for(target)
@@ -49,7 +49,7 @@ module Admin
       set_cookie(:session_id, impersonator_token)
       cookies.delete(:impersonator_session_id)
 
-      redirect_to '/admin', notice: 'Personificação encerrada.'
+      redirect_to '/admin', notice: I18n.t('admin.impersonation.ended')
     end
 
     private
