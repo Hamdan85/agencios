@@ -83,9 +83,13 @@ export function useUpdateAccount() {
     onSuccess: (data, variables) => {
       qc.setQueryData(keys.me(), data)
       if (variables?.locale) {
+        // A language switch is a rare, deliberate action — hard-reload so the whole
+        // shell (html lang, document title, every label map + date-picker locale)
+        // reloads in the new language, not just the useTranslation consumers. The
+        // saved locale is already persisted, so the reload boots straight into it.
         applyLocale(data?.user?.locale)
-        // Server-rendered copy (API errors, system notes) changes language too.
-        qc.invalidateQueries()
+        window.location.reload()
+        return
       }
       toast.success(t('account.profileUpdated'))
     },
