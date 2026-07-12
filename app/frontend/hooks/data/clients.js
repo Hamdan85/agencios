@@ -9,14 +9,15 @@ import { onErr } from './shared'
 // ── Clients ────────────────────────────────────────────────────
 export const useClients = (filters = {}) =>
   useQuery({ queryKey: keys.clients(filters), queryFn: () => clientsApi.list(filters), select: (d) => d.clients })
-// `poll` (ms) keeps refetching while set — used by the edit dialog to pick up the
-// async image-palette once its background job lands it.
+// `poll` keeps refetching while set: either an interval (ms) or a predicate over the
+// fetched data returning one — used by the edit dialog to pick up the async
+// image-palette once its background job lands it.
 export const useClient = (id, { poll = false } = {}) =>
   useQuery({
     queryKey: keys.client(id),
     queryFn: () => clientsApi.get(id),
     enabled: !!id,
-    refetchInterval: poll || false,
+    refetchInterval: typeof poll === 'function' ? (q) => poll(q.state.data) || false : poll || false,
   })
 
 export function useClientMutations() {

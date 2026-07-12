@@ -54,7 +54,9 @@ export default function ClientEditDialog({ open, onOpenChange, client, mutations
     c?.carousel_style === 'image' && !!c?.carousel_background_url && !c?.carousel_image_palette?.accent
   // Poll while an image background exists but its palette hasn't landed yet — the
   // derivation runs async in a background job.
-  const { data, isLoading } = useClient(id, { poll: open ? (palettePending(data?.client) ? 4000 : false) : false })
+  const { data, isLoading } = useClient(id, {
+    poll: open ? (d) => (palettePending(d?.client) ? 4000 : false) : false,
+  })
   const live = data?.client
 
   // Seed local form state from the fully-loaded client, once per open/client.
