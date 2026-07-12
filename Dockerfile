@@ -46,10 +46,15 @@ RUN apt-get update -qq && \
 # Install Node.js (build-only) so Vite can bundle the React SPA during
 # assets:precompile. The base image is Debian bookworm; pull a glibc-matching
 # Node from the official bookworm-slim image. Node is NOT needed at runtime.
-COPY --from=node:20-bookworm-slim /usr/local/lib/node_modules /usr/local/lib/node_modules
-COPY --from=node:20-bookworm-slim /usr/local/bin/node /usr/local/bin/node
+COPY --from=node:24-bookworm-slim /usr/local/lib/node_modules /usr/local/lib/node_modules
+COPY --from=node:24-bookworm-slim /usr/local/bin/node /usr/local/bin/node
 RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
     ln -sf /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
+
+# Pin npm to the exact version the lockfile is generated with. npm minors resolve
+# the bundled wasm32-wasi dependency trees differently, so a mismatch here makes
+# `npm ci` reject a lock that `npm install` produced locally (and vice-versa).
+RUN npm i -g npm@11.6.1
 
 # Install application gems
 COPY vendor/* ./vendor/

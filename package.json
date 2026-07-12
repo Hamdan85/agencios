@@ -2,7 +2,8 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=20 <21"
+    "node": ">=24 <25",
+    "npm": "11.6.1"
   },
   "scripts": {
     "build:admin:css": "tailwindcss -i app/assets/tailwind/active_admin.css -o app/assets/stylesheets/active_admin.css --minify",
@@ -64,5 +65,6 @@
     "tslib": "^2.8.1",
     "yet-another-react-lightbox": "^3.32.0",
     "zod": "^4.4.3"
-  }
+  },
+  "packageManager": "npm@11.6.1"
 }
