@@ -34,7 +34,7 @@ const isSceneEditable = (c) => c?.source === 'generated' && ['ugc_video', 'reel'
 
 // The three generatable kinds, each mapped to a sensible default creative type.
 // Copy is resolved lazily (getters) so it follows the active locale.
-const tr = (key) => i18n.t(`ticket:${key}`)
+const tr = (key, opts) => i18n.t(`ticket:${key}`, opts)
 const GENERATABLE = [
   { kind: 'carousel', type: 'carousel', get label() { return tr('creatives.kinds.carousel.label') }, get desc() { return tr('creatives.kinds.carousel.desc') }, icon: GalleryHorizontalEnd, color: CREATIVE_TYPE_META.carousel.color },
   { kind: 'video', type: 'ugc_video', get label() { return tr('creatives.kinds.video.label') }, get desc() { return tr('creatives.kinds.video.desc') }, icon: Video, color: CREATIVE_TYPE_META.ugc_video.color },
