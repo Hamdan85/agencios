@@ -45,7 +45,10 @@ const DialogContent = React.forwardRef(({ className, children, ...props }, ref) 
       {...props}
     >
       {children}
-      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-lg p-1 text-ink-muted opacity-70 transition hover:bg-surface-muted hover:opacity-100 focus:outline-none">
+      {/* max-sm:p-2.5 → a 44px touch target on phones (24px on desktop is fine with a
+          cursor). z-10 + a surface backdrop keeps it legible when it sits over a
+          scrolling tab rail (SettingsDialog on mobile). */}
+      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-lg p-1 text-ink-muted opacity-70 transition hover:bg-surface-muted hover:opacity-100 focus:outline-none max-sm:z-10 max-sm:bg-surface/80 max-sm:p-2.5 max-sm:backdrop-blur-sm">
         <X className="size-4" />
       </DialogPrimitive.Close>
     </DialogPrimitive.Content>

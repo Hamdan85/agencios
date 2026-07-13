@@ -187,7 +187,11 @@
       "content": "Conteúdo",
       "statement": "Síntese"
     },
-    "saveChanges": "Salvar alterações"
+    "saveChanges": "Salvar alterações",
+    "discardTitle": "Descartar alterações?",
+    "discardDescription": "Você tem alterações não salvas neste cliente. Se sair agora, elas serão perdidas.",
+    "discardConfirm": "Descartar",
+    "nameRequired": "Informe o nome do cliente."
   },
   "fields": {
     "name": "Nome",

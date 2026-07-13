@@ -53,8 +53,27 @@ function dataUrlToFile(dataUrl, filename) {
 
 // Compact horizontal step indicator.
 function WizardSteps({ step, onJump }) {
+  const current = STEPS[step]
   return (
-    <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+    <>
+      {/* Mobile: nine 28px dots separated by ~2px connectors are impossible to hit, and
+          each step's name only exists as a `title` attr — which never shows on touch. A
+          labelled progress bar says where you are and how far is left. Desktop keeps the
+          jumpable dot rail below, unchanged. */}
+      <div className="shrink-0 space-y-1.5 sm:hidden">
+        <div className="flex items-baseline justify-between gap-2">
+          <span className="truncate text-sm font-semibold text-ink">{current.title}</span>
+          <span className="shrink-0 font-mono text-xs font-semibold text-ink-faint">{step + 1}/{STEPS.length}</span>
+        </div>
+        <div className="h-1 overflow-hidden rounded-full bg-surface-muted">
+          <div
+            className="h-full rounded-full transition-all"
+            style={{ width: `${((step + 1) / STEPS.length) * 100}%`, background: ACCENT }}
+          />
+        </div>
+      </div>
+
+    <div className="hidden shrink-0 items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 sm:flex">
       {STEPS.map((s, i) => {
         const done = i < step
         const current = i === step
@@ -77,6 +96,7 @@ function WizardSteps({ step, onJump }) {
         )
       })}
     </div>
+    </>
   )
 }
 
@@ -210,8 +230,12 @@ export default function ClientWizard({ open, onOpenChange, editing, mutations })
 
   return (
     <Dialog open={open} onOpenChange={(v) => (v ? onOpenChange(true) : close())}>
-      <DialogContent className="max-w-xl">
-        <DialogHeader>
+      {/* On mobile the dialog is fullscreen: make it a flex column that owns its height so
+          the body scrolls and the action bar stays put at the bottom. `overflow-hidden!` is
+          needed to beat DialogContent's own `max-sm:overflow-y-auto` (only a max-sm: wins
+          over a max-sm:) — otherwise we'd get two nested scrollers. */}
+      <DialogContent className="max-w-xl max-sm:flex max-sm:flex-col max-sm:overflow-hidden!">
+        <DialogHeader className="max-sm:shrink-0">
           <div className="mb-1 flex size-11 items-center justify-center rounded-2xl" style={{ background: `${ACCENT}16`, color: ACCENT }}>
             <UserPlus size={22} strokeWidth={2.2} />
           </div>
@@ -223,8 +247,9 @@ export default function ClientWizard({ open, onOpenChange, editing, mutations })
 
         <WizardSteps step={step} onJump={(i) => { if (i <= 1 || contact.name.trim()) setStep(i) }} />
 
-        {/* Step body */}
-        <div className="max-h-[52vh] overflow-y-auto px-0.5">
+        {/* Step body — `vh` doesn't shrink when the iOS keyboard opens, so on mobile we let
+            it flex instead of capping it. */}
+        <div className="overflow-y-auto px-0.5 max-sm:min-h-0 max-sm:flex-1 max-sm:overscroll-contain sm:max-h-[52vh]">
           {isSite && (
             <SiteImportPanel
               url={url}
@@ -269,26 +294,44 @@ export default function ClientWizard({ open, onOpenChange, editing, mutations })
           )}
         </div>
 
-        <DialogFooter className="sm:justify-between">
-          <div>
-            {!isSite && (
-              <Button type="button" variant="ghost" onClick={() => setStep((s) => s - 1)}>
-                <ArrowLeft /> {t('actions.back')}
-              </Button>
-            )}
-          </div>
-          <div className="flex flex-col-reverse gap-2 sm:flex-row">
+        {/* DialogFooter is `flex-col-reverse` on mobile, which would put "Voltar" UNDER the
+            thumb and push the primary action up. Force a row: secondary left, primary right. */}
+        <DialogFooter className="max-sm:shrink-0 max-sm:flex-row max-sm:items-center max-sm:gap-2 sm:justify-between">
+          {!isSite && (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setStep((s) => s - 1)}
+              className="max-sm:h-11 max-sm:flex-1"
+            >
+              <ArrowLeft /> {t('actions.back')}
+            </Button>
+          )}
+          {/* sm:ml-auto — the Back button is now conditional (no phantom spacer div), so on the
+              first step this is the only child and `justify-between` would pull it left. */}
+          <div className="flex flex-col-reverse gap-2 max-sm:flex-1 max-sm:flex-row sm:ml-auto sm:flex-row">
+            {/* "Criar rascunho" is a shortcut; three full-width CTAs don't fit a 320px bar. */}
             {isContact && (
-              <Button type="button" variant="outline" onClick={submit} disabled={!contact.name.trim() || saving}>
+              <Button type="button" variant="outline" onClick={submit} disabled={!contact.name.trim() || saving} className="max-sm:hidden">
                 {isEdit ? t('wizard.save') : t('wizard.createDraft')}
               </Button>
             )}
             {!isStatement ? (
-              <Button type="button" onClick={() => setStep((s) => s + 1)} disabled={!isSite && !contact.name.trim()}>
+              <Button
+                type="button"
+                onClick={() => setStep((s) => s + 1)}
+                disabled={!isSite && !contact.name.trim()}
+                className="max-sm:h-11 max-sm:w-full"
+              >
                 {(isSite || isBrief) ? t('wizard.skip') : t('wizard.continue')} <ArrowRight />
               </Button>
             ) : (
-              <Button type="button" onClick={submit} disabled={!contact.name.trim() || saving}>
+              <Button
+                type="button"
+                onClick={submit}
+                disabled={!contact.name.trim() || saving}
+                className="max-sm:h-11 max-sm:w-full"
+              >
                 {saving ? t('wizard.saving') : isEdit ? t('wizard.saveClient') : t('wizard.createClient')}
               </Button>
             )}

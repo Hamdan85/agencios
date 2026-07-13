@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '@/i18n'
 import { ChevronLeft, ChevronRight, GalleryHorizontalEnd } from 'lucide-react'
@@ -201,6 +201,18 @@ export function CarouselExampleDialog({ client, open, onOpenChange }) {
   useEffect(() => { if (open) setI(0) }, [open])
 
   const go = (n) => setI((cur) => Math.min(total - 1, Math.max(0, cur + n)))
+
+  // Mobile shows every slide in a swipeable snap rail (see below), so the active dot
+  // follows the scroll position instead of a click.
+  const railRef = useRef(null)
+  const onRailScroll = (e) => {
+    const el = e.currentTarget
+    setI(Math.round(el.scrollLeft / el.clientWidth))
+  }
+  const scrollToSlide = (idx) => {
+    setI(idx)
+    railRef.current?.scrollTo({ left: idx * railRef.current.clientWidth, behavior: 'smooth' })
+  }
   const styleLabel = CAROUSEL_STYLE_LABEL[client?.carousel_style] || CAROUSEL_STYLE_LABEL.gradient
 
   return (
@@ -218,7 +230,23 @@ export function CarouselExampleDialog({ client, open, onOpenChange }) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex items-center gap-2">
+        {/* Mobile: swipe. The two 36px arrows ate 25% of a 320px row — of the very preview
+            they frame — and swiping is the native gesture anyway. Render every slide in a
+            snap rail so the full width goes to the artwork. */}
+        <div
+          ref={railRef}
+          onScroll={onRailScroll}
+          className="no-scrollbar -mx-5 flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain px-5 sm:hidden"
+        >
+          {slides.map((s, idx) => (
+            <div key={idx} className="w-full shrink-0 snap-center">
+              <CarouselSlide slide={s} index={idx + 1} total={total} client={client} />
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop: arrows + one slide (a cursor makes 36px targets fine). */}
+        <div className="hidden items-center gap-2 sm:flex">
           <button
             type="button"
             onClick={() => go(-1)}
@@ -249,10 +277,11 @@ export function CarouselExampleDialog({ client, open, onOpenChange }) {
             <button
               key={idx}
               type="button"
-              onClick={() => setI(idx)}
+              onClick={() => scrollToSlide(idx)}
               aria-label={t('example.goToSlide', { n: idx + 1 })}
               className={cn(
-                'h-1.5 rounded-full transition-all',
+                // The dot is 6px; `before:` gives it a 44px invisible hit area.
+                'relative h-1.5 rounded-full transition-all before:absolute before:-inset-2.5 before:content-[""]',
                 idx === i ? 'w-5 bg-brand' : 'w-1.5 bg-border hover:bg-ink-faint',
               )}
             />

@@ -187,7 +187,11 @@
       "content": "Content",
       "statement": "Synthesis"
     },
-    "saveChanges": "Save changes"
+    "saveChanges": "Save changes",
+    "discardTitle": "Discard changes?",
+    "discardDescription": "You have unsaved changes on this client. If you leave now, they'll be lost.",
+    "discardConfirm": "Discard",
+    "nameRequired": "Enter the client name."
   },
   "fields": {
     "name": "Name",

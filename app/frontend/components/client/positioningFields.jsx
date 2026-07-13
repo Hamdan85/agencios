@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useIsMobile } from '@/hooks/useMediaQuery'
 import i18n from '@/i18n'
 import { Sparkles, Wand2, Image as ImageIcon, UserCircle2, Globe, Check, Upload, Images, X } from 'lucide-react'
 import { Input, Textarea } from '@/components/ui/input'
@@ -27,7 +28,7 @@ export function ContactFields({ contact, onField }) {
         <Label htmlFor="cl-company">{t('fields.company')}</Label>
         <Input id="cl-company" value={contact.company || ''} onChange={set('company')} placeholder={t('fields.companyPlaceholder')} />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="cl-email">{t('fields.email')}</Label>
           <Input id="cl-email" type="email" value={contact.email || ''} onChange={set('email')} placeholder={t('fields.emailPlaceholder')} />
@@ -60,7 +61,13 @@ export const textToPillars = (str) =>
 // Renders a single positioning field by its declared type.
 export function PositioningField({ field, value, onChange }) {
   const id = `pos-${field.key}`
+  const isMobile = useIsMobile()
   const common = { id, placeholder: field.placeholder }
+  // Textarea auto-grows to maxRows (18 ≈ 380px) and writes height/overflowY INLINE, so a
+  // CSS max-height can't clamp it (the inline `overflow-y: hidden` would just hide the
+  // overflow). An AI-filled field would then grow taller than the space above the
+  // keyboard and push the cursor off-screen. Cap it via the prop; it scrolls internally.
+  const area = { ...common, maxRows: isMobile ? 8 : undefined }
 
   return (
     <div className="space-y-1.5">
@@ -69,13 +76,13 @@ export function PositioningField({ field, value, onChange }) {
         <Input {...common} value={value || ''} onChange={(e) => onChange(field.key, e.target.value)} />
       ) : field.type === 'pillars' ? (
         <Textarea
-          {...common}
+          {...area}
           rows={4}
           value={pillarsToText(value)}
           onChange={(e) => onChange(field.key, textToPillars(e.target.value))}
         />
       ) : (
-        <Textarea {...common} value={value || ''} onChange={(e) => onChange(field.key, e.target.value)} />
+        <Textarea {...area} value={value || ''} onChange={(e) => onChange(field.key, e.target.value)} />
       )}
     </div>
   )
@@ -102,7 +109,7 @@ function ColorField({ label, value, onChange }) {
           type="color"
           value={value || '#000000'}
           onChange={(e) => onChange(e.target.value)}
-          className="size-10 shrink-0 cursor-pointer rounded-lg border border-border bg-surface p-1"
+          className="size-10 shrink-0 cursor-pointer rounded-lg border border-border bg-surface p-1 max-sm:size-11"
         />
         <Input value={value || ''} onChange={(e) => onChange(e.target.value)} placeholder="#7C3AED" className="font-mono" />
       </div>
@@ -185,7 +192,10 @@ function CarouselStyleField({ value, onChange, primary, secondary, imageUrl }) {
     <div className="space-y-1.5">
       <Label>{t('carousel.styleLabel')}</Label>
       <p className="-mt-0.5 text-xs text-ink-faint">{t('carousel.styleHint')}</p>
-      <div className="grid grid-cols-3 gap-2.5">
+      {/* The preview IS the decision surface for the client's visual identity. A fixed
+          3-up grid squeezes it to ~84px on a phone (illegible), so below sm it becomes a
+          snap rail with ~62%-wide cards — the peeking next card also signals there's more. */}
+      <div className="max-sm:no-scrollbar max-sm:-mx-4 max-sm:flex max-sm:snap-x max-sm:snap-mandatory max-sm:overflow-x-auto max-sm:px-4 grid grid-cols-3 gap-2.5 max-sm:grid-cols-none">
         {CAROUSEL_STYLES.map((opt) => {
           const on = active === opt.key
           return (
@@ -193,14 +203,14 @@ function CarouselStyleField({ value, onChange, primary, secondary, imageUrl }) {
               key={opt.key}
               type="button"
               onClick={() => onChange(opt.key)}
-              className={cn('rounded-xl border p-1.5 text-left transition', on ? 'border-brand ring-2 ring-brand/30' : 'border-border hover:border-brand/40')}
+              className={cn('rounded-xl border p-1.5 text-left transition max-sm:w-[62%] max-sm:shrink-0 max-sm:snap-start', on ? 'border-brand ring-2 ring-brand/30' : 'border-border hover:border-brand/40')}
             >
               <CarouselSlidePreview style={opt.key} primary={primary} secondary={secondary} imageUrl={imageUrl} />
               <div className="mt-1.5 flex items-center gap-1 px-0.5">
-                <span className={cn('grid size-3.5 shrink-0 place-items-center rounded-full border', on ? 'border-brand bg-brand text-white' : 'border-border')}>
+                <span className={cn('grid size-3.5 shrink-0 place-items-center rounded-full border max-sm:size-5', on ? 'border-brand bg-brand text-white' : 'border-border')}>
                   {on && <Check size={10} strokeWidth={3} />}
                 </span>
-                <span className="truncate text-[11px] font-semibold text-ink-secondary">{opt.label}</span>
+                <span className="truncate text-[11px] font-semibold text-ink-secondary max-sm:text-sm">{opt.label}</span>
               </div>
             </button>
           )
@@ -250,17 +260,17 @@ function CarouselBackgroundChooser({ bgPreview, onFile, bgCreative, onBgCreative
           <p className="text-xs text-ink-faint">{t('carousel.bgHint')}</p>
         </div>
         {bgPreview && (
-          <button type="button" onClick={() => { onFile(null); onBgCreative(null) }} className="shrink-0 rounded-lg p-1.5 text-ink-faint transition hover:bg-surface hover:text-ink" title={t('actions.remove')}>
+          <button type="button" onClick={() => { onFile(null); onBgCreative(null) }} className="shrink-0 rounded-lg p-1.5 text-ink-faint transition hover:bg-surface hover:text-ink max-sm:p-3" title={t('actions.remove')}>
             <X size={16} />
           </button>
         )}
       </div>
-      <div className="flex flex-wrap gap-2">
-        <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-ink-secondary transition hover:border-brand/50">
+      <div className="flex flex-wrap gap-2 max-sm:grid max-sm:grid-cols-2">
+        <label className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-ink-secondary transition hover:border-brand/50 max-sm:h-11 max-sm:text-sm">
           <Upload size={14} /> {t('carousel.uploadImage')}
           <input type="file" accept="image/*" className="hidden" onChange={(e) => onFile(e.target.files?.[0] || null)} />
         </label>
-        <Button type="button" variant="outline" size="sm" onClick={() => setPickerOpen(true)}>
+        <Button type="button" variant="outline" size="sm" onClick={() => setPickerOpen(true)} className="max-sm:h-11 max-sm:w-full max-sm:text-sm">
           <Images size={14} /> {t('carousel.pickFromCreative')}
         </Button>
       </div>
@@ -304,7 +314,7 @@ export function CarouselPaletteSwatches({ palette, hasBackground, onReanalyze, a
             type="button"
             onClick={onReanalyze}
             disabled={analyzing}
-            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-ink-secondary transition hover:bg-surface disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-ink-secondary transition hover:bg-surface disabled:opacity-50 max-sm:h-10 max-sm:px-3"
           >
             {analyzing ? <InlineSpinner size={12} /> : <Wand2 size={12} />} {t('palette.reanalyze')}
           </button>
@@ -368,7 +378,7 @@ export function BrandIdentityFields({
           placeholder={t('brandFields.handlePlaceholder')}
         />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <ColorField label={t('brand.primaryColor')} value={brand.brand_primary_color} onChange={(v) => onBrand('brand_primary_color', v)} />
         <ColorField label={t('brand.secondaryColor')} value={brand.brand_secondary_color} onChange={(v) => onBrand('brand_secondary_color', v)} />
       </div>
@@ -420,7 +430,7 @@ export function SiteImportPanel({ url, onUrl, onImport, importing }) {
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="brand-url">{t('siteImport.label')}</Label>
-        <div className="flex gap-2">
+        <div className="flex gap-2 max-sm:flex-col">
           <Input
             id="brand-url"
             type="url"
@@ -430,7 +440,7 @@ export function SiteImportPanel({ url, onUrl, onImport, importing }) {
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); if (!importing && ready) onImport() } }}
             placeholder={t('siteImport.placeholder')}
           />
-          <Button type="button" onClick={onImport} disabled={importing || !ready} className="shrink-0">
+          <Button type="button" onClick={onImport} disabled={importing || !ready} className="shrink-0 max-sm:h-11 max-sm:w-full">
             {importing ? <InlineSpinner /> : <Globe />}
             {importing ? t('siteImport.reading') : t('siteImport.import')}
           </Button>

@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 import { User, Palette, Compass, Layers, Sparkles } from 'lucide-react'
 import { SettingsDialog, SettingsPanel } from '@/components/ui/settings-dialog'
 import { Button } from '@/components/ui/button'
 import { SectionLabel } from '@/components/ui/section-label'
 import { Spinner } from '@/components/ui/feedback'
+import { useConfirm } from '@/components/ui/confirm-dialog'
 import { useClient } from '@/hooks/useData'
 import { POSITIONING_STEPS, EMPTY_POSITIONING, EMPTY_BRAND } from '@/lib/constants'
 import { maskPhone, maskDocument } from '@/lib/formatters'
@@ -84,12 +86,31 @@ export default function ClientEditDialog({ open, onOpenChange, client, mutations
   const { update, uploadBrandAssets, setCarouselBackground, reanalyzeCarouselPalette } = mutations
   const saving = update?.isPending || uploadBrandAssets?.isPending || setCarouselBackground?.isPending
 
-  const close = () => onOpenChange(false)
+  const confirm = useConfirm()
+
+  // The close X is absolutely positioned over the tab rail on mobile, so a mistap while
+  // scrolling the tabs is easy — and it used to discard every edit silently.
+  const close = async () => {
+    if (dirty && !(await confirm({
+      title: t('editDialog.discardTitle'),
+      description: t('editDialog.discardDescription'),
+      confirmLabel: t('editDialog.discardConfirm'),
+      destructive: true,
+    }))) return
+    onOpenChange(false)
+  }
 
   // Single save: persist the text fields, then (if any) upload asset files, then
   // (if a creative was picked) copy the carousel background — mirrors the wizard.
   const save = () => {
-    if (!contact.name.trim()) { setTab('contact'); return }
+    // Silently switching tabs reads as "the button did nothing" — especially on mobile,
+    // where the target tab may be scrolled off the rail. Say what's wrong.
+    if (!contact.name.trim()) {
+      setTab('contact')
+      toast.error(t('editDialog.nameRequired'))
+      requestAnimationFrame(() => document.getElementById('cl-name')?.focus())
+      return
+    }
     const finish = () => { setDirty(false); close() }
     const copyBg = () => {
       if (bgCreative?.id && setCarouselBackground) {
