@@ -66,6 +66,7 @@ export function onlyDigits(value) {
 // regardless of the UI language.
 export function maskPhone(value) {
   const d = onlyDigits(value).slice(0, 11)
+  if (!d) return '' // an empty value must stay empty — it used to render a stray "("
   if (d.length <= 2) return d.replace(/^(\d{0,2})/, '($1')
   if (d.length <= 6) return d.replace(/^(\d{2})(\d{0,4})/, '($1) $2')
   if (d.length <= 10) return d.replace(/^(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3')

@@ -55,12 +55,32 @@ export function SettingsDialog({
           value={value}
           onValueChange={onValueChange}
           orientation="vertical"
-          className="flex min-h-0 flex-col max-sm:h-full sm:h-[min(600px,82vh)] sm:flex-row"
+          // min-w-0 is load-bearing: this is a GRID ITEM of DialogContent, and grid items
+          // default to `min-width: auto` — they refuse to shrink below their content. The
+          // tab rail's chips add up to ~616px, so without this the whole panel widened to
+          // 616px inside a 390px dialog (the rail never scrolled; it just pushed every
+          // field out of view). With min-w-0 the panel tracks the dialog width and the
+          // rail scrolls internally, as intended.
+          className="flex min-h-0 min-w-0 flex-col max-sm:h-full sm:h-[min(600px,82vh)] sm:flex-row"
         >
-          {/* max-sm:pr-12 keeps the last chip from sliding under the absolute close X. */}
+          {/* Mobile puts the title FIRST so the dialog's absolutely-positioned close X lands
+              in this row — if the rail came first, the X would sit on top of the scrolling
+              chips and you'd hit it while swiping the tabs. pr-12 keeps the title clear of it. */}
+          <div className="flex shrink-0 items-center gap-2.5 border-b border-border px-4 py-3 pr-12 sm:hidden">
+            {Icon && (
+              <span className="grid size-8 shrink-0 place-items-center rounded-xl" style={{ background: `${accent}16`, color: accent }}>
+                <Icon size={16} strokeWidth={2.2} />
+              </span>
+            )}
+            {/* Plain text, NOT a second DialogTitle — Radix derives the title id from context,
+                so rendering it twice would emit duplicate DOM ids. The real DialogTitle stays
+                in the desktop rail header below (it's in the DOM in both layouts). */}
+            <span className="truncate font-display text-base font-bold tracking-tight text-ink">{title}</span>
+          </div>
+
           <TabsPrimitive.List
             ref={listRef}
-            className="no-scrollbar flex shrink-0 gap-1 overflow-x-auto border-b border-border bg-surface-muted/40 p-3 max-sm:pr-12 sm:w-60 sm:flex-col sm:overflow-y-auto sm:overflow-x-visible sm:border-b-0 sm:border-r"
+            className="no-scrollbar flex shrink-0 gap-1 overflow-x-auto border-b border-border bg-surface-muted/40 p-3 sm:w-60 sm:flex-col sm:overflow-y-auto sm:overflow-x-visible sm:border-b-0 sm:border-r"
           >
             <div className="mb-2 hidden items-center gap-2.5 px-1.5 sm:flex">
               {Icon && (
@@ -90,16 +110,6 @@ export function SettingsDialog({
           </TabsPrimitive.List>
 
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-            {/* Mobile has no room for the rail header, so the title lives here instead —
-                without it the phone shows a strip of chips and no dialog name at all. */}
-            <div className="flex shrink-0 items-center gap-2.5 border-b border-border px-4 pb-3 pt-4 sm:hidden">
-              {Icon && (
-                <span className="grid size-8 shrink-0 place-items-center rounded-xl" style={{ background: `${accent}16`, color: accent }}>
-                  <Icon size={16} strokeWidth={2.2} />
-                </span>
-              )}
-              <DialogTitle className="truncate text-base">{title}</DialogTitle>
-            </div>
             {description && (
               <p className="shrink-0 border-b border-border px-6 pb-3 pt-5 text-sm text-ink-muted max-sm:px-4 max-sm:pb-2.5 max-sm:pt-3.5">{description}</p>
             )}
