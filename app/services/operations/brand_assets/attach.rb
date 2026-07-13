@@ -21,7 +21,7 @@ module Operations
           @owner.carousel_background.attach(@carousel_background)
           # Re-derive the image-style palette from the new background (async — the
           # vision call must not block this upload). Idempotent on the blob checksum.
-          Creatives::DeriveCarouselPaletteJob.perform_later(@owner.id) if @owner.is_a?(Client)
+          ::Creatives::DeriveCarouselPaletteJob.perform_later(@owner.id) if @owner.is_a?(Client)
         end
         @owner
       end

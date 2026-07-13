@@ -29,7 +29,7 @@ module Controllers
         return unless client.carousel_background.attached?
         return if client.carousel_image_palette['source_signature'].present?
 
-        Creatives::DeriveCarouselPaletteJob.perform_later(client.id)
+        ::Creatives::DeriveCarouselPaletteJob.perform_later(client.id)
       end
 
       def client_params

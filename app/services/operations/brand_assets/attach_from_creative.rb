@@ -21,7 +21,7 @@ module Operations
           content_type: source.content_type.presence || 'image/png'
         )
         # Re-derive the image-style palette from the copied background (async).
-        Creatives::DeriveCarouselPaletteJob.perform_later(@owner.id) if @owner.is_a?(Client)
+        ::Creatives::DeriveCarouselPaletteJob.perform_later(@owner.id) if @owner.is_a?(Client)
         @owner
       end
     end

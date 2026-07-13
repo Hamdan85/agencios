@@ -18,7 +18,7 @@ module Controllers
           raise Operations::Errors::Invalid, I18n.t('api.clients.background_image_required')
         end
 
-        Creatives::DeriveCarouselPaletteJob.perform_later(client.id, force: true)
+        ::Creatives::DeriveCarouselPaletteJob.perform_later(client.id, force: true)
         { client: serialize(client, ClientSerializer) }
       end
     end
