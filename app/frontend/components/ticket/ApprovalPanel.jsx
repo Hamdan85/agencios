@@ -116,7 +116,10 @@ export default function ApprovalPanel({ ticket, creatives = [], onChanged }) {
     )
   }
 
-  // In Aprovação: the decision. Approve on the client's behalf, or send it back.
+  // In Aprovação: the ball is with the client, so the leading action is nudging
+  // them — resend the link. Approving on their behalf (or bouncing the ticket back
+  // to Produção) stays available, but secondary. On a project that gates approval
+  // internally nothing was ever sent, so approving IS the action.
   if (status === 'approval') {
     return (
       <Card className="p-4">
@@ -124,11 +127,13 @@ export default function ApprovalPanel({ ticket, creatives = [], onChanged }) {
           <ShieldCheck size={18} style={{ color: '#F97316' }} />
           <span className="font-semibold">{sentAt ? t('approval.awaiting') : t('approval.awaitingInternal')}</span>
         </div>
-        {sentAt && <p className="mb-3 text-xs text-ink-muted">{t('approval.sentAt', { date: sentAt })}</p>}
+        {sentAt && <p className="mb-3 text-xs text-ink-muted">{t('approval.lastSentAt', { date: sentAt })}</p>}
         <div className="flex flex-wrap gap-2">
-          <Button onClick={approve}><CheckCircle2 size={16} /> {t('approval.approve')}</Button>
+          {sentAt && <Button onClick={resend}><Send size={16} /> {t('approval.resendLink')}</Button>}
+          <Button variant={sentAt ? 'outline' : 'default'} onClick={approve}>
+            <CheckCircle2 size={16} /> {t('approval.approve')}
+          </Button>
           <Button variant="outline" onClick={reject}><Undo2 size={16} /> {t('approval.reject')}</Button>
-          {sentAt && <Button variant="ghost" onClick={resend}><Send size={16} /> {t('approval.resendLink')}</Button>}
         </div>
       </Card>
     )

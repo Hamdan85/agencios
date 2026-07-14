@@ -25,7 +25,7 @@ en:
     autopilot:
       completed:
         title: "Campaign on autopilot ✅"
-        body: "%{title}: creatives generated and ready for approval."
+        body: "%{title}: creatives generated. Review them and send to the client."
       failed:
         title: "Autopilot halted"
         body: "%{title}: %{reason}"

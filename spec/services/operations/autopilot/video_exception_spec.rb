@@ -53,8 +53,8 @@ RSpec.describe 'Autopilot video exception' do
 
       described_class.call(run: run)
 
-      # Nothing NEW generated, but the ready carousel is approvable → GO hands it over.
-      expect(run.reload.ticket.status).to eq('approval')
+      # Nothing NEW generated — and the run ends where GO always ends: in Produção.
+      expect(run.reload.ticket.status).to eq('production')
     end
 
     it 'still regenerates a type whose only creative FAILED' do

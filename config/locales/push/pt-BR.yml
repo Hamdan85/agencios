@@ -25,7 +25,7 @@ pt-BR:
     autopilot:
       completed:
         title: "Campanha no piloto automático ✅"
-        body: "%{title}: criativos gerados e prontos para aprovação."
+        body: "%{title}: criativos gerados. Revise e envie para o cliente."
       failed:
         title: "Piloto automático interrompido"
         body: "%{title}: %{reason}"

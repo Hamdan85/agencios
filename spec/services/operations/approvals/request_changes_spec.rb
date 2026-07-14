@@ -22,8 +22,6 @@ RSpec.describe Operations::Approvals::RequestChanges do
 
   it 'marks the creative changes_requested with feedback and writes history' do
     c = creative('carousel')
-    AutopilotRun.create!(workspace: ws, ticket: ticket, user: owner, scope: 'ticket', state: 'completed', progress: {})
-    allow(Operations::Autopilot::Regenerate).to receive(:call)
 
     described_class.call(creative: c, feedback: 'Mais contraste', actor: client)
 
@@ -36,29 +34,25 @@ RSpec.describe Operations::Approvals::RequestChanges do
     expect(ticket.reload.status).to eq('production')
   end
 
-  it 'starts a regeneration for a non-video creative under GO' do
+  # A client's "pedir ajustes" must never spend the workspace's credits — not even
+  # on a GO ticket. The piece is redone by the TEAM, from Produção.
+  it 'never regenerates anything under GO — no credits are spent on a rejection' do
     c = creative('carousel')
-    run = AutopilotRun.create!(workspace: ws, ticket: ticket, user: owner, scope: 'ticket', state: 'completed', progress: {})
-    expect(Operations::Autopilot::Regenerate).to receive(:call)
-      .with(hash_including(creative: c, feedback: 'Mais contraste'))
-
-    described_class.call(creative: c, feedback: 'Mais contraste', actor: client)
-  end
-
-  it 'never regenerates a video creative — it stays in production' do
-    c = creative('ugc_video')
     AutopilotRun.create!(workspace: ws, ticket: ticket, user: owner, scope: 'ticket', state: 'completed', progress: {})
-    expect(Operations::Autopilot::Regenerate).not_to receive(:call)
+    expect(Operations::Creatives::GenerateViralCarousel).not_to receive(:call)
+    expect(Operations::Creatives::GenerateImage).not_to receive(:call)
 
-    described_class.call(creative: c, feedback: 'Refazer', actor: client)
+    expect { described_class.call(creative: c, feedback: 'Mais contraste', actor: client) }
+      .not_to change { ws.credit_transactions.count }
     expect(ticket.reload.status).to eq('production')
   end
 
-  it 'does not regenerate a manual (non-GO) ticket — stays in production' do
-    c = creative('carousel') # no autopilot run
-    expect(Operations::Autopilot::Regenerate).not_to receive(:call)
+  it 'leaves a manual (non-GO) ticket in production with the feedback' do
+    c = creative('carousel')
 
     described_class.call(creative: c, feedback: 'Refazer', actor: client)
+
     expect(ticket.reload.status).to eq('production')
+    expect(c.reload.client_feedback).to eq('Refazer')
   end
 end

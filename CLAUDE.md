@@ -439,10 +439,14 @@ never pre-format dates/money on the backend, never inline `toLocaleString`.
    - Image → `Operations::Creatives::GenerateImage` → `Vendors::OpenRouter::Image` →
      `Generation` (`kind: image`, 1 credit).
 4. **Approval** — leaving `production` for `approval` sends the client the link
-   (`Operations::Approvals::RequestApproval` → `ApprovalMailer` → the portal). The client approves
-   or rejects per media slot (`Approvals::ApproveSlot` / `RequestChanges`); a GO ticket
-   auto-regenerates the rejected piece (`Operations::Autopilot::Regenerate`) and returns to
-   `approval` on its own. Full approval → `Approvals::OnFullyApproved` → `scheduled`.
+   (`Operations::Approvals::RequestApproval` → `ApprovalMailer` → the portal). **A human always
+   decides to send it** — GO stops in `production` with the creatives ready and never asks the
+   client on its own. The client approves or rejects per media slot (`Approvals::ApproveSlot` /
+   `RequestChanges`); a rejection bounces the ticket back to `production` with the feedback and
+   **regenerates nothing** — a regeneration spends credits, so only the team may trigger it. Full
+   approval → `Approvals::OnFullyApproved` → `scheduled`, and there GO resumes: a ticket that ran
+   on autopilot (`Ticket#autopilot_completed?`) gets its posts scheduled hands-off
+   (`Approvals::AutoPublishApproved`), same as a project with `auto_publish_after_approval`.
 5. **Publish & monitor** — in `scheduled`→`published`, `Posts::PublishJob` →
    `Operations::Posts::Publish` → `Publishers::SocialPublisher` → the network vendor. Then
    `Posts::SyncMetricsJob` (scheduled) → `Operations::Posts::SyncMetrics` writes `PostMetric`s.

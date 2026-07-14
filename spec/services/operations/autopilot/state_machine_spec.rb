@@ -67,7 +67,7 @@ RSpec.describe 'Operations::Autopilot state machine' do
 
   def advance(run) = Operations::Autopilot::Advance.call(run: run.reload)
 
-  it 'walks a sync-only ticket to completed, handing it to approval (GO no longer publishes)' do
+  it 'walks a sync-only ticket to completed, stopping in production (GO never sends or publishes)' do
     connect('instagram')
     ticket = eligible_ticket(%w[feed_image carousel], %w[instagram])
     run = Operations::Autopilot::Start.call(ticket: ticket, user: user)
@@ -77,8 +77,10 @@ RSpec.describe 'Operations::Autopilot state machine' do
 
     advance(run) # generating → (both creatives sync) → Complete
     expect(run.reload.state).to eq('completed')
-    expect(ticket.reload.status).to eq('approval') # GO stops with the approver; approval schedules
-    expect(ticket.posts.count).to eq(0)            # no posts until it's approved
+    # The creatives are ready, but a human decides when the client sees them.
+    expect(ticket.reload.status).to eq('production')
+    expect(ticket.approval_requested_at).to be_nil
+    expect(ticket.posts.count).to eq(0) # no posts until it's approved
   end
 
   # Video is never auto-generated in GO, but the state machine still parks on ANY
@@ -101,7 +103,7 @@ RSpec.describe 'Operations::Autopilot state machine' do
     gen.creative.update!(status: :ready)
     Operations::Autopilot::OnGenerationSettled.reconcile(run: run.reload)
     expect(run.reload.state).to eq('completed')
-    expect(ticket.reload.status).to eq('approval')
+    expect(ticket.reload.status).to eq('production')
   end
 
   it 'halts the run when a generation fails' do

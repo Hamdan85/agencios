@@ -5,9 +5,13 @@ module Operations
     # Reached when every approvable creative on a ticket is approved. Records the
     # "Aprovado por <actor>" note, pre-fills a reasonable schedule, and ALWAYS
     # advances the ticket out of Aprovação into the Publication phase (approval →
-    # scheduled). Only when the project auto-publishes does it also create the
-    # scheduled posts hands-off; otherwise the team confirms in the Publication
-    # phase (PostingPanel).
+    # scheduled).
+    #
+    # The scheduled posts are then created hands-off in two cases:
+    #   * the project opted into it (`auto_publish_after_approval`), or
+    #   * the ticket ran on GO — the client's "yes" is what GO was waiting for, so
+    #     the automation resumes and finishes the job (Ticket#autopilot_completed?).
+    # Otherwise the team confirms the posting itself (PostingPanel).
     class OnFullyApproved < Operations::Base
       def initialize(ticket:)
         @ticket = ticket
@@ -37,9 +41,15 @@ module Operations
         Operations::Tickets::ChangeStatus.call(@ticket, 'scheduled', user: nil, force: true)
         @ticket.reload
 
-        # Only the hands-off branch actually creates the posts here.
-        AutoPublishApproved.call(ticket: @ticket) if @ticket.project.setting('auto_publish_after_approval')
+        # Only the hands-off branches actually create the posts here.
+        AutoPublishApproved.call(ticket: @ticket) if auto_publish?
         @ticket
+      end
+
+      private
+
+      def auto_publish?
+        @ticket.project.setting('auto_publish_after_approval') || @ticket.autopilot_completed?
       end
     end
   end

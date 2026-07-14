@@ -51,7 +51,7 @@
     "noDetails": "No details — the client just asked for adjustments.",
     "resendLink": "Resend link",
     "awaiting": "Awaiting client approval",
-    "sentAt": "Link sent on {{date}}",
+    "lastSentAt": "Last sent on {{date}}",
     "approve": "Approve",
     "readyTitle": "Ready for approval",
     "readyHelp": "Send the pieces for the client to approve. The ticket moves to the Approval column.",
@@ -103,7 +103,7 @@
       "running": "On autopilot…"
     },
     "title": "Start on autopilot?",
-    "description": "The agent will fill in the brief, generate every creative and schedule the posts on every network. Once started, credits are consumed even if you adjust the schedule later.",
+    "description": "The agent will fill in the brief and generate every creative, then stop in Production for you to review and send it to the client. Once the client approves, autopilot schedules the posts on its own. Once started, credits are consumed even if you adjust the schedule later.",
     "alreadyGenerated": "already generated",
     "included": "included",
     "credits": "{{count}} credits",

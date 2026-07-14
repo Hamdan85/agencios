@@ -120,6 +120,15 @@ class Ticket < ApplicationRecord
     autopilot_runs.any? { |r| r.ticket_scope? && r.active? }
   end
 
+  # This ticket ran on GO and the run produced its creatives (the run ends in
+  # Produção, where a human decides to send it to the client). The automation is
+  # only paused there: once the client approves, GO picks the ticket back up and
+  # schedules its posts on its own (Operations::Approvals::OnFullyApproved). A
+  # failed/cancelled run means the team took over — no automation resumes.
+  def autopilot_completed?
+    autopilot_runs.ticket_runs.order(created_at: :desc).first&.state == 'completed'
+  end
+
   # A ticket in "alert" needs human attention — something broke at posting time
   # (a failed publish). `alert_reason` holds the why; cleared on a clean publish.
   def in_alert?

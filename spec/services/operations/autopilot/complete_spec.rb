@@ -15,13 +15,17 @@ RSpec.describe Operations::Autopilot::Complete do
     allow(Operations::Push::Notify).to receive(:call)
   end
 
-  it 'completes the run and hands the ticket to approval' do
-    # A ready creative to approve (video-only tickets generate nothing and stay in production).
+  # GO stops with the work done, NOT sent: a human reviews it in Produção and
+  # clicks "Enviar para aprovação" (which is what asks the client).
+  it 'completes the run and leaves the ticket in production for the team to send' do
     Creative.create!(workspace: ws, ticket: ticket, creative_type: 'carousel', status: :ready)
-    expect(Operations::Approvals::RequestApproval).to receive(:call).with(hash_including(ticket: ticket))
+    expect(Operations::Approvals::RequestApproval).not_to receive(:call)
+
     Operations::Autopilot::Complete.call(run: run)
+
     expect(run.reload.state).to eq('completed')
     expect(run.finished_at).to be_present
-    expect(ticket.reload.status).to eq('approval')
+    expect(ticket.reload.status).to eq('production')
+    expect(ticket.approval_requested_at).to be_nil
   end
 end

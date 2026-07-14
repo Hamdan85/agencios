@@ -51,7 +51,7 @@
     "noDetails": "Sem detalhes — o cliente apenas pediu ajustes.",
     "resendLink": "Reenviar link",
     "awaiting": "Aguardando aprovação do cliente",
-    "sentAt": "Link enviado em {{date}}",
+    "lastSentAt": "Último envio em {{date}}",
     "approve": "Aprovar",
     "readyTitle": "Pronto para aprovação",
     "readyHelp": "Envie as peças para o cliente aprovar. O ticket vai para a coluna Aprovação.",
@@ -103,7 +103,7 @@
       "running": "No piloto automático…"
     },
     "title": "Iniciar no piloto automático?",
-    "description": "O agente vai preencher o briefing, gerar todos os criativos e agendar os posts em todas as redes. Uma vez iniciado, os créditos são consumidos mesmo que você ajuste o agendamento depois.",
+    "description": "O agente vai preencher o briefing e gerar todos os criativos, parando em Produção para você revisar e enviar ao cliente. Depois que o cliente aprovar, o piloto automático agenda os posts sozinho. Uma vez iniciado, os créditos são consumidos mesmo que você ajuste o agendamento depois.",
     "alreadyGenerated": "já gerado",
     "included": "incluso",
     "credits": "{{count}} créditos",

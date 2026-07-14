@@ -18,8 +18,9 @@ function firstThumb(ticket) {
 }
 
 // A single rich, identifiable queue row: content thumbnail + title + campaign +
-// format/channel chips + pending-count badge, with a left accent bar on the
-// selected row (echoing the board card treatment).
+// format/channel chips, with a left accent bar on the selected row (echoing the
+// board card treatment). The pending-count badge only shows when there is more
+// than one piece left to decide — a "1" on every single-piece ticket is noise.
 function QueueRow({ ticket, on, accent, onPick }) {
   const thumb = firstThumb(ticket)
   const pending = (ticket.slots || []).filter((s) => s.state === 'pending').length
@@ -54,7 +55,7 @@ function QueueRow({ ticket, on, accent, onPick }) {
           </div>
         )}
       </div>
-      {pending > 0 && (
+      {pending > 1 && (
         <span className="shrink-0 rounded-full bg-amber/20 px-1.5 py-0.5 text-[11px] font-extrabold text-[#B45309]">
           {pending}
         </span>

@@ -5,11 +5,14 @@ module Operations
     # A client requested changes on ONE creative from the portal. Records the
     # decision + feedback as history, notifies the responsible user, and sends the
     # ticket BACK to Produção — the column whose action is "produce", which is
-    # exactly what the ticket now needs. From there:
-    #   - video            → stays in Produção (never auto-regenerated)
-    #   - non-video + GO   → Autopilot::Regenerate remakes the piece with the
-    #                        feedback and returns it to Aprovação on its own
-    #   - non-video manual → stays in Produção for the team to redo and resubmit
+    # exactly what the ticket now needs.
+    #
+    # Nothing is regenerated here, GO ticket or not: a regeneration spends the
+    # workspace's credits, so only the TEAM may trigger it (from Produção, with the
+    # client's feedback in front of them). A client clicking "pedir ajustes" must
+    # never be able to burn credits — they'd bounce the piece as many times as they
+    # feel like. The team redoes the work and resubmits it with "Enviar para
+    # aprovação".
     class RequestChanges < Operations::Base
       def initialize(creative:, feedback:, actor:)
         @creative = creative
@@ -28,8 +31,6 @@ module Operations
                             creative: @creative, feedback: @feedback)
         create_review_task
         back_to_production
-
-        regenerate_if_go
         @creative
       end
 
@@ -56,21 +57,6 @@ module Operations
       end
 
       def slot_label = ::Creatives.spec_for(@creative.creative_type)&.dig(:label) || @creative.creative_type
-
-      def video? = ::Creatives.spec_for(@creative.creative_type)&.dig(:kind) == 'video'
-
-      # The GO run that produced this ticket (if any). Its presence means the ticket
-      # is under autopilot, so a non-video change kicks a regeneration.
-      def autopilot_run = @ticket.autopilot_runs.order(created_at: :desc).first
-
-      def regenerate_if_go
-        return if video? # video always waits in production
-
-        run = autopilot_run
-        return unless run # manual ticket — team handles it in production
-
-        Operations::Autopilot::Regenerate.call(run: run, creative: @creative, feedback: @feedback)
-      end
     end
   end
 end

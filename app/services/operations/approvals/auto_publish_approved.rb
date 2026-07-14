@@ -2,9 +2,10 @@
 
 module Operations
   module Approvals
-    # The hands-off branch (auto_publish_after_approval ON): with the ticket already
-    # in the Publication phase and its scheduled_at pre-filled by OnFullyApproved,
-    # reuse Tickets::Publish to create the scheduled posts. They remain reviewable /
+    # The hands-off branch (the project's auto_publish_after_approval, or a GO
+    # ticket resuming after the client's approval): with the ticket already in the
+    # Publication phase and its scheduled_at pre-filled by OnFullyApproved, reuse
+    # Tickets::Publish to create the scheduled posts. They remain reviewable /
     # editable / cancelable in the Publication phase until they fire. This is the
     # only publish path — no new one. (Replaces the earlier ScheduleApproved.)
     class AutoPublishApproved < Operations::Base
