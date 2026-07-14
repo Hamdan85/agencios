@@ -22,7 +22,7 @@ ActiveAdmin.register ImageConfig do
     f.inputs I18n.t('admin.image_configs.model_section') do
       f.input :default_model,
               label: I18n.t('admin.image_configs.model_label'),
-              input_html: { placeholder: Vendors::OpenRouter::Image::DEFAULT_MODEL, autocomplete: 'off' },
+              input_html: model_picker_input_html('image', placeholder: Vendors::OpenRouter::Image::DEFAULT_MODEL),
               hint: I18n.t('admin.image_configs.model_hint', model: Vendors::OpenRouter::Image::DEFAULT_MODEL)
     end
     f.actions

@@ -48,6 +48,42 @@ RSpec.describe 'Admin AI config pages', type: :request do
     expect(response).to have_http_status(:ok)
   end
 
+  describe 'the model-picker endpoint (/admin/openrouter_models)' do
+    def stub_catalog(models)
+      catalog = instance_double(Vendors::OpenRouter::Catalog, models: models)
+      allow(Vendors::OpenRouter::Catalog).to receive(:new).and_return(catalog)
+    end
+
+    it 'returns the searched catalog page as JSON' do
+      login
+      stub_catalog([{ id: 'google/gemini-3.1-flash-image', name: 'Gemini 3.1 Flash Image' }])
+      get '/admin/openrouter_models', params: { kind: 'image', q: 'gemini' }
+      expect(response).to have_http_status(:ok)
+      body = JSON.parse(response.body)
+      expect(body['results']).to eq([{ 'id' => 'google/gemini-3.1-flash-image', 'name' => 'Gemini 3.1 Flash Image' }])
+      expect(body['has_more']).to be(false)
+    end
+
+    it 'rejects an unknown kind' do
+      login
+      get '/admin/openrouter_models', params: { kind: 'audio' }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it 'answers 502 with an error body when OpenRouter is unreachable' do
+      login
+      allow(Vendors::OpenRouter::Catalog).to receive(:new).and_raise(Vendors::Base::ServerError.new('down', status: 503))
+      get '/admin/openrouter_models', params: { kind: 'text' }
+      expect(response).to have_http_status(:bad_gateway)
+      expect(JSON.parse(response.body)['results']).to eq([])
+    end
+
+    it 'answers 401 JSON for non-staff' do
+      get '/admin/openrouter_models', params: { kind: 'text' }
+      expect(response).to have_http_status(:unauthorized)
+    end
+  end
+
   it 'bounces non-staff users' do
     Operations::Users::Register.call(
       email: 'member@agencios.app', password: 'secret123', name: 'M', workspace_name: 'W'

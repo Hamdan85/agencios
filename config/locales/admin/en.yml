@@ -64,6 +64,12 @@ en:
       default_model_hint: 'OpenRouter slug used when an operation has no model of its own. E.g.: anthropic/claude-sonnet-4.5, openai/gpt-5-mini, google/gemini-2.5-flash.'
       per_operation_section: Model per operation (leave blank to use the default)
       op_placeholder: default (%{model})
+    model_picker:
+      loading: Loading models…
+      empty: No models found.
+      load_more: Load more
+      error: Could not reach the OpenRouter catalog.
+      unknown_kind: Unknown model kind.
     image_configs:
       menu: Image
       model_section: Image model

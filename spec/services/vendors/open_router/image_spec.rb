@@ -5,14 +5,15 @@ require 'rails_helper'
 RSpec.describe Vendors::OpenRouter::Image do
   subject(:image) { described_class.new(api_key: 'test-key', model: 'google/gemini-2.5-flash-image') }
 
-  attr_reader :last_body
+  attr_reader :last_path, :last_body
 
   # Fakes the Faraday boundary (same pattern as the video client spec): capture
   # the POST body so we can assert the exact wire shape sent to OpenRouter.
   def stub_post(body:, success: true, status: 200)
     resp = instance_double(Faraday::Response, success?: success, body: body, status: status)
     conn = instance_double(Faraday::Connection)
-    allow(conn).to receive(:post) do |_path, &blk|
+    allow(conn).to receive(:post) do |path, &blk|
+      @last_path = path
       if blk
         req = double('req')
         allow(req).to receive(:body=) { |b| @last_body = b.deep_stringify_keys }
@@ -24,53 +25,62 @@ RSpec.describe Vendors::OpenRouter::Image do
     allow(image).to receive(:connection).and_return(conn)
   end
 
-  # OpenRouter returns the generated image inline on message.images[] as a data URI.
+  # The images API returns the generated image at data[0] as base64 + media type.
   def image_response(mime: 'image/png', b64: Base64.strict_encode64('PNGBYTES'), cost: nil)
     {
-      'choices' => [{ 'message' => { 'content' => 'here', 'images' => [
-        { 'type' => 'image_url', 'image_url' => { 'url' => "data:#{mime};base64,#{b64}" } }
-      ] } }],
+      'created' => 1_748_372_400,
+      'data' => [{ 'b64_json' => b64, 'media_type' => mime }],
       'usage' => cost ? { 'cost' => cost } : {}
     }
   end
 
   describe '#generate_image' do
-    it 'requests the image+text modalities and returns the decoded bytes + content type' do
+    it 'POSTs the dedicated images endpoint and returns the decoded bytes + content type + model' do
       stub_post(body: image_response(mime: 'image/png', b64: Base64.strict_encode64('PNGBYTES')))
 
       result = image.generate_image(prompt: 'a cheetah lawyer', aspect_ratio: '1:1')
 
+      expect(last_path).to eq('/api/v1/images')
       expect(last_body['model']).to eq('google/gemini-2.5-flash-image')
-      expect(last_body['modalities']).to eq(%w[image text])
-      expect(last_body.dig('messages', 0, 'role')).to eq('user')
+      expect(last_body['aspect_ratio']).to eq('1:1')
+      expect(last_body['n']).to eq(1)
       expect(result[:bytes]).to eq('PNGBYTES')
       expect(result[:content_type]).to eq('image/png')
+      expect(result[:model]).to eq('google/gemini-2.5-flash-image')
     end
 
-    it 'folds the aspect ratio and negative prompt into the text part' do
+    it 'sends the aspect ratio as a param AND folds it (plus the negative prompt) into the prompt' do
       stub_post(body: image_response)
 
       image.generate_image(prompt: 'a cat', aspect_ratio: '9:16', negative_prompt: 'blurry')
 
-      text = last_body.dig('messages', 0, 'content', 0, 'text')
-      expect(text).to include('a cat')
-      expect(text).to include('Aspect ratio: 9:16.')
-      expect(text).to include('Avoid: blurry.')
+      expect(last_body['aspect_ratio']).to eq('9:16')
+      expect(last_body['prompt']).to include('a cat')
+      expect(last_body['prompt']).to include('Aspect ratio: 9:16.')
+      expect(last_body['prompt']).to include('Avoid: blurry.')
     end
 
-    it 'attaches supported reference images as inline image_url data URIs' do
+    it 'normalizes an unsupported aspect ratio to square' do
+      stub_post(body: image_response)
+
+      image.generate_image(prompt: 'x', aspect_ratio: '21:9')
+
+      expect(last_body['aspect_ratio']).to eq('1:1')
+    end
+
+    it 'sends reference images as input_references data URLs with a numbered legend in the prompt' do
       stub_post(body: image_response)
 
       image.generate_image(
         prompt: 'x', aspect_ratio: '1:1',
-        reference_images: [{ label: 'MARCA', bytes: 'LOGO', content_type: 'image/png' }]
+        reference_images: [{ label: 'BRAND LOGO', bytes: 'LOGO', content_type: 'image/png' }]
       )
 
-      parts = last_body.dig('messages', 0, 'content')
-      label = parts.find { |p| p['type'] == 'text' && p['text'].to_s.include?('MARCA') }
-      img   = parts.find { |p| p['type'] == 'image_url' }
-      expect(label).to be_present
-      expect(img.dig('image_url', 'url')).to eq("data:image/png;base64,#{Base64.strict_encode64('LOGO')}")
+      refs = last_body['input_references']
+      expect(refs.size).to eq(1)
+      expect(refs.first['type']).to eq('image_url')
+      expect(refs.first.dig('image_url', 'url')).to eq("data:image/png;base64,#{Base64.strict_encode64('LOGO')}")
+      expect(last_body['prompt']).to include('Reference images, in order: 1. BRAND LOGO.')
     end
 
     it 'skips reference images with an unsupported MIME type (e.g. SVG logos)' do
@@ -78,11 +88,11 @@ RSpec.describe Vendors::OpenRouter::Image do
 
       image.generate_image(
         prompt: 'x', aspect_ratio: '1:1',
-        reference_images: [{ label: 'MARCA', bytes: '<svg/>', content_type: 'image/svg+xml' }]
+        reference_images: [{ label: 'BRAND', bytes: '<svg/>', content_type: 'image/svg+xml' }]
       )
 
-      parts = last_body.dig('messages', 0, 'content')
-      expect(parts.select { |p| p['type'] == 'image_url' }).to be_empty
+      expect(last_body).not_to have_key('input_references')
+      expect(last_body['prompt']).not_to include('Reference images')
     end
 
     it 'passes through the real USD cost as cents when OpenRouter reports usage.cost' do
@@ -94,7 +104,7 @@ RSpec.describe Vendors::OpenRouter::Image do
     end
 
     it 'raises when the response carries no image' do
-      stub_post(body: { 'choices' => [{ 'message' => { 'content' => 'no image' } }] })
+      stub_post(body: { 'created' => 1, 'data' => [] })
 
       expect { image.generate_image(prompt: 'x') }
         .to raise_error(Vendors::OpenRouter::Error, /No image returned/)
@@ -109,9 +119,9 @@ RSpec.describe Vendors::OpenRouter::Image do
 
   describe 'model resolution' do
     it 'uses the admin-configured ImageConfig model when none is passed' do
-      ImageConfig.create!(default_model: 'stability/sd-ultra')
+      ImageConfig.create!(default_model: 'black-forest-labs/flux.2-pro')
       client = described_class.new(api_key: 'test-key')
-      expect(client.instance_variable_get(:@model)).to eq('stability/sd-ultra')
+      expect(client.instance_variable_get(:@model)).to eq('black-forest-labs/flux.2-pro')
     end
 
     it 'falls back to the coded default when ImageConfig is blank' do
@@ -120,7 +130,7 @@ RSpec.describe Vendors::OpenRouter::Image do
     end
 
     it 'an explicit model argument beats the admin config' do
-      ImageConfig.create!(default_model: 'stability/sd-ultra')
+      ImageConfig.create!(default_model: 'black-forest-labs/flux.2-pro')
       client = described_class.new(api_key: 'test-key', model: 'x/explicit')
       expect(client.instance_variable_get(:@model)).to eq('x/explicit')
     end

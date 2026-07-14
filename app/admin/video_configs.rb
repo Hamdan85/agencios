@@ -30,11 +30,11 @@ ActiveAdmin.register VideoConfig do
     f.inputs I18n.t('admin.video_configs.models_section') do
       f.input :draft_model,
               label: I18n.t('admin.video_configs.draft_model_label'),
-              input_html: { placeholder: VideoConfig::DEFAULT_DRAFT_MODEL, autocomplete: 'off' },
+              input_html: model_picker_input_html('video', placeholder: VideoConfig::DEFAULT_DRAFT_MODEL),
               hint: I18n.t('admin.video_configs.draft_model_hint', model: VideoConfig::DEFAULT_DRAFT_MODEL)
       f.input :default_model,
               label: I18n.t('admin.video_configs.final_model_label'),
-              input_html: { placeholder: VideoConfig::DEFAULT_MODEL, autocomplete: 'off' },
+              input_html: model_picker_input_html('video', placeholder: VideoConfig::DEFAULT_MODEL),
               hint: I18n.t('admin.video_configs.final_model_hint', model: VideoConfig::DEFAULT_MODEL)
       f.input :max_duration_seconds, label: I18n.t('admin.video_configs.max_duration_label'),
                                      hint: I18n.t('admin.video_configs.max_duration_hint')

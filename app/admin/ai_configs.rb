@@ -31,13 +31,16 @@ ActiveAdmin.register AiConfig do
     f.inputs I18n.t('admin.ai_configs.default_model_section') do
       f.input :default_model,
               label: I18n.t('admin.ai_configs.default_model_label'),
-              hint: I18n.t('admin.ai_configs.default_model_hint')
+              hint: I18n.t('admin.ai_configs.default_model_hint'),
+              input_html: model_picker_input_html('text')
     end
     f.inputs I18n.t('admin.ai_configs.per_operation_section') do
       AiConfig::OPERATIONS.each do |op|
         f.input :"op_model_#{op}",
                 label: AiConfig::OP_LABELS[op],
-                input_html: { placeholder: I18n.t('admin.ai_configs.op_placeholder', model: f.object.default_model), autocomplete: 'off' }
+                input_html: model_picker_input_html(
+                  'text', placeholder: I18n.t('admin.ai_configs.op_placeholder', model: f.object.default_model)
+                )
       end
     end
     f.actions

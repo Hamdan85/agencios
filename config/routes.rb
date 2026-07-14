@@ -10,6 +10,9 @@ Rails.application.routes.draw do
   match '/admin/stop-impersonation',   to: 'admin/impersonations#destroy',
                                        via: %i[get delete], as: :admin_stop_impersonation
 
+  # ── Admin model-picker typeahead (OpenRouter catalog, staff-only) ──
+  get '/admin/openrouter_models', to: 'admin/openrouter_models#index', as: :admin_openrouter_models
+
   get 'up' => 'rails/health#show', as: :rails_health_check
 
   # ── PWA ────────────────────────────────────────────────────────────

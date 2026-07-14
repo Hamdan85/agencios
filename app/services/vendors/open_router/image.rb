@@ -4,31 +4,36 @@ require 'base64'
 
 module Vendors
   module OpenRouter
-    # OpenRouter IMAGE-generation client (https://openrouter.ai/api/v1/chat/completions).
-    # Image models (Gemini "nano banana", etc.) are reached through the SAME
-    # OpenAI-compatible chat endpoint as text — the image comes back inline on
-    # `choices[0].message.images[]` as data URIs when `modalities` asks for it.
+    # OpenRouter IMAGE-generation client, on the DEDICATED images API
+    # (https://openrouter.ai/docs/features/multimodal/image-generation) — the
+    # catalog at GET /api/v1/images/models (Gemini, FLUX, GPT-image, Recraft, …),
+    # NOT the chat-completions modality trick this client used before. That
+    # unlocks image-only engines (e.g. black-forest-labs/flux.2-pro) that have
+    # no chat endpoint at all.
     #
-    # Separate from the chat `Client` (which is specialized for text/tool/stream)
-    # and the `Video` client (async submit→poll), mirroring how those are split.
+    # Separate from the chat `Client` (text/tool/stream) and the `Video` client
+    # (async submit→poll), mirroring how those are split.
     #
-    # Endpoint: POST /api/v1/chat/completions with `modalities: ["image","text"]`.
+    # Endpoint: POST /api/v1/images — `model`, `prompt`, `aspect_ratio`, and
+    #           labeled references via `input_references` (data URLs). Engines
+    #           that don't support a param have it dropped by the router, so the
+    #           aspect ratio is ALSO folded into the prompt as a fallback.
     # Auth:     Authorization: Bearer <key> (openrouter.api_key / OPENROUTER_API_KEY).
     #
     # Returns { bytes: <binary String>, content_type:, cost_cents:, model: } —
     # the caller attaches the bytes to ActiveStorage and logs the model that
     # actually rendered (the slug is admin-editable, so no caller may assume the
-    # coded default). Raises on error (so the operation can refund credits),
-    # like the Banana client it replaces.
+    # coded default). Raises on error (so the operation can refund credits).
     class Image < Vendors::Base
       BASE_URL      = 'https://openrouter.ai'
-      # Google's Gemini image model ("nano banana") via OpenRouter. This is only
-      # the coded seed — the live slug is admin-editable in ImageConfig; the
+      # Google's Gemini image model ("nano banana"). This is only the coded
+      # seed — the live slug is admin-editable in ImageConfig; the
       # `openrouter.image_model` credential / OPENROUTER_IMAGE_MODEL env var
       # remains as a fallback between the two.
       DEFAULT_MODEL = 'google/gemini-2.5-flash-image'
 
-      # Aspect ratios we fold into the prompt (the chat API has no dedicated param).
+      # The ratios our creative specs use — a subset every mainstream engine's
+      # `aspect_ratio` enum covers. Anything else falls back to square.
       SUPPORTED_ASPECT_RATIOS = %w[1:1 16:9 9:16 4:3 3:4].freeze
 
       # Raster MIME types accepted as inline reference-image input. Anything else
@@ -45,26 +50,26 @@ module Vendors
                    DEFAULT_MODEL
       end
 
-      # Generates one image. Returns { bytes:, content_type:, cost_cents: }.
+      # Generates one image. Returns { bytes:, content_type:, cost_cents:, model: }.
       #
       # `reference_images` — optional labeled visual references (brand logo,
-      # creator avatar, …) handed to the multimodal model. Each is a hash
-      # `{ label:, bytes:, content_type: }`; the label text precedes its inline
-      # image so the model knows what it is and can decide whether to use it.
+      # creator avatar, …) handed to the engine. Each is a hash
+      # `{ label:, bytes:, content_type: }`; the images go in `input_references`
+      # (in order) and their labels are folded into the prompt as a numbered
+      # legend so the model knows what each one is.
       def generate_image(prompt:, aspect_ratio: '1:1', negative_prompt: nil, reference_images: [])
         require_credential!(@api_key, 'openrouter.api_key')
 
-        content = [{ type: 'text', text: full_prompt(prompt, aspect_ratio, negative_prompt) }] +
-                  reference_parts(reference_images)
-
+        refs = usable_references(reference_images)
         payload = {
           model: @model,
-          messages: [{ role: 'user', content: content }],
-          modalities: %w[image text],
-          usage: { include: true }
+          prompt: full_prompt(prompt, aspect_ratio, negative_prompt, refs),
+          aspect_ratio: normalize_aspect_ratio(aspect_ratio),
+          n: 1
         }
+        payload[:input_references] = refs.map { |ref| reference_entry(ref) } if refs.any?
 
-        body  = handle(connection.post('/api/v1/chat/completions') { |req| req.body = payload })
+        body  = handle(connection.post('/api/v1/images') { |req| req.body = payload })
         image = extract_image(body)
 
         raise Vendors::OpenRouter::Error, 'No image returned by OpenRouter' unless image
@@ -91,26 +96,15 @@ module Vendors
         }
       end
 
-      # Pull the first inline image off the assistant message and decode its data
-      # URI into { bytes:, content_type: }. Returns nil when none is present.
+      # The generated image lives at data[0] as base64 + media type.
       def extract_image(body)
-        images = body.is_a?(Hash) ? body.dig('choices', 0, 'message', 'images') : nil
-        return nil unless images.is_a?(Array)
+        entry = body.is_a?(Hash) ? Array(body['data']).first : nil
+        return nil unless entry.is_a?(Hash) && entry['b64_json'].present?
 
-        url = images.filter_map { |img| img.is_a?(Hash) ? img.dig('image_url', 'url') : nil }.first
-        decode_data_uri(url)
-      end
-
-      # data:image/png;base64,<...> → { bytes: <binary>, content_type: 'image/png' }.
-      def decode_data_uri(url)
-        return nil if url.blank?
-
-        match = %r{\Adata:(?<mime>[^;,]+)?(?<base64>;base64)?,(?<data>.*)\z}m.match(url.to_s)
-        return nil unless match
-
-        data = match[:data].to_s
-        bytes = match[:base64] ? Base64.strict_decode64(data) : CGI.unescape(data)
-        { bytes: bytes, content_type: match[:mime].presence || 'image/png' }
+        {
+          bytes: Base64.strict_decode64(entry['b64_json']),
+          content_type: entry['media_type'].presence || 'image/png'
+        }
       rescue ArgumentError
         nil
       end
@@ -121,37 +115,39 @@ module Vendors
         cost.present? ? (cost.to_f * 100.0) : nil
       end
 
-      # Turn labeled reference images into interleaved [text, image_url] content
-      # parts. A label part precedes each image so the model can tell them apart.
-      def reference_parts(reference_images)
-        Array(reference_images).flat_map do |ref|
-          bytes = ref && ref[:bytes]
-          next [] if bytes.blank?
+      # References the engine can actually take: non-blank bytes, raster MIME.
+      def usable_references(reference_images)
+        Array(reference_images).select do |ref|
+          next false if ref.nil? || ref[:bytes].blank?
 
-          mime = ref[:content_type].presence || 'image/png'
-          unless SUPPORTED_IMAGE_MIME_TYPES.include?(mime.to_s.downcase)
-            Rails.logger.warn(
-              "[Vendors::OpenRouter::Image] skipping reference image with unsupported MIME type: #{mime}"
-            )
-            next []
-          end
+          mime = (ref[:content_type].presence || 'image/png').to_s.downcase
+          next true if SUPPORTED_IMAGE_MIME_TYPES.include?(mime)
 
-          parts = []
-          parts << { type: 'text', text: "Referência — #{ref[:label]}:" } if ref[:label].present?
-          parts << {
-            type: 'image_url',
-            image_url: { url: "data:#{mime};base64,#{Base64.strict_encode64(bytes)}" }
-          }
-          parts
+          Rails.logger.warn(
+            "[Vendors::OpenRouter::Image] skipping reference image with unsupported MIME type: #{mime}"
+          )
+          false
         end
       end
 
-      # Fold aspect ratio and negative prompt into the text prompt — the chat
-      # completions API has no dedicated params for these.
-      def full_prompt(prompt, aspect_ratio, negative_prompt)
+      def reference_entry(ref)
+        mime = ref[:content_type].presence || 'image/png'
+        { type: 'image_url', image_url: { url: "data:#{mime};base64,#{Base64.strict_encode64(ref[:bytes])}" } }
+      end
+
+      # Fold the aspect ratio (fallback for engines without the param), the
+      # negative prompt (no engine param exists) and the reference legend into
+      # the text prompt.
+      def full_prompt(prompt, aspect_ratio, negative_prompt, refs)
         parts = [prompt]
         parts << "Aspect ratio: #{normalize_aspect_ratio(aspect_ratio)}." if aspect_ratio.present?
         parts << "Avoid: #{negative_prompt}." if negative_prompt.present?
+
+        legend = refs.each_with_index.filter_map do |ref, i|
+          "#{i + 1}. #{ref[:label]}" if ref[:label].present?
+        end
+        parts << "Reference images, in order: #{legend.join('; ')}." if legend.any?
+
         parts.join(' ')
       end
 
