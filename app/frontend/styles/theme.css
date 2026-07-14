@@ -177,6 +177,16 @@
 .ag-sheet-panel-bottom[data-state='open']   { animation: ag-slide-in-bottom 0.34s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .ag-sheet-panel-bottom[data-state='closed'] { animation: ag-slide-out-bottom 0.26s cubic-bezier(0.4, 0, 1, 1) both; }
 
+/* The lightbox rises INTO the media rather than sliding: the backdrop fades
+   while the deck scales up from just under full size, so opening a creative
+   reads as a zoom out of the thumbnail that was tapped. The component drives
+   its own transform while a drag is live, so the animation only owns the
+   open/close moment (`both` keeps the end state until the drag takes over). */
+@keyframes ag-lightbox-in  { from { opacity: 0; transform: scale(0.92) } to { opacity: 1; transform: none } }
+@keyframes ag-lightbox-out { from { opacity: 1 } to { opacity: 0 } }
+.ag-lightbox[data-state='open']   { animation: ag-lightbox-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.ag-lightbox[data-state='closed'] { animation: ag-lightbox-out 0.18s ease both; }
+
 /* ╔══════════════════════════════════════════════════════════════════╗
  * ║   MARKETING MOTION SYSTEM                                          ║
  * ║   CSS-only animation primitives for the SSR landing pages.        ║

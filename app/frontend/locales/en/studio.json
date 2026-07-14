@@ -81,6 +81,7 @@
     "maxPhotos": "Maximum of {{max}} photos.",
     "uploadError": "Couldn't upload the photo. Try another image (JPG, PNG or WEBP).",
     "alt": "Reference",
+    "view": "View reference",
     "remove": "Remove",
     "describePlaceholder": "What is this file? (e.g.: product photo, character, style…)",
     "add": "Add reference",

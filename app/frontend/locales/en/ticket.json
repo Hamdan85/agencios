@@ -375,14 +375,6 @@
     "switchOn": "On",
     "switchOff": "Off"
   },
-  "viewer": {
-    "pdfError": "Couldn't preview this PDF.",
-    "loadingPdf": "Loading PDF…",
-    "noPreview": "{{label}} — preview unavailable for this format.",
-    "downloadFile": "Download file",
-    "previous": "Previous",
-    "next": "Next"
-  },
   "meta": {
     "title": "Details",
     "assignee": "Assignee",

@@ -375,14 +375,6 @@
     "switchOn": "Ativada",
     "switchOff": "Desativada"
   },
-  "viewer": {
-    "pdfError": "Não foi possível pré-visualizar este PDF.",
-    "loadingPdf": "Carregando PDF…",
-    "noPreview": "{{label}} — pré-visualização indisponível neste formato.",
-    "downloadFile": "Baixar arquivo",
-    "previous": "Anterior",
-    "next": "Próximo"
-  },
   "meta": {
     "title": "Detalhes",
     "assignee": "Responsável",

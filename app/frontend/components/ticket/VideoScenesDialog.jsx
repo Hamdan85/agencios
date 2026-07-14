@@ -27,9 +27,8 @@ import {
 import { uploadsApi } from '@/api'
 import { cn } from '@/lib/utils'
 import i18n from '@/i18n'
-
-// The shared fullscreen media viewer (lazy — heavy) for previewing element images.
-const MediaViewer = lazy(() => import('./MediaViewer'))
+import { useLightbox } from '@/components/ui/lightbox'
+import { isVideoUrl, urlToMedia } from '@/lib/media'
 
 // Per-scene state → a solid icon dot on the thumb (label rides the tooltip),
 // so the strip stays tiny and the player keeps the room. `working` states get a
@@ -463,9 +462,8 @@ function AlertMessage({ content }) {
 
 // Reference thumbnails kept in a chat message — a square black tile (so any
 // aspect fits without cropping, object-contain) that FLOATS slightly over the
-// bubble's bottom edge to tie it to the message. Clicking opens an in-app
+// bubble's bottom edge to tie it to the message. Clicking opens the in-app
 // lightbox (NOT a new tab — a top-level nav would hit the ngrok warning page).
-const isVideoUrl = (u) => /\.(mp4|mov|webm|m4v)(\?|#|$)/i.test(String(u || ''))
 function MessageThumbs({ images, align = 'start', onOpen }) {
   const { t } = useTranslation('ticket')
   return (
@@ -480,23 +478,6 @@ function MessageThumbs({ images, align = 'start', onOpen }) {
             : <img src={url} alt={t('video.referenceAlt')} className="size-full object-contain" />}
         </button>
       ))}
-    </div>
-  )
-}
-
-// Full-size preview of a reference, IN-APP (avoids opening the raw ngrok URL in a
-// new tab, which would show the browser-warning interstitial). Backdrop/✕ closes.
-function Lightbox({ url, onClose }) {
-  const { t } = useTranslation('ticket')
-  if (!url) return null
-  return (
-    <div className="fixed inset-0 z-[120] grid place-items-center bg-black/85 p-6" onClick={onClose}>
-      <button type="button" onClick={onClose} aria-label={t('actions.close')} className="absolute right-4 top-4 text-white/80 transition hover:text-white">
-        <X size={26} />
-      </button>
-      {isVideoUrl(url)
-        ? <video src={url} controls autoPlay className="max-h-[88vh] max-w-[92vw] rounded-xl" onClick={(e) => e.stopPropagation()} />
-        : <img src={url} alt={t('video.referenceAlt')} className="max-h-[88vh] max-w-[92vw] rounded-xl object-contain" onClick={(e) => e.stopPropagation()} />}
     </div>
   )
 }
@@ -520,10 +501,10 @@ const MAX_CHAT_REFS = 3
 
 function Chat({ messages, notes, onRemoveNote, onSend, sending, working = [], creditBalance = null }) {
   const { t } = useTranslation('ticket')
+  const lightbox = useLightbox()
   const [text, setText] = useState('')
   const [refs, setRefs] = useState([]) // [{ url }] attached reference images
   const [uploading, setUploading] = useState(false)
-  const [lightbox, setLightbox] = useState(null) // reference URL open in the in-app viewer
   const scrollRef = useRef(null)
   const fileRef = useRef(null)
 
@@ -566,7 +547,6 @@ function Chat({ messages, notes, onRemoveNote, onSend, sending, working = [], cr
 
   return (
     <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-border bg-surface-muted/30">
-      <Lightbox url={lightbox} onClose={() => setLightbox(null)} />
       <div ref={scrollRef} className="scrollbar-subtle min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center text-ink-muted">
@@ -581,8 +561,18 @@ function Chat({ messages, notes, onRemoveNote, onSend, sending, working = [], cr
               : (
                 <div key={i} className="space-y-1">
                   {m.content?.trim() && <Bubble role={m.role} content={m.content} />}
-                  {/* Attached references kept in the transcript — clickable thumbnails. */}
-                  {m.images?.length > 0 && <MessageThumbs images={m.images} align={m.role === 'user' ? 'end' : 'start'} onOpen={setLightbox} />}
+                  {/* Attached references kept in the transcript — clickable thumbnails.
+                      Opening one opens the whole message's references as a deck. */}
+                  {m.images?.length > 0 && (
+                    <MessageThumbs
+                      images={m.images}
+                      align={m.role === 'user' ? 'end' : 'start'}
+                      onOpen={(url) => lightbox.open(
+                        m.images.map((u) => urlToMedia(u, { name: t('video.elementCap') })),
+                        Math.max(0, m.images.indexOf(url)),
+                      )}
+                    />
+                  )}
                   {/* The cost sits UNDER the exact bubble whose turn spent credits. */}
                   {m.credits > 0 && <CreditTag credits={m.credits} />}
                 </div>
@@ -1040,18 +1030,13 @@ function AddElement({ creativeId }) {
   )
 }
 
-// Map an element with an image to a MediaViewer attachment.
-function elementToAttachment(item) {
-  const isVideo = item.kind === 'vid'
-  return {
+// Map a video element (character, scenario, reference) to a lightbox slide.
+function elementToMedia(item) {
+  return urlToMedia(item.image_url, {
     id: item.key,
-    url: item.image_url,
-    filename: item.role_label || i18n.t('ticket:video.element'),
-    display_name: item.role_label || i18n.t('ticket:video.elementCap'),
-    kind: isVideo ? 'video' : 'image',
-    content_type: isVideo ? 'video/mp4' : 'image/jpeg',
-    description: item.description || undefined,
-  }
+    name: item.role_label || i18n.t('ticket:video.elementCap'),
+    caption: item.description || undefined,
+  })
 }
 
 // The Elementos tab body: characters, scenarios, other references and the
@@ -1059,6 +1044,7 @@ function elementToAttachment(item) {
 // image opens it in the shared fullscreen media viewer.
 function AssetsPanel({ creativeId, open }) {
   const { t } = useTranslation('ticket')
+  const lightbox = useLightbox()
   const { data, isLoading } = useVideoAssets(creativeId, { enabled: open })
   const regen = useRegenerateAsset(creativeId)
   const remove = useRemoveAsset(creativeId)
@@ -1079,18 +1065,16 @@ function AssetsPanel({ creativeId, open }) {
     if (ok) remove.mutate({ key: item.key })
   }
 
-  // Every element image, in display order — the viewer's slide list.
+  // Every element image, in display order — the lightbox's slide list, so
+  // opening one element lets you page through all of them.
   const imageItems = useMemo(
     () => [...characters, ...scenarios, ...references].filter((i) => i.image_url),
     [characters, scenarios, references],
   )
-  const [viewerOpen, setViewerOpen] = useState(false)
-  const [viewerIndex, setViewerIndex] = useState(0)
   const openImage = (item) => {
     const idx = imageItems.findIndex((i) => i.key === item.key)
     if (idx < 0) return
-    setViewerIndex(idx)
-    setViewerOpen(true)
+    lightbox.open(imageItems.map(elementToMedia), idx)
   }
 
   return (
@@ -1112,14 +1096,6 @@ function AssetsPanel({ creativeId, open }) {
           )}
         </div>
       )}
-      <Suspense fallback={null}>
-        <MediaViewer
-          attachments={imageItems.map(elementToAttachment)}
-          index={viewerIndex}
-          open={viewerOpen}
-          onClose={() => setViewerOpen(false)}
-        />
-      </Suspense>
     </div>
   )
 }
@@ -1130,6 +1106,7 @@ function AssetsPanel({ creativeId, open }) {
 // Videos render DRAFT-first; approving upgrades every scene to the final model.
 export function VideoScenesDialog({ creative, open, onOpenChange }) {
   const { t } = useTranslation('ticket')
+  const lightbox = useLightbox()
   const creativeId = creative?.id
   const { data, isLoading } = useVideoScenes(creativeId, { enabled: open })
   const chat = useVideoChat(creativeId)
@@ -1150,9 +1127,7 @@ export function VideoScenesDialog({ creative, open, onOpenChange }) {
   const [playhead, setPlayhead] = useState(null)
   // Which tab is showing: the conversational editor or the assets list.
   const [tab, setTab] = useState('edicao')
-  // The composed video open in the fullscreen media viewer.
-  const [videoFullscreen, setVideoFullscreen] = useState(false)
-  useEffect(() => { if (!open) { setNotes([]); setPlayhead(null); setTab('edicao'); setVideoFullscreen(false) } }, [open])
+  useEffect(() => { if (!open) { setNotes([]); setPlayhead(null); setTab('edicao') } }, [open])
 
   const noteFor = (scene) => notes.find((n) => n.scene === scene) || { text: '', refs: [] }
   // Upsert a scene's annotation; drop it entirely when it has neither text nor refs.
@@ -1305,7 +1280,9 @@ export function VideoScenesDialog({ creative, open, onOpenChange }) {
                       scenes={scenes} composedUrl={composedUrl} music={data?.creative?.music}
                       jumpTo={jumpTo} onJumped={() => setJumpTo(null)}
                       onProgress={setPlayhead}
-                      onFullscreen={composedUrl ? () => setVideoFullscreen(true) : undefined}
+                      onFullscreen={composedUrl
+                        ? () => lightbox.open(urlToMedia(composedUrl, { id: `video-${creativeId}`, name: t('video.videoName') }))
+                        : undefined}
                     />
                   ) : (
                     <PreviewPlaceholder busy={busy} failed={failed} planning={planning} />
@@ -1341,19 +1318,6 @@ export function VideoScenesDialog({ creative, open, onOpenChange }) {
           </div>
         )}
 
-        {/* The finished video (all scenes + music burned in) in the fullscreen
-            media viewer — opened by the "Tela cheia" action on the player. */}
-        <Suspense fallback={null}>
-          <MediaViewer
-            attachments={composedUrl ? [{
-              id: `video-${creativeId}`, url: composedUrl, filename: `video-${creativeId}`,
-              display_name: t('video.videoName'), kind: 'video', content_type: 'video/mp4',
-            }] : []}
-            index={0}
-            open={videoFullscreen}
-            onClose={() => setVideoFullscreen(false)}
-          />
-        </Suspense>
       </DialogContent>
     </Dialog>
   )

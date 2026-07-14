@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import i18n from '@/i18n'
@@ -11,6 +11,8 @@ import { Badge } from '@/components/ui/badge'
 import { IconTile } from '@/components/ui/icon-tile'
 import { Label } from '@/components/ui/label'
 import { MediaThumb } from '@/components/ui/media-thumb'
+import { useLightbox } from '@/components/ui/lightbox'
+import { creativeToMedia } from '@/lib/media'
 import { Textarea } from '@/components/ui/input'
 import { Spinner, InlineSpinner, EmptyState } from '@/components/ui/feedback'
 import {
@@ -26,8 +28,6 @@ import {
   Trash2, ChevronDown, UploadCloud, LibraryBig, Film, Search,
 } from 'lucide-react'
 import { VideoScenesDialog } from './VideoScenesDialog'
-
-const MediaViewer = lazy(() => import('./MediaViewer'))
 
 // A generated video is scene-editable (reel / ugc_video).
 const isSceneEditable = (c) => c?.source === 'generated' && ['ugc_video', 'reel'].includes(c?.creative_type)
@@ -54,35 +54,6 @@ function creditsForKind(kind, creditCosts) {
 // "1 crédito" / "3 créditos"; video is prefixed "~" since it's an estimate.
 function creditBadgeLabel(kind, credits) {
   return tr(kind === 'video' ? 'creatives.creditBadgeEstimate' : 'creatives.creditBadge', { count: credits })
-}
-
-// A generated asset is a video when its URL carries a video extension (the
-// ActiveStorage blob URL keeps the original filename, e.g. .../video-80.mp4).
-const isVideoUrl = (url) => /\.(mp4|mov|webm|avi)(\?|$)/i.test(url || '')
-
-// Convert a creative's asset_urls to MediaViewer attachment objects. A carousel
-// is ONE creative with several slides — every slide shares the creative's name
-// and is captioned "Slide i de N" so the viewer reads as a single carousel, not
-// a pile of separate creatives.
-function creativeToAttachments(creative) {
-  const m = creativeMeta(creative?.creative_type)
-  const urls = creative?.asset_urls || []
-  const total = urls.length
-  const isCarousel = creative?.creative_type === 'carousel' || total > 1
-
-  return urls.map((url, i) => {
-    const isVideo = isVideoUrl(url)
-    return {
-      id: `${creative.id}-${i}`,
-      url,
-      filename: isCarousel ? `${m.label}-${creative.id}-slide-${i + 1}` : `${m.label}-${creative.id}`,
-      display_name: creative.name || m.label,
-      kind: isVideo ? 'video' : 'image',
-      content_type: isVideo ? 'video/mp4' : 'image/jpeg',
-      // The lightbox Counter plugin already shows "i / N" — no extra slide label.
-      description: creative.caption || undefined,
-    }
-  })
 }
 
 // ── Creative card (fixed square ratio, no size shift from title) ───
@@ -396,6 +367,7 @@ export default function CreativesPanel({
   creativeTypes = [], channels = [],
 }) {
   const { t } = useTranslation('ticket')
+  const lightbox = useLightbox()
   // Only offer uploading the types that make sense for this ticket (its scoped
   // types, fitting its channels) — a reel/TikTok ticket never offers a carousel.
   const uploadTypes = uploadableTypesForTicket(creativeTypes, channels)
@@ -416,9 +388,6 @@ export default function CreativesPanel({
   const [pendingType, setPendingType] = useState(null)
   const [uploadOpen, setUploadOpen] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
-  const [viewerOpen, setViewerOpen] = useState(false)
-  const [viewerIndex, setViewerIndex] = useState(0)
-  const [viewerAttachments, setViewerAttachments] = useState([])
   const [pendingDelete, setPendingDelete] = useState(null)
   // Deep link: ?creative=<id> opens that video's editor (it shows its own
   // loading state while it fetches), so a reload reopens the dialog.
@@ -455,13 +424,9 @@ export default function CreativesPanel({
     openGenerate(false)
   }
 
-  const openViewer = (creative) => {
-    const atts = creativeToAttachments(creative)
-    if (!atts.length) return
-    setViewerAttachments(atts)
-    setViewerIndex(0)
-    setViewerOpen(true)
-  }
+  // A carousel is ONE creative with several slides, so the lightbox opens on
+  // that creative's slides — not on every creative in the panel.
+  const openViewer = (creative) => lightbox.open(creativeToMedia(creative))
 
   return (
     <Card className="overflow-hidden animate-rise">
@@ -523,16 +488,6 @@ export default function CreativesPanel({
           </div>
         )}
       </div>
-
-      {/* MediaViewer lightbox */}
-      <Suspense fallback={null}>
-        <MediaViewer
-          attachments={viewerAttachments}
-          index={viewerIndex}
-          open={viewerOpen}
-          onClose={() => setViewerOpen(false)}
-        />
-      </Suspense>
 
       {/* Generate dialog */}
       <Dialog open={open} onOpenChange={openGenerate}>

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
@@ -14,6 +14,8 @@ import { PageHeader } from '@/components/ui/page-header'
 import { PageLoader, EmptyState, Spinner, InlineSpinner } from '@/components/ui/feedback'
 import { IconTile } from '@/components/ui/icon-tile'
 import { MediaThumb } from '@/components/ui/media-thumb'
+import { useLightbox } from '@/components/ui/lightbox'
+import { creativeToMedia } from '@/lib/media'
 import { Badge } from '@/components/ui/badge'
 import { Page } from '@/components/ui/page'
 import { FilterBar } from '@/components/ui/filter-bar'
@@ -22,8 +24,6 @@ import { CREATIVE_TYPE_META, creativeMeta } from '@/lib/constants'
 import { GeneratorCard } from '@/components/studio/GeneratorCard'
 import { GenerateDialog } from '@/components/studio/GenerateDialog'
 import { VideoScenesDialog } from '@/components/ticket/VideoScenesDialog'
-
-const MediaViewer = lazy(() => import('@/components/ticket/MediaViewer'))
 
 // A generated video is scene-editable (reel / ugc_video) — its scenes can be
 // re-rendered one at a time in the scenes editor.
@@ -123,11 +123,10 @@ export default function StudioIndex() {
 // ── Creatives gallery ──────────────────────────────────────────────
 function CreativesGallery() {
   const { t } = useTranslation('studio')
+  const lightbox = useLightbox()
   const [q, setQ] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const [clientFilter, setClientFilter] = useState('')
-  const [viewerOpen, setViewerOpen] = useState(false)
-  const [viewerItems, setViewerItems] = useState([])
   // A generated video opens the EDITOR on click; everything else opens the viewer.
   const [editorCreative, setEditorCreative] = useState(null)
 
@@ -161,12 +160,7 @@ function CreativesGallery() {
 
   // Open the viewer on a SINGLE creative's slides (a carousel is one creative,
   // not a pile of separate items).
-  const openViewer = useCallback((creative) => {
-    const atts = creativeToAttachments(creative)
-    if (!atts.length) return
-    setViewerItems(atts)
-    setViewerOpen(true)
-  }, [])
+  const openViewer = useCallback((creative) => lightbox.open(creativeToMedia(creative)), [lightbox])
 
   const typeOptions = Object.entries(CREATIVE_TYPE_META).map(([key, m]) => ({ value: key, label: m.label, icon: m.icon, color: m.color }))
   const filterSpec = [
@@ -227,16 +221,6 @@ function CreativesGallery() {
         </>
       )}
 
-      {/* MediaViewer lightbox */}
-      <Suspense fallback={null}>
-        <MediaViewer
-          attachments={viewerItems}
-          index={0}
-          open={viewerOpen}
-          onClose={() => setViewerOpen(false)}
-        />
-      </Suspense>
-
       {/* Video editor — opened by clicking a generated video card */}
       <VideoScenesDialog
         creative={editorCreative}
@@ -245,33 +229,6 @@ function CreativesGallery() {
       />
     </div>
   )
-}
-
-// A generated asset is a video when its URL carries a video extension (the
-// ActiveStorage blob URL keeps the original filename, e.g. .../video-80.mp4).
-const isVideoUrl = (url) => /\.(mp4|mov|webm|avi)(\?|$)/i.test(url || '')
-
-// One creative → its slide attachments. A carousel's slides share the creative's
-// name and are captioned "Slide i de N", so the viewer reads as one carousel.
-function creativeToAttachments(creative) {
-  const m = creativeMeta(creative.creative_type)
-  const urls = creative.asset_urls || []
-  const total = urls.length
-  const isCarousel = creative.creative_type === 'carousel' || total > 1
-
-  return urls.map((url, i) => {
-    const isVideo = isVideoUrl(url)
-    return {
-      id: `${creative.id}-${i}`,
-      url,
-      filename: isCarousel ? `${m.label}-${creative.id}-slide-${i + 1}` : `${m.label}-${creative.id}`,
-      display_name: creative.name || m.label,
-      kind: isVideo ? 'video' : 'image',
-      content_type: isVideo ? 'video/mp4' : 'image/jpeg',
-      // The lightbox Counter plugin already shows "i / N" — no extra slide label.
-      description: creative.caption || undefined,
-    }
-  })
 }
 
 // ── Gallery card ───────────────────────────────────────────────────

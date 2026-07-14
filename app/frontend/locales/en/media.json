@@ -1,0 +1,19 @@
+{
+  "title": "Media viewer",
+  "description": "Swipe or use the arrows to navigate. Double-tap to zoom.",
+  "close": "Close",
+  "download": "Download",
+  "downloadFile": "Download file",
+  "previous": "Previous",
+  "next": "Next",
+  "goToSlide": "Go to item {{index}}",
+  "counter": "{{current}} of {{total}}",
+  "zoomIn": "Zoom in",
+  "zoomOut": "Zoom out",
+  "fullscreen": "Fullscreen",
+  "exitFullscreen": "Exit fullscreen",
+  "play": "Play",
+  "loadingPdf": "Loading PDF…",
+  "pdfError": "This PDF could not be displayed.",
+  "noPreview": "No preview for {{label}}"
+}

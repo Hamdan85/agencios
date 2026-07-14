@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '@/i18n'
 import { Card } from '@/components/ui/card'
@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { IconTile } from '@/components/ui/icon-tile'
 import { MediaThumb } from '@/components/ui/media-thumb'
+import { useLightbox } from '@/components/ui/lightbox'
+import { creativeToMedia } from '@/lib/media'
 import { Spinner, EmptyState, AiRewritingOverlay } from '@/components/ui/feedback'
 import { DateTimePicker } from '@/components/ui/date-picker'
 import { ChannelIcons } from '@/components/ui/iconography'
@@ -19,8 +21,6 @@ import {
   Send, Clock, Zap, MessageCircle, MessageSquareText, Link2, CheckCircle2, AlertCircle, Loader2, ImagePlus, Radio, Ban, Eye, ChevronDown, ChevronUp, CalendarX2,
 } from 'lucide-react'
 
-const MediaViewer = lazy(() => import('./MediaViewer'))
-
 // Copy is resolved lazily (getters) so it follows the active locale — same
 // pattern as the label maps in lib/constants.
 const tr = (key) => i18n.t(`ticket:${key}`)
@@ -29,28 +29,6 @@ const MEDIA_LABEL = {
   get carousel() { return tr('posting.media.carousel') },
   get video() { return tr('posting.media.video') },
   get text() { return tr('posting.media.text') },
-}
-
-// A generated asset is a video when its URL carries a video extension (the
-// ActiveStorage blob URL keeps the original filename, e.g. .../video-80.mp4).
-const isVideoUrl = (url) => /\.(mp4|mov|webm|avi)(\?|$)/i.test(url || '')
-
-// Turn a creative's asset_urls into MediaViewer attachment objects so a creative
-// in the posting bundle can be previewed full-size, not just selected.
-function creativeToAttachments(creative) {
-  const m = creativeMeta(creative?.creative_type)
-  return (creative?.asset_urls || []).map((url, i) => {
-    const isVideo = isVideoUrl(url)
-    return {
-      id: `${creative.id}-${i}`,
-      url,
-      filename: `${m.label}-${creative.id}-${i + 1}`,
-      display_name: creative.name || m.label,
-      kind: isVideo ? 'video' : 'image',
-      content_type: isVideo ? 'video/mp4' : 'image/jpeg',
-      description: creative.caption || undefined,
-    }
-  })
 }
 
 const POST_STATUS = {
@@ -71,6 +49,7 @@ export default function PostingPanel({
   onCancelPost, cancelingId, color = '#EC4899',
 }) {
   const { t } = useTranslation('ticket')
+  const lightbox = useLightbox()
   const fields = ticket?.fields?.scheduled || {}
   const channels = Array.isArray(ticket?.channels) ? ticket.channels : []
   const ready = creatives.filter((c) => c?.status === 'ready' && (c?.asset_urls?.length || 0) > 0)
@@ -98,12 +77,8 @@ export default function PostingPanel({
   const baseCaption = ticket?.fields?.production?.caption || ''
   const [captionByChannel, setCaptionByChannel] = useState(fields.captions || {})
   const [expandedCaptions, setExpandedCaptions] = useState({})
-  const [viewer, setViewer] = useState({ open: false, attachments: [] })
 
-  const openViewer = (creative) => {
-    const atts = creativeToAttachments(creative)
-    if (atts.length) setViewer({ open: true, attachments: atts })
-  }
+  const openViewer = (creative) => lightbox.open(creativeToMedia(creative))
   const toggleCaption = (channel) => setExpandedCaptions((prev) => ({ ...prev, [channel]: !prev[channel] }))
 
   // Re-seed the text drafts when switching to a different ticket (the panel may
@@ -451,15 +426,6 @@ export default function PostingPanel({
         )}
       </div>
       </AiRewritingOverlay>
-
-      <Suspense fallback={null}>
-        <MediaViewer
-          attachments={viewer.attachments}
-          index={0}
-          open={viewer.open}
-          onClose={() => setViewer((v) => ({ ...v, open: false }))}
-        />
-      </Suspense>
     </Card>
   )
 }

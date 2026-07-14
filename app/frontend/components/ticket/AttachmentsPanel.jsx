@@ -1,4 +1,4 @@
-import { lazy, Suspense, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslation, Trans } from 'react-i18next'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -18,9 +18,8 @@ import {
 import { attachmentKindMeta } from '@/lib/constants'
 import { fileSize } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
-
-// Lazy: react-pdf + the lightbox (~half a MB) load only when a file is opened.
-const MediaViewer = lazy(() => import('./MediaViewer'))
+import { useLightbox } from '@/components/ui/lightbox'
+import { attachmentToMedia } from '@/lib/media'
 
 // One file in the grid: image/video preview when available, otherwise a colored
 // icon tile. Clicking the body opens the media viewer; the ⋯ menu manages it.
@@ -117,10 +116,10 @@ export default function AttachmentsPanel({
   uploading = false,
 }) {
   const { t } = useTranslation('ticket')
+  const lightbox = useLightbox()
   const items = attachments || []
   const inputRef = useRef(null)
   const [dragging, setDragging] = useState(false)
-  const [viewer, setViewer] = useState({ open: false, index: 0 })
   const [renaming, setRenaming] = useState(null) // attachment being renamed
   const [removing, setRemoving] = useState(null) // attachment pending delete
 
@@ -142,9 +141,11 @@ export default function AttachmentsPanel({
     handleFiles(e.dataTransfer?.files)
   }
 
+  // Open the whole file list in the lightbox, positioned on the clicked file —
+  // so the arrows/swipe walk every attachment, not just the one that was tapped.
   const openViewer = (att) => {
     const index = items.findIndex((a) => a.id === att.id)
-    setViewer({ open: true, index: Math.max(0, index) })
+    lightbox.open(items.map(attachmentToMedia), Math.max(0, index))
   }
 
   const submitRename = (e) => {
@@ -230,18 +231,6 @@ export default function AttachmentsPanel({
           </>
         )}
       </div>
-
-      {/* Media viewer (lightbox / pdf / players) — loaded on first open */}
-      {viewer.open && (
-        <Suspense fallback={null}>
-          <MediaViewer
-            attachments={items}
-            index={viewer.index}
-            open
-            onClose={() => setViewer((v) => ({ ...v, open: false }))}
-          />
-        </Suspense>
-      )}
 
       {/* Rename / describe */}
       <Dialog open={!!renaming} onOpenChange={(o) => !o && setRenaming(null)}>

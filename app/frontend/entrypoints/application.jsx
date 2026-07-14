@@ -6,6 +6,7 @@ import App from '@/App'
 import i18n from '@/i18n'
 import { Button } from '@/components/ui/button'
 import { ConfirmProvider } from '@/components/ui/confirm-dialog'
+import { LightboxProvider } from '@/components/ui/lightbox'
 import { ErrorScene } from '@/components/errors/ErrorScene'
 import { bootAnalytics } from '@/lib/analytics/boot'
 import { initSentry, Sentry } from '@/lib/sentry'
@@ -69,9 +70,13 @@ createRoot(document.getElementById('root')).render(
     <QueryClientProvider client={queryClient}>
       <Toaster richColors closeButton position="top-right" toastOptions={{ style: { fontFamily: 'var(--font-sans)' } }} />
       <ConfirmProvider>
-        <Sentry.ErrorBoundary fallback={<AppErrorFallback />}>
-          <App />
-        </Sentry.ErrorBoundary>
+        {/* One lightbox for the whole app — every image/video/carousel/document
+            preview opens through useLightbox(). */}
+        <LightboxProvider>
+          <Sentry.ErrorBoundary fallback={<AppErrorFallback />}>
+            <App />
+          </Sentry.ErrorBoundary>
+        </LightboxProvider>
       </ConfirmProvider>
     </QueryClientProvider>
   </StrictMode>,

@@ -15,6 +15,8 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/components/ui/select'
 import { ClientSelect } from '@/components/ui/entity-select'
+import { useLightbox } from '@/components/ui/lightbox'
+import { urlToMedia } from '@/lib/media'
 import { GENERATION_KIND_META } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
@@ -486,6 +488,15 @@ function PillGroup({ options, value, onChange }) {
 // director knows how to use it (its name + the user's words).
 function RefUploader({ urls, fileRef, uploading, onPick, onRemove, onFiles, onDescribe, describe = false, label, hint }) {
   const { t } = useTranslation('studio')
+  const lightbox = useLightbox()
+
+  // A reference is small on the tile but often detailed — open the set in the
+  // lightbox so it can actually be inspected before generating from it.
+  const openRef = (url) => lightbox.open(
+    urls.map((r) => urlToMedia(r.url, { name: t('refs.alt'), caption: r.description })),
+    Math.max(0, urls.findIndex((r) => r.url === url)),
+  )
+
   return (
     <Field label={label}>
       <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" multiple hidden onChange={onFiles} />
@@ -493,9 +504,14 @@ function RefUploader({ urls, fileRef, uploading, onPick, onRemove, onFiles, onDe
         <div className="space-y-2">
           {urls.map((r) => (
             <div key={r.url} className="flex items-center gap-2.5">
-              <div className="relative size-14 shrink-0 overflow-hidden rounded-xl border border-border">
+              <button
+                type="button"
+                onClick={() => openRef(r.url)}
+                aria-label={t('refs.view')}
+                className="relative size-14 shrink-0 cursor-zoom-in overflow-hidden rounded-xl border border-border transition hover:border-brand"
+              >
                 <img src={r.url} alt={t('refs.alt')} className="size-full object-cover" />
-              </div>
+              </button>
               <input
                 value={r.description || ''}
                 onChange={(e) => onDescribe?.(r.url, e.target.value)}
@@ -523,8 +539,10 @@ function RefUploader({ urls, fileRef, uploading, onPick, onRemove, onFiles, onDe
       ) : (
         <div className="flex flex-wrap items-center gap-2.5">
           {urls.map((r) => (
-            <div key={r.url} className="relative size-16 overflow-hidden rounded-xl border border-border">
-              <img src={r.url} alt={t('refs.alt')} className="size-full object-cover" />
+            <div key={r.url} className="relative size-16 overflow-hidden rounded-xl border border-border transition hover:border-brand">
+              <button type="button" onClick={() => openRef(r.url)} aria-label={t('refs.view')} className="size-full cursor-zoom-in">
+                <img src={r.url} alt={t('refs.alt')} className="size-full object-cover" />
+              </button>
               <button
                 type="button" onClick={() => onRemove(r.url)} aria-label={t('refs.remove')}
                 className="absolute right-1 top-1 grid size-5 place-items-center rounded-md bg-black/55 text-white backdrop-blur"

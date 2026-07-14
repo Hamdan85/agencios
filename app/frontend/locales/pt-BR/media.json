@@ -1,0 +1,19 @@
+{
+  "title": "Visualizador de mídia",
+  "description": "Deslize ou use as setas para navegar. Toque duas vezes para ampliar.",
+  "close": "Fechar",
+  "download": "Baixar",
+  "downloadFile": "Baixar arquivo",
+  "previous": "Anterior",
+  "next": "Próximo",
+  "goToSlide": "Ir para o item {{index}}",
+  "counter": "{{current}} de {{total}}",
+  "zoomIn": "Ampliar",
+  "zoomOut": "Reduzir",
+  "fullscreen": "Tela cheia",
+  "exitFullscreen": "Sair da tela cheia",
+  "play": "Reproduzir",
+  "loadingPdf": "Carregando PDF…",
+  "pdfError": "Não foi possível exibir este PDF.",
+  "noPreview": "Sem prévia para {{label}}"
+}

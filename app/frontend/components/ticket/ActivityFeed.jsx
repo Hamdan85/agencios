@@ -4,6 +4,8 @@ import { EmptyState } from '@/components/ui/feedback'
 import { Avatar } from '@/components/ui/avatar'
 import { dt } from '@/lib/formatters'
 import { attachmentKindMeta } from '@/lib/constants'
+import { useLightbox } from '@/components/ui/lightbox'
+import { attachmentToMedia } from '@/lib/media'
 import CommentComposer from './CommentComposer'
 import { MessageSquare, Sparkles, GitCommitHorizontal } from 'lucide-react'
 
@@ -31,20 +33,22 @@ function renderBody(body) {
 
 // File chips for files attached to a comment (the same files also live in the
 // ticket file list). Images show a thumbnail; everything else a typed icon.
+// Clicking opens the comment's files in the lightbox — not a new tab, which
+// would leave the app to render a bare blob URL.
 function NoteAttachments({ attachments = [] }) {
+  const lightbox = useLightbox()
   if (!attachments.length) return null
   return (
     <div className="mt-2 flex flex-wrap gap-2">
-      {attachments.map((att) => {
+      {attachments.map((att, i) => {
         const meta = attachmentKindMeta(att.kind)
         const Icon = meta.icon
         const thumb = att.kind === 'image' ? att.preview_url || att.url : null
         return (
-          <a
+          <button
             key={att.id}
-            href={att.url}
-            target="_blank"
-            rel="noreferrer"
+            type="button"
+            onClick={() => lightbox.open(attachments.map(attachmentToMedia), i)}
             className="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-border bg-surface py-1 pl-1.5 pr-2 text-[12px] text-ink-secondary transition hover:border-brand/40 hover:text-ink"
             title={att.display_name}
           >
@@ -59,7 +63,7 @@ function NoteAttachments({ attachments = [] }) {
               </span>
             )}
             <span className="truncate">{att.display_name}</span>
-          </a>
+          </button>
         )
       })}
     </div>

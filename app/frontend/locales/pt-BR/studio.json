@@ -81,6 +81,7 @@
     "maxPhotos": "Máximo de {{max}} fotos.",
     "uploadError": "Não foi possível enviar a foto. Tente outra imagem (JPG, PNG ou WEBP).",
     "alt": "Referência",
+    "view": "Ver referência",
     "remove": "Remover",
     "describePlaceholder": "O que é este arquivo? (ex.: foto do produto, personagem, estilo…)",
     "add": "Adicionar referência",
