@@ -7,11 +7,17 @@ class TicketCardSerializer < ActiveModel::Serializer
   attributes :id, :title, :display_title, :status, :priority, :position,
              :due_date, :scheduled_at, :channels, :creative_type,
              :project, :assignee, :subtasks_count, :subtasks_done, :creatives_count,
-             :overdue, :autopilot_running, :in_alert, :alert_reason
+             :overdue, :autopilot_running, :in_alert, :alert_reason, :approval
 
   # True while the ticket is walking itself in GO mode — drives the card/row
   # "working" indicator.
   def autopilot_running = object.autopilot_running?
+
+  # Lean approval summary for the card/row chip ("Aguardando cliente" etc.) —
+  # the full detail serializer layers fully_approved + actor name on top.
+  def approval
+    { state: approval_state, requested_at: object.approval_requested_at&.iso8601 }
+  end
 
   def project
     p = object.project

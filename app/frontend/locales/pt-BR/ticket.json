@@ -321,25 +321,6 @@
         "placeholder": "Direções de produção — orientam a geração dos criativos (referências, o que mostrar/evitar, elementos obrigatórios)…"
       }
     },
-    "scheduled": {
-      "title": "Postagem",
-      "helper": "Escolha o criativo e publique — imediatamente ou agendado.",
-      "scheduled_at": {
-        "label": "Publicar em"
-      },
-      "first_comment": {
-        "label": "Primeiro comentário",
-        "placeholder": "Comentário fixado no post…"
-      },
-      "link_in_bio": {
-        "label": "Link na bio",
-        "placeholder": "https://…"
-      },
-      "auto_publish": {
-        "label": "Publicação automática",
-        "hint": "Publicar sem revisão manual"
-      }
-    },
     "retrospective": {
       "title": "Retrospectiva",
       "helper": "O que funcionou, o que melhorar e a recomendação para o futuro.",

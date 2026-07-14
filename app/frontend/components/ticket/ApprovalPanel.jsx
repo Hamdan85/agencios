@@ -97,7 +97,8 @@ export default function ApprovalPanel({ ticket, creatives = [], onChanged }) {
           <MessageSquareWarning size={18} />
           <span className="font-semibold">{t('approval.changesTitle')}</span>
         </div>
-        <p className="mb-3 text-xs text-ink-muted">{t('approval.changesHelp')}</p>
+        <p className="mb-1 text-xs text-ink-muted">{t('approval.changesHelp')}</p>
+        {sentAt && <p className="mb-3 text-xs text-ink-faint">{t('approval.lastSentAt', { date: sentAt })}</p>}
         <ul className="mb-3 flex flex-col gap-2">
           {changeRequests.map((c) => (
             <li key={c.id} className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3">
@@ -146,10 +147,13 @@ export default function ApprovalPanel({ ticket, creatives = [], onChanged }) {
         <ShieldCheck size={18} className="text-brand" />
         <span className="font-semibold">{t('approval.readyTitle')}</span>
       </div>
-      <p className="mb-3 text-xs text-ink-muted">
+      <p className="mb-1 text-xs text-ink-muted">
         {hasReady ? t('approval.readyHelp') : t('approval.needsCreative')}
       </p>
-      <Button onClick={send} disabled={!hasReady}><Send size={16} /> {t('approval.send')}</Button>
+      {/* The ticket was in the client's hands before (e.g. pulled back manually)
+          — keep the send trail visible. */}
+      {sentAt && <p className="text-xs text-ink-faint">{t('approval.lastSentAt', { date: sentAt })}</p>}
+      <Button className="mt-3" onClick={send} disabled={!hasReady}><Send size={16} /> {t('approval.send')}</Button>
     </Card>
   )
 }

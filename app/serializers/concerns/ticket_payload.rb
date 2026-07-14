@@ -10,4 +10,17 @@ module TicketPayload
   def scheduled_at = object.scheduled_at&.iso8601
   def overdue = object.overdue?
   def in_alert = object.in_alert?
+
+  # Client-approval chip state, shared by every ticket surface (card, row, full
+  # detail): nil (never asked) / pending (awaiting client) / approved /
+  # changes_requested. Derived from the preloaded creatives — no extra queries.
+  def approval_state
+    return nil if object.approval_requested_at.blank?
+    return 'approved' if object.fully_approved?
+
+    creatives = object.approvable_creatives
+    return 'changes_requested' if creatives.any?(&:approval_changes_requested?) && creatives.none?(&:approval_pending?)
+
+    'pending'
+  end
 end

@@ -18,14 +18,7 @@ import { Avatar } from '@/components/ui/avatar'
 import { AssigneeMenu } from '@/components/ui/assignee-menu'
 import { WorkingBadge } from '@/components/ticket/WorkingBadge'
 import { AlertBadge } from '@/components/ticket/AlertBadge'
-import { DUE_TONE, AUTOPILOT_RING, ALERT_RING, projectAccent } from '@/components/ticket/ticketVisuals'
-
-// Client-approval state → a small row chip (label lives in ticket:row.approval.*).
-const APPROVAL_CHIP_CLS = {
-  pending: 'bg-amber/15 text-[#B45309]',
-  approved: 'bg-emerald-500/15 text-emerald-700',
-  changes_requested: 'bg-danger/12 text-danger',
-}
+import { DUE_TONE, APPROVAL_CHIP_CLS, AUTOPILOT_RING, ALERT_RING, projectAccent } from '@/components/ticket/ticketVisuals'
 
 // A single ticket row, shared by the global ticket list and the project page.
 // Clicking the body opens the ticket (drawer); the trailing menu archives /

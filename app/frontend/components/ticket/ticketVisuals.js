@@ -6,6 +6,14 @@ export const DUE_TONE = {
   muted: 'bg-surface-muted text-ink-muted',
 }
 
+// Client-approval state → a small chip on the card/row (labels live in
+// ticket:row.approval.*).
+export const APPROVAL_CHIP_CLS = {
+  pending: 'bg-amber/15 text-[#B45309]',
+  approved: 'bg-emerald-500/15 text-emerald-700',
+  changes_requested: 'bg-danger/12 text-danger',
+}
+
 // Executing on autopilot → a steady brand ring so the "working" ticket stands out.
 export const AUTOPILOT_RING = 'border-brand/50 ring-1 ring-brand/40'
 // Something broke at posting time → a danger ring (takes precedence).

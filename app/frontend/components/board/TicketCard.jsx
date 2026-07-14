@@ -8,7 +8,7 @@ import { ColorBadge } from '@/components/ui/badge'
 import { Avatar } from '@/components/ui/avatar'
 import { WorkingBadge } from '@/components/ticket/WorkingBadge'
 import { AlertBadge } from '@/components/ticket/AlertBadge'
-import { DUE_TONE, AUTOPILOT_RING, ALERT_RING, projectAccent } from '@/components/ticket/ticketVisuals'
+import { DUE_TONE, APPROVAL_CHIP_CLS, AUTOPILOT_RING, ALERT_RING, projectAccent } from '@/components/ticket/ticketVisuals'
 
 // A single, graphic ticket card on the Kanban board.
 // Lifts on hover; clicking (when not dragging) opens the ticket — in the side
@@ -104,6 +104,12 @@ export function TicketCard({ ticket, dragging = false, overlay = false, onOpen }
         <div className="flex items-center gap-1.5">
           {ticket.in_alert && <AlertBadge reason={ticket.alert_reason} />}
           {ticket.autopilot_running && <WorkingBadge />}
+          {/* client-approval state — same chip (and labels) as the list row */}
+          {APPROVAL_CHIP_CLS[ticket.approval?.state] && (
+            <span className={cn('inline-flex items-center rounded-md px-1.5 py-0.5 text-[10.5px] font-bold', APPROVAL_CHIP_CLS[ticket.approval.state])}>
+              {t(`ticket:row.approval.${ticket.approval.state}`)}
+            </span>
+          )}
           {ticket.overdue && (
             <span className="inline-flex items-center gap-1 rounded-md bg-danger/12 px-1.5 py-0.5 text-[10.5px] font-bold text-danger">
               <AlertTriangle size={11} strokeWidth={2.4} />

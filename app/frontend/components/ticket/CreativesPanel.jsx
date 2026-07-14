@@ -440,13 +440,15 @@ export default function CreativesPanel({
             </p>
           </div>
         </div>
+        {/* Secondary on purpose: the stage's primary action is sending the work
+            to approval (ApprovalPanel) — one primary per screen. */}
         <AddCreativeMenu
           onGenerateOpen={() => setOpen(true)}
           onUploadOpen={() => setUploadOpen(true)}
           onPickerOpen={() => setPickerOpen(true)}
           trigger={(
-            <Button size="sm" disabled={busy}>
-              {busy ? <Spinner size={14} className="border-white/30 border-t-white" /> : <Sparkles size={14} />}
+            <Button size="sm" variant="outline" disabled={busy}>
+              {busy ? <Spinner size={14} /> : <Sparkles size={14} />}
               {t('creatives.add')}
               <ChevronDown size={13} />
             </Button>

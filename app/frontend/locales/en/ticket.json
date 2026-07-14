@@ -321,25 +321,6 @@
         "placeholder": "Production directions — they guide creative generation (references, what to show/avoid, must-have elements)…"
       }
     },
-    "scheduled": {
-      "title": "Posting",
-      "helper": "Pick the creative and publish — immediately or scheduled.",
-      "scheduled_at": {
-        "label": "Publish at"
-      },
-      "first_comment": {
-        "label": "First comment",
-        "placeholder": "Comment pinned on the post…"
-      },
-      "link_in_bio": {
-        "label": "Link in bio",
-        "placeholder": "https://…"
-      },
-      "auto_publish": {
-        "label": "Auto-publish",
-        "hint": "Publish without manual review"
-      }
-    },
     "retrospective": {
       "title": "Retrospective",
       "helper": "What worked, what to improve and the recommendation going forward.",

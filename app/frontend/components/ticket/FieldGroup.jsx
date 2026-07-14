@@ -108,17 +108,8 @@ const SCHEMAS = {
       schemaField('production', 'production_scope', { kind: 'textarea', rich: true, rows: 3, icon: FileText, placeholder: true, full: true }),
     ],
   },
-  scheduled: {
-    icon: CalendarClock,
-    get title() { return tr('schema.scheduled.title') },
-    get helper() { return tr('schema.scheduled.helper') },
-    fields: [
-      schemaField('scheduled', 'scheduled_at', { kind: 'datetime', icon: CalendarClock, full: true }),
-      schemaField('scheduled', 'first_comment', { kind: 'textarea', rows: 2, icon: MessageCircle, placeholder: true, full: true }),
-      schemaField('scheduled', 'link_in_bio', { kind: 'text', icon: Link2, placeholder: true }),
-      schemaField('scheduled', 'auto_publish', { kind: 'switch', icon: Radio, hint: true }),
-    ],
-  },
+  // `scheduled` has no schema here — the Publication stage renders PostingPanel
+  // (see TicketBody), which owns its own fields (per-network captions, schedule).
   retrospective: {
     icon: LineChart,
     get title() { return tr('schema.retrospective.title') },
