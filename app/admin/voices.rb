@@ -5,9 +5,11 @@
 # character); this page just shows what's available and lets staff import the
 # catalog, set a default, force/rename specific voices, and toggle post-dubbing.
 # The voice fields all live on the singleton VideoConfig — this page is only a
-# nicer, full-width surface than cramming them into the engines form.
+# nicer, full-width surface than cramming them into the engines form. It has no
+# menu entry of its own: voices belong to VIDEO, so the only way in is the link
+# inside the Video config form (AI → Video).
 ActiveAdmin.register_page 'Vozes' do
-  menu label: I18n.t('admin.voices.menu'), priority: 22
+  menu false
 
   # Pull the whole Cartesia library (PT) into the catalog so it's visible + ready.
   page_action :import, method: :post do

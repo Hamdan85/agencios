@@ -87,7 +87,7 @@ module Operations
           raise
         end
 
-        log_ai_cost(generation, cost_cents: result[:cost_cents])
+        log_ai_cost(generation, cost_cents: result[:cost_cents], model: result[:model])
         broadcast(event: 'generation_done', id: generation.id, kind: 'image')
         generation
       end
@@ -106,11 +106,11 @@ module Operations
 
       # OpenRouter reports the REAL USD cost per generation (usage.cost) — pass it
       # through as cost_cents so the ledger stores it verbatim (no price table).
-      def log_ai_cost(generation, cost_cents: nil)
+      def log_ai_cost(generation, cost_cents: nil, model: nil)
         Operations::Ai::LogUsage.call(
           provider: PROVIDER,
           operation: 'generate_image',
-          model: Vendors::OpenRouter::Image::DEFAULT_MODEL,
+          model: model.presence || Vendors::OpenRouter::Image::DEFAULT_MODEL,
           units: 1,
           unit_kind: AiUsageLog::UNIT_IMAGE,
           cost_cents: cost_cents,

@@ -5,6 +5,7 @@ pt-BR:
       tenants: Tenants
       platform: Plataforma
       pricing: Preços
+      ai: IA (modelos)
     common:
       'yes': Sim
       'no': Não
@@ -52,7 +53,7 @@ pt-BR:
         jamendo: Jamendo (royalty-free)
         epidemic_sound: Epidemic Sound (licenciado)
     ai_configs:
-      menu: IA (modelos)
+      menu: Texto
       provider_section: Provedor
       provider_auto: Auto (detecta pela chave configurada)
       provider_openrouter: OpenRouter (vários modelos)
@@ -63,8 +64,13 @@ pt-BR:
       default_model_hint: 'Slug do OpenRouter usado quando a operação não tem um modelo próprio. Ex.: anthropic/claude-sonnet-4.5, openai/gpt-5-mini, google/gemini-2.5-flash.'
       per_operation_section: Modelo por operação (deixe vazio para usar o padrão)
       op_placeholder: padrão (%{model})
+    image_configs:
+      menu: Imagem
+      model_section: Modelo de imagem
+      model_label: Modelo de imagem
+      model_hint: 'Slug de imagem do OpenRouter usado em imagens e carrosséis. Vazio usa o padrão (%{model}).'
     video_configs:
-      menu: Vídeo (motores)
+      menu: Vídeo
       provider_section: Provedor
       provider_auto: Auto (OpenRouter)
       provider_openrouter: OpenRouter (vários modelos)
@@ -85,7 +91,6 @@ pt-BR:
       voices_link_text: 'As vozes (Cartesia) têm aba própria: '
       voices_link_label: Vídeo — vozes
     voices:
-      menu: Vídeo — vozes
       title: Vídeo — vozes
       imported: "%{count} vozes importadas da Cartesia."
       none_imported: Nenhuma voz importada (verifique a credencial cartesia.api_key).

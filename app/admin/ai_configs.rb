@@ -4,7 +4,7 @@
 # the single row's edit form. Changing a model here takes effect immediately —
 # no deploy. (The API key stays in credentials; only non-secret slugs live here.)
 ActiveAdmin.register AiConfig do
-  menu label: I18n.t('admin.ai_configs.menu'), priority: 20
+  menu parent: I18n.t('admin.menu.ai'), label: I18n.t('admin.ai_configs.menu'), priority: 1
 
   actions :index, :edit, :update
 

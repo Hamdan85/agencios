@@ -308,7 +308,7 @@ module Operations
           prompt: @ctx.image_prompt(query),
           aspect_ratio: @ctx.image_aspect_ratio
         )
-        log_generated_image(result[:cost_cents])
+        log_generated_image(result[:cost_cents], model: result[:model])
         data_uri(result[:bytes], result[:content_type])
       rescue Vendors::Base::Error => e
         Rails.logger.warn("[GenerateViralCarousel] image slot failed: #{e.message}")
@@ -388,11 +388,11 @@ module Operations
         Rails.application.routes.url_helpers.rails_blob_url(blob, host: SystemConfig.app_host)
       end
 
-      def log_generated_image(cost_cents = nil)
+      def log_generated_image(cost_cents = nil, model: nil)
         Operations::Ai::LogUsage.call(
           provider: AiUsageLog::PROVIDER_OPENROUTER,
           operation: 'carousel_image',
-          model: Vendors::OpenRouter::Image::DEFAULT_MODEL,
+          model: model.presence || Vendors::OpenRouter::Image::DEFAULT_MODEL,
           units: 1,
           unit_kind: AiUsageLog::UNIT_IMAGE,
           cost_cents: cost_cents,

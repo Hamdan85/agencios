@@ -107,6 +107,25 @@ RSpec.describe Vendors::OpenRouter::Image do
     end
   end
 
+  describe 'model resolution' do
+    it 'uses the admin-configured ImageConfig model when none is passed' do
+      ImageConfig.create!(default_model: 'stability/sd-ultra')
+      client = described_class.new(api_key: 'test-key')
+      expect(client.instance_variable_get(:@model)).to eq('stability/sd-ultra')
+    end
+
+    it 'falls back to the coded default when ImageConfig is blank' do
+      client = described_class.new(api_key: 'test-key')
+      expect(client.instance_variable_get(:@model)).to eq(described_class::DEFAULT_MODEL)
+    end
+
+    it 'an explicit model argument beats the admin config' do
+      ImageConfig.create!(default_model: 'stability/sd-ultra')
+      client = described_class.new(api_key: 'test-key', model: 'x/explicit')
+      expect(client.instance_variable_get(:@model)).to eq('x/explicit')
+    end
+  end
+
   describe 'missing credentials' do
     it 'raises NotConfiguredError when no API key is set' do
       client = described_class.new(api_key: '')

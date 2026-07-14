@@ -4,7 +4,7 @@
 # picks an engine — the platform does, from here. Changing a model takes effect
 # immediately, no deploy. (The OpenRouter key stays in credentials.)
 ActiveAdmin.register VideoConfig do
-  menu label: I18n.t('admin.video_configs.menu'), priority: 21
+  menu parent: I18n.t('admin.menu.ai'), label: I18n.t('admin.video_configs.menu'), priority: 3
 
   actions :index, :edit, :update
 

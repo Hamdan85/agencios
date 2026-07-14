@@ -5,6 +5,7 @@ en:
       tenants: Tenants
       platform: Platform
       pricing: Pricing
+      ai: AI (models)
     common:
       'yes': 'Yes'
       'no': 'No'
@@ -52,7 +53,7 @@ en:
         jamendo: Jamendo (royalty-free)
         epidemic_sound: Epidemic Sound (licensed)
     ai_configs:
-      menu: AI (models)
+      menu: Text
       provider_section: Provider
       provider_auto: Auto (detect from the configured key)
       provider_openrouter: OpenRouter (several models)
@@ -63,8 +64,13 @@ en:
       default_model_hint: 'OpenRouter slug used when an operation has no model of its own. E.g.: anthropic/claude-sonnet-4.5, openai/gpt-5-mini, google/gemini-2.5-flash.'
       per_operation_section: Model per operation (leave blank to use the default)
       op_placeholder: default (%{model})
+    image_configs:
+      menu: Image
+      model_section: Image model
+      model_label: Image model
+      model_hint: 'OpenRouter image slug used for images and carousels. Blank uses the default (%{model}).'
     video_configs:
-      menu: Video (engines)
+      menu: Video
       provider_section: Provider
       provider_auto: Auto (OpenRouter)
       provider_openrouter: OpenRouter (several models)
@@ -85,7 +91,6 @@ en:
       voices_link_text: 'Voices (Cartesia) have their own tab: '
       voices_link_label: Video — voices
     voices:
-      menu: Video — voices
       title: Video — voices
       imported: "%{count} voices imported from Cartesia."
       none_imported: No voices imported (check the cartesia.api_key credential).

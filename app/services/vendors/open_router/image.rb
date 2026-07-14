@@ -15,13 +15,17 @@ module Vendors
     # Endpoint: POST /api/v1/chat/completions with `modalities: ["image","text"]`.
     # Auth:     Authorization: Bearer <key> (openrouter.api_key / OPENROUTER_API_KEY).
     #
-    # Returns { bytes: <binary String>, content_type:, cost_cents: } — the caller
-    # attaches the bytes to ActiveStorage. Raises on error (so the operation can
-    # refund credits), like the Banana client it replaces.
+    # Returns { bytes: <binary String>, content_type:, cost_cents:, model: } —
+    # the caller attaches the bytes to ActiveStorage and logs the model that
+    # actually rendered (the slug is admin-editable, so no caller may assume the
+    # coded default). Raises on error (so the operation can refund credits),
+    # like the Banana client it replaces.
     class Image < Vendors::Base
       BASE_URL      = 'https://openrouter.ai'
-      # Google's Gemini image model ("nano banana") via OpenRouter. Override with
-      # `openrouter.image_model` / OPENROUTER_IMAGE_MODEL.
+      # Google's Gemini image model ("nano banana") via OpenRouter. This is only
+      # the coded seed — the live slug is admin-editable in ImageConfig; the
+      # `openrouter.image_model` credential / OPENROUTER_IMAGE_MODEL env var
+      # remains as a fallback between the two.
       DEFAULT_MODEL = 'google/gemini-2.5-flash-image'
 
       # Aspect ratios we fold into the prompt (the chat API has no dedicated param).
@@ -36,6 +40,7 @@ module Vendors
       def initialize(api_key: nil, model: nil)
         @api_key = api_key || credential(:openrouter, :api_key, env: 'OPENROUTER_API_KEY')
         @model   = model.presence ||
+                   ImageConfig.instance.model ||
                    credential(:openrouter, :image_model, env: 'OPENROUTER_IMAGE_MODEL').presence ||
                    DEFAULT_MODEL
       end
@@ -64,7 +69,7 @@ module Vendors
 
         raise Vendors::OpenRouter::Error, 'No image returned by OpenRouter' unless image
 
-        image.merge(cost_cents: cost_cents(body))
+        image.merge(cost_cents: cost_cents(body), model: @model)
       end
 
       private
