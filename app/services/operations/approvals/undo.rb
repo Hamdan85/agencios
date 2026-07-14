@@ -3,8 +3,8 @@
 module Operations
   module Approvals
     # Reverts a just-approved ticket back to pending within the undo window. Once
-    # the deferred OnFullyApproved has advanced the ticket (no longer production),
-    # undo is refused — the decision has already taken effect downstream.
+    # the deferred OnFullyApproved has advanced the ticket out of Aprovação, undo
+    # is refused — the decision has already taken effect downstream.
     class Undo < Operations::Base
       def initialize(ticket:, actor: nil)
         @ticket = ticket
@@ -12,7 +12,7 @@ module Operations
       end
 
       def call
-        raise Operations::Errors::Invalid, I18n.t('operations.approvals.already_completed') unless @ticket.production?
+        raise Operations::Errors::Invalid, I18n.t('operations.approvals.already_completed') unless @ticket.approval?
 
         # Revert BOTH the approved winners and the not_selected losers so every slot
         # re-opens exactly as it was before the decision. (approvable_creatives hides

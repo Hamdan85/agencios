@@ -1,4 +1,4 @@
-import { ShieldCheck, Send, CheckCircle2, MessageSquareWarning } from 'lucide-react'
+import { ShieldCheck, Send, CheckCircle2, MessageSquareWarning, Undo2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Card } from '@/components/ui/card'
@@ -8,34 +8,75 @@ import { ticketsApi } from '@/api'
 import { dt as formatDt } from '@/lib/formatters'
 import { slotLabel } from '@/lib/creativeName'
 
-// Production-step approval widget. Derives its state from the ticket's creatives:
-//   - fully approved              → "Aprovado por <actor>"
-//   - client requested changes    → the requested-changes state, listing what the
-//                                    client asked for; internal approval is blocked
-//                                    (you address the notes, then resend the link)
-//   - otherwise                   → awaiting the client, with resend + approve.
+// The approval widget, across the two stages it spans:
+//
+//   Produção  → the way out of the stage: "Enviar para aprovação" (the move IS the
+//               request). When the client bounced the work back, it lists what they
+//               asked for, and the button resubmits.
+//   Aprovação → the stage's whole job: approve (on the client's behalf, or outright
+//               on a project that gates approval internally) or send it back to
+//               Produção. Plus resending the link while you wait.
+//   Postagem  → just the "Aprovado por <actor>" badge, carried over.
+//
+// State comes from the ticket's creatives, not a flag.
 export default function ApprovalPanel({ ticket, creatives = [], onChanged }) {
   const { t } = useTranslation('ticket')
   const confirm = useConfirm()
   const approval = ticket.approval || {}
+  const status = ticket.status
   const sentAt = approval.requested_at ? formatDt(approval.requested_at) : null
 
   // The pieces the client asked to change (each carries its own feedback note).
   const changeRequests = (creatives || []).filter((c) => c.approval_state === 'changes_requested')
   const hasChanges = changeRequests.length > 0
+  // Nothing ready to show the client yet — sending is meaningless (and the backend
+  // refuses the transition).
+  const hasReady = (creatives || []).some((c) => c.status === 'ready')
+
+  const run = async (fn, { successKey, errorKey }) => {
+    try { await fn(); toast.success(t(successKey)); onChanged?.() }
+    catch (e) { toast.error(e?.error || t(errorKey)) }
+  }
+
+  const send = async () => {
+    const ok = await confirm({
+      title: t('approval.sendConfirmTitle'),
+      description: t('approval.sendConfirmDescription'),
+      confirmLabel: t('approval.sendConfirmLabel'),
+    })
+    if (!ok) return
+    run(() => ticketsApi.requestApproval(ticket.id), { successKey: 'approval.sendSuccess', errorKey: 'approval.sendError' })
+  }
 
   const resend = async () => {
-    const ok = await confirm({ title: t('approval.resendConfirmTitle'), description: t('approval.resendConfirmDescription'), confirmLabel: t('approval.resendConfirmLabel') })
+    const ok = await confirm({
+      title: t('approval.resendConfirmTitle'),
+      description: t('approval.resendConfirmDescription'),
+      confirmLabel: t('approval.resendConfirmLabel'),
+    })
     if (!ok) return
-    try { await ticketsApi.requestApproval(ticket.id); toast.success(t('approval.resendSuccess')); onChanged?.() }
-    catch (e) { toast.error(e?.error || t('approval.resendError')) }
+    run(() => ticketsApi.requestApproval(ticket.id), { successKey: 'approval.resendSuccess', errorKey: 'approval.resendError' })
   }
 
   const approve = async () => {
-    const ok = await confirm({ title: t('approval.approveConfirmTitle'), description: t('approval.approveConfirmDescription'), confirmLabel: t('approval.approveConfirmLabel') })
+    const ok = await confirm({
+      title: t('approval.approveConfirmTitle'),
+      description: t('approval.approveConfirmDescription'),
+      confirmLabel: t('approval.approveConfirmLabel'),
+    })
     if (!ok) return
-    try { await ticketsApi.approve(ticket.id); toast.success(t('approval.approveSuccess')); onChanged?.() }
-    catch (e) { toast.error(e?.error || t('approval.approveError')) }
+    run(() => ticketsApi.approve(ticket.id), { successKey: 'approval.approveSuccess', errorKey: 'approval.approveError' })
+  }
+
+  const reject = async () => {
+    const ok = await confirm({
+      title: t('approval.rejectConfirmTitle'),
+      description: t('approval.rejectConfirmDescription'),
+      confirmLabel: t('approval.rejectConfirmLabel'),
+      destructive: true,
+    })
+    if (!ok) return
+    run(() => ticketsApi.advance(ticket.id, 'production'), { successKey: 'approval.rejectSuccess', errorKey: 'approval.rejectError' })
   }
 
   if (approval.fully_approved) {
@@ -47,9 +88,8 @@ export default function ApprovalPanel({ ticket, creatives = [], onChanged }) {
     )
   }
 
-  // Client requested changes on at least one piece: show what they asked for and
-  // withhold the internal "Aprovar" — you can't approve content with open change
-  // requests. Address the notes, then resend the link to reopen it for approval.
+  // The client bounced it back: show exactly what they asked for. The ticket is in
+  // Produção — address the notes, then resubmit.
   if (hasChanges) {
     return (
       <Card className="p-4">
@@ -57,9 +97,7 @@ export default function ApprovalPanel({ ticket, creatives = [], onChanged }) {
           <MessageSquareWarning size={18} />
           <span className="font-semibold">{t('approval.changesTitle')}</span>
         </div>
-        <p className="mb-3 text-xs text-ink-muted">
-          {t('approval.changesHelp')}
-        </p>
+        <p className="mb-3 text-xs text-ink-muted">{t('approval.changesHelp')}</p>
         <ul className="mb-3 flex flex-col gap-2">
           {changeRequests.map((c) => (
             <li key={c.id} className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3">
@@ -73,22 +111,40 @@ export default function ApprovalPanel({ ticket, creatives = [], onChanged }) {
             </li>
           ))}
         </ul>
-        <Button variant="outline" onClick={resend}><Send size={16} /> {t('approval.resendLink')}</Button>
+        <Button onClick={send} disabled={!hasReady}><Send size={16} /> {t('approval.resubmit')}</Button>
       </Card>
     )
   }
 
+  // In Aprovação: the decision. Approve on the client's behalf, or send it back.
+  if (status === 'approval') {
+    return (
+      <Card className="p-4">
+        <div className="mb-3 flex items-center gap-2 text-ink">
+          <ShieldCheck size={18} style={{ color: '#F97316' }} />
+          <span className="font-semibold">{sentAt ? t('approval.awaiting') : t('approval.awaitingInternal')}</span>
+        </div>
+        {sentAt && <p className="mb-3 text-xs text-ink-muted">{t('approval.sentAt', { date: sentAt })}</p>}
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={approve}><CheckCircle2 size={16} /> {t('approval.approve')}</Button>
+          <Button variant="outline" onClick={reject}><Undo2 size={16} /> {t('approval.reject')}</Button>
+          {sentAt && <Button variant="ghost" onClick={resend}><Send size={16} /> {t('approval.resendLink')}</Button>}
+        </div>
+      </Card>
+    )
+  }
+
+  // In Produção: the one way forward.
   return (
     <Card className="p-4">
-      <div className="mb-3 flex items-center gap-2 text-ink">
+      <div className="mb-1 flex items-center gap-2 text-ink">
         <ShieldCheck size={18} className="text-brand" />
-        <span className="font-semibold">{t('approval.awaiting')}</span>
+        <span className="font-semibold">{t('approval.readyTitle')}</span>
       </div>
-      {sentAt && <p className="mb-3 text-xs text-ink-muted">{t('approval.sentAt', { date: sentAt })}</p>}
-      <div className="flex gap-2">
-        <Button variant="outline" onClick={resend}><Send size={16} /> {t('approval.resendLink')}</Button>
-        <Button onClick={approve}><CheckCircle2 size={16} /> {t('approval.approve')}</Button>
-      </div>
+      <p className="mb-3 text-xs text-ink-muted">
+        {hasReady ? t('approval.readyHelp') : t('approval.needsCreative')}
+      </p>
+      <Button onClick={send} disabled={!hasReady}><Send size={16} /> {t('approval.send')}</Button>
     </Card>
   )
 }

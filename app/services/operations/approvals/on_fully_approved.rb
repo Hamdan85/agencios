@@ -4,7 +4,7 @@ module Operations
   module Approvals
     # Reached when every approvable creative on a ticket is approved. Records the
     # "Aprovado por <actor>" note, pre-fills a reasonable schedule, and ALWAYS
-    # advances the ticket into the (preserved) Publication phase (production →
+    # advances the ticket out of Aprovação into the Publication phase (approval →
     # scheduled). Only when the project auto-publishes does it also create the
     # scheduled posts hands-off; otherwise the team confirms in the Publication
     # phase (PostingPanel).
@@ -15,8 +15,9 @@ module Operations
 
       def call
         # Guard both conditions: it runs deferred (behind the undo window), so a
-        # reverted approval must no-op, and it must never advance past production.
-        return unless @ticket.production? && @ticket.fully_approved?
+        # reverted approval — or one the client bounced back to Produção — must
+        # no-op, and it must never advance a ticket that isn't in Aprovação.
+        return unless @ticket.approval? && @ticket.fully_approved?
 
         actor = @ticket.approval_actor
         actor_name = (actor.respond_to?(:name) ? actor.name.presence : nil) || I18n.t('notes.approval.default_actor')

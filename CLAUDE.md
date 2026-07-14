@@ -48,9 +48,10 @@ and i18n key names (`chave.criar` → `key.create`).
 
 The ticket workflow statuses are **coded in English** with localized labels:
 `ideation` → "Ideação"/"Ideation", `scoping` → "Escopo"/"Scoping", `production` → "Produção"/
-"Production", `scheduled` → "Postagem"/"Posting", `published` → "No ar"/"Live",
-`retrospective` → "Retrospectiva"/"Retrospective", `done` → "Concluído"/"Done". The translation
-layer is the locale files (frontend `common.json status.*`, backend `statuses.*`), never the enum key.
+"Production", `approval` → "Aprovação"/"Approval", `scheduled` → "Postagem"/"Posting",
+`published` → "No ar"/"Live", `retrospective` → "Retrospectiva"/"Retrospective",
+`done` → "Concluído"/"Done". The translation layer is the locale files (frontend
+`common.json status.*`, backend `statuses.*`), never the enum key.
 
 If a Portuguese identifier already exists in the codebase, create a rename migration /
 refactor immediately — do not leave it.
@@ -280,11 +281,22 @@ is the **tag** that groups tickets on the board; the board is filterable by proj
 **Ticket** — the central unit of agency work. `belongs_to :workspace, :project`; optional
 `belongs_to :assignee` (User). `has_many :subtasks, :creatives, :posts, :notes,
 :ticket_status_logs`. Linear `WORKFLOW` enum:
-`ideation → scoping → production → scheduled → published → retrospective → done`.
+`ideation → scoping → production → approval → scheduled → published → retrospective → done`.
+`Ticket::WORKFLOW` (not the enum integer) is the single source of truth for the funnel's ORDER —
+`approval` was added later and is stored as `7`, so nothing may compare status integers.
 **All status transitions go through `Operations::Tickets::ChangeStatus`** (the single authoritative
 point — records a `TicketStatusLog`, writes a history `Note`, refreshes the status-scoped AI
 summary, and broadcasts to `ticket_<id>` + `board_<workspace_id>`). Never mutate `status` with a
-bare `update!`. The **ticket view is contextual to its status** — each status renders its own field
+bare `update!`.
+
+**Each column has exactly one action.** `production` = produce (upload/generate creatives);
+`approval` = decide (approve / reject). Entering `approval` **is** the approval request
+(`ChangeStatus` fires `Operations::Approvals::RequestApproval` — it never changes status itself), and
+it is refused when there is no ready creative to approve. Full approval advances to `scheduled`
+(`Operations::Approvals::OnFullyApproved`); a rejection bounces the ticket **back to `production`**
+(`Operations::Approvals::RequestChanges`), carrying the client's feedback. A project may gate approval
+internally (`require_client_approval` off): the ticket still stops in `approval`, but nobody is
+emailed and it stays out of the client portal — the team approves it with `Approvals::ApproveAll`. The **ticket view is contextual to its status** — each status renders its own field
 set plus a Claude-generated summary (`ai_summaries` jsonb, keyed by status). See
 `docs/SPECIFICATION.md` §"Contextual ticket view" for the per-status field map.
 
@@ -377,7 +389,7 @@ Real-time: hooks subscribe via `useTicketChannel` / `useBoardChannel`; events (`
 `creative_ready`, `post_published`, `metric_updated`, `summary_ready`, `card_moved`) trigger
 `queryClient.invalidateQueries`.
 
-**The board** (`/tickets`, default view; `/quadro` redirects): columns are the 7 statuses; cards
+**The board** (`/tickets`, default view; `/quadro` redirects): columns are the 8 statuses; cards
 are tickets; the project renders as a colored chip on each card; cards drag between columns (a
 drop calls `POST /tickets/:id/advance` → `Operations::Tickets::ChangeStatus`). Filters: project,
 client, assignee, channel, creative type.
@@ -416,10 +428,15 @@ never pre-format dates/money on the backend, never inline `toLocaleString`.
      + stock images + `Prompts::CarouselCopy`) → `Generation` (`kind: carousel`, 0 credits).
    - Image → `Operations::Creatives::GenerateImage` → `Vendors::OpenRouter::Image` →
      `Generation` (`kind: image`, 1 credit).
-4. **Publish & monitor** — in `scheduled`→`published`, `Posts::PublishJob` →
+4. **Approval** — leaving `production` for `approval` sends the client the link
+   (`Operations::Approvals::RequestApproval` → `ApprovalMailer` → the portal). The client approves
+   or rejects per media slot (`Approvals::ApproveSlot` / `RequestChanges`); a GO ticket
+   auto-regenerates the rejected piece (`Operations::Autopilot::Regenerate`) and returns to
+   `approval` on its own. Full approval → `Approvals::OnFullyApproved` → `scheduled`.
+5. **Publish & monitor** — in `scheduled`→`published`, `Posts::PublishJob` →
    `Operations::Posts::Publish` → `Publishers::SocialPublisher` → the network vendor. Then
    `Posts::SyncMetricsJob` (scheduled) → `Operations::Posts::SyncMetrics` writes `PostMetric`s.
-5. **Retrospective** — entering `retrospective`, `DraftRetrospectiveJob` →
+6. **Retrospective** — entering `retrospective`, `DraftRetrospectiveJob` →
    `Operations::Ai::DraftRetrospective` (`Prompts::Retrospective`) drafts a performance review
    from `PostMetric`s + the ticket history; the team edits and finalizes.
 

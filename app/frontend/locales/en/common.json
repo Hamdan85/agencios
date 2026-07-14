@@ -15,6 +15,11 @@
       "short": "Production",
       "hint": "Creative and caption"
     },
+    "approval": {
+      "label": "Approval",
+      "short": "Approval",
+      "hint": "With the client — approve or request changes"
+    },
     "scheduled": {
       "label": "Posting",
       "short": "Posting",

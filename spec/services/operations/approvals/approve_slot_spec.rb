@@ -12,7 +12,7 @@ RSpec.describe Operations::Approvals::ApproveSlot do
   let(:client) { ws.clients.create!(name: 'ACME') }
   let(:project) { ws.projects.create!(client: client, name: 'Camp', color: '#7C3AED', settings: { 'auto_publish_after_approval' => false }) }
   let(:ticket) do
-    Ticket.create!(workspace: ws, project: project, status: :production, assignee: owner, scheduled_at: 2.days.from_now,
+    Ticket.create!(workspace: ws, project: project, status: :approval, assignee: owner, scheduled_at: 2.days.from_now,
                    fields: { 'scoping' => { 'creative_types' => %w[carousel feed_image] } })
   end
 
@@ -51,7 +51,7 @@ RSpec.describe Operations::Approvals::ApproveSlot do
     # First slot: no advance scheduled yet (feed_image still pending).
     expect { described_class.call(ticket: ticket, creative_type: 'carousel', chosen_creative_id: car.id, actor: client) }
       .not_to have_enqueued_job(OnFullyApprovedJob)
-    expect(ticket.reload.status).to eq('production')
+    expect(ticket.reload.status).to eq('approval') # still with the client
 
     # Last slot completes the ticket → deferred advance enqueued.
     expect { described_class.call(ticket: ticket, creative_type: 'feed_image', chosen_creative_id: img.id, actor: client) }

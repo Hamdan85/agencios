@@ -22,6 +22,7 @@ module Operations
         return @ticket if from_status == @to_status && @position.nil?
 
         guard_regression!(from_status)
+        guard_approval_entry!
 
         ApplicationRecord.transaction do
           apply_status!(from_status)
@@ -52,6 +53,16 @@ module Operations
         return if @user.nil? || @user.can_manage?(@ticket.workspace)
 
         raise Operations::Errors::InvalidTransition, I18n.t('operations.tickets.only_managers_regress')
+      end
+
+      # Aprovação means "it's with the approver" — there must be something to
+      # approve. Unconditional (force included): nothing should ever park an empty
+      # ticket in the approval column, where its only action is approve/reject.
+      def guard_approval_entry!
+        return unless @to_status == 'approval'
+        return if @ticket.approvable_creatives.any?
+
+        raise Operations::Errors::InvalidTransition, I18n.t('operations.tickets.approval_needs_creative')
       end
 
       def apply_status!(_from_status)
@@ -112,12 +123,22 @@ module Operations
       # (Operations::Tickets::Publish) creates the posts and fires publishing;
       # the ticket reaches "published" only when a post succeeds. Entering
       # `published` therefore has no publish side effect here (avoids re-posting).
+      #
+      # Entering `approval` IS the request: moving the card into Aprovação (by a
+      # board drag, by the "Pedir aprovação" button, or by autopilot) is what puts
+      # the work in front of the client. RequestApproval never changes status, so
+      # this doesn't recurse.
       def fire_side_effects(_from_status)
         case @to_status
+        when 'approval'      then request_approval
         when 'published'     then close_open_subtasks
         when 'retrospective' then draft_retrospective
         when 'done'          then spawn_follow_ups
         end
+      end
+
+      def request_approval
+        Operations::Approvals::RequestApproval.call(ticket: @ticket, sent_by: @user)
       end
 
       # Reaching "No ar" means the production work shipped — auto-close any still-open

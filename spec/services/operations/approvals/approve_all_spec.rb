@@ -6,7 +6,7 @@ RSpec.describe Operations::Approvals::ApproveAll do
   let(:ws) { Workspace.create!(name: 'WS', slug: "ws-#{SecureRandom.hex(4)}") }
   let(:client) { Client.create!(workspace: ws, name: 'C', email: 'c@c.co') }
   let(:project) { Project.create!(workspace: ws, client: client, name: 'P', status: :active, settings: { 'auto_publish_after_approval' => false }) }
-  let(:ticket) { Ticket.create!(workspace: ws, project: project, status: :production, channels: ['instagram']) }
+  let(:ticket) { Ticket.create!(workspace: ws, project: project, status: :approval, channels: ['instagram']) }
   let(:user) { User.create!(email: 'm@a.co', password: 'password123', name: 'Manager') }
   let!(:c1) { Creative.create!(workspace: ws, ticket: ticket, creative_type: 'carousel', status: :ready) }
   let!(:c2) { Creative.create!(workspace: ws, ticket: ticket, creative_type: 'image', status: :ready) }

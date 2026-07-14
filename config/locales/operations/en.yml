@@ -10,6 +10,7 @@ en:
     tickets:
       invalid_status: "Invalid status: %{status}"
       only_managers_regress: "Only managers can move a ticket backward."
+      approval_needs_creative: "Add at least one ready creative before sending it for approval."
       project_archived: "The campaign \"%{project}\" is archived — reactivate it to create tickets."
       creative_not_ready: "One of the selected creatives isn't ready yet."
       publish_in_progress: "A publish is already in progress — wait for it to finish before publishing again."
@@ -43,6 +44,7 @@ en:
       option_not_found: "The chosen option wasn't found."
       choose_option: "Choose an option to approve this item."
       nothing_to_approve: "There are no creatives ready to approve."
+      not_in_approval: "The ticket must be in Approval before it can be approved."
       already_completed: "The approval has already been completed."
     autopilot:
       not_eligible: "This ticket isn't eligible for GO mode."
@@ -101,6 +103,7 @@ en:
       fully_approved: "Content approved by %{actor}."
       link_sent: "Approval link sent to the client."
       link_not_sent: "Client has no email on file — approval link not sent."
+      internal_only: "Internal approval — this campaign does not require client approval."
       undone: "Approval undone by the client."
     follow_up:
       spawned_iteration: "Spawned an iteration: #%{id} — %{title}"

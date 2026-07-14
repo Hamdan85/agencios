@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
 # A single "GO mode" run. Autopilot walks an eligible ticket from its current
-# stage through to `production` on its own: fills every briefing field and
-# generates all of its creatives (carousel/image/video). Publishing no longer
-# happens here — the ticket stops at production for client approval, which then
-# advances it into the Publication phase (see Operations::Approvals::*).
+# stage through production on its own: fills every briefing field and generates
+# all of its creatives (carousel/image/video), then hands it to the approver — the
+# run ends with the ticket in `approval` (or in `production` when it generated
+# nothing to approve). Publishing no longer happens here: approval is what advances
+# the ticket into the Publication phase (see Operations::Approvals::*).
 #
 # This is a PURE state record — every transition goes through an
 # `Operations::Autopilot::*` operation (mirroring the "ChangeStatus is the only

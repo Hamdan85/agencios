@@ -3,12 +3,13 @@
 module Operations
   module Approvals
     # A client requested changes on ONE creative from the portal. Records the
-    # decision + feedback as history, notifies the responsible user, and routes:
-    #   - video          → stays in production (never auto-regenerated)
-    #   - non-video + GO  → Autopilot::Regenerate (new generation with the feedback)
-    #   - non-video manual → stays in production for the team to handle
-    # The ticket itself stays in production throughout (it only advances on full
-    # approval), so there is no status change here.
+    # decision + feedback as history, notifies the responsible user, and sends the
+    # ticket BACK to Produção — the column whose action is "produce", which is
+    # exactly what the ticket now needs. From there:
+    #   - video            → stays in Produção (never auto-regenerated)
+    #   - non-video + GO   → Autopilot::Regenerate remakes the piece with the
+    #                        feedback and returns it to Aprovação on its own
+    #   - non-video manual → stays in Produção for the team to redo and resubmit
     class RequestChanges < Operations::Base
       def initialize(creative:, feedback:, actor:)
         @creative = creative
@@ -26,12 +27,23 @@ module Operations
         NotifyDecision.call(ticket: @ticket, decision: 'changes_requested', actor: @actor,
                             creative: @creative, feedback: @feedback)
         create_review_task
+        back_to_production
 
         regenerate_if_go
         @creative
       end
 
       private
+
+      # The work is with the team again — put the card where its action lives.
+      # `force`: the client is not a workspace user, so the regression guard has no
+      # membership to check.
+      def back_to_production
+        return unless @ticket.approval?
+
+        Operations::Tickets::ChangeStatus.call(@ticket, 'production', user: nil, force: true)
+        @ticket.reload
+      end
 
       # A concrete to-do for the ticket owner: review the client's requested changes
       # on this piece. Assigned to the responsible user so it surfaces on My Tasks.

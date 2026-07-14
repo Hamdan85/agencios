@@ -19,7 +19,7 @@ RSpec.describe 'Ticket approval actions', type: :request do
     expect(response).to have_http_status(:ok)
   end
 
-  it 'resends the link and approves internally' do
+  it 'sends it to approval, then approves internally' do
     login
     client = @workspace.clients.create!(name: 'C', email: 'c@c.co')
     project = @workspace.projects.create!(client: client, name: 'P', status: :active, settings: { 'auto_publish_after_approval' => false })
@@ -32,6 +32,7 @@ RSpec.describe 'Ticket approval actions', type: :request do
     end
     expect(response).to have_http_status(:ok)
     expect(ActionMailer::Base.deliveries.size).to eq(1)
+    expect(ticket.reload.status).to eq('approval') # the request IS the move
 
     post "/api/v1/tickets/#{ticket.id}/approve", as: :json
     expect(response).to have_http_status(:ok)

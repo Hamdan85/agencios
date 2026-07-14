@@ -2,9 +2,13 @@
 
 module Operations
   module Approvals
-    # The internal "Aprovar" action — a team member approves on the client's behalf.
-    # Approves ONE winner per media-type slot (the newest option), marking the rest
+    # The internal "Aprovar" action — a team member approves on the client's behalf
+    # (or approves outright, on a project that gates approval internally). Approves
+    # ONE winner per media-type slot (the newest option), marking the rest
     # not_selected, then the full-approval hook runs once.
+    #
+    # Only valid in Aprovação: approving elsewhere would mark every creative approved
+    # while OnFullyApproved refused to advance, stranding the ticket.
     class ApproveAll < Operations::Base
       def initialize(ticket:, actor:)
         @ticket = ticket
@@ -12,6 +16,8 @@ module Operations
       end
 
       def call
+        raise Operations::Errors::Invalid, I18n.t('operations.approvals.not_in_approval') unless @ticket.approval?
+
         slots = @ticket.approval_slots
         raise Operations::Errors::Invalid, I18n.t('operations.approvals.nothing_to_approve') if slots.empty?
 

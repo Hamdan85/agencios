@@ -11,7 +11,7 @@ RSpec.describe Operations::Approvals::RequestChanges do
   let(:ws) { Operations::Workspaces::SetupForUser.call(user: owner, name: 'Studio') }
   let(:client) { ws.clients.create!(name: 'ACME', email: 'c@acme.co') }
   let(:project) { ws.projects.create!(client: client, name: 'Camp', color: '#7C3AED') }
-  let(:ticket) { Ticket.create!(workspace: ws, project: project, status: :production, assignee: owner) }
+  let(:ticket) { Ticket.create!(workspace: ws, project: project, status: :approval, assignee: owner) }
 
   before { Current.workspace = ws }
   after { Current.reset }
@@ -29,7 +29,11 @@ RSpec.describe Operations::Approvals::RequestChanges do
 
     expect(c.reload.approval_state).to eq('changes_requested')
     expect(c.client_feedback).to eq('Mais contraste')
-    expect(ticket.notes.where(kind: 'system').last.display_body).to include('ajustes')
+    # The rejection note, then the bounce back to Produção — both land in history.
+    bodies = ticket.notes.where(kind: 'system').map(&:display_body)
+    expect(bodies).to include(a_string_including('ajustes'))
+    expect(bodies.last).to eq('Status: Aprovação → Produção')
+    expect(ticket.reload.status).to eq('production')
   end
 
   it 'starts a regeneration for a non-video creative under GO' do

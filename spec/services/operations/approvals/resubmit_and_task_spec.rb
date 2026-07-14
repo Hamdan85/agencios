@@ -11,7 +11,7 @@ RSpec.describe 'Client rejection → task + resubmit' do
   let(:ws) { Operations::Workspaces::SetupForUser.call(user: owner, name: 'Studio') }
   let(:client) { ws.clients.create!(name: 'ACME', email: 'c@acme.co') }
   let(:project) { ws.projects.create!(client: client, name: 'Camp', color: '#7C3AED') }
-  let(:ticket) { Ticket.create!(workspace: ws, project: project, status: :production, assignee: owner, approval_requested_at: Time.current) }
+  let(:ticket) { Ticket.create!(workspace: ws, project: project, status: :approval, assignee: owner, approval_requested_at: Time.current) }
   let!(:creative) { Creative.create!(workspace: ws, ticket: ticket, creative_type: 'carousel', status: :ready, approval_state: 'pending') }
 
   before { Current.workspace = ws }
@@ -34,7 +34,10 @@ RSpec.describe 'Client rejection → task + resubmit' do
       expect(creative.reload.approval_state).to eq('changes_requested')
       expect(client.pending_approval_tickets).to be_empty # left the queue after rejection
 
-      Operations::Approvals::RequestApproval.call(ticket: ticket, sent_by: owner)
+      # Rejection bounced it to Produção; resubmitting is the move back into
+      # Aprovação (the transition fires RequestApproval).
+      expect(ticket.reload.status).to eq('production')
+      Operations::Tickets::ChangeStatus.call(ticket, 'approval', user: owner)
 
       expect(creative.reload.approval_state).to eq('pending')
       expect(client.pending_approval_tickets.map(&:id)).to include(ticket.id) # reopened

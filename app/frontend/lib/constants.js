@@ -4,7 +4,7 @@
 // self-explanatory at a glance. Import meta, render the icon.
 // ─────────────────────────────────────────────────────────────────
 import {
-  Lightbulb, Ruler, Wand2, CalendarClock, Radio, LineChart, CheckCircle2,
+  Lightbulb, Ruler, Wand2, ShieldCheck, CalendarClock, Radio, LineChart, CheckCircle2,
   Camera, AtSign, PlaySquare, Briefcase, Music2, Hash,
   Film, Image as ImageIcon, GalleryHorizontalEnd, Clapperboard, Megaphone,
   Sparkles, Video, LayoutTemplate,
@@ -50,13 +50,14 @@ const Youtube = PlaySquare
 const Linkedin = Briefcase
 const Twitter = Hash
 
-// The seven funnel statuses — order IS the workflow.
-export const WORKFLOW = ['ideation', 'scoping', 'production', 'scheduled', 'published', 'retrospective', 'done']
+// The eight funnel statuses — order IS the workflow (mirrors Ticket::WORKFLOW).
+export const WORKFLOW = ['ideation', 'scoping', 'production', 'approval', 'scheduled', 'published', 'retrospective', 'done']
 
 export const STATUS_META = {
   ideation:      localized({ color: '#F59E0B', icon: Lightbulb },     'status.ideation',      ['label', 'short', 'hint']),
   scoping:       localized({ color: '#0EA5E9', icon: Ruler },         'status.scoping',       ['label', 'short', 'hint']),
   production:    localized({ color: '#7C3AED', icon: Wand2 },         'status.production',    ['label', 'short', 'hint']),
+  approval:      localized({ color: '#F97316', icon: ShieldCheck },   'status.approval',      ['label', 'short', 'hint']),
   scheduled:     localized({ color: '#EC4899', icon: CalendarClock }, 'status.scheduled',     ['label', 'short', 'hint']),
   published:     localized({ color: '#10B981', icon: Radio },         'status.published',     ['label', 'short', 'hint']),
   retrospective: localized({ color: '#6366F1', icon: LineChart },     'status.retrospective', ['label', 'short', 'hint']),

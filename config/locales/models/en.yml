@@ -3,6 +3,7 @@ en:
     ideation: "Ideation"
     scoping: "Scoping"
     production: "Production"
+    approval: "Approval"
     scheduled: "Posting"
     published: "Live"
     retrospective: "Retrospective"

@@ -25,7 +25,7 @@ RSpec.describe 'Public client central (portal)', type: :request do
     active_c = json['campaigns'].find { |c| c['name'] == 'Ativa' }
     done_c = json['campaigns'].find { |c| c['name'] == 'Fim' }
     expect(active_c['available_tabs']).to include('quadro', 'metricas')
-    expect(done_c['available_tabs']).to eq(['relatorio'])
+    expect(done_c['available_tabs']).to eq(%w[quadro relatorio])
     expect(done_c['has_report']).to be(true)
   end
 

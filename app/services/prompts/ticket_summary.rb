@@ -8,6 +8,8 @@ module Prompts
       'ideation' => 'Sintetize a ideia: qual é o ângulo central, o objetivo e a audiência. Aponte o gancho mais forte.',
       'scoping' => 'Resuma o escopo: tipo de criativo, canais, entregáveis e o que falta definir.',
       'production' => 'Avalie a produção: o criativo e a legenda atendem ao brief? Aponte ajustes de QA.',
+      'approval' => 'Resuma o que está em aprovação: as peças enviadas ao cliente, ' \
+                    'o que ele já aprovou e os ajustes que pediu.',
       'scheduled' => 'Resuma o plano de publicação: canais, horários e adaptações por rede.',
       'published' => 'Avalie o desempenho até agora versus o objetivo, com base nas métricas.',
       'retrospective' => 'Destaque vitórias, melhorias e a recomendação (repetir/iterar/aposentar).',

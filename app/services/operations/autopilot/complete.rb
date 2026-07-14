@@ -2,10 +2,12 @@
 
 module Operations
   module Autopilot
-    # Terminal step for a ticket-run under the new lifecycle: GO stops at
-    # `production` with creatives ready. Relocates the old PublishStep#finish
-    # side-effects (spent credits, broadcasts, owner push, batch recompute) and
-    # requests client approval when the project requires it.
+    # Terminal step for a ticket-run under the new lifecycle: GO produces the
+    # creatives and hands the ticket to the approver — it stops in `approval` with
+    # the pieces ready (or in `production` when it generated nothing to approve,
+    # e.g. a video-only ticket GO doesn't touch). Relocates the old
+    # PublishStep#finish side-effects (spent credits, broadcasts, owner push,
+    # batch recompute).
     class Complete < Operations::Base
       def initialize(run:)
         @run = run
@@ -25,7 +27,7 @@ module Operations
         # loudly instead of being swallowed, and must not strand the batch — on a
         # job retry `claim!` no-ops, so anything after a raise never re-runs.
         Operations::Autopilot::RecomputeBatch.call(batch_id: @run.batch_id) if @run.batch_id
-        request_approval_if_needed
+        send_to_approval
         @run
       end
 
@@ -42,13 +44,16 @@ module Operations
         end
       end
 
-      def request_approval_if_needed
-        return unless @ticket.project.setting('require_client_approval')
+      # Hand the finished work to the approver. Entering `approval` is what sends
+      # the client their link (ChangeStatus side effect); when the project gates
+      # approval internally the card still stops there for the team to decide.
+      def send_to_approval
         # Nothing to approve yet — e.g. a video-only ticket that GO didn't generate
-        # (video waits for manual production). Don't drop an empty item in the portal.
+        # (video waits for manual production). Leave it in Produção.
         return unless @ticket.approvable_creatives.any?
+        return if @ticket.approval?
 
-        Operations::Approvals::RequestApproval.call(ticket: @ticket, sent_by: @run.user)
+        Operations::Tickets::ChangeStatus.call(@ticket, 'approval', user: @run.user, force: true)
       end
 
       def computed_spent

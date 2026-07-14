@@ -137,8 +137,9 @@ channels:string[] (target networks: instagram, facebook, tiktok, youtube, linked
 creative_type:string (registry key), ai_summaries:jsonb (default {}), fields:jsonb (default {}),
 published_at:datetime, archived_at:datetime
 
-enum status: { ideation:0, scoping:1, production:2, scheduled:3, published:4, retrospective:5, done:6 }
-WORKFLOW = %i[ideation scoping production scheduled published retrospective done].freeze
+enum status: { ideation:0, scoping:1, production:2, scheduled:3, published:4, retrospective:5, done:6,
+               approval:7 }  # integers are storage; WORKFLOW below is the ORDER
+WORKFLOW = %i[ideation scoping production approval scheduled published retrospective done].freeze
 ```
 - `has_many :subtasks, :creatives, :posts, :notes, :ticket_status_logs`; `belongs_to :project,
   :workspace`; `belongs_to :assignee, optional`
@@ -209,7 +210,8 @@ shows the Claude summary on top, and offers the status's AI action. Structured v
 |---|---|---|
 | **ideation** | `brief` (rich), `objective`, `target_persona`, `references[]` (urls/uploads), `content_pillar`, `format_hypothesis` | `TicketSummary` synthesizes the idea; action: `IdeaSynthesis` → suggests angles/hooks |
 | **scoping** | `creative_type` (sets `ticket.creative_type`), `channels[]` (sets `ticket.channels`), `copy_brief` (rich), `script` (rich), `deliverables[]`, `due_date`, `effort_estimate` | action: `ScopeBuilder` → produces a subtask checklist (creates `Subtask`s via `Operations::Subtasks::Create`) |
-| **production** | `creative_id` (selected/active creative), `caption` (rich), `hashtags[]`, `approval_status` enum `{pending, approved, changes_requested}`, `internal_notes` | action: `CaptionWriter` → caption variants; QA pass vs. brief; carousel copy via `CarouselCopy` |
+| **production** | `creative_id` (selected/active creative), `caption` (rich), `hashtags[]`, `production_scope` | the stage's action is **producing** the creatives (upload / generate); `CaptionWriter` → caption variants; carousel copy via `CarouselCopy` |
+| **approval** | none — the stage IS the decision, taken on the creatives (`Creative#approval_state` `{pending, approved, changes_requested, not_selected}`) | the stage's action is **approve / reject**, per media slot. Entering it requests the client's approval; rejection returns the ticket to **production**, full approval advances it to **scheduled** |
 | **scheduled** | `scheduled_at` (sets `ticket.scheduled_at`), per-channel `schedule[]` `{network, social_account_id, datetime}`, `first_comment`, `link_in_bio`, `auto_publish:boolean` | action: `BestTimeToPost` → suggests slots; per-network caption adaptation summary |
 | **published** | (read-only, hydrated) `posts[]` with `permalink`, live `metrics` (reach/views/likes/comments/shares/saves), `monitor_alerts[]` | `TicketSummary` → performance vs. `objective` so far |
 | **retrospective** | `outcome_metrics` (final snapshot), `wins[]`, `improvements[]`, `repeat_recommendation` enum `{repeat, iterate, retire}`, `lessons_learned` (rich) | action: `Retrospective` → drafts the whole retro from metrics + history; team edits |

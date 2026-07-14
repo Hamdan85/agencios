@@ -32,14 +32,18 @@ class Ticket < ApplicationRecord
   # `scopes: false` — the `scoping` status would otherwise generate a
   # `Ticket.scoping` scope that clashes with ActiveRecord::Relation#scoping.
   # The board groups by status in a single query; predicates remain available.
+  # The integers are storage, NOT order — `approval` was added to the funnel after
+  # the fact and is appended as 7 so no existing row needs rewriting. WORKFLOW below
+  # is the single source of truth for the funnel's ORDER (nothing compares the
+  # integer; every ordering/progress check goes through WORKFLOW.index).
   enum :status, {
     ideation: 0, scoping: 1, production: 2, scheduled: 3,
-    published: 4, retrospective: 5, done: 6
+    published: 4, retrospective: 5, done: 6, approval: 7
   }, scopes: false
 
   enum :priority, { low: 0, medium: 1, high: 2 }, prefix: true
 
-  WORKFLOW = %i[ideation scoping production scheduled published retrospective done].freeze
+  WORKFLOW = %i[ideation scoping production approval scheduled published retrospective done].freeze
   CHANNELS = %w[instagram facebook tiktok youtube linkedin x].freeze
 
   # Image creative types that ride a video post as its cover/thumbnail rather than
@@ -156,18 +160,21 @@ class Ticket < ApplicationRecord
     approval_token
   end
 
-  # Coarse SQL filter for the client-approval queue: approval was requested and
-  # the ticket has at least one ready creative still pending a decision. Refined
-  # by #pending_client_approval? (which also excludes superseded creatives).
+  # Coarse SQL filter for the client-approval queue: the ticket sits in the
+  # Aprovação stage, the client was actually asked (a project may gate approval
+  # internally — see Operations::Approvals::RequestApproval), and at least one
+  # ready creative still awaits a decision. Refined by #pending_client_approval?
+  # (which also excludes superseded creatives).
   scope :awaiting_client_approval, lambda {
-    where.not(approval_requested_at: nil)
-         .where(id: Creative.where(approval_state: 'pending', status: Creative.statuses[:ready]).select(:ticket_id))
+    where(status: statuses[:approval])
+      .where.not(approval_requested_at: nil)
+      .where(id: Creative.where(approval_state: 'pending', status: Creative.statuses[:ready]).select(:ticket_id))
   }
 
-  # In the client portal iff approval was requested and there is still an
-  # approvable creative awaiting the client's decision.
+  # In the client portal iff the ticket is in Aprovação, the client was asked, and
+  # there is still an approvable creative awaiting their decision.
   def pending_client_approval?
-    approval_requested_at.present? && approvable_creatives.any?(&:approval_pending?)
+    approval? && approval_requested_at.present? && approvable_creatives.any?(&:approval_pending?)
   end
 
   # The creatives the client approves: ready, not superseded by a newer version

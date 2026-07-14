@@ -38,8 +38,9 @@ export default function TicketBody({
   const showCreativesInMain = status === 'production'
   const saveFields = (fields) => mut.update.mutate({ status, fields })
   // "Atualizar com IA" fills the current stage's fields — only meaningful on the
-  // editable funnel stages (the read-only monitoring/done stages have no fields).
-  const editable = !['published', 'done'].includes(status)
+  // editable funnel stages (approval is a decision, not a form; the read-only
+  // monitoring/done stages have no fields either).
+  const editable = !['approval', 'published', 'done'].includes(status)
   const runAiFill = (instruction) => {
     setAiFilling(true)
     mut.aiAction.mutate({ instruction }, {
@@ -64,10 +65,17 @@ export default function TicketBody({
 
   const main = (
     <div className="space-y-5">
-      {/* Client approval: actions in Produção; the "Aprovado por <actor>" badge
-          persists in Publicação (scheduled) since full approval advanced it there. */}
-      {(status === 'production' || (status === 'scheduled' && ticket.approval?.fully_approved)) && (
-        <ApprovalPanel ticket={ticket} creatives={creatives} onChanged={() => qc.invalidateQueries({ queryKey: keys.ticket(id) })} />
+      {/* Approval is its own stage now, and the decision is its whole job — so the
+          panel leads the Aprovação screen. In Produção it offers the one way out
+          ("Enviar para aprovação"), and the "Aprovado por <actor>" badge persists
+          into Publicação (scheduled), where full approval advanced it. */}
+      {(status === 'production' || status === 'approval'
+        || (status === 'scheduled' && ticket.approval?.fully_approved)) && (
+        <ApprovalPanel
+          ticket={ticket}
+          creatives={creatives}
+          onChanged={() => qc.invalidateQueries({ queryKey: keys.ticket(id) })}
+        />
       )}
       {status === 'scheduled' ? (
         <PostingPanel

@@ -8,7 +8,7 @@ RSpec.describe 'Client approval queue', type: :model do
   let(:project) { Project.create!(workspace: ws, client: client, name: 'P', status: :active) }
 
   def ticket_with_creative(status:, approval_state:, requested: true)
-    t = Ticket.create!(workspace: ws, project: project, status: :production,
+    t = Ticket.create!(workspace: ws, project: project, status: :approval,
                        approval_requested_at: requested ? Time.current : nil)
     Creative.create!(workspace: ws, ticket: t, creative_type: 'carousel', status: status, approval_state: approval_state)
     t

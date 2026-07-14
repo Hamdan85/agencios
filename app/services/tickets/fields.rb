@@ -9,6 +9,9 @@ module Tickets
       'ideation' => %w[brief objective target_persona references content_pillar format_hypothesis],
       'scoping' => %w[creative_type creative_types channels copy_brief script deliverables due_date effort_estimate],
       'production' => %w[creative_id caption hashtags production_scope],
+      # Aprovação has no editable fields: the stage IS the decision (approve /
+      # request changes), taken on the creatives themselves.
+      'approval' => [],
       'scheduled' => %w[creative_id creative_ids post_mode scheduled_at schedule first_comment link_in_bio
                         auto_publish captions],
       'published' => %w[posts metrics monitor_alerts],

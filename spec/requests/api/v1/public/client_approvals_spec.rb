@@ -13,14 +13,14 @@ RSpec.describe 'Public client approval portal', type: :request do
   let(:project) { ws.projects.create!(client: client, name: 'Camp', color: '#7C3AED', settings: { 'auto_publish_after_approval' => false }) }
 
   def pending_ticket
-    t = Ticket.create!(workspace: ws, project: project, status: :production, approval_requested_at: Time.current)
+    t = Ticket.create!(workspace: ws, project: project, status: :approval, approval_requested_at: Time.current)
     Creative.create!(workspace: ws, ticket: t, creative_type: 'carousel', status: :ready, approval_state: 'pending')
     t
   end
 
   it 'lists pending tickets as scope + media-type slots with named options' do
     pending = pending_ticket
-    approved = Ticket.create!(workspace: ws, project: project, status: :production, approval_requested_at: Time.current)
+    approved = Ticket.create!(workspace: ws, project: project, status: :approval, approval_requested_at: Time.current)
     Creative.create!(workspace: ws, ticket: approved, creative_type: 'carousel', status: :ready, approval_state: 'approved')
 
     get "/api/v1/public/client_approvals/#{client.approval_token!}"

@@ -213,7 +213,9 @@ module Mcp
       end,
       t('advance_ticket', 'Controllers::Tickets::Advance',
         'Move a ticket to a new funnel status (the authoritative board move). WRITE. ' \
-        'Statuses: ideation → scoping → production → scheduled → published → retrospective → done.',
+        'Statuses: ideation → scoping → production → approval → scheduled → published → ' \
+        'retrospective → done. Moving into `approval` sends the ticket to the client for ' \
+        'approval and requires at least one ready creative.',
         scope: :write, side_effect: true) do |s|
         s.required(:id).filled(:integer)
         s.required(:to_status).filled(:string)

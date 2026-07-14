@@ -3,9 +3,10 @@
 module Operations
   module Autopilot
     # A client requested changes on a NON-VIDEO creative of a GO ticket. Regenerate
-    # that single creative considering the feedback, supersede the old one, and
-    # re-request the client's approval. Video is never regenerated here (it waits
-    # in production — routed away by Operations::Approvals::RequestChanges).
+    # that single creative considering the feedback, supersede the old one, and send
+    # the ticket back to Aprovação with the replacement (RequestChanges bounced it
+    # to Produção on its way in). Video is never regenerated here — it stays in
+    # Produção for the team (routed away by Operations::Approvals::RequestChanges).
     #
     # Credit-gated: if the wallet can't cover the regeneration, the workspace admins
     # are alerted and nothing is generated (the creative keeps its feedback for when
@@ -32,8 +33,12 @@ module Operations
         end
 
         generation = regenerate(kind)
-        supersede!(generation)
-        Operations::Approvals::RequestApproval.call(ticket: @ticket, sent_by: @run&.user)
+        fresh = supersede!(generation)
+        # Only a real, ready replacement goes back to the client. Without this the
+        # ticket would return to Aprovação showing the very piece they rejected.
+        return generation unless fresh&.status_ready?
+
+        Operations::Tickets::ChangeStatus.call(@ticket, 'approval', user: @run&.user, force: true)
         generation
       end
 
@@ -69,12 +74,14 @@ module Operations
       end
 
       # Point the fresh creative at the one it replaces so approvable_creatives
-      # excludes the old version.
+      # excludes the old version. Returns the replacement (nil when the generation
+      # produced nothing).
       def supersede!(generation)
         fresh = generation&.creative
         return unless fresh
 
         fresh.update!(parent_id: @creative.id, version: @creative.version + 1)
+        fresh
       end
     end
   end

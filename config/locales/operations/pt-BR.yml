@@ -10,6 +10,7 @@ pt-BR:
     tickets:
       invalid_status: "Status inválido: %{status}"
       only_managers_regress: "Apenas gestores podem retroceder um ticket."
+      approval_needs_creative: "Adicione ao menos um criativo pronto antes de enviar para aprovação."
       project_archived: "A campanha \"%{project}\" está arquivada — reative-a para criar tickets."
       creative_not_ready: "Há um criativo selecionado que ainda não está pronto."
       publish_in_progress: "Há uma publicação em andamento — aguarde ela concluir antes de publicar novamente."
@@ -43,6 +44,7 @@ pt-BR:
       option_not_found: "Opção escolhida não encontrada."
       choose_option: "Escolha uma opção para aprovar esta peça."
       nothing_to_approve: "Não há criativos prontos para aprovar."
+      not_in_approval: "O ticket precisa estar em Aprovação para ser aprovado."
       already_completed: "A aprovação já foi concluída."
     autopilot:
       not_eligible: "Ticket não é elegível para o modo GO."
@@ -101,6 +103,7 @@ pt-BR:
       fully_approved: "Conteúdo aprovado por %{actor}."
       link_sent: "Link de aprovação enviado ao cliente."
       link_not_sent: "Cliente sem e-mail cadastrado — link de aprovação não enviado."
+      internal_only: "Aprovação interna — a campanha não exige aprovação do cliente."
       undone: "Aprovação desfeita pelo cliente."
     follow_up:
       spawned_iteration: "Gerou uma iteração: #%{id} — %{title}"

@@ -15,6 +15,11 @@
       "short": "Produção",
       "hint": "Criativo e legenda"
     },
+    "approval": {
+      "label": "Aprovação",
+      "short": "Aprovação",
+      "hint": "Com o cliente — aprovar ou pedir ajustes"
+    },
     "scheduled": {
       "label": "Postagem",
       "short": "Postagem",
