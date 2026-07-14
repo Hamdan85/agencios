@@ -191,7 +191,9 @@
     "discardTitle": "Descartar alterações?",
     "discardDescription": "Você tem alterações não salvas neste cliente. Se sair agora, elas serão perdidas.",
     "discardConfirm": "Descartar",
-    "nameRequired": "Informe o nome do cliente."
+    "nameRequired": "Informe o nome do cliente.",
+    "analyzingColors": "Definindo as cores…",
+    "analyzingWait": "Aguarde: a IA está definindo as cores do carrossel a partir da imagem."
   },
   "fields": {
     "name": "Nome",

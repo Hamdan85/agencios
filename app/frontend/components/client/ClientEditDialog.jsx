@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { User, Palette, Compass, Layers, Sparkles } from 'lucide-react'
 import { SettingsDialog, SettingsPanel } from '@/components/ui/settings-dialog'
 import { Button } from '@/components/ui/button'
 import { SectionLabel } from '@/components/ui/section-label'
-import { Spinner } from '@/components/ui/feedback'
+import { Spinner, InlineSpinner } from '@/components/ui/feedback'
 import { useConfirm } from '@/components/ui/confirm-dialog'
 import { useClient } from '@/hooks/useData'
 import { POSITIONING_STEPS, EMPTY_POSITIONING, EMPTY_BRAND } from '@/lib/constants'
@@ -15,6 +15,9 @@ import { ContactFields, BrandIdentityFields, PositioningStepFields, StatementPan
 const ACCENT = '#6366F1'
 const EMPTY_CONTACT = { name: '', company: '', email: '', phone: '', document: '', notes: '' }
 const EMPTY_ASSETS = { logo: null, defaultCreatorAvatar: null, carouselBackground: null }
+// How long the dialog waits on the palette job before it gives up blocking (a dead
+// job must never lock the user in).
+const ANALYSIS_TIMEOUT = 90_000
 
 // Editing a client is NOT the creation wizard — jump straight to the section you
 // want via a vertical tab rail (Contato · Marca · Posicionamento · Conteúdo ·
@@ -54,12 +57,51 @@ export default function ClientEditDialog({ open, onOpenChange, client, mutations
   const id = client?.id
   const palettePending = (c) =>
     c?.carousel_style === 'image' && !!c?.carousel_background_url && !c?.carousel_image_palette?.accent
-  // Poll while an image background exists but its palette hasn't landed yet — the
-  // derivation runs async in a background job.
+
+  // An analysis WE kicked off from this dialog (re-analyze, or a save that set a new
+  // background), tracked separately from `palettePending`. Two reasons it can't just
+  // be derived from the client:
+  //   1. A re-analysis REPLACES an existing palette — `accent` is present the whole
+  //      time, so palettePending stays false and nothing would ever poll. We watch
+  //      `derived_at` change instead, which covers first-derivation and re-derivation.
+  //   2. palettePending is an ambient STATE (an old client whose derivation once
+  //      failed has it forever). Blocking the dialog on that would trap the user.
+  // `{ since, closeWhenDone }` — `since` is the derived_at we're waiting to move off.
+  const [analysis, setAnalysis] = useState(null)
+  const analyzing = !!analysis
+  const derivedAt = (c) => c?.carousel_image_palette?.derived_at || null
+
   const { data, isLoading } = useClient(id, {
-    poll: open ? (d) => (palettePending(d?.client) ? 4000 : false) : false,
+    poll: open ? (d) => (analyzing || palettePending(d?.client) ? 3000 : false) : false,
   })
   const live = data?.client
+
+  const startAnalysis = (closeWhenDone = false) =>
+    setAnalysis({ since: derivedAt(live), closeWhenDone })
+
+  // The parent passes `onOpenChange` as an inline arrow, so it changes identity every
+  // render — and the poll below re-renders every 3s. Kept in a ref, it stays out of the
+  // effect deps, so those re-renders can't restart the timeout that is the escape hatch.
+  const onOpenChangeRef = useRef(onOpenChange)
+  useEffect(() => { onOpenChangeRef.current = onOpenChange }, [onOpenChange])
+
+  // The colors landed: the palette carries a new derived_at.
+  useEffect(() => {
+    if (!analysis || !live || derivedAt(live) === analysis.since) return
+    setAnalysis(null)
+    if (analysis.closeWhenDone) onOpenChangeRef.current(false)
+  }, [analysis, live])
+
+  // Never trap the user behind a job that died: stop blocking after this, even if the
+  // palette never arrives. The colors still land later — the dialog just stops waiting.
+  useEffect(() => {
+    if (!analysis) return undefined
+    const timer = setTimeout(() => {
+      setAnalysis(null)
+      if (analysis.closeWhenDone) onOpenChangeRef.current(false)
+    }, ANALYSIS_TIMEOUT)
+    return () => clearTimeout(timer)
+  }, [analysis])
 
   // Seed local form state from the fully-loaded client, once per open/client.
   const syncKey = open && live ? `${id}` : null
@@ -73,6 +115,7 @@ export default function ClientEditDialog({ open, onOpenChange, client, mutations
     setAssets(EMPTY_ASSETS)
     setBgCreative(null)
     setDirty(false)
+    setAnalysis(null)
   }
   if (!open && synced) setSynced(null)
 
@@ -91,6 +134,12 @@ export default function ClientEditDialog({ open, onOpenChange, client, mutations
   // The close X is absolutely positioned over the tab rail on mobile, so a mistap while
   // scrolling the tabs is easy — and it used to discard every edit silently.
   const close = async () => {
+    // Leaving mid-analysis abandons the colors being picked for this client (and the
+    // ESC key / overlay click reach here too, not just the X). Hold the door.
+    if (analyzing) {
+      toast.info(t('editDialog.analyzingWait'))
+      return
+    }
     if (dirty && !(await confirm({
       title: t('editDialog.discardTitle'),
       description: t('editDialog.discardDescription'),
@@ -111,16 +160,32 @@ export default function ClientEditDialog({ open, onOpenChange, client, mutations
       requestAnimationFrame(() => document.getElementById('cl-name')?.focus())
       return
     }
-    const finish = () => { setDirty(false); close() }
+    // Saving this client will (re)derive the carousel palette when it carries a new
+    // background, or when it's flipping to the image style with one that was never
+    // analyzed — mirrors the backend enqueue conditions (Clients::Update and
+    // BrandAssets::Attach). When it does, hold the dialog open until the colors land.
+    const willDerive = brand.carousel_style === 'image' && (
+      !!(assets.carouselBackground || bgCreative) ||
+      (!!live?.carousel_background_url && !live?.carousel_image_palette?.accent)
+    )
+    // The save persisted everything, so there is nothing left to discard. Routing
+    // through close() here would re-read the PRE-save `dirty` from this closure and
+    // ask whether to throw away the very changes it had just written.
+    const closeNow = () => { setDirty(false); onOpenChange(false) }
+    const finish = () => {
+      setDirty(false)
+      if (willDerive) startAnalysis(true)
+      else onOpenChange(false)
+    }
     const copyBg = () => {
       if (bgCreative?.id && setCarouselBackground) {
-        setCarouselBackground.mutate({ id, creativeId: bgCreative.id }, { onSuccess: finish, onError: finish })
+        setCarouselBackground.mutate({ id, creativeId: bgCreative.id }, { onSuccess: finish, onError: closeNow })
       } else finish()
     }
     const afterFields = () => {
       const hasUpload = assets.logo || assets.defaultCreatorAvatar || assets.carouselBackground
       if (hasUpload && uploadBrandAssets) {
-        uploadBrandAssets.mutate({ id, assets }, { onSuccess: copyBg, onError: finish })
+        uploadBrandAssets.mutate({ id, assets }, { onSuccess: copyBg, onError: closeNow })
       } else copyBg()
     }
     update.mutate({ id, data: { ...contact, ...brand, positioning } }, { onSuccess: afterFields })
@@ -147,9 +212,12 @@ export default function ClientEditDialog({ open, onOpenChange, client, mutations
       onValueChange={setTab}
       footer={(
         <>
-          <Button variant="ghost" onClick={close}>{t('actions.close')}</Button>
-          <Button onClick={save} disabled={!dirty || saving}>
-            {saving ? t('wizard.saving') : t('editDialog.saveChanges')}
+          <Button variant="ghost" onClick={close} disabled={analyzing}>{t('actions.close')}</Button>
+          <Button onClick={save} disabled={!dirty || saving || analyzing}>
+            {analyzing && <InlineSpinner size={14} />}
+            {analyzing
+              ? t('editDialog.analyzingColors')
+              : saving ? t('wizard.saving') : t('editDialog.saveChanges')}
           </Button>
         </>
       )}
@@ -174,8 +242,11 @@ export default function ClientEditDialog({ open, onOpenChange, client, mutations
               bgCreative={bgCreative}
               onBgCreative={setBg}
               palette={live.carousel_image_palette || {}}
-              onReanalyzePalette={() => reanalyzeCarouselPalette?.mutate({ id })}
-              analyzingPalette={reanalyzeCarouselPalette?.isPending}
+              onReanalyzePalette={() => {
+                startAnalysis()
+                reanalyzeCarouselPalette?.mutate({ id })
+              }}
+              analyzingPalette={analyzing}
             />
           </SettingsPanel>
 

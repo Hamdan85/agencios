@@ -191,7 +191,9 @@
     "discardTitle": "Discard changes?",
     "discardDescription": "You have unsaved changes on this client. If you leave now, they'll be lost.",
     "discardConfirm": "Discard",
-    "nameRequired": "Enter the client name."
+    "nameRequired": "Enter the client name.",
+    "analyzingColors": "Picking the colors…",
+    "analyzingWait": "Hold on: AI is picking the carousel colors from the image."
   },
   "fields": {
     "name": "Name",
