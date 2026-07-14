@@ -7,10 +7,10 @@ export const DUE_TONE = {
 }
 
 // Client-approval state → a small chip on the card/row (labels live in
-// ticket:row.approval.*).
+// ticket:row.approval.*). Only BLOCKED states get a chip — a resolved approval
+// is implied by the ticket's column.
 export const APPROVAL_CHIP_CLS = {
   pending: 'bg-amber/15 text-[#B45309]',
-  approved: 'bg-emerald-500/15 text-emerald-700',
   changes_requested: 'bg-danger/12 text-danger',
 }
 

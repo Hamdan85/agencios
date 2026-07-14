@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import { relativeDay } from '@/lib/formatters'
 import { CreativeTypeChip, ChannelIcons, PriorityDot } from '@/components/ui/iconography'
 import { ColorBadge } from '@/components/ui/badge'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { Avatar } from '@/components/ui/avatar'
 import { WorkingBadge } from '@/components/ticket/WorkingBadge'
 import { AlertBadge } from '@/components/ticket/AlertBadge'
@@ -110,11 +111,19 @@ export function TicketCard({ ticket, dragging = false, overlay = false, onOpen }
               {t(`ticket:row.approval.${ticket.approval.state}`)}
             </span>
           )}
+          {/* Overdue: icon-only to keep the footer quiet — the label lives in the
+              hover tooltip (with the due distance when we have it). */}
           {ticket.overdue && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-danger/12 px-1.5 py-0.5 text-[10.5px] font-bold text-danger">
-              <AlertTriangle size={11} strokeWidth={2.4} />
-              {t('card.overdue')}
-            </span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex items-center rounded-md bg-danger/12 p-1 text-danger">
+                  <AlertTriangle size={11} strokeWidth={2.4} />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                {due ? `${t('card.overdue')} — ${due.text}` : t('card.overdue')}
+              </TooltipContent>
+            </Tooltip>
           )}
           {due && !ticket.overdue && (
             <span className={cn('inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10.5px] font-bold', DUE_TONE[due.tone] || DUE_TONE.muted)}>

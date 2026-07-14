@@ -458,7 +458,6 @@
   "row": {
     "approval": {
       "pending": "Aguardando cliente",
-      "approved": "Aprovado",
       "changes_requested": "Ajustes pedidos"
     },
     "archived": "Arquivado",

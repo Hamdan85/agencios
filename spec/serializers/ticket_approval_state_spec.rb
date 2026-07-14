@@ -2,9 +2,10 @@
 
 require 'rails_helper'
 
-# The client-approval chip (card/row/detail) is STAGE-AWARE: the raw creative
-# states only translate into a chip while the ticket is in the stage where that
-# state is actionable. A ticket published without a full sign-off must not keep
+# The client-approval chip (card/row/detail) is STAGE-AWARE and only flags a
+# BLOCKED ticket: awaiting the client in Aprovação, or reworking their feedback
+# in Produção. A resolved approval shows no chip — the ticket's column already
+# says it moved on. A ticket published without a full sign-off must not keep
 # saying "aguardando cliente" forever.
 RSpec.describe 'Ticket approval chip state' do
   let(:ws) { Workspace.create!(name: 'WS', slug: "ws-#{SecureRandom.hex(4)}") }
@@ -48,9 +49,10 @@ RSpec.describe 'Ticket approval chip state' do
     expect(chip).to be_nil
   end
 
-  it 'keeps approved as provenance on any later stage' do
+  it 'shows nothing when fully approved — the column already implies it' do
     creative!('approved')
-    ticket.update!(status: :published)
-    expect(chip).to eq('approved')
+    expect(chip).to be_nil
+    ticket.update!(status: :scheduled)
+    expect(chip).to be_nil
   end
 end
