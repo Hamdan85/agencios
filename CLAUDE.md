@@ -429,14 +429,18 @@ never pre-format dates/money on the backend, never inline `toLocaleString`.
    via `Operations::Subtasks::Create`). Project-level planning runs through the Estrategista chat
    (`Operations::Strategy::*` → `Prompts::StrategyPlanner`).
 3. **Creative generation** — in `production` (each debits prepaid credits via
-   `Operations::Credits::Debit`):
-   - UGC video → `Operations::Creatives::GenerateUgcVideo` → scene pipeline
-     (`Operations::Video::PlanScenes` → per-scene `RenderScene` via OpenRouter + Cartesia voice →
-     `PollVideoSceneJob` → `Compose` with FFmpeg + music) → `Creative` finalized → credits
-     trued-up to the real cost. Editable in the scene editor (chat + assets).
-   - Carousel → `Operations::Creatives::GenerateViralCarousel` (brand identity + @handle + avatar
-     + stock images + `Prompts::CarouselCopy`) → `Generation` (`kind: carousel`, 0 credits).
-   - Image → `Operations::Creatives::GenerateImage` → `Vendors::OpenRouter::Image` →
+   `Operations::Credits::Debit`). **Generations NEVER render in-request** (see the rule in
+   Conventions recap): each `Generate*` op is only the fast half (records + debit + enqueue);
+   the vendor work runs in a render job and the result arrives via Action Cable:
+   - UGC video → `Operations::Creatives::GenerateUgcVideo` → `StartVideoRenderJob` → scene
+     pipeline (`Operations::Video::PlanScenes` → per-scene `RenderScene` via OpenRouter +
+     Cartesia voice → `PollVideoSceneJob` → `Compose` with FFmpeg + music) → `Creative`
+     finalized → credits trued-up to the real cost. Editable in the scene editor (chat + assets).
+   - Carousel → `Operations::Creatives::GenerateViralCarousel` → `Creatives::RenderCarouselJob` →
+     `Operations::Creatives::RenderCarousel` (brand identity + @handle + avatar + stock images +
+     `Prompts::CarouselCopy`) → `Generation` (`kind: carousel`).
+   - Image → `Operations::Creatives::GenerateImage` → `Creatives::RenderImageJob` →
+     `Operations::Creatives::RenderImage` → `Vendors::OpenRouter::Image` →
      `Generation` (`kind: image`, 1 credit).
 4. **Approval** — leaving `production` for `approval` sends the client the link
    (`Operations::Approvals::RequestApproval` → `ApprovalMailer` → the portal). **A human always
@@ -498,6 +502,14 @@ destructive/override actions are audit-logged. See `docs/ARCHITECTURE.md` §6.
 - Always scope queries to `Current.workspace`.
 - Status changes only via `Operations::Tickets::ChangeStatus`.
 - Publishing only via `Publishers::SocialPublisher`.
+- **Generations NEVER run vendor work in-request.** A `Generate*` operation only STARTS the
+  process: create the `Creative` (generating) + `Generation` (processing), debit credits
+  (402 before any vendor spend) and enqueue the render job (`Creatives::RenderImageJob` /
+  `Creatives::RenderCarouselJob` / `StartVideoRenderJob`). The HTTP response returns the
+  processing generation; the RESULT arrives via Action Cable (`generation_done` /
+  `generation_failed` on `generations_<workspace_id>`, `creative_ready` on `ticket_<id>`),
+  and autopilot settles via `Operations::Autopilot::OnGenerationSettled` — never by waiting
+  on the request.
 - Secrets: app keys in credentials; per-workspace tokens encrypted on models.
 - Dates ISO 8601, money in cents — format on the frontend.
 - Frontend: reuse `components/ui/` primitives and `lib/formatters.js` — never hand-roll

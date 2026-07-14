@@ -32,6 +32,11 @@ module Operations
           @generation.workspace_id, 'generation_failed',
           id: @generation.id, kind: @generation.kind, reason: @reason
         )
+        # Also wake the ticket drawer (it follows ticket_<id>) so the failed
+        # card replaces "Gerando…" without a manual refresh.
+        if (ticket = @generation.creative&.ticket)
+          Broadcaster.ticket(ticket, 'creative_failed', creative_id: @generation.creative_id)
+        end
         # Halt the owning autopilot run, if any (rescued internally).
         Operations::Autopilot::OnGenerationSettled.call(generation: @generation)
         @generation

@@ -43,15 +43,20 @@ RSpec.describe Operations::Creatives::GenerateViralCarousel do
     Operations::Credits::Grant.call(workspace: workspace, amount: credits, expires_at: 1.year.from_now)
   end
 
-  it 'debits the configured carousel credits (default 1) from the wallet on completion' do
+  it 'debits the configured carousel credits (default 1) at START; the render job completes it' do
     fund_wallet(5)
 
-    expect { described_class.call(ticket: ticket, slides: 3) }
+    generation = nil
+    expect { generation = described_class.call(ticket: ticket, slides: 3) }
       .to change { workspace.reload.credits_available }.by(-Pricing.credits_for(kind: :carousel))
 
-    generation = Generation.last
+    # The request half only starts the work (project rule: generations never
+    # render in-request) — the render half finishes it.
+    expect(generation.status).to eq('processing')
+    Operations::Creatives::RenderCarousel.call(generation: generation)
+
+    expect(generation.reload.status).to eq('completed')
     expect(generation.kind).to eq('carousel')
-    expect(generation.status).to eq('completed')
     expect(generation.creative.assets.count).to eq(3)
   end
 
@@ -61,12 +66,13 @@ RSpec.describe Operations::Creatives::GenerateViralCarousel do
       Vendors::Render::Html::RenderError, 'Chromium down'
     )
 
-    expect { described_class.call(ticket: ticket, slides: 3) }
+    generation = described_class.call(ticket: ticket, slides: 3)
+    expect { Operations::Creatives::RenderCarousel.call(generation: generation) }
       .to raise_error(Vendors::Render::Html::RenderError)
 
     expect(workspace.reload.credits_available).to eq(5) # debit refunded
     creative = ticket.reload.creatives.where(source: Creative.sources[:generated]).last
     expect(creative.status).to eq('failed')
-    expect(Generation.last.status).to eq('failed')
+    expect(generation.reload.status).to eq('failed')
   end
 end

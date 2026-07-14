@@ -2,11 +2,15 @@
 
 module Operations
   module Creatives
-    # Generates a single image via OpenRouter (Gemini image model), folding the
-    # ticket scope + brand identity into the prompt and the creative type's spec
-    # into the aspect ratio. Produces a Creative (generated, ready) plus a tracked
-    # `image` Generation. Image is NOT Stripe-metered, but its vendor cost is
-    # recorded in the AI ledger (AiUsageLog) via Operations::Ai::LogUsage.
+    # Starts a single-image generation. This is the FAST, in-request half (the
+    # project rule for ALL generation kinds): it folds the ticket scope + brand
+    # identity into the prompt, creates the Creative (generating) + the tracked
+    # `image` Generation, charges prepaid credits (raises InsufficientCredits →
+    # 402 before any vendor spend) and hands off to Creatives::RenderImageJob.
+    # The vendor render NEVER runs in-request — the UI gets the processing
+    # generation back immediately and receives the result via Action Cable
+    # (`generation_done` on generations_<workspace_id>, `creative_ready` on
+    # ticket_<id>).
     class GenerateImage < Operations::Base
       PROVIDER = AiUsageLog::PROVIDER_OPENROUTER
 
@@ -26,11 +30,11 @@ module Operations
                                                          overrides: { revision_notes: @revision_notes })
         ensure_client_active!(ctx.client)
         aspect = @aspect_ratio.presence || ctx.image_aspect_ratio
-        refs   = ctx.reference_images
         prompt = ctx.image_prompt(@prompt)
         # Brand logo + creator avatar ride along as OPTIONAL references — the model
-        # decides, per the prompt, whether to actually use them.
-        prompt = "#{prompt}. #{::Tickets::CreativeContext::REFERENCE_ASSETS_DIRECTIVE}" if refs.any?
+        # decides, per the prompt, whether to actually use them. The reference
+        # BYTES are re-derived by the render half; here they only shape the prompt.
+        prompt = "#{prompt}. #{::Tickets::CreativeContext::REFERENCE_ASSETS_DIRECTIVE}" if ctx.reference_images.any?
 
         creative = Operations::Creatives::Create.call(
           ticket: @ticket,
@@ -47,48 +51,33 @@ module Operations
           kind: :image,
           status: :processing,
           provider: PROVIDER,
-          cost_cents: 0, # not Stripe-metered; real vendor cost is in AiUsageLog
-          params: { prompt: prompt, aspect_ratio: aspect },
+          cost_cents: 0, # real vendor cost is recorded in AiUsageLog by the render half
+          # Everything the render job needs to re-derive the context off-request.
+          params: { prompt: prompt, aspect_ratio: aspect, creative_type: type,
+                    client_id: @client_id, revision_notes: @revision_notes }.compact,
           result: {}
         )
 
-        # Surface the "Gerando…" card immediately (the studio/board gallery is
-        # subscribed to this channel) even though the vendor work below runs
-        # inline — the broadcast is out-of-band from the blocking HTTP request.
-        broadcast(event: 'generation_progress', id: generation.id, kind: 'image', status: 'processing')
+        # Surface the "Gerando…" card immediately — the gallery/board are
+        # subscribed to this channel.
+        Broadcaster.generations(workspace.id, 'generation_progress',
+                                id: generation.id, kind: 'image', status: 'processing')
 
-        # Everything that can fail — the credit debit, the vendor call, the attach —
-        # is wrapped so ANY error moves the records to `failed` and refunds credits
-        # (FailGeneration), never leaving the creative stranded in `generating`.
+        # Charge prepaid credits BEFORE any vendor spend — raises
+        # InsufficientCredits (→ 402) and fails/refunds the records if the wallet
+        # can't cover it.
         begin
-          # Charge prepaid credits BEFORE spending vendor $ — raises
-          # InsufficientCredits (→ 402) if the wallet can't cover it.
           Operations::Credits::Debit.call(
             workspace: workspace,
             amount: Pricing.credits_for(kind: :image),
             generation: generation
           )
-
-          result = Vendors::OpenRouter::Actions::GenerateImage.call(
-            prompt: prompt,
-            aspect_ratio: aspect,
-            reference_images: refs
-          )
-
-          creative.assets.attach(
-            io: StringIO.new(result[:bytes]),
-            filename: "creative-#{creative.id}.jpg",
-            content_type: result[:content_type]
-          )
-          creative.update!(status: :ready)
-          generation.update!(status: :completed)
         rescue StandardError => e
           Operations::Creatives::FailGeneration.call(generation: generation, reason: e.message)
           raise
         end
 
-        log_ai_cost(generation, cost_cents: result[:cost_cents], model: result[:model])
-        broadcast(event: 'generation_done', id: generation.id, kind: 'image')
+        ::Creatives::RenderImageJob.perform_later(generation.id)
         generation
       end
 
@@ -102,26 +91,6 @@ module Operations
         return nil if @client_id.blank?
 
         workspace.clients.find_by(id: @client_id)
-      end
-
-      # OpenRouter reports the REAL USD cost per generation (usage.cost) — pass it
-      # through as cost_cents so the ledger stores it verbatim (no price table).
-      def log_ai_cost(generation, cost_cents: nil, model: nil)
-        Operations::Ai::LogUsage.call(
-          provider: PROVIDER,
-          operation: 'generate_image',
-          model: model.presence || Vendors::OpenRouter::Image::DEFAULT_MODEL,
-          units: 1,
-          unit_kind: AiUsageLog::UNIT_IMAGE,
-          cost_cents: cost_cents,
-          subject: generation
-        )
-      end
-
-      def broadcast(payload)
-        ActionCable.server.broadcast("generations_#{workspace.id}", payload)
-      rescue StandardError
-        nil
       end
     end
   end

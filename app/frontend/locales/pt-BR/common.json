@@ -18,12 +18,12 @@
     "approval": {
       "label": "Aprovação",
       "short": "Aprovação",
-      "hint": "Com o cliente — aprovar ou pedir ajustes"
+      "hint": "Aprovar ou pedir ajustes"
     },
     "scheduled": {
       "label": "Postagem",
       "short": "Postagem",
-      "hint": "Escolha o criativo e publique — agora ou agendado"
+      "hint": "Publicar agora ou agendar"
     },
     "published": {
       "label": "No ar",

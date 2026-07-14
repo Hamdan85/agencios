@@ -18,12 +18,12 @@
     "approval": {
       "label": "Approval",
       "short": "Approval",
-      "hint": "With the client — approve or request changes"
+      "hint": "Approve or request changes"
     },
     "scheduled": {
       "label": "Posting",
       "short": "Posting",
-      "hint": "Pick the creative and publish — now or scheduled"
+      "hint": "Publish now or schedule"
     },
     "published": {
       "label": "Live",

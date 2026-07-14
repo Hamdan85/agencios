@@ -4,9 +4,9 @@ module Operations
   module Autopilot
     # Phase 2: generate EVERY scoped creative for the ticket. Reuses the studio
     # generation ops (which already fold the ticket's brand/scope context into the
-    # prompt) — image + carousel finish inline, video is async. Records the
-    # generation ids, then either parks in `awaiting_generation` (a video is still
-    # rendering) or advances straight to `publishing` (all sync).
+    # prompt) — ALL kinds are async (the ops enqueue render jobs and settle via
+    # Operations::Autopilot::OnGenerationSettled). Records the generation ids and
+    # parks in `awaiting_generation` until every render lands.
     #
     # The per-generation credit debit happens inside each generate op; the
     # controller pre-checked the whole run, so this normally cannot overspend — a
