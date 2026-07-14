@@ -51,18 +51,48 @@ module Operations
       # Coerce the model output into a safe, self-consistent palette. A malformed
       # hex from the model clamps to a sane default rather than 500-ing an upload;
       # on_accent is forced to a readable value if its contrast against accent fails.
+      # Every fallback stays inside the client's brand (accent → brand secondary,
+      # scrim → a dark tint of the brand primary), so a degraded model response
+      # still yields a branded carousel rather than a generic black-on-white one.
       def guard(raw)
-        accent     = hex(raw['accent'], fallback: brand_secondary)
-        text_color = hex(raw['text_color'], fallback: '#FFFFFF')
-        scrim      = hex(raw['scrim_color'], fallback: '#000000')
-        opacity    = raw['scrim_opacity'].to_f.clamp(0.0, 0.6)
-        on_accent  = readable_on(accent, hex(raw['on_accent'], fallback: '#FFFFFF'))
+        accent      = hex(raw['accent'], fallback: brand_secondary)
+        text_color  = hex(raw['text_color'], fallback: '#FFFFFF')
+        scrim       = hex(raw['scrim_color'], fallback: brand_scrim)
+        opacity     = raw['scrim_opacity'].to_f.clamp(0.0, 0.6)
+        on_accent   = readable_on(accent, hex(raw['on_accent'], fallback: '#FFFFFF'))
+        text_shadow = shadow(raw['text_shadow'])
 
         {
           'accent' => accent, 'on_accent' => on_accent, 'text_color' => text_color,
-          'scrim_color' => scrim, 'scrim_opacity' => opacity,
+          'scrim_color' => scrim, 'scrim_opacity' => opacity, 'text_shadow' => text_shadow,
           'reasoning' => raw['reasoning'].to_s.strip.presence
         }.compact
+      end
+
+      # The shadow is the cheap legibility lever (it leaves the photo untouched), so an
+      # unrecognized value falls back to `soft` — the safe middle — never to `none`.
+      def shadow(value)
+        str = value.to_s.strip.downcase
+        Prompts::CarouselPalette::TEXT_SHADOWS.include?(str) ? str : 'soft'
+      end
+
+      # A very dark tint of the brand primary — the default scrim when the model gives
+      # us nothing usable. Beats pure black: it dims the photo without washing the
+      # brand out of it.
+      def brand_scrim
+        darken(@client.brand_primary_color.presence || '#7C3AED', 0.28)
+      end
+
+      # Scale every channel toward black, which PRESERVES the hue. (Subtracting a
+      # constant instead — the CSS-gradient `shade` the template uses — bottoms the
+      # weak channels out first and swings the hue: #7C3AED would land on navy, not
+      # dark purple.) `factor` is the fraction of the original brightness kept.
+      def darken(hex, factor)
+        match = hex.to_s.strip.match(/\A#?([0-9a-fA-F]{6})\z/)
+        return '#000000' unless match
+
+        rgb = match[1].scan(/../).map { |c| (c.to_i(16) * factor).round.clamp(0, 255) }
+        format('#%02x%02x%02x', *rgb)
       end
 
       # Keep the model's on_accent when it's legible over accent; otherwise pick

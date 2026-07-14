@@ -171,16 +171,59 @@ module Creatives
         .swipe { font-size:30px; font-weight:700; opacity:.85;
           border-top:4px solid #{@secondary}; padding-top:16px; }
         .logo { height:64px; width:auto; object-fit:contain; opacity:.95; }
-        /* No scrim on image slides — keep copy readable with text-shadows alone. */
-        .has-image .name, .has-image .handle, .has-image .counter,
-        .has-image .kicker, .has-image .text, .has-image .swipe {
-          text-shadow:0 2px 12px rgba(0,0,0,.55); }
-        .has-image .headline { text-shadow:0 4px 24px rgba(0,0,0,.65); }
+        #{image_shadow_css}
         .plain .headline::after { content:""; display:block; width:140px; height:10px;
           margin-top:28px; border-radius:999px; background:#{@secondary}; }
         #{white_css}
         #{image_css}
       CSS
+    end
+
+    # The text shadow is the FIRST legibility lever (the scrim is the last): it keeps
+    # the photo untouched. The palette picks its strength; `soft` — the previous
+    # hardcoded look — is the default, so palette-less slides render as before.
+    TEXT_SHADOWS = {
+      'none'   => nil,
+      'soft'   => { base: '0 2px 12px', base_alpha: 0.55, headline: '0 4px 24px', headline_alpha: 0.65 },
+      'strong' => { base: '0 2px 16px', base_alpha: 0.78, headline: '0 4px 32px', headline_alpha: 0.88 }
+    }.freeze
+    DEFAULT_TEXT_SHADOW = 'soft'
+
+    def image_shadow_css
+      spec = TEXT_SHADOWS.fetch(text_shadow_kind, TEXT_SHADOWS[DEFAULT_TEXT_SHADOW])
+      selectors = '.has-image .name, .has-image .handle, .has-image .counter, ' \
+                  '.has-image .kicker, .has-image .text, .has-image .swipe'
+      return "#{selectors}, .has-image .headline { text-shadow:none; }" if spec.nil?
+
+      ink = shadow_ink
+      <<~CSS.chomp
+        #{selectors} {
+          text-shadow:#{spec[:base]} rgba(#{ink},#{spec[:base_alpha]}); }
+        .has-image .headline { text-shadow:#{spec[:headline]} rgba(#{ink},#{spec[:headline_alpha]}); }
+      CSS
+    end
+
+    def text_shadow_kind
+      kind = @palette['text_shadow'].to_s
+      TEXT_SHADOWS.key?(kind) ? kind : DEFAULT_TEXT_SHADOW
+    end
+
+    # A halo, not a smudge: dark behind light text, light behind dark text. A black
+    # shadow under dark ink (the light-photo case) just muddies the copy it's meant
+    # to lift, so the ink is derived from the text color rather than assumed black.
+    def shadow_ink = light?(image_text_color) ? '0,0,0' : '255,255,255'
+
+    def image_text_color = @palette['text_color'].presence || '#ffffff'
+
+    def light?(hex)
+      m = hex.to_s.strip.match(/\A#?([0-9a-fA-F]{6})\z/)
+      return true unless m
+
+      rgb = m[1].scan(/../).map do |c|
+        v = c.to_i(16) / 255.0
+        v <= 0.03928 ? v / 12.92 : (((v + 0.055) / 1.055)**2.4)
+      end
+      ((0.2126 * rgb[0]) + (0.7152 * rgb[1]) + (0.0722 * rgb[2])) > 0.4
     end
 
     # Image-style overrides: recolor the accent (kicker / swipe underline / avatar
@@ -193,7 +236,7 @@ module Creatives
 
       accent    = @palette['accent'].presence
       on_accent = @palette['on_accent'].presence || '#fff'
-      text      = @palette['text_color'].presence || '#fff'
+      text      = image_text_color
 
       rules = []
       if accent

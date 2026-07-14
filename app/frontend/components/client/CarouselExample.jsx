@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import { CAROUSEL_STYLE_LABEL } from './positioningFields'
+import { carouselTheme } from './carouselTheme'
 
 // The generated slide is authored on a 1080px-wide canvas (see the backend
 // Creatives::CarouselSlideTemplate). We reproduce every measurement faithfully by
@@ -15,18 +16,6 @@ import { CAROUSEL_STYLE_LABEL } from './positioningFields'
 // not an approximation.
 const DESIGN_W = 1080
 const u = (px) => `${((px / DESIGN_W) * 100).toFixed(4)}cqw`
-
-// Darken/lighten a #rrggbb hex — mirrors CarouselSlideTemplate#shade so the
-// gradient matches the rendered slide exactly.
-function shade(hex, pct) {
-  const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || '').trim())
-  if (!m) return hex || '#7C3AED'
-  const n = parseInt(m[1], 16)
-  const adj = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((c) =>
-    Math.min(255, Math.max(0, Math.round(c + (255 * pct) / 100))),
-  )
-  return `#${adj.map((c) => c.toString(16).padStart(2, '0')).join('')}`
-}
 
 function initialsOf(name) {
   const parts = String(name || '').split(/\s+/).filter(Boolean).slice(0, 2)
@@ -38,25 +27,22 @@ function initialsOf(name) {
 // and carousel style (gradient / white / image).
 export function CarouselSlide({ slide, index, total, client, className }) {
   const { t } = useTranslation('clients')
-  const primary = client?.brand_primary_color || '#7C3AED'
-  const secondary = client?.brand_secondary_color || '#F59E0B'
   const style = client?.carousel_style || 'gradient'
   const imageUrl = style === 'image' ? client?.carousel_background_url : null
-  const hasImage = !!imageUrl
-  const white = style === 'white' && !hasImage
+  const {
+    hasImage, white, secondary, accent, onAccent, ink, background: bg, scrim,
+    textShadow: shadow, headlineShadow: hlShadow,
+  } = carouselTheme({
+    style,
+    primary: client?.brand_primary_color,
+    secondary: client?.brand_secondary_color,
+    imageUrl,
+    palette: client?.carousel_image_palette,
+  })
 
   const isHook = index === 1
   const isCta = index === total
   const hl = isHook ? 92 : isCta ? 84 : 72
-
-  const ink = white ? '#18161d' : '#ffffff'
-  const bg = white
-    ? '#ffffff'
-    : hasImage
-      ? '#2b2730'
-      : `radial-gradient(120% 120% at 0% 0%, ${primary} 0%, ${shade(primary, -28)} 70%)`
-  const shadow = hasImage ? '0 2px 12px rgba(0,0,0,.55)' : undefined
-  const hlShadow = hasImage ? '0 4px 24px rgba(0,0,0,.65)' : undefined
 
   const handle = String(client?.default_handle || '').replace(/^@/, '')
 
@@ -67,6 +53,9 @@ export function CarouselSlide({ slide, index, total, client, className }) {
     >
       {hasImage && (
         <img src={imageUrl} alt="" className="absolute inset-0 size-full object-cover" />
+      )}
+      {scrim && (
+        <div className="absolute inset-0" style={{ background: scrim.color, opacity: scrim.opacity }} />
       )}
       <div
         className="absolute inset-0 flex flex-col"
@@ -85,7 +74,7 @@ export function CarouselSlide({ slide, index, total, client, className }) {
             ) : (
               <div
                 className="flex shrink-0 items-center justify-center rounded-full font-extrabold"
-                style={{ width: u(96), height: u(96), background: secondary, color: '#fff', fontSize: u(40) }}
+                style={{ width: u(96), height: u(96), background: accent, color: onAccent, fontSize: u(40) }}
               >
                 {initialsOf(client?.name)}
               </div>
@@ -113,7 +102,7 @@ export function CarouselSlide({ slide, index, total, client, className }) {
           {isCta && (
             <span
               className="self-start font-extrabold uppercase"
-              style={{ fontSize: u(30), letterSpacing: u(2), color: secondary, textShadow: shadow }}
+              style={{ fontSize: u(30), letterSpacing: u(2), color: accent, textShadow: shadow }}
             >
               {t('example.nextStep')}
             </span>
@@ -140,7 +129,7 @@ export function CarouselSlide({ slide, index, total, client, className }) {
         <div className="flex items-center justify-between">
           <span
             className="font-bold"
-            style={{ fontSize: u(30), opacity: 0.85, borderTop: `${u(4)} solid ${secondary}`, paddingTop: u(16), textShadow: shadow }}
+            style={{ fontSize: u(30), opacity: 0.85, borderTop: `${u(4)} solid ${accent}`, paddingTop: u(16), textShadow: shadow }}
           >
             {isCta ? t('example.saveShare') : t('example.swipe')}
           </span>

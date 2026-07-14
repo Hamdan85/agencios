@@ -10,6 +10,7 @@ import { InlineSpinner } from '@/components/ui/feedback'
 import { cn } from '@/lib/utils'
 import { maskPhone, maskDocument } from '@/lib/formatters'
 import CarouselBackgroundPicker from './CarouselBackgroundPicker'
+import { carouselTheme } from './carouselTheme'
 
 // Client contact fields — shared by the creation wizard and the edit dialog so the
 // fields have ONE source of truth. Owns the phone/document input masks; `onField`
@@ -117,18 +118,6 @@ function ColorField({ label, value, onChange }) {
   )
 }
 
-// Darken/lighten a #rrggbb hex by `pct` percent — mirrors the backend
-// Creatives::CarouselSlideTemplate#shade so the preview matches the real slide.
-function shade(hex, pct) {
-  const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || '').trim())
-  if (!m) return hex || '#7C3AED'
-  const n = parseInt(m[1], 16)
-  const adj = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((c) =>
-    Math.min(255, Math.max(0, Math.round(c + (255 * pct) / 100))),
-  )
-  return `#${adj.map((c) => c.toString(16).padStart(2, '0')).join('')}`
-}
-
 // Labels resolve lazily (getters) so they follow the active locale — same
 // pattern as the label maps in lib/constants.
 const tr = (key) => i18n.t(`clients:${key}`)
@@ -145,30 +134,27 @@ export const CAROUSEL_STYLE_LABEL = {
 
 // A faithful miniature of a generated carousel slide using the client's real
 // brand colors — mirrors Creatives::CarouselSlideTemplate so each option is a
-// literal example of the actual output, not a mockup. For the `image` style it
-// renders the chosen background photo behind a scrim (the has-image layout).
-export function CarouselSlidePreview({ style, primary, secondary, imageUrl, className }) {
+// literal example of the actual output, not a mockup. The `image` style is themed
+// by the AI-derived palette (accent/text/scrim/shadow) exactly as the real slide is.
+export function CarouselSlidePreview({ style, primary, secondary, imageUrl, palette, className }) {
   const { t } = useTranslation('clients')
-  const p = primary || '#7C3AED'
-  const s = secondary || '#F59E0B'
-  const white = style === 'white'
-  const image = style === 'image'
-  const bg = white
-    ? '#ffffff'
-    : image
-      ? '#2b2730'
-      : `radial-gradient(120% 120% at 0% 0%, ${p} 0%, ${shade(p, -28)} 70%)`
-  const ink = white ? '#18161d' : '#ffffff'
+  const {
+    hasImage, secondary: s, accent, ink, background: bg, scrim, textShadow,
+  } = carouselTheme({ style, primary, secondary, imageUrl, palette })
+
   return (
     <div className={cn('relative aspect-4/5 w-full overflow-hidden rounded-lg', className)} style={{ background: bg, color: ink }}>
-      {/* Image style shows the photo clean — no darkening lens (mirrors the
-          backend CarouselSlideTemplate). Copy stays legible via text-shadow. */}
-      {image && imageUrl && (
+      {/* The photo is the asset: it shows clean unless the palette asked for a scrim
+          (mirrors the backend CarouselSlideTemplate). Copy is lifted by text-shadow. */}
+      {hasImage && (
         <img src={imageUrl} alt="" className="absolute inset-0 size-full object-cover" />
       )}
-      <div className={cn('relative p-3', image && '[text-shadow:0_1px_6px_rgba(0,0,0,.6)]')}>
+      {scrim && (
+        <div className="absolute inset-0" style={{ background: scrim.color, opacity: scrim.opacity }} />
+      )}
+      <div className="relative p-3" style={{ textShadow }}>
         <div className="flex items-center gap-1.5">
-          <span className="size-4 shrink-0 rounded-full" style={{ background: s }} />
+          <span className="size-4 shrink-0 rounded-full" style={{ background: accent }} />
           <div className="space-y-1">
             <span className="block h-1 w-9 rounded-full" style={{ background: ink, opacity: 0.9 }} />
             <span className="block h-1 w-5 rounded-full" style={{ background: ink, opacity: 0.45 }} />
@@ -176,7 +162,7 @@ export function CarouselSlidePreview({ style, primary, secondary, imageUrl, clas
         </div>
         <div className="mt-4 space-y-1.5">
           <span className="block text-[11px] font-extrabold leading-tight">{t('carousel.previewHeadline')}</span>
-          {!image && <span className="block h-1 w-6 rounded-full" style={{ background: s }} />}
+          {!hasImage && <span className="block h-1 w-6 rounded-full" style={{ background: s }} />}
         </div>
       </div>
       <span className="absolute bottom-2.5 left-3 z-10 text-[8px] font-bold" style={{ opacity: 0.8 }}>{t('example.swipe')}</span>
@@ -185,7 +171,7 @@ export function CarouselSlidePreview({ style, primary, secondary, imageUrl, clas
 }
 
 // Literal slide previews the user picks between; drives carousel generation.
-function CarouselStyleField({ value, onChange, primary, secondary, imageUrl }) {
+function CarouselStyleField({ value, onChange, primary, secondary, imageUrl, palette }) {
   const { t } = useTranslation('clients')
   const active = value || 'gradient'
   return (
@@ -205,7 +191,7 @@ function CarouselStyleField({ value, onChange, primary, secondary, imageUrl }) {
               onClick={() => onChange(opt.key)}
               className={cn('rounded-xl border p-1.5 text-left transition max-sm:w-[62%] max-sm:shrink-0 max-sm:snap-start', on ? 'border-brand ring-2 ring-brand/30' : 'border-border hover:border-brand/40')}
             >
-              <CarouselSlidePreview style={opt.key} primary={primary} secondary={secondary} imageUrl={imageUrl} />
+              <CarouselSlidePreview style={opt.key} primary={primary} secondary={secondary} imageUrl={imageUrl} palette={palette} />
               <div className="mt-1.5 flex items-center gap-1 px-0.5">
                 <span className={cn('grid size-3.5 shrink-0 place-items-center rounded-full border max-sm:size-5', on ? 'border-brand bg-brand text-white' : 'border-border')}>
                   {on && <Check size={10} strokeWidth={3} />}
@@ -354,6 +340,12 @@ export function BrandIdentityFields({
   const bgFileUrl = assets.carouselBackground ? URL.createObjectURL(assets.carouselBackground) : null
   const bgPreview = bgCreative?.url || bgFileUrl || bgUrl || null
 
+  // The stored palette belongs to the SAVED photo. Once a new one is picked the
+  // analysis hasn't run yet, so painting the preview with the old photo's colors
+  // would be a lie — fall back to the brand look until the new palette lands.
+  const bgReplaced = !!(bgCreative || assets.carouselBackground)
+  const livePalette = bgReplaced ? null : palette
+
   // Uploading a file and picking a creative are mutually exclusive sources.
   const setBgFile = (f) => { onAsset('carouselBackground', f); if (f) onBgCreative(null) }
   const setBgCreative = (sel) => { onBgCreative(sel); if (sel) onAsset('carouselBackground', null) }
@@ -388,6 +380,7 @@ export function BrandIdentityFields({
         primary={brand.brand_primary_color}
         secondary={brand.brand_secondary_color}
         imageUrl={bgPreview}
+        palette={livePalette}
       />
       {carouselStyle === 'image' && (
         <>
