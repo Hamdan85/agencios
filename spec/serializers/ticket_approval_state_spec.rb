@@ -2,11 +2,10 @@
 
 require 'rails_helper'
 
-# The client-approval chip (card/row/detail) is STAGE-AWARE and only flags a
-# BLOCKED ticket: awaiting the client in Aprovação, or reworking their feedback
-# in Produção. A resolved approval shows no chip — the ticket's column already
-# says it moved on. A ticket published without a full sign-off must not keep
-# saying "aguardando cliente" forever.
+# The client-approval chip (card/row/detail) exists only to flag a ticket
+# BLOCKED on client feedback — back in Produção with requested changes. The
+# column itself already says everything else (Aprovação = awaiting the approver;
+# a later column = resolved), so no other state gets a chip.
 RSpec.describe 'Ticket approval chip state' do
   let(:ws) { Workspace.create!(name: 'WS', slug: "ws-#{SecureRandom.hex(4)}") }
   let(:client) { Client.create!(workspace: ws, name: 'C') }
@@ -32,9 +31,9 @@ RSpec.describe 'Ticket approval chip state' do
     expect(chip).to be_nil
   end
 
-  it 'is pending only while the ticket sits in Aprovação' do
+  it 'shows nothing while awaiting the client — the Aprovação column says it' do
     creative!('pending')
-    expect(chip).to eq('pending')
+    expect(chip).to be_nil
   end
 
   it 'is changes_requested while the rework sits in Produção' do
@@ -43,7 +42,7 @@ RSpec.describe 'Ticket approval chip state' do
     expect(chip).to eq('changes_requested')
   end
 
-  it 'shows nothing once the ticket moved past approval without a full sign-off' do
+  it 'shows nothing once the ticket moved past approval' do
     creative!('pending')
     ticket.update!(status: :published)
     expect(chip).to be_nil

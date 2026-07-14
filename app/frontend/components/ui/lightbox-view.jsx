@@ -483,6 +483,7 @@ export default function LightboxView({ items, initialIndex = 0, onClose }) {
       <DialogPrimitive.Portal>
         <DialogPrimitive.Content
           ref={rootRef}
+          data-lightbox-root
           onOpenAutoFocus={(e) => e.preventDefault()}
           // z-200: the lightbox opens from inside dialogs (the scenes editor, the
           // studio) and must sit above them. pointer-events-auto!: Radix pins

@@ -1,6 +1,7 @@
 import * as React from 'react'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { cn } from '@/lib/utils'
+import { guardLightboxInteractOutside } from '@/components/ui/lightbox-guard'
 
 // A right-side drawer built on Radix Dialog. Slide animations live in theme.css
 // (.ag-sheet-overlay / .ag-sheet-panel), driven by the data-state attribute.
@@ -27,7 +28,7 @@ const SHEET_SIDES = {
 
 // `overlay={false}` drops the dimming backdrop so a non-modal drawer (e.g. the
 // strategy planner) leaves the page behind visible + interactive.
-const SheetContent = React.forwardRef(({ className, children, side = 'right', overlay = true, ...props }, ref) => (
+const SheetContent = React.forwardRef(({ className, children, side = 'right', overlay = true, onInteractOutside, ...props }, ref) => (
   <SheetPortal>
     {overlay && <SheetOverlay />}
     <DialogPrimitive.Content
@@ -40,6 +41,9 @@ const SheetContent = React.forwardRef(({ className, children, side = 'right', ov
         '!pointer-events-auto',
         className,
       )}
+      // A press inside the lightbox (stacked above this drawer) must close only
+      // the lightbox — see lightbox-guard.js for the unmount race it papers over.
+      onInteractOutside={guardLightboxInteractOutside(onInteractOutside)}
       {...props}
     >
       {children}

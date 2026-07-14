@@ -2,6 +2,7 @@ import * as React from 'react'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { guardLightboxInteractOutside } from '@/components/ui/lightbox-guard'
 
 const Dialog = DialogPrimitive.Root
 const DialogTrigger = DialogPrimitive.Trigger
@@ -20,7 +21,7 @@ const DialogOverlay = React.forwardRef(({ className, ...props }, ref) => (
 ))
 DialogOverlay.displayName = 'DialogOverlay'
 
-const DialogContent = React.forwardRef(({ className, children, ...props }, ref) => (
+const DialogContent = React.forwardRef(({ className, children, onInteractOutside, ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
@@ -42,6 +43,9 @@ const DialogContent = React.forwardRef(({ className, children, ...props }, ref) 
         '!pointer-events-auto',
         className,
       )}
+      // A press inside the lightbox (stacked above this dialog — scenes editor,
+      // studio) must close only the lightbox — see lightbox-guard.js.
+      onInteractOutside={guardLightboxInteractOutside(onInteractOutside)}
       {...props}
     >
       {children}
