@@ -377,6 +377,16 @@ plus `approval/`, `billing/`, `calendar/`, `client/`, `meeting/`, `posts/`, `pro
 `InlineSpinner`, `Skeleton`, `EmptyState`, `PageLoader`), `PageHeader`/`StatCard`, filter bars,
 entity selects, charts. **Always reuse a primitive before hand-rolling markup**; extend the
 primitive (props/className) when a variant is needed.
+
+**Viewing media — always the lightbox.** There is exactly ONE media viewer
+(`components/ui/lightbox.jsx`), mounted once at the app root by `LightboxProvider` and opened
+imperatively: `const { open } = useLightbox(); open(items, index)`. It is mobile-first (swipe,
+pinch/double-tap zoom, drag-to-dismiss, tap-to-hide-chrome) and renders images, video, audio, PDFs
+and a download card per slide. **Never** hand-roll an overlay, and never send a user to a raw asset
+URL with `target="_blank"` — a blob URL outside the app is not a preview.
+Build its items with the media layer in `lib/media.js` — `creativeToMedia(creative)` (a carousel is
+ONE creative with several slides), `attachmentToMedia(att)`, `urlToMedia(url, opts)` — which is also
+the only home for `isVideoUrl`/kind detection. Do not re-derive a creative's slides locally.
 **Hooks** in `app/frontend/hooks/`: domain data hooks live under `hooks/data/*` and are re-exported
 by `useData.js` (import from `@/hooks/useData`); `useBoard`/`useTicket` own the board/ticket-drawer
 mutations; channel hooks (`useTicketChannel`, `useBoardChannel`, `useGenerationsChannel`,
@@ -488,3 +498,5 @@ destructive/override actions are audit-logged. See `docs/ARCHITECTURE.md` §6.
 - Dates ISO 8601, money in cents — format on the frontend.
 - Frontend: reuse `components/ui/` primitives and `lib/formatters.js` — never hand-roll
   pills/spinners/icon tiles/skeletons or inline `toLocaleString`.
+- Viewing media only via `useLightbox()` + `lib/media.js` — never a hand-rolled overlay, never a
+  `target="_blank"` to a raw asset URL.
