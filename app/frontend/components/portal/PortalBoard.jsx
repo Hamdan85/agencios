@@ -71,7 +71,10 @@ function PortalTicketCard({ ticket, accent, onOpen }) {
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === 'Enter') onOpen(ticket) }}
       className={cn(
-        'group relative cursor-pointer overflow-hidden rounded-2xl border border-border bg-surface p-3.5 text-left',
+        // `shrink-0` is load-bearing: the column body is a flex column that scrolls,
+        // and `overflow-hidden` here zeroes the card's automatic min-height — without
+        // it the cards compress to fit instead of overflowing into the scroll.
+        'group relative shrink-0 cursor-pointer overflow-hidden rounded-2xl border border-border bg-surface p-3.5 text-left',
         'shadow-[0_1px_2px_rgba(24,18,43,0.04)] transition-all',
         'hover:-translate-y-0.5 hover:border-strong hover:shadow-[0_14px_30px_-16px_rgba(24,18,43,0.3)]',
       )}

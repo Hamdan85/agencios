@@ -30,7 +30,10 @@ function QueueRow({ ticket, on, accent, onPick }) {
     <button
       onClick={() => onPick(ticket.id)}
       className={cn(
-        'group relative flex w-full items-center gap-3 overflow-hidden rounded-xl border p-2.5 text-left transition',
+        // `shrink-0`: the queue body is a scrolling flex column, and `overflow-hidden`
+        // zeroes this row's automatic min-height — without it rows squash together
+        // instead of overflowing into the scroll.
+        'group relative flex w-full shrink-0 items-center gap-3 overflow-hidden rounded-xl border p-2.5 text-left transition',
         on ? 'bg-surface shadow-sm' : 'border-border bg-surface/70 hover:-translate-y-0.5 hover:bg-surface hover:shadow-sm',
       )}
       style={on ? { borderColor: accent } : undefined}

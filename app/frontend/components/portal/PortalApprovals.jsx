@@ -89,11 +89,12 @@ export default function PortalApprovals({ token, campaignId, accent = '#7C3AED' 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 p-3 sm:px-6 sm:py-4 lg:flex-row">
       {/* The campaign's approval queue as a board-style column: rich, searchable
-          rows that make each pending piece easy to identify. A capped strip when
-          stacked on mobile, a full-height sidebar on desktop. */}
+          rows that make each pending piece easy to identify. Desktop only — on a
+          phone the review card needs the whole screen, and deciding a ticket pops
+          it off the queue and lands on the next one (same as the approval portal). */}
       {tickets.length > 1 && (
         <ApprovalQueue
-          className="max-h-52 shrink-0 lg:h-full lg:max-h-none lg:w-72"
+          className="hidden shrink-0 lg:flex lg:h-full lg:w-72"
           tickets={tickets}
           currentId={current.id}
           onPick={setFocusId}
