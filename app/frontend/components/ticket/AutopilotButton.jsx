@@ -87,7 +87,7 @@ export default function AutopilotButton({ run, estimating, starting, onEstimate,
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <IconTile icon={Rocket} tint="1A" className="mb-1 size-11" iconSize={22} />
             <DialogTitle>{t('autopilot.title')}</DialogTitle>
@@ -100,14 +100,18 @@ export default function AutopilotButton({ run, estimating, starting, onEstimate,
             <div className="space-y-3 text-sm">
               {breakdown.length > 0 && (
                 <div className="rounded-2xl border border-border bg-surface-muted/50 p-3">
-                  {breakdown.map((b, i) => (
-                    <div key={i} className="flex items-center justify-between py-0.5">
-                      <span className="text-ink-secondary">{KIND_LABEL[b.kind] || b.type}</span>
-                      <span className="font-semibold">
-                        {b.existing ? t('autopilot.alreadyGenerated') : b.credits === 0 ? t('autopilot.included') : t('autopilot.credits', { count: b.credits })}
-                      </span>
-                    </div>
-                  ))}
+                  {/* A whole-campaign run can list dozens of items — keep the
+                      line items scrollable so the Total and footer stay in view. */}
+                  <div className="max-h-56 space-y-0.5 overflow-y-auto">
+                    {breakdown.map((b, i) => (
+                      <div key={i} className="flex items-center justify-between py-0.5">
+                        <span className="text-ink-secondary">{KIND_LABEL[b.kind] || b.type}</span>
+                        <span className="font-semibold">
+                          {b.existing ? t('autopilot.alreadyGenerated') : b.credits === 0 ? t('autopilot.included') : t('autopilot.credits', { count: b.credits })}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                   <div className="mt-2 flex items-center justify-between border-t border-border pt-2 font-bold">
                     <span>{t('autopilot.total')}</span>
                     <span>{t('autopilot.credits', { count: estimate.total_credits })}</span>
