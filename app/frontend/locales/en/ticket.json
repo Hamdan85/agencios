@@ -127,11 +127,12 @@
     "title": "Creatives",
     "count_one": "{{count}} creative",
     "count_other": "{{count}} creatives",
-    "hint": "Generate, upload or use a piece from the studio.",
+    "hint": "Generate, upload or use a piece from the studio or the ticket's files.",
     "add": "Add creative",
     "generateWithAi": "Generate with AI",
     "uploadFile": "Upload file",
     "useFromStudio": "Use from the studio",
+    "useFromFiles": "Use a ticket file",
     "generating": "Generating…",
     "failed": "Failed",
     "view": "View",
@@ -140,7 +141,7 @@
     "editScenesAria": "Edit scenes",
     "empty": {
       "title": "No creatives yet",
-      "description": "Generate with AI, upload a file or use a piece already generated in the studio."
+      "description": "Generate with AI, upload a file or use a piece from the studio or the ticket's files."
     },
     "kinds": {
       "carousel": {
@@ -179,6 +180,13 @@
       "captionLabel": "Caption (optional)",
       "captionPlaceholder": "A note about this piece…",
       "submit": "Upload"
+    },
+    "fromFiles": {
+      "title": "Use a ticket file",
+      "description": "Turn an image or video already uploaded to this ticket's files into a creative (only formats this ticket's types accept).",
+      "emptyTitle": "No compatible files",
+      "emptyDescription": "Upload images or videos to the ticket's files section to use them as creatives.",
+      "submit": "Add creative"
     },
     "picker": {
       "title": "Use a studio creative",
@@ -591,6 +599,7 @@
     "autopilotStarted": "Autopilot started 🚀",
     "postUnpublished": "Post unpublished.",
     "postRetrying": "Retrying the publication…",
+    "creativeFromFile": "Creative created from the file.",
     "scheduleCanceled": "Schedule canceled.",
     "ticketArchived": "Ticket archived.",
     "ticketRestored": "Ticket restored.",

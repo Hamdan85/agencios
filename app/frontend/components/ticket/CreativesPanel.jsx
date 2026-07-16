@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import i18n from '@/i18n'
 import { toast } from 'sonner'
-import { creativeMeta, CREATIVE_TYPE_META, GENERATION_KIND_META, uploadAcceptFor, fileMatchesCreativeType, uploadableTypesForTicket, generatableKindsForTicket } from '@/lib/constants'
+import { creativeMeta, CREATIVE_TYPE_META, GENERATION_KIND_META, uploadAcceptFor, fileMatchesCreativeType, attachmentMatchesCreativeType, uploadableTypesForTicket, generatableKindsForTicket } from '@/lib/constants'
 import { useWorkspaceCreatives, usePricing } from '@/hooks/useData'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -25,7 +25,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { cn } from '@/lib/utils'
 import {
   ImagePlus, Sparkles, GalleryHorizontalEnd, Video, Image as ImageIcon, AlertCircle, CheckCircle2,
-  Trash2, ChevronDown, UploadCloud, LibraryBig, Film, Search,
+  Trash2, ChevronDown, UploadCloud, LibraryBig, Film, Search, Paperclip,
 } from 'lucide-react'
 import { VideoScenesDialog } from './VideoScenesDialog'
 
@@ -153,8 +153,9 @@ function CreativeCard({ creative, onClick, onDelete, onEditScenes, deleting }) {
   )
 }
 
-// The "Adicionar criativo" split action — generate / upload / use-from-studio.
-function AddCreativeMenu({ trigger, onGenerateOpen, onUploadOpen, onPickerOpen }) {
+// The "Adicionar criativo" split action — generate / upload / use-from-studio /
+// use-from-ticket-files (the last only when the ticket has compatible files).
+function AddCreativeMenu({ trigger, onGenerateOpen, onUploadOpen, onPickerOpen, onFilesOpen }) {
   const { t } = useTranslation('ticket')
   return (
     <DropdownMenu>
@@ -169,8 +170,130 @@ function AddCreativeMenu({ trigger, onGenerateOpen, onUploadOpen, onPickerOpen }
         <DropdownMenuItem onClick={onPickerOpen}>
           <LibraryBig size={14} /> {t('creatives.useFromStudio')}
         </DropdownMenuItem>
+        {onFilesOpen && (
+          <DropdownMenuItem onClick={onFilesOpen}>
+            <Paperclip size={14} /> {t('creatives.useFromFiles')}
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
+  )
+}
+
+// Ticket-files picker — turns an image/video already uploaded to the ticket's
+// files into a creative. Only media compatible with the ticket's types shows;
+// the type select narrows to the types the picked file can become.
+function TicketFilesPickerDialog({ open, onOpenChange, attachments = [], onPick, picking, types = [] }) {
+  const { t } = useTranslation('ticket')
+  const options = types.length ? types : ['feed_image']
+  const files = attachments.filter((a) => options.some((type) => attachmentMatchesCreativeType(a, type)))
+  const [selectedId, setSelectedId] = useState(null)
+  const selected = files.find((a) => a.id === selectedId)
+  const compatible = selected ? options.filter((type) => attachmentMatchesCreativeType(selected, type)) : options
+  const [creativeType, setCreativeType] = useState(options[0])
+
+  useEffect(() => {
+    if (open) { setSelectedId(null); setCreativeType(options[0]) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
+
+  const pickFile = (attachment) => {
+    setSelectedId(attachment.id)
+    // Switching to a file the current type can't take snaps to its first fit.
+    const fits = options.filter((type) => attachmentMatchesCreativeType(attachment, type))
+    if (!fits.includes(creativeType)) setCreativeType(fits[0])
+  }
+
+  const submit = () => {
+    if (!selected || picking) return
+    onPick?.({ attachment_id: selected.id, creative_type: creativeType })
+    onOpenChange(false)
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Paperclip size={18} className="text-brand" /> {t('creatives.fromFiles.title')}
+          </DialogTitle>
+          <DialogDescription>{t('creatives.fromFiles.description')}</DialogDescription>
+        </DialogHeader>
+
+        {files.length === 0 ? (
+          <EmptyState
+            icon={Paperclip}
+            title={t('creatives.fromFiles.emptyTitle')}
+            description={t('creatives.fromFiles.emptyDescription')}
+            color="#7C3AED"
+          />
+        ) : (
+          <>
+            <div className="grid max-h-104 grid-cols-3 gap-2.5 overflow-y-auto py-1 sm:grid-cols-4">
+              {files.map((a) => {
+                const active = a.id === selectedId
+                const thumb = a.preview_url || a.url
+                return (
+                  <button
+                    key={a.id}
+                    type="button"
+                    aria-pressed={active}
+                    disabled={picking}
+                    onClick={() => pickFile(a)}
+                    className={cn(
+                      'group overflow-hidden rounded-xl border-2 bg-surface text-left transition-all disabled:opacity-50',
+                      active ? 'border-brand ring-2 ring-brand/20' : 'border-border hover:border-brand/40',
+                    )}
+                  >
+                    <div className="relative w-full" style={{ paddingBottom: '100%' }}>
+                      <div className="absolute inset-0 overflow-hidden bg-surface-muted">
+                        {thumb ? (
+                          <MediaThumb url={thumb} alt={a.display_name} className="transition-transform group-hover:scale-105" />
+                        ) : (
+                          <div className="flex size-full items-center justify-center text-ink-faint">
+                            {a.kind === 'video' ? <Video size={22} strokeWidth={2.1} /> : <ImageIcon size={22} strokeWidth={2.1} />}
+                          </div>
+                        )}
+                        {active && (
+                          <div className="absolute right-1.5 top-1.5 grid size-5 place-items-center rounded-full bg-brand text-white shadow">
+                            <CheckCircle2 size={13} />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <p className="truncate px-2 py-1.5 text-[11px] font-semibold text-ink">{a.display_name}</p>
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>{t('creatives.upload.typeLabel')}</Label>
+              <Select value={creativeType} onValueChange={setCreativeType}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {compatible.map((key) => (
+                    <SelectItem key={key} value={key}>{CREATIVE_TYPE_META[key]?.label || key}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </>
+        )}
+
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="ghost" size="sm">{t('actions.cancel')}</Button>
+          </DialogClose>
+          {files.length > 0 && (
+            <Button size="sm" onClick={submit} disabled={!selected || picking}>
+              {picking ? <Spinner size={14} className="border-white/30 border-t-white" /> : <Paperclip size={14} />}
+              {t('creatives.fromFiles.submit')}
+            </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -363,8 +486,8 @@ function StudioPickerDialog({ open, onOpenChange, onAttach, attaching, supported
 
 export default function CreativesPanel({
   creatives = [], onGenerate, generating = false, onUpload, uploading = false,
-  onAttach, attaching = false, onDelete, deleting = false,
-  creativeTypes = [], channels = [],
+  onAttach, attaching = false, onFromAttachment, attachingFile = false,
+  onDelete, deleting = false, creativeTypes = [], channels = [], attachments = [],
 }) {
   const { t } = useTranslation('ticket')
   const lightbox = useLightbox()
@@ -388,6 +511,7 @@ export default function CreativesPanel({
   const [pendingType, setPendingType] = useState(null)
   const [uploadOpen, setUploadOpen] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
+  const [filesOpen, setFilesOpen] = useState(false)
   const [pendingDelete, setPendingDelete] = useState(null)
   // Deep link: ?creative=<id> opens that video's editor (it shows its own
   // loading state while it fetches), so a reload reopens the dialog.
@@ -395,7 +519,7 @@ export default function CreativesPanel({
   const deepId = urlParams.get('creative')
   const [scenesFor, setScenesFor] = useState(deepId ? { id: Number(deepId) } : null)
   const items = creatives || []
-  const busy = generating || uploading || attaching
+  const busy = generating || uploading || attaching || attachingFile
 
   // Drop the optimistic placeholder once the generation call settles — the real
   // (generating or ready) creative arrives from the refetched ticket query.
@@ -446,6 +570,7 @@ export default function CreativesPanel({
           onGenerateOpen={() => setOpen(true)}
           onUploadOpen={() => setUploadOpen(true)}
           onPickerOpen={() => setPickerOpen(true)}
+          onFilesOpen={onFromAttachment ? () => setFilesOpen(true) : undefined}
           trigger={(
             <Button size="sm" variant="outline" disabled={busy}>
               {busy ? <Spinner size={14} /> : <Sparkles size={14} />}
@@ -468,6 +593,7 @@ export default function CreativesPanel({
                 onGenerateOpen={() => setOpen(true)}
                 onUploadOpen={() => setUploadOpen(true)}
                 onPickerOpen={() => setPickerOpen(true)}
+                onFilesOpen={onFromAttachment ? () => setFilesOpen(true) : undefined}
                 trigger={<Button size="sm" disabled={busy}><Sparkles size={14} /> {t('creatives.add')} <ChevronDown size={13} /></Button>}
               />
             )}
@@ -568,6 +694,16 @@ export default function CreativesPanel({
 
       {/* Studio picker dialog */}
       <StudioPickerDialog open={pickerOpen} onOpenChange={setPickerOpen} onAttach={onAttach} attaching={attaching} supportedTypes={uploadTypes} />
+
+      {/* Ticket files picker dialog */}
+      <TicketFilesPickerDialog
+        open={filesOpen}
+        onOpenChange={setFilesOpen}
+        attachments={attachments}
+        onPick={onFromAttachment}
+        picking={attachingFile}
+        types={uploadTypes}
+      />
 
       {/* Video scenes editor */}
       <VideoScenesDialog creative={scenesFor} open={!!scenesFor} onOpenChange={(v) => { if (!v) setScenesFor(null) }} />

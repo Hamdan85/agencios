@@ -20,6 +20,9 @@ module Controllers
           ticket: ticket,
           creative_type: creative_type,
           source: :uploaded,
+          # An upload IS the finished deliverable — ready from the start, so it
+          # shows up in Aprovação/Postagem like a generated piece does.
+          status: :ready,
           caption: @params[:caption],
           metadata: @params[:metadata]&.permit!.to_h
         )

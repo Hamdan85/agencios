@@ -276,7 +276,9 @@ RSpec.describe 'AI content-strategy planning' do
   describe 'Operations::Strategy::Apply' do
     it 'materializes each SLIM card and defers the brief/checklist to a per-ticket job' do
       session = Operations::Strategy::Start.call(project: @project, user: @user)
-      post_at = Time.zone.parse('2026-07-15 10:00')
+      # Relative (never a fixed calendar date): Apply clamps past dates to "now",
+      # so a hardcoded date rots into a false failure once the calendar passes it.
+      post_at = 2.days.from_now.change(hour: 10)
       session.update!(status: 'proposed', proposed_plan: proposed_with(slim_card('t1', post_at)))
 
       tickets = nil

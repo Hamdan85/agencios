@@ -16,6 +16,10 @@ module Api
       # POST /tickets/:ticket_id/creatives/attach — body { creative_id }
       def attach = render_created(Controllers::Creatives::Attach.call(params:))
 
+      # POST /tickets/:ticket_id/creatives/from_attachment — body
+      # { attachment_id, creative_type, caption? }: a ticket file becomes a creative.
+      def from_attachment = render_created(Controllers::Creatives::FromAttachment.call(params:))
+
       # Workspace-level actions (Studio gallery)
       def workspace_index   = render_ok(Controllers::Creatives::WorkspaceIndex.call(params:))
       def update            = render_ok(Controllers::Creatives::Update.call(params:))

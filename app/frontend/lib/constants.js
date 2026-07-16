@@ -122,6 +122,10 @@ export const uploadAcceptFor = (type) =>
 export const fileMatchesCreativeType = (file, type) =>
   (CREATIVE_UPLOAD_MEDIA[type] || ['image', 'video']).includes((file?.type || '').split('/')[0])
 
+// True when a ticket attachment (by its serialized `kind`) matches the creative type.
+export const attachmentMatchesCreativeType = (attachment, type) =>
+  (CREATIVE_UPLOAD_MEDIA[type] || ['image', 'video']).includes(attachment?.kind)
+
 export const PRIORITY_META = {
   low:    withLabel({ color: '#8B86A3', dot: '#B6B1C9' }, 'priority.low'),
   medium: withLabel({ color: '#0EA5E9', dot: '#0EA5E9' }, 'priority.medium'),

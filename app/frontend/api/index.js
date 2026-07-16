@@ -106,6 +106,8 @@ export const ticketsApi = {
   },
   // Link an existing, unassigned Studio creative to this ticket.
   attachCreative: (id, creativeId) => api.post(`/tickets/${id}/creatives/attach`, { creative_id: creativeId }),
+  // Turn a file already uploaded to the ticket into a creative (shares the blob, no re-upload).
+  creativeFromAttachment: (id, payload) => api.post(`/tickets/${id}/creatives/from_attachment`, payload),
   createPost: (id, data) => api.post(`/tickets/${id}/posts`, { post: data }),
   unpublishPost: (id, postId) => api.post(`/tickets/${id}/posts/${postId}/unpublish`),
   // Retry ONE failed publication on its network (the successful siblings stay put).

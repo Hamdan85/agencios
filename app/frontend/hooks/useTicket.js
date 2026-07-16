@@ -59,6 +59,12 @@ export function useTicketMutations(id) {
       t('toasts.creativeAttached'),
       () => qc.invalidateQueries({ queryKey: ['creatives'] }),
     ),
+    // A ticket file becomes a creative of a compatible type (no re-upload).
+    creativeFromAttachment: mk(
+      (payload) => ticketsApi.creativeFromAttachment(id, payload),
+      t('toasts.creativeFromFile'),
+      () => qc.invalidateQueries({ queryKey: ['creatives'] }),
+    ),
     // Autopilot ("GO mode"). Estimate is fetched imperatively (mutateAsync) for
     // the confirm dialog; autopilot launches the run after confirmation.
     autopilotEstimate: mk(() => ticketsApi.autopilotEstimate(id)),

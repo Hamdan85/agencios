@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_14_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_16_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -163,7 +163,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_14_120000) do
     t.index ["batch_id"], name: "index_autopilot_runs_on_batch_id"
     t.index ["ticket_id", "state"], name: "index_autopilot_runs_on_ticket_id_and_state"
     t.index ["ticket_id"], name: "index_autopilot_runs_on_ticket_id"
-    t.index ["ticket_id"], name: "index_autopilot_runs_one_active_per_ticket", unique: true, where: "(((scope)::text = 'ticket'::text) AND ((state)::text = ANY ((ARRAY['pending'::character varying, 'scoping'::character varying, 'generating'::character varying, 'awaiting_generation'::character varying])::text[])))"
+    t.index ["ticket_id"], name: "index_autopilot_runs_one_active_per_ticket", unique: true, where: "(((scope)::text = 'ticket'::text) AND ((state)::text = ANY (ARRAY[('pending'::character varying)::text, ('scoping'::character varying)::text, ('generating'::character varying)::text, ('awaiting_generation'::character varying)::text])))"
     t.index ["user_id"], name: "index_autopilot_runs_on_user_id"
     t.index ["workspace_id", "state"], name: "index_autopilot_runs_on_workspace_id_and_state"
     t.index ["workspace_id"], name: "index_autopilot_runs_on_workspace_id"

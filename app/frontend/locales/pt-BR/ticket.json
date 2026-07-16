@@ -127,11 +127,12 @@
     "title": "Criativos",
     "count_one": "{{count}} criativo",
     "count_other": "{{count}} criativos",
-    "hint": "Gere, envie ou use uma peça do estúdio.",
+    "hint": "Gere, envie ou use uma peça do estúdio ou dos arquivos do ticket.",
     "add": "Adicionar criativo",
     "generateWithAi": "Gerar com IA",
     "uploadFile": "Enviar arquivo",
     "useFromStudio": "Usar do estúdio",
+    "useFromFiles": "Usar arquivo do ticket",
     "generating": "Gerando…",
     "failed": "Falhou",
     "view": "Ver",
@@ -140,7 +141,7 @@
     "editScenesAria": "Editar cenas",
     "empty": {
       "title": "Nenhum criativo ainda",
-      "description": "Gere com IA, envie um arquivo ou use uma peça já gerada no estúdio."
+      "description": "Gere com IA, envie um arquivo ou use uma peça do estúdio ou dos arquivos do ticket."
     },
     "kinds": {
       "carousel": {
@@ -179,6 +180,13 @@
       "captionLabel": "Legenda (opcional)",
       "captionPlaceholder": "Uma nota sobre esta peça…",
       "submit": "Enviar"
+    },
+    "fromFiles": {
+      "title": "Usar arquivo do ticket",
+      "description": "Transforme uma imagem ou vídeo já enviado nos arquivos deste ticket em um criativo (apenas formatos que os tipos deste ticket aceitam).",
+      "emptyTitle": "Nenhum arquivo compatível",
+      "emptyDescription": "Envie imagens ou vídeos na seção de arquivos do ticket para poder usá-los como criativos.",
+      "submit": "Adicionar criativo"
     },
     "picker": {
       "title": "Usar criativo do estúdio",
@@ -591,6 +599,7 @@
     "autopilotStarted": "Piloto automático iniciado 🚀",
     "postUnpublished": "Post despublicado.",
     "postRetrying": "Tentando publicar de novo…",
+    "creativeFromFile": "Criativo criado a partir do arquivo.",
     "scheduleCanceled": "Agendamento cancelado.",
     "ticketArchived": "Ticket arquivado.",
     "ticketRestored": "Ticket restaurado.",

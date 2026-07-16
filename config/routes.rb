@@ -241,6 +241,8 @@ Rails.application.routes.draw do
         resources :creatives, only: %i[index create destroy] do
           post :generate, on: :collection
           post :attach, on: :collection
+          # A ticket file (Attachment) becomes a creative of a compatible type.
+          post :from_attachment, on: :collection
         end
         resources :attachments, only: %i[index create update destroy]
         resources :notes, only: %i[index create]

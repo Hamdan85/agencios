@@ -116,12 +116,15 @@ export default function TicketBody({
           creatives={creatives}
           creativeTypes={ticket.creative_types}
           channels={ticket.channels}
+          attachments={attachments}
           onGenerate={(payload) => mut.generate.mutate(payload)}
           generating={mut.generate.isPending}
           onUpload={(payload) => mut.uploadCreative.mutate(payload)}
           uploading={mut.uploadCreative.isPending}
           onAttach={(creativeId) => mut.attachCreative.mutate(creativeId)}
           attaching={mut.attachCreative.isPending}
+          onFromAttachment={(payload) => mut.creativeFromAttachment.mutate(payload)}
+          attachingFile={mut.creativeFromAttachment.isPending}
           onDelete={(creativeId) => mut.removeCreative.mutate(creativeId)}
           deleting={mut.removeCreative.isPending}
         />
