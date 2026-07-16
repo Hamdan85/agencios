@@ -32,6 +32,7 @@ en:
       unpublish_failed: "Couldn't delete on %{provider}: %{message}"
       update_only_scheduled_or_failed: "You can only edit scheduled or failed posts. A live post can't be edited."
       cancel_only_scheduled_or_failed: "You can only cancel scheduled or failed posts. To take a post off the air, unpublish it."
+      retry_only_failed: "You can only retry a failed publication."
       project_archived: "This post's campaign/client is archived. Reactivate it to publish."
       unsupported_media: "%{provider} doesn't support %{media}."
     invoices:

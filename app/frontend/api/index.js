@@ -108,6 +108,8 @@ export const ticketsApi = {
   attachCreative: (id, creativeId) => api.post(`/tickets/${id}/creatives/attach`, { creative_id: creativeId }),
   createPost: (id, data) => api.post(`/tickets/${id}/posts`, { post: data }),
   unpublishPost: (id, postId) => api.post(`/tickets/${id}/posts/${postId}/unpublish`),
+  // Retry ONE failed publication on its network (the successful siblings stay put).
+  retryPost: (id, postId) => api.post(`/tickets/${id}/posts/${postId}/retry`),
   // Cancel a scheduled (or failed) publication — removed before going live.
   destroyPost: (id, postId) => api.delete(`/tickets/${id}/posts/${postId}`),
   // Autopilot ("GO mode"): estimate the credit cost, then launch the run.

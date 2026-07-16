@@ -246,6 +246,8 @@ Rails.application.routes.draw do
         resources :notes, only: %i[index create]
         resources :posts, only: %i[index create update destroy] do
           post :unpublish, on: :member
+          # Retry ONE failed publication on its own network — never the bundle.
+          post :retry, on: :member, action: :retry_publish
         end
       end
       patch 'subtasks/:id', to: 'subtasks#update_global'

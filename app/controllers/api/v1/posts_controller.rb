@@ -12,6 +12,10 @@ module Api
 
       # POST /api/v1/tickets/:ticket_id/posts/:id/unpublish
       def unpublish = render_ok(Controllers::Posts::Unpublish.call(params:))
+
+      # POST /api/v1/tickets/:ticket_id/posts/:id/retry — retry ONE failed
+      # publication. (`retry_publish` because `retry` is a Ruby keyword.)
+      def retry_publish = render_ok(Controllers::Posts::Retry.call(params:))
     end
   end
 end

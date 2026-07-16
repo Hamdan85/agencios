@@ -18,7 +18,7 @@ import AiFillButton from './AiFillButton'
 import { dt } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 import {
-  Send, Clock, Zap, MessageCircle, MessageSquareText, Link2, CheckCircle2, AlertCircle, Loader2, ImagePlus, Radio, Ban, Eye, ChevronDown, ChevronUp, CalendarX2,
+  Send, Clock, Zap, MessageCircle, MessageSquareText, Link2, CheckCircle2, AlertCircle, Loader2, ImagePlus, Radio, Ban, Eye, ChevronDown, ChevronUp, CalendarX2, RotateCcw,
 } from 'lucide-react'
 
 // Copy is resolved lazily (getters) so it follows the active locale — same
@@ -46,7 +46,7 @@ const POST_STATUS = {
 export default function PostingPanel({
   ticket, creatives = [], posts = [], onSave, onPublish, publishing = false,
   onAiAction, acting = false, filling = false, onUnpublish, unpublishingId,
-  onCancelPost, cancelingId, color = '#EC4899',
+  onCancelPost, cancelingId, onRetryPost, retryingId, color = '#EC4899',
 }) {
   const { t } = useTranslation('ticket')
   const lightbox = useLightbox()
@@ -375,50 +375,69 @@ export default function PostingPanel({
               const st = POST_STATUS[post.status] || POST_STATUS.scheduled
               const StIcon = st.icon
               return (
-                <div key={post.id} className="flex items-start justify-between gap-2 rounded-xl border border-border bg-surface px-3.5 py-2.5 sm:items-center">
-                  {/* Mobile stacks network + date on the left and badge + action on
-                      the right; from sm up it's the original single row. */}
-                  <div className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2">
-                    <div className="flex min-w-0 items-center gap-2">
-                      <ChannelIcons channels={[post.provider]} />
-                      <span className="truncate text-sm font-semibold text-ink">{channelMeta(post.provider).label}</span>
+                <div key={post.id} className="rounded-xl border border-border bg-surface px-3.5 py-2.5">
+                  <div className="flex items-start justify-between gap-2 sm:items-center">
+                    {/* Mobile stacks network + date on the left and badge + action on
+                        the right; from sm up it's the original single row. */}
+                    <div className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <ChannelIcons channels={[post.provider]} />
+                        <span className="truncate text-sm font-semibold text-ink">{channelMeta(post.provider).label}</span>
+                      </div>
+                      {post.scheduled_at && post.status === 'scheduled' && (
+                        <span className="text-xs text-ink-muted"><span className="hidden sm:inline">· </span>{dt(post.scheduled_at)}</span>
+                      )}
                     </div>
-                    {post.scheduled_at && post.status === 'scheduled' && (
-                      <span className="text-xs text-ink-muted"><span className="hidden sm:inline">· </span>{dt(post.scheduled_at)}</span>
-                    )}
+                    <div className="flex shrink-0 flex-col items-end gap-1.5 sm:flex-row sm:items-center sm:gap-2">
+                      <Badge variant={st.variant}>
+                        <StIcon size={11} className={cn('mr-0.5', post.status === 'publishing' && 'animate-spin')} />
+                        {st.label}
+                      </Badge>
+                      {/* A FAILED publication retries on ITS network only — the
+                          siblings that already went live are never re-posted. */}
+                      {post.status === 'failed' && onRetryPost && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-2 text-xs"
+                          onClick={() => onRetryPost(post.id)}
+                          disabled={retryingId === post.id}
+                        >
+                          {retryingId === post.id ? <Spinner size={11} /> : <RotateCcw size={11} />}
+                          {t('posting.retry')}
+                        </Button>
+                      )}
+                      {/* A not-yet-live publication can be CANCELED (the post is
+                          removed before going live; schedule again anytime). */}
+                      {['scheduled', 'failed'].includes(post.status) && onCancelPost && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-2 text-xs text-danger hover:border-danger/40 hover:bg-danger/5"
+                          onClick={() => onCancelPost(post.id)}
+                          disabled={cancelingId === post.id}
+                        >
+                          {cancelingId === post.id ? <Spinner size={11} /> : <CalendarX2 size={11} />}
+                          {t('actions.cancel')}
+                        </Button>
+                      )}
+                      {post.status === 'published' && onUnpublish && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-2 text-xs text-danger hover:border-danger/40 hover:bg-danger/5"
+                          onClick={() => onUnpublish(post.id)}
+                          disabled={unpublishingId === post.id}
+                        >
+                          {unpublishingId === post.id ? <Spinner size={11} /> : <Ban size={11} />}
+                          {t('post.unpublish')}
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1.5 sm:flex-row sm:items-center sm:gap-2">
-                    <Badge variant={st.variant}>
-                      <StIcon size={11} className={cn('mr-0.5', post.status === 'publishing' && 'animate-spin')} />
-                      {st.label}
-                    </Badge>
-                    {/* A not-yet-live publication can be CANCELED (the post is
-                        removed before going live; schedule again anytime). */}
-                    {['scheduled', 'failed'].includes(post.status) && onCancelPost && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 px-2 text-xs text-danger hover:border-danger/40 hover:bg-danger/5"
-                        onClick={() => onCancelPost(post.id)}
-                        disabled={cancelingId === post.id}
-                      >
-                        {cancelingId === post.id ? <Spinner size={11} /> : <CalendarX2 size={11} />}
-                        {t('actions.cancel')}
-                      </Button>
-                    )}
-                    {post.status === 'published' && onUnpublish && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 px-2 text-xs text-danger hover:border-danger/40 hover:bg-danger/5"
-                        onClick={() => onUnpublish(post.id)}
-                        disabled={unpublishingId === post.id}
-                      >
-                        {unpublishingId === post.id ? <Spinner size={11} /> : <Ban size={11} />}
-                        {t('post.unpublish')}
-                      </Button>
-                    )}
-                  </div>
+                  {post.status === 'failed' && post.failure_reason && (
+                    <p className="mt-1.5 line-clamp-2 text-[11px] text-danger/80">{post.failure_reason}</p>
+                  )}
                 </div>
               )
             })}

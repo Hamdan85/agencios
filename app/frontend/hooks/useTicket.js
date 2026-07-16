@@ -65,6 +65,8 @@ export function useTicketMutations(id) {
     autopilot: mk((payload) => ticketsApi.autopilotStart(id, payload), t('toasts.autopilotStarted')),
     addPost: mk((data) => ticketsApi.createPost(id, data), undefined, () => analytics.track(EVENTS.POST_CREATED)),
     unpublishPost: mk((postId) => ticketsApi.unpublishPost(id, postId), t('toasts.postUnpublished')),
+    // Retry a failed publication on its own network — the rest of the bundle is untouched.
+    retryPost: mk((postId) => ticketsApi.retryPost(id, postId), t('toasts.postRetrying')),
     // Cancel a scheduled/failed publication (deletes the post before it goes live).
     removePost: mk((postId) => ticketsApi.destroyPost(id, postId), t('toasts.scheduleCanceled')),
     // Ticket lifecycle: archive hides it from the active views; destroy is final.

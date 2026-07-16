@@ -92,6 +92,8 @@ export default function TicketBody({
           unpublishingId={mut.unpublishPost.isPending ? mut.unpublishPost.variables : null}
           onCancelPost={cancelPost}
           cancelingId={mut.removePost.isPending ? mut.removePost.variables : null}
+          onRetryPost={(postId) => mut.retryPost.mutate(postId)}
+          retryingId={mut.retryPost.isPending ? mut.retryPost.variables : null}
         />
       ) : (
         <FieldGroup

@@ -411,7 +411,8 @@
     "linkInBio": "Link na bio",
     "goesLiveNote": "O ticket vai para “No ar” quando a publicação for concluída.",
     "publishNow": "Publicar agora",
-    "schedulePublish": "Agendar publicação"
+    "schedulePublish": "Agendar publicação",
+    "retry": "Tentar de novo"
   },
   "subtasksPanel": {
     "title": "Subtarefas",
@@ -589,6 +590,7 @@
     "creativeAttached": "Criativo adicionado ao ticket!",
     "autopilotStarted": "Piloto automático iniciado 🚀",
     "postUnpublished": "Post despublicado.",
+    "postRetrying": "Tentando publicar de novo…",
     "scheduleCanceled": "Agendamento cancelado.",
     "ticketArchived": "Ticket arquivado.",
     "ticketRestored": "Ticket restaurado.",

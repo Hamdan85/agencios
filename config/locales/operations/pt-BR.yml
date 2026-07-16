@@ -32,6 +32,7 @@ pt-BR:
       unpublish_failed: "Não foi possível excluir no %{provider}: %{message}"
       update_only_scheduled_or_failed: "Só é possível editar publicações agendadas ou com falha. Um post no ar não pode ser editado."
       cancel_only_scheduled_or_failed: "Só é possível cancelar publicações agendadas ou com falha. Para tirar um post do ar, despublique-o."
+      retry_only_failed: "Só é possível tentar de novo uma publicação que falhou."
       project_archived: "A campanha/cliente deste post está arquivada. Reative para publicar."
       unsupported_media: "%{provider} não suporta %{media}."
     invoices:
