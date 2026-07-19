@@ -11,7 +11,7 @@ import {
   FileText, FileSpreadsheet, Presentation, FileArchive, File as FileIcon, Paperclip,
   UploadCloud, AlertTriangle,
 } from 'lucide-react'
-import { InstagramIcon } from './brand-icons.jsx'
+import { InstagramIcon, FacebookIcon } from './brand-icons.jsx'
 import i18n from '@/i18n'
 
 // Labels resolve at ACCESS time (property getters bound to i18next), so every
@@ -45,7 +45,7 @@ const localizedStrings = (prefix, keys) => {
 // lucide v1 removed brand icons (trademark) — channel identity is carried by
 // the vivid colors below; icons are recognizable generics.
 const Instagram = InstagramIcon
-const Facebook = AtSign
+const Facebook = FacebookIcon
 const Youtube = PlaySquare
 const Linkedin = Briefcase
 const Twitter = Hash

@@ -5,6 +5,7 @@ import {
   ArrowUpRight, CalendarClock, PartyPopper, Building2,
 } from 'lucide-react'
 import { useTasks, useTaskMutations, useOpenTicket } from '@/hooks/useData'
+import { useUrlFilters } from '@/hooks/useUrlState'
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll'
 import { PageHeader } from '@/components/ui/page-header'
 import { Badge, ColorBadge } from '@/components/ui/badge'
@@ -28,6 +29,10 @@ const EMPTY_ICON = {
   completed: Inbox,
 }
 
+// Tab + search live in the URL so refresh/Back/shared links keep the listing
+// (business requirement). Absent tab = 'pending'. Stable ref — see useUrlFilters.
+const FILTER_KEYS = ['tab', 'q']
+
 function isOverdue(task) {
   if (task.done || !task.due_date) return false
   return new Date(task.due_date) < new Date(new Date().setHours(0, 0, 0, 0))
@@ -39,17 +44,24 @@ function isOverdue(task) {
 export default function TasksIndex({ scope } = {}) {
   const { t } = useTranslation('tasks')
   const global = scope === 'all_workspaces'
-  const [tab, setTab] = useState('pending')
-  const [query, setQuery] = useState('')
-  const [q, setQ] = useState('')
+  const [urlFilters, setUrlFilters] = useUrlFilters(FILTER_KEYS)
+  const tab = TABS.some((tabItem) => tabItem.key === urlFilters.tab) ? urlFilters.tab : 'pending'
+  const q = urlFilters.q || ''
+  const setTab = (v) => setUrlFilters((f) => ({ ...f, tab: v === 'pending' ? undefined : v }))
+  const [query, setQuery] = useState(q)
   const mutate = useTaskMutations()
   const openTicket = useOpenTicket()
 
-  // Debounce the text search into the server query key.
+  // Keep the input in sync when the URL changes from outside (Back button).
+  useEffect(() => { setQuery(q) }, [q])
+  // Debounce the text search into the URL (which drives the server query key).
   useEffect(() => {
-    const t = setTimeout(() => setQ(query.trim()), 300)
-    return () => clearTimeout(t)
-  }, [query])
+    const id = setTimeout(() => {
+      const next = query.trim()
+      if (next !== q) setUrlFilters((f) => ({ ...f, q: next || undefined }))
+    }, 300)
+    return () => clearTimeout(id)
+  }, [query, q, setUrlFilters])
 
   const filters = { tab, ...(q ? { q } : {}), ...(global ? { scope } : {}) }
   const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useTasks(filters)

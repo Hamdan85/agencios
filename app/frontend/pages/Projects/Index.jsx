@@ -5,6 +5,7 @@ import {
   FolderKanban, Plus, ListChecks, Wallet, CalendarRange, Check, Sparkles,
 } from 'lucide-react'
 import { useProjects, useProjectMutations } from '@/hooks/useData'
+import { useUrlFilters } from '@/hooks/useUrlState'
 import { PageHeader } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
 import { Input, Textarea } from '@/components/ui/input'
@@ -36,6 +37,10 @@ const STATUS_OPTIONS = [
   { value: 'completed', variant: 'soft' },
 ]
 const statusMeta = (s) => STATUS_OPTIONS.find((o) => o.value === s) || STATUS_OPTIONS[1]
+
+// Filters live in the URL so a refreshed / shared / Back-navigated URL keeps the
+// listing (business requirement). Stable reference — see useUrlFilters.
+const FILTER_KEYS = ['q', 'client_id', 'status']
 
 const EMPTY_FORM = {
   client_id: '', name: '', description: '', color: PALETTE[0],
@@ -204,9 +209,13 @@ export default function ProjectsIndex() {
   const { data: projects, isLoading } = useProjects()
   const { create } = useProjectMutations()
   const [open, setOpen] = useState(false)
-  const [search, setSearch] = useState('')
-  const [clientFilter, setClientFilter] = useState('all')
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [filters, setFilters] = useUrlFilters(FILTER_KEYS)
+  const search = filters.q || ''
+  const clientFilter = filters.client_id || 'all'
+  const statusFilter = filters.status || 'all'
+  const setSearch = (v) => setFilters((f) => ({ ...f, q: v || undefined }))
+  const setClientFilter = (v) => setFilters((f) => ({ ...f, client_id: v === 'all' ? undefined : v }))
+  const setStatusFilter = (v) => setFilters((f) => ({ ...f, status: v === 'all' ? undefined : v }))
 
   const list = projects || []
   const q = search.trim().toLowerCase()
@@ -233,7 +242,7 @@ export default function ProjectsIndex() {
     </Select>
   )
   const filterCount = (clientFilter !== 'all' ? 1 : 0) + (statusFilter !== 'all' ? 1 : 0)
-  const clearFilters = () => { setClientFilter('all'); setStatusFilter('all') }
+  const clearFilters = () => setFilters((f) => ({ q: f.q }))
 
   if (isLoading) return <PageLoader />
 

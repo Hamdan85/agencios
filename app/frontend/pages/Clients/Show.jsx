@@ -503,7 +503,7 @@ function BasicColumn({ client, projects, invoices, totalPaid, archived, onEdit }
             <Pencil size={15} /> {t('show.editClient')}
           </Button>
           <Button asChild variant="outline" size="sm" className="mt-2 w-full">
-            <Link to={`/publicacoes?client=${client.id}`}>
+            <Link to={`/publicacoes?client_id=${client.id}`}>
               <BarChart3 size={15} /> {t('show.viewPerformance')}
             </Link>
           </Button>

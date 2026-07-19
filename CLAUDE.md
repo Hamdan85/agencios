@@ -387,6 +387,13 @@ URL with `target="_blank"` — a blob URL outside the app is not a preview.
 Build its items with the media layer in `lib/media.js` — `creativeToMedia(creative)` (a carousel is
 ONE creative with several slides), `attachmentToMedia(att)`, `urlToMedia(url, opts)` — which is also
 the only home for `isVideoUrl`/kind detection. Do not re-derive a creative's slides locally.
+**List state lives in the URL (business requirement).** In every list section, filters, text
+search, sort, tabs, and view toggles sync to the query string via `useUrlFilters` / `useUrlParam`
+(`hooks/useUrlState.js`) — never a bare `useState`. A refresh, a shared link, or the browser Back
+button must restore the exact listing state. Reference implementations: the Tickets hub
+(`pages/Tickets/Index.jsx`, `FILTER_KEYS` + `?visao=` + `?ticket=`) and the calendar
+(`?view=&date=`). Filter param names mirror the API's English param names (`q`, `project_id`,
+`client_id`, `status`, …).
 **Hooks** in `app/frontend/hooks/`: domain data hooks live under `hooks/data/*` and are re-exported
 by `useData.js` (import from `@/hooks/useData`); `useBoard`/`useTicket` own the board/ticket-drawer
 mutations; channel hooks (`useTicketChannel`, `useBoardChannel`, `useGenerationsChannel`,
@@ -516,3 +523,5 @@ destructive/override actions are audit-logged. See `docs/ARCHITECTURE.md` §6.
   pills/spinners/icon tiles/skeletons or inline `toLocaleString`.
 - Viewing media only via `useLightbox()` + `lib/media.js` — never a hand-rolled overlay, never a
   `target="_blank"` to a raw asset URL.
+- List state (filters, search, sort, tabs, views) lives in the URL via `useUrlFilters` /
+  `useUrlParam` — refresh, Back, and shared links must restore the listing.

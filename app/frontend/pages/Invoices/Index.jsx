@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import i18n from '@/i18n'
 import { useInvoices, useInvoiceMutations, useSettings } from '@/hooks/useData'
+import { useUrlFilters } from '@/hooks/useUrlState'
 import { PageHeader, StatCard } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
 import { CopyButton } from '@/components/ui/copy-button'
@@ -46,6 +47,9 @@ const FILTERS = [
   { value: 'draft', get label() { return i18n.t('invoices:filters.draft') } },
   { value: 'canceled', get label() { return i18n.t('invoices:filters.canceled') } },
 ]
+
+// Stable reference — see useUrlFilters.
+const FILTER_KEYS = ['status']
 
 // ── Payment link dialog ────────────────────────────────────────
 function PaymentLinkDialog({ invoice, open, onOpenChange, onSendPaymentLink, sending }) {
@@ -195,7 +199,11 @@ export default function InvoicesIndex() {
   const confirm = useConfirm()
   const [createOpen, setCreateOpen] = useState(false)
   const [linkInvoiceId, setLinkInvoiceId] = useState(null)
-  const [filter, setFilter] = useState('all')
+  // The status filter lives in the URL so refresh/Back/shared links keep the
+  // listing (business requirement). Absent = 'all'.
+  const [filters, setFilters] = useUrlFilters(FILTER_KEYS)
+  const filter = filters.status || 'all'
+  const setFilter = (v) => setFilters({ status: v === 'all' ? undefined : v })
 
   const list = invoices || []
 

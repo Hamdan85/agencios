@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { useMemo } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Megaphone } from 'lucide-react'
 import { Page } from '@/components/ui/page'
@@ -7,7 +7,7 @@ import { PageHeader } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/feedback'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { useUrlParam } from '@/hooks/useUrlState'
+import { useUrlFilters, useUrlParam } from '@/hooks/useUrlState'
 import { usePosts, usePostsOverview } from '@/hooks/useData'
 import PostsPerformance from '@/components/posts/PostsPerformance'
 import PostsFilterBar from '@/components/posts/PostsFilterBar'
@@ -17,19 +17,34 @@ import PostList from '@/components/posts/PostList'
 // The posts hub, split into two tabs over a shared filter row: "Publicações" (the
 // paginated grid, the base path) and "Desempenho" (the analytics dashboard, at
 // `/publicacoes/desempenho`). Each tab is its own URL PATH — never a query string.
-// Deep-linkable with `?client=<id>` (the client detail page links here); the list
-// tab also carries its own sort in the URL (`?ordenar=`), separate from filters.
+// Everything else about the listing lives in the query string so a refresh, Back,
+// or a shared link restores it: the filters (?client_id=&project_id=&network=
+// &status=&period=) and the list tab's sort (`?ordenar=`). The client detail
+// page deep-links here with `?client_id=<id>`.
 const PERF_PATH = '/publicacoes/desempenho'
+
+// Stable reference — see useUrlFilters.
+const FILTER_KEYS = ['client_id', 'project_id', 'network', 'status', 'period']
 
 export default function PostsIndex() {
   const { t } = useTranslation('posts')
   const location = useLocation()
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const initialClient = searchParams.get('client') || undefined
-  const [filters, setFilters] = useState({ client_id: initialClient })
+  const [filters, setFilters] = useUrlFilters(FILTER_KEYS)
   const [ordenar, setOrdenar] = useUrlParam('ordenar')
   const sort = ordenar || 'recent'
+
+  // Expand the flat URL params into the API filter shape both queries share
+  // (`providers` / `status` arrays; `period` becomes a concrete `from` date).
+  const apiFilters = useMemo(() => ({
+    client_id: filters.client_id,
+    project_id: filters.project_id,
+    providers: filters.network ? [filters.network] : undefined,
+    status: filters.status ? [filters.status] : undefined,
+    from: filters.period
+      ? new Date(Date.now() - Number(filters.period) * 864e5).toISOString().slice(0, 10)
+      : undefined,
+  }), [filters])
 
   // The active tab is derived from the path; switching navigates the segment
   // while preserving the query string (client / ordenar).
@@ -39,8 +54,8 @@ export default function PostsIndex() {
     navigate({ pathname, search: location.search }, { replace: true })
   }
 
-  const { data: overview, isLoading: overviewLoading } = usePostsOverview(filters)
-  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = usePosts({ ...filters, sort })
+  const { data: overview, isLoading: overviewLoading } = usePostsOverview(apiFilters)
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = usePosts({ ...apiFilters, sort })
   const posts = (data?.pages || []).flatMap((pg) => pg.posts || [])
 
   return (

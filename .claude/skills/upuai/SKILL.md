@@ -3,7 +3,7 @@ name: "upuai"
 description: "Deploy, manage, and troubleshoot projects on Upuai Cloud using the upuai CLI. Route-first skill — read the routing table below and follow the matching section."
 when_to_use: "When the user wants to deploy a project to Upuai, check status/logs, configure env vars or domains, manage databases, roll back, promote between environments, or use the upuai CLI for any task."
 ---
-<!-- upuai skill v1.0.0 · sha256:826d1a9e4e9a8838ac6118cf8881254381812bc0af17bca0a65e732dffee870a · managed by the upuai CLI (upstream: saiph-ti/upuai-cli skills/upuai). Do not edit here — run `upuai skill install --force` to refresh. -->
+<!-- upuai skill v1.0.0 · sha256:64aaaa5df1d54784c0a0a98274407e8825ffbea541c3297da6db4808dad2072a · managed by the upuai CLI (upstream: saiph-ti/upuai-cli skills/upuai). Do not edit here — run `upuai skill install --force` to refresh. -->
 
 # Upuai Cloud — deploy via CLI
 
@@ -26,7 +26,7 @@ Read only the section(s) that match the user's intent.
 
 Always invoke `upuai` in non-interactive mode. Without these, prompts will hang in agent environments.
 
-1. **Auth**: always run `upuai whoami` first. If it returns the expected user, you're authenticated — the CLI reads `~/.upuai/credentials.json` and auto-refreshes the JWT on 401. If `whoami` fails, ask the user to run `upuai login` once on their own machine (browser OAuth or email OTP — both interactive). **There is no headless auth path** — `upuai login` is the only supported auth flow, same pattern as `railway login`, `vercel login`, `fly auth login`. Don't invent env-var shortcuts.
+1. **Auth**: always run `upuai whoami` first. If it returns the expected user, you're authenticated — the CLI reads `~/.upuai/credentials.json` and auto-refreshes the JWT on 401. If `whoami` fails, ask the user to run `upuai login` once on their own machine (browser OAuth or email OTP — both interactive), same pattern as `railway login`, `vercel login`, `fly auth login`. For **CI/automation**, the sanctioned headless path is a scoped token: a human runs `upuai token create --name <name> --scope deploy` (add `--project <id>` to scope it to one project, `--expires <days>` for a TTL), then sets the printed secret in `UPUAI_TOKEN` (opaque, long-lived, revocable). `--scope read` mints a GET-only token. List with `upuai token list`, revoke with `upuai token revoke <id>`. Never stuff a user JWT into an env var — use `upuai token`.
 2. **Skip confirmations**: pass `-y` / `--yes` on any command that mutates state (`init`, `deploy`, `down`, `delete`, `rollback`, `promote`, `db restore`, `vars delete`, `domain delete`).
 3. **JSON output for parsing**: pass `-o json` on `status`, `logs`, `list`, `vars list`, `domain list`, `env list`, and (when waiting) `deploy --wait -o json`.
 4. **Pre-supply flags on `init`**: when `--yes` is set, `init` requires `--name <slug>`. Pass `--framework <name>` to skip auto-detect prompts. Pass `--repo <owner>/<repo>` (or `--image <ref>`) to create a deployable service in one step instead of an empty placeholder. The CLI errors out with a clear message if a flag is missing rather than hanging on a prompt.

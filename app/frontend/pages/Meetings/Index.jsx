@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Video, Plus, CalendarClock, History, Calendar } from 'lucide-react'
 import { useMeetings, useMeetingMutations } from '@/hooks/useData'
+import { useUrlFilters } from '@/hooks/useUrlState'
 import { useCurrentUser } from '@/hooks/useAuth'
 import { PageHeader } from '@/components/ui/page-header'
 import { Badge } from '@/components/ui/badge'
@@ -14,9 +15,13 @@ import { FilterBar } from '@/components/ui/filter-bar'
 import { MeetingCard } from '@/components/meeting/MeetingCard'
 import { MeetingFormDialog } from '@/components/meeting/MeetingFormDialog'
 
+// Filters live in the URL so a refreshed / shared / Back-navigated URL keeps the
+// listing (business requirement). Stable reference — see useUrlFilters.
+const FILTER_KEYS = ['q', 'client_id']
+
 export default function MeetingsIndex() {
   const { t } = useTranslation('meetings')
-  const [filters, setFilters] = useState({})
+  const [filters, setFilters] = useUrlFilters(FILTER_KEYS)
   const { data: meetings, isLoading } = useMeetings(filters)
   const { create, update, destroy } = useMeetingMutations()
   const { data: me } = useCurrentUser()

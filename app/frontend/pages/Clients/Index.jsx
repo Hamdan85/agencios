@@ -6,6 +6,7 @@ import {
   Pencil, Archive, ArchiveRestore, FolderKanban, Building2, Sparkles,
 } from 'lucide-react'
 import { useClients, useClientMutations } from '@/hooks/useData'
+import { useUrlFilters } from '@/hooks/useUrlState'
 import { PageHeader } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
 import { useConfirm } from '@/components/ui/confirm-dialog'
@@ -20,6 +21,10 @@ import { Page } from '@/components/ui/page'
 import { cn } from '@/lib/utils'
 import ClientWizard from '@/components/client/ClientWizard'
 import ClientEditDialog from '@/components/client/ClientEditDialog'
+
+// Filters live in the URL so a refreshed / shared / Back-navigated URL keeps the
+// listing (business requirement). Stable reference — see useUrlFilters.
+const FILTER_KEYS = ['q', 'status']
 
 function ClientCard({ client, onEdit, onArchive, onUnarchive }) {
   const { t } = useTranslation('clients')
@@ -114,8 +119,11 @@ export default function ClientsIndex() {
   const { archive, unarchive } = mutations
   const [createOpen, setCreateOpen] = useState(false)
   const [editing, setEditing] = useState(null)
-  const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('active')
+  // Filters live in the URL so refresh/Back/shared links keep the listing
+  // (business requirement). Absent status = the 'active' default.
+  const [filters, setFilters] = useUrlFilters(FILTER_KEYS)
+  const search = filters.q || ''
+  const statusFilter = filters.status || 'active'
 
   const list = clients || []
 
@@ -168,7 +176,7 @@ export default function ClientsIndex() {
       <FilterBar
         search
         searchValue={search}
-        onSearch={(v) => setSearch(v || '')}
+        onSearch={(v) => setFilters((f) => ({ ...f, q: v || undefined }))}
         searchPlaceholder={t('index.searchPlaceholder')}
         filters={[
           {
@@ -183,8 +191,8 @@ export default function ClientsIndex() {
           },
         ]}
         values={{ status: statusFilter === 'active' ? undefined : statusFilter }}
-        onChange={(_key, value) => setStatusFilter(value || 'active')}
-        onClear={() => setStatusFilter('active')}
+        onChange={(_key, value) => setFilters((f) => ({ ...f, status: value || undefined }))}
+        onClear={() => setFilters((f) => ({ ...f, status: undefined }))}
         className="mb-6"
       />
 

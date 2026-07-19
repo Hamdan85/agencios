@@ -11,6 +11,7 @@ import {
   useBilling, useBillingMutations, useCredits, useCreditsMutations, useCreditUsage,
 } from '@/hooks/useData'
 import { useCurrentUser } from '@/hooks/useAuth'
+import { useUrlFilters } from '@/hooks/useUrlState'
 import { useParams, useNavigate } from 'react-router-dom'
 import { PageHeader } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
@@ -308,12 +309,23 @@ const STATUS_FILTERS = [
   { key: 'failed', get label() { return tr('generationStatus.failed') } },
 ]
 
+// Stable reference — see useUrlFilters.
+const USAGE_FILTER_KEYS = ['range', 'kind', 'status', 'page']
+
 function UsageSection() {
   const { t } = useTranslation('billing')
-  const [range, setRange] = useState('30d')
-  const [kind, setKind] = useState('all')
-  const [status, setStatus] = useState('all')
-  const [page, setPage] = useState(1)
+  // Range / kind / status / page live in the URL so refresh/Back/shared links
+  // keep the listing (business requirement). Absent = the defaults below.
+  const [urlFilters, setUrlFilters] = useUrlFilters(USAGE_FILTER_KEYS)
+  const range = urlFilters.range || '30d'
+  const kind = urlFilters.kind || 'all'
+  const status = urlFilters.status || 'all'
+  const page = Math.max(1, Number(urlFilters.page) || 1)
+  const setPage = (updater) => setUrlFilters((f) => {
+    const current = Math.max(1, Number(f.page) || 1)
+    const next = typeof updater === 'function' ? updater(current) : updater
+    return { ...f, page: next > 1 ? String(next) : undefined }
+  })
   // null = auto (credits when the period spent any, else generation activity).
   const [metricOverride, setMetricOverride] = useState(null)
 
@@ -362,10 +374,10 @@ function UsageSection() {
     })),
   ]
 
-  // Range / filter changes reset paging.
-  const changeRange = (r) => { setRange(r); setPage(1) }
-  const changeKind = (k) => { setKind(k); setPage(1) }
-  const changeStatus = (s) => { setStatus(s); setPage(1) }
+  // Range / filter changes reset paging. Defaults stay out of the URL.
+  const changeRange = (r) => setUrlFilters((f) => ({ ...f, range: r === '30d' ? undefined : r, page: undefined }))
+  const changeKind = (k) => setUrlFilters((f) => ({ ...f, kind: k === 'all' ? undefined : k, page: undefined }))
+  const changeStatus = (s) => setUrlFilters((f) => ({ ...f, status: s === 'all' ? undefined : s, page: undefined }))
 
   const total = Number(meta.total ?? recent.length)
   const per = Number(meta.per ?? 20)

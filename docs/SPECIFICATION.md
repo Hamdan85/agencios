@@ -25,6 +25,8 @@
 - All tenant tables carry `workspace_id` (FK, indexed). Add composite indexes for the board/calendar
   queries (`[workspace_id, status]`, `[workspace_id, scheduled_at]`).
 - RSpec for every model, operation, and request. Webmock all vendor HTTP.
+- List/filter state (filters, search, sort, tabs, views) is URL-synced — refresh/Back/shared links
+  restore the listing (§11).
 
 ---
 
@@ -474,6 +476,14 @@ escalate failures).
 - `Meetings/` → `/reunioes`. `Invoices/` → `/cobrancas`. `Settings/` → `/configuracoes`
   (team, integrations/social connect, brand identity, Google, Mercado Pago). `Billing/` →
   `/assinatura`. `Dashboard/` → `/painel`.
+
+**List state lives in the URL (business requirement).** In every list section, changing a filter,
+text search, sort, tab, or view toggle must be reflected in the query string — synced via
+`useUrlFilters` / `useUrlParam` (`app/frontend/hooks/useUrlState.js`), never held in bare component
+state. Refreshing the page, sharing the link, or coming back with the browser's Back button must
+restore the exact listing the user was seeing. The Tickets hub (`pages/Tickets/Index.jsx`) and the
+calendar (`?view=&date=`) are the reference implementations; filter param names mirror the API's
+English param names (`q`, `project_id`, `client_id`, `status`, …).
 
 **Hooks** wrap TanStack Query: `useBoard`, `useTicket`, `useTickets`, `useCalendar`, `useProjects`,
 `useClients`, `useSubtasks`, `useCreatives`, `useSocialAccounts`, `useInvoices`, `useBilling`,

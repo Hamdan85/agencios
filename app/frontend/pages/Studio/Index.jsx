@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import i18n from '@/i18n'
 import { useStudio, useGenerate, useStartVideo, useWorkspaceCreativesInfinite, useCreativeMutations } from '@/hooks/useData'
+import { useUrlFilters } from '@/hooks/useUrlState'
 import { useCurrentUser } from '@/hooks/useAuth'
 import { useGenerationsChannel } from '@/hooks/useRealtime'
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll'
@@ -121,12 +122,20 @@ export default function StudioIndex() {
 }
 
 // ── Creatives gallery ──────────────────────────────────────────────
+
+// Gallery filters live in the URL so refresh/Back/shared links keep the listing
+// (business requirement). Stable reference — see useUrlFilters. The page's
+// `?creative=` deep link is a separate param and stays untouched.
+const GALLERY_FILTER_KEYS = ['q', 'type', 'client_id']
+
 function CreativesGallery() {
   const { t } = useTranslation('studio')
   const lightbox = useLightbox()
-  const [q, setQ] = useState('')
-  const [typeFilter, setTypeFilter] = useState('')
-  const [clientFilter, setClientFilter] = useState('')
+  const [urlFilters, setUrlFilters] = useUrlFilters(GALLERY_FILTER_KEYS)
+  const q = urlFilters.q || ''
+  const typeFilter = urlFilters.type || ''
+  const clientFilter = urlFilters.client_id || ''
+  const setQ = (v) => setUrlFilters((f) => ({ ...f, q: v || undefined }))
   // A generated video opens the EDITOR on click; everything else opens the viewer.
   const [editorCreative, setEditorCreative] = useState(null)
 
@@ -170,11 +179,8 @@ function CreativesGallery() {
       : []),
   ]
   const filterValues = { type: typeFilter || undefined, client_id: clientFilter || undefined }
-  const onFilterChange = (key, value) => {
-    if (key === 'type') setTypeFilter(value || '')
-    else if (key === 'client_id') setClientFilter(value || '')
-  }
-  const clearFilters = () => { setTypeFilter(''); setClientFilter('') }
+  const onFilterChange = (key, value) => setUrlFilters((f) => ({ ...f, [key]: value || undefined }))
+  const clearFilters = () => setUrlFilters((f) => ({ q: f.q }))
 
   return (
     <div className="space-y-5">
