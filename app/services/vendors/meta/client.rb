@@ -25,6 +25,12 @@ module Vendors
       # Resumable upload host for IG Reels raw bytes + FB Reels binary.
       RUPLOAD_HOST = 'https://rupload.facebook.com'
 
+      # Graph error codes that mean "the token itself is finished — reconnect".
+      # Permission/feature gaps (#10 pages_read_engagement, #200) are deliberately
+      # NOT here: they survive a reconnect, so flagging needs_reauth on them would
+      # nag the user to redo an OAuth hop that cannot fix anything.
+      DEAD_TOKEN_CODES = [102, 190, 463, 467].freeze
+
       attr_reader :access_token, :graph_version
 
       # Pass a SocialAccount (publishing/insights use its token) or an explicit
@@ -75,12 +81,16 @@ module Vendors
       end
 
       # GET an /insights edge, resiliently dropping any metric the API rejects.
-      # Graph fails the ENTIRE request on a single invalid metric name, reporting
-      # its position as "metric[N] must be one of the following values: ...". We
-      # drop metric N and retry, so one deprecated metric can't zero out the rest
-      # (Meta deprecates insights metrics aggressively). Returns the last response
-      # body, or { 'data' => [] } if no metric survives. Non-metric errors (auth,
-      # rate limit, …) propagate unchanged.
+      # Graph fails the ENTIRE request on a single invalid metric name, and it
+      # reports that failure in TWO shapes — both must survive, or one retired
+      # metric zeroes out the rest (Meta deprecates insights metrics aggressively):
+      #   indexed   — "metric[N] must be one of the following values: …"
+      #               → drop metric N and retry.
+      #   unindexed — "(#100) The value must be a valid insights metric"
+      #               → no position to drop, so probe each metric on its own and
+      #                 keep whatever answers (see #probe_insights).
+      # Returns the response body, or { 'data' => [] } if no metric survives.
+      # Non-metric errors (auth, rate limit, …) propagate unchanged.
       def insights_get(path, metrics:)
         metrics = Array(metrics).dup
         loop do
@@ -89,8 +99,12 @@ module Vendors
           begin
             return get(path, params: { metric: metrics.join(',') })
           rescue Vendors::Base::Error => e
+            raise unless invalid_metric_error?(e)
+
             idx = invalid_metric_index(e)
-            raise if idx.nil? || idx >= metrics.size
+            # Unindexed rejection — nothing to drop, so fall back to probing.
+            return probe_insights(path, metrics) if idx.nil?
+            raise if idx >= metrics.size
 
             dropped = metrics.delete_at(idx)
             Rails.logger.warn("[Meta::Client] dropping unsupported insights metric #{dropped.inspect} on #{path}: #{e.message}")
@@ -178,10 +192,65 @@ module Vendors
       # Graph reports the first invalid insights metric by index, e.g.
       # "metric[4] must be one of the following values: …". Extract that index so
       # insights_get can drop the offending metric and retry. Returns nil when the
-      # error isn't an invalid-metric error (so the caller re-raises).
+      # rejection carries no position (the "(#100)" shape) — the caller probes.
       def invalid_metric_index(error)
         match = error.message.to_s.match(/metric\[(\d+)\]/)
         match && match[1].to_i
+      end
+
+      # Is this Graph complaining about a metric NAME (vs auth, permissions, rate
+      # limits)? Only these may be swallowed by insights_get.
+      def invalid_metric_error?(error)
+        message = error.message.to_s
+        message.match?(/metric\[\d+\]/) ||
+          message.match?(/valid insights metric/i) ||
+          message.match?(/must be one of the following values/i)
+      end
+
+      # Last resort when Graph rejects the batch without naming a position: ask
+      # for each metric ALONE and merge whatever answers. Costs one call per
+      # candidate, but only on an edge whose batch already failed. The survivors
+      # are logged at info so the currently-valid metric list can be read straight
+      # off production logs the next time Meta retires a family.
+      def probe_insights(path, metrics)
+        data = []
+        survivors = []
+        metrics.each do |metric|
+          body = get(path, params: { metric: metric })
+          data.concat(Array(body['data']))
+          survivors << metric
+        rescue Vendors::Base::Error => e
+          raise unless invalid_metric_error?(e)
+
+          Rails.logger.warn("[Meta::Client] dropping unsupported insights metric #{metric.inspect} on #{path}: #{e.message}")
+        end
+        Rails.logger.info("[Meta::Client] surviving insights metrics on #{path}: #{survivors.inspect}")
+        { 'data' => data }
+      end
+
+      # Graph answers a dead/unparseable token with HTTP 400 + an OAuthException
+      # body, which the status-based mapping in Vendors::Base would class as a
+      # generic Error. Re-map those so callers can tell "this ACCOUNT needs
+      # reconnecting" from "this CALL failed" — the former is worth flagging on
+      # the SocialAccount, the latter is not.
+      def handle(response)
+        super
+      rescue Vendors::Base::AuthenticationError
+        raise
+      rescue Vendors::Base::Error => e
+        raise Vendors::Base::AuthenticationError.new(e.message, status: e.status, body: e.body) if dead_token_error?(e)
+
+        raise
+      end
+
+      def dead_token_error?(error)
+        body = error.body
+        return false unless body.is_a?(Hash)
+
+        graph_error = body['error']
+        return false unless graph_error.is_a?(Hash)
+
+        DEAD_TOKEN_CODES.include?(graph_error['code'].to_i)
       end
     end
   end

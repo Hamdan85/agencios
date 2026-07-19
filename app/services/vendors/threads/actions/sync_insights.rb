@@ -17,8 +17,11 @@ module Vendors
           @account = post.social_account
         end
 
+        # Returns nil when there is nothing to read and RAISES when the read
+        # failed — persisting a failure as zeros would leave a permanent hole in
+        # the chart (same contract as Meta::Actions::SyncInsights).
         def call
-          return empty if @post.external_post_id.blank?
+          return nil if @post.external_post_id.blank?
 
           body = Vendors::Threads::Client.new(@account).get(
             "/#{@post.external_post_id}/insights", params: { metric: METRICS.join(',') }
@@ -34,8 +37,6 @@ module Vendors
             saves: 0,
             raw: body
           }
-        rescue Vendors::Base::Error
-          empty
         end
 
         private
@@ -52,9 +53,6 @@ module Vendors
 
         def int(value) = value.to_i
 
-        def empty
-          { reach: 0, views: 0, likes: 0, comments: 0, shares: 0, saves: 0, raw: {} }
-        end
       end
     end
   end

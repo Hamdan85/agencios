@@ -14,9 +14,13 @@ module Vendors
         def self.call(...) = new(...).call
 
         # Reach/views candidates, newest-first. Whatever the current Graph version
-        # still accepts survives insights_get's drop-and-retry; the rest fall away.
+        # still accepts survives insights_get's drop-and-probe; the rest fall away
+        # and are logged, so production tells us the surviving list rather than us
+        # guessing it. `post_views` is Meta's post-2024 "Views" standardization
+        # (the IG side of this seam already reads `views`) and is UNCONFIRMED for
+        # Page posts — it costs one probe call and is dropped if Graph rejects it.
         DEFAULT_METRICS = %w[
-          post_impressions_unique post_impressions post_video_views
+          post_views post_impressions_unique post_impressions post_video_views
         ].freeze
 
         def initialize(social_account:, post_id:, metrics: DEFAULT_METRICS, client: nil)

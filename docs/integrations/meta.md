@@ -551,9 +551,37 @@ GET /v25.0/{POST_ID}/insights
   access_token={PAGE_TOKEN}
 ```
 `GetPostInsights` (and `GetMediaInsights`) go through `Client#insights_get`, which
-drops any metric the current Graph version rejects and retries, so a deprecated
-metric can't zero out the rest. Reach/views may read 0 until Meta's replacement
-metric names are confirmed against a live Page.
+survives BOTH shapes Graph uses to reject a metric name — a deprecated metric must
+never zero out the rest:
+
+| Shape | Graph says | `insights_get` does |
+|---|---|---|
+| indexed | `metric[N] must be one of the following values: …` | drops metric N, retries |
+| unindexed | `(#100) The value must be a valid insights metric` | probes each metric alone, keeps the survivors |
+
+The probe logs `surviving insights metrics on {path}: [...]` at info — **read that
+line off production to learn the currently-valid list** instead of guessing metric
+names. Reach/views read 0 until at least one candidate in
+`GetPostInsights::DEFAULT_METRICS` survives.
+
+**The two halves are independent.** `Meta::Actions::SyncInsights#facebook_metrics`
+attempts engagement and insights separately: whichever answers is kept, and only a
+total failure raises. This is load-bearing — when the insights call was allowed to
+unwind the method, it discarded the engagement numbers already fetched and every
+Facebook post persisted as all zeros.
+
+**Failure never becomes data.** `SyncInsights` returns `nil` when there is nothing
+to read and raises when the read failed; `Operations::Posts::SyncMetrics` skips the
+`PostMetric` write on either. An all-zero row is not "this post scored zero" — it is
+a hole in the chart that outlives the outage that caused it.
+
+**A finished token flags the account.** `Client` maps `DEAD_TOKEN_CODES`
+(190/102/463/467 — invalid or expired token) to `Vendors::Base::AuthenticationError`
+even though Graph answers HTTP 400, and `SyncMetrics` turns that into
+`Operations::Social::FlagNeedsReauth` so the UI prompts a reconnect. Permission
+gaps (`#10 pages_read_engagement`, `#200`) are deliberately excluded: they survive a
+reconnect, so flagging them would nag the user to redo an OAuth hop that cannot fix
+anything — those need the permission granted (App Review), not a new token.
 
 Persist via `Facebook::SyncInsightsJob` → `Operations::Facebook::SyncInsights`.
 
