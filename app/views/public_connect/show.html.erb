@@ -31,6 +31,16 @@
     .yt { background: #FF0000; }
     .li { background: #0A66C2; }
     .xx { background: #111111; }
+    .pin { background: #E60023; }
+    .bs { background: #0285FF; }
+    .ms { background: #6364FF; }
+    .tg { background: #26A5E4; }
+    .gb { background: #4285F4; }
+    .instance { display: none; margin: .6rem 0 0; padding: .8rem .9rem; border: 1px solid #ececf3; border-radius: .75rem; background: #f8fafc; }
+    .instance.open { display: block; }
+    .instance label { display: block; font-size: .78rem; font-weight: 600; color: #4b5563; margin-bottom: .35rem; }
+    .instance input { width: 100%; box-sizing: border-box; padding: .55rem .7rem; border: 1px solid #d1d5db; border-radius: .55rem; font: inherit; font-size: .88rem; }
+    .instance button { margin-top: .6rem; padding: .5rem .9rem; border: none; border-radius: .55rem; background: var(--brand); color: #fff; font: inherit; font-size: .82rem; font-weight: 600; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -43,7 +53,9 @@
     <div class="body">
       <% css_by_network = {
         "instagram" => "ig", "facebook" => "fb", "threads" => "th", "tiktok" => "tt",
-        "youtube" => "yt", "linkedin" => "li", "x" => "xx"
+        "youtube" => "yt", "linkedin" => "li", "x" => "xx",
+        "pinterest" => "pin", "bluesky" => "bs", "mastodon" => "ms",
+        "telegram" => "tg", "google_business" => "gb"
       } %>
       <%# Brand glyphs (lucide paths — same icon set the app UI uses). %>
       <% icons = {
@@ -53,13 +65,24 @@
         "tiktok" => '<circle cx="8" cy="18" r="4"/><path d="M12 18V2l7 4"/>',
         "youtube" => '<path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path d="m10 15 5-3-5-3z"/>',
         "linkedin" => '<path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/>',
-        "x" => '<path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/>'
+        "x" => '<path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/>',
+        "pinterest" => '<path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/>',
+        "bluesky" => '<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>',
+        "mastodon" => '<path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/>',
+        "telegram" => '<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>',
+        "google_business" => '<path d="M15 21v-5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v5"/><path d="M17.774 10.31a1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.451 0 1.12 1.12 0 0 0-1.548 0 2.5 2.5 0 0 1-3.452 0 1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.77-3.248l2.889-4.184A2 2 0 0 1 7 2h10a2 2 0 0 1 1.653.873l2.895 4.192a2.5 2.5 0 0 1-3.774 3.244"/><path d="M4 10.95V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8.05"/>'
       } %>
-      <% @data[:networks].each do |net| %>
+      <%# PostGate aggregator networks only render while the integration is on —
+          Show already filters these out when disabled; this is a defensive
+          second gate since the ERB owns rendering. %>
+      <% postgate_networks = %w[pinterest bluesky mastodon telegram google_business] %>
+      <% networks = @data[:networks].reject { |n| postgate_networks.include?(n[:key]) && !SystemConfig.postgate_enabled? } %>
+      <% networks.each do |net| %>
         <% css = css_by_network[net[:key]] %>
         <% label = t("pages.public_connect.networks.#{net[:key]}.label") %>
         <% sub = t("pages.public_connect.networks.#{net[:key]}.sub") %>
-        <button type="button" class="net" data-network="<%= net[:key] %>" <%= "disabled" if net[:connected] %>>
+        <% needs_instance = net[:key] == "mastodon" %>
+        <button type="button" class="net" data-network="<%= net[:key] %>" <%= "data-needs-instance=\"1\"" if needs_instance %> <%= "disabled" if net[:connected] %>>
           <span class="ico <%= css %>">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><%== icons[net[:key]] %></svg>
           </span>
@@ -70,6 +93,13 @@
           <span class="state" data-role="state" style="<%= "display:none" unless net[:connected] %>"><%= t('pages.public_connect.connected') %></span>
           <span class="cta" data-role="cta" style="<%= "display:none" if net[:connected] %>"><%= t('pages.public_connect.connect') %></span>
         </button>
+        <% if needs_instance %>
+          <div class="instance" data-role="instance-panel" data-network="mastodon">
+            <label for="mastodon-instance"><%= t('pages.public_connect.mastodon.instance_label') %></label>
+            <input type="url" id="mastodon-instance" placeholder="<%= t('pages.public_connect.mastodon.instance_placeholder') %>">
+            <button type="button" data-role="instance-continue"><%= t('pages.public_connect.mastodon.continue') %></button>
+          </div>
+        <% end %>
       <% end %>
       <p class="foot"><%= t('pages.public_connect.footer', agency: @data[:agency_name]) %></p>
     </div>
@@ -87,11 +117,12 @@
         btn.querySelector('[data-role="cta"]').style.display = "none";
       }
 
-      function openPopup(network) {
+      function openPopup(network, instanceUrl) {
         var w = 600, h = 760;
         var left = Math.round(window.screenX + (window.outerWidth - w) / 2);
         var top = Math.round(window.screenY + (window.outerHeight - h) / 2);
         var url = "/conectar/" + encodeURIComponent(token) + "/authorize?network=" + encodeURIComponent(network);
+        if (instanceUrl) url += "&instance_url=" + encodeURIComponent(instanceUrl);
         return window.open(url, "oauth_popup", "width=" + w + ",height=" + h + ",left=" + left + ",top=" + top);
       }
 
@@ -114,7 +145,26 @@
       document.querySelectorAll(".net[data-network]").forEach(function (btn) {
         btn.addEventListener("click", function () {
           if (btn.disabled) return;
-          popup = openPopup(btn.getAttribute("data-network"));
+          var network = btn.getAttribute("data-network");
+          // Mastodon needs the instance URL before we can request the authorize
+          // URL — reveal the inline panel instead of opening the popup directly.
+          if (btn.getAttribute("data-needs-instance") === "1") {
+            var panel = document.querySelector('.instance[data-network="' + network + '"]');
+            if (panel) { panel.classList.add("open"); panel.querySelector("input").focus(); }
+            return;
+          }
+          popup = openPopup(network);
+        });
+      });
+
+      document.querySelectorAll('[data-role="instance-continue"]').forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var panel = btn.closest(".instance");
+          var network = panel.getAttribute("data-network");
+          var input = panel.querySelector("input");
+          var value = (input.value || "").trim();
+          if (!/^https:\/\//i.test(value)) { input.focus(); return; }
+          popup = openPopup(network, value);
         });
       });
 

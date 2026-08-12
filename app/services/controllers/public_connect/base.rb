@@ -9,9 +9,22 @@ module Controllers
     class Base < Controllers::Base
       SALT = 'agencios:client_connect'
 
-      # Networks offered on the public page — every network the agency can connect
-      # for a client. Each maps to a connect slug via Publishers::SocialPublisher.
-      NETWORKS = %w[instagram facebook threads tiktok youtube linkedin x].freeze
+      # Networks offered on the public page when PostGate is off — every network
+      # the agency can connect for a client through the direct per-vendor OAuth
+      # flow. Each maps to a connect slug via Publishers::SocialPublisher. Kept as
+      # a plain constant (rather than folded into .networks) for rollback safety.
+      DIRECT_NETWORKS = %w[instagram facebook threads tiktok youtube linkedin x].freeze
+      NETWORKS = DIRECT_NETWORKS
+
+      # Networks PostGate connects that have no direct per-vendor OAuth flow —
+      # only ever offered once SystemConfig.postgate_enabled?.
+      POSTGATE_ONLY_NETWORKS = %w[pinterest bluesky mastodon telegram google_business].freeze
+
+      # The full set of networks offered right now — extended with the
+      # PostGate-only networks once the aggregator is live.
+      def self.networks
+        SystemConfig.postgate_enabled? ? (DIRECT_NETWORKS + POSTGATE_ONLY_NETWORKS) : DIRECT_NETWORKS
+      end
 
       # URL-safe signed token so it can live in the `/conectar/:token` path
       # without `/`, `+`, `=` or `.` (which a default verifier emits and which

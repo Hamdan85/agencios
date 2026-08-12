@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_16_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_12_120200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -163,7 +163,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_16_120000) do
     t.index ["batch_id"], name: "index_autopilot_runs_on_batch_id"
     t.index ["ticket_id", "state"], name: "index_autopilot_runs_on_ticket_id_and_state"
     t.index ["ticket_id"], name: "index_autopilot_runs_on_ticket_id"
-    t.index ["ticket_id"], name: "index_autopilot_runs_one_active_per_ticket", unique: true, where: "(((scope)::text = 'ticket'::text) AND ((state)::text = ANY (ARRAY[('pending'::character varying)::text, ('scoping'::character varying)::text, ('generating'::character varying)::text, ('awaiting_generation'::character varying)::text])))"
+    t.index ["ticket_id"], name: "index_autopilot_runs_one_active_per_ticket", unique: true, where: "(((scope)::text = 'ticket'::text) AND ((state)::text = ANY ((ARRAY['pending'::character varying, 'scoping'::character varying, 'generating'::character varying, 'awaiting_generation'::character varying])::text[])))"
     t.index ["user_id"], name: "index_autopilot_runs_on_user_id"
     t.index ["workspace_id", "state"], name: "index_autopilot_runs_on_workspace_id_and_state"
     t.index ["workspace_id"], name: "index_autopilot_runs_on_workspace_id"
@@ -209,10 +209,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_16_120000) do
     t.text "notes"
     t.string "phone"
     t.jsonb "positioning", default: {}, null: false
+    t.string "postgate_group_id"
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
     t.bigint "workspace_id", null: false
     t.index ["approval_token"], name: "index_clients_on_approval_token", unique: true
+    t.index ["postgate_group_id"], name: "index_clients_on_postgate_group_id"
     t.index ["workspace_id", "status"], name: "index_clients_on_workspace_id_and_status"
     t.index ["workspace_id"], name: "index_clients_on_workspace_id"
   end
@@ -468,6 +470,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_16_120000) do
     t.string "failure_reason"
     t.jsonb "media", default: {}, null: false
     t.string "permalink"
+    t.string "postgate_post_id"
     t.datetime "published_at"
     t.datetime "scheduled_at"
     t.bigint "social_account_id", null: false
@@ -476,6 +479,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_16_120000) do
     t.datetime "unpublished_at"
     t.datetime "updated_at", null: false
     t.bigint "workspace_id", null: false
+    t.index ["postgate_post_id"], name: "index_posts_on_postgate_post_id"
     t.index ["social_account_id"], name: "index_posts_on_social_account_id"
     t.index ["ticket_id"], name: "index_posts_on_ticket_id"
     t.index ["workspace_id", "scheduled_at"], name: "index_posts_on_workspace_id_and_scheduled_at"
@@ -598,6 +602,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_16_120000) do
     t.string "channel_id"
     t.string "channel_title"
     t.bigint "client_id", null: false
+    t.integer "connection_source", default: 0, null: false
     t.integer "connection_type", default: 0, null: false
     t.datetime "created_at", null: false
     t.string "default_org_urn"
@@ -608,6 +613,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_16_120000) do
     t.string "member_urn"
     t.text "page_access_token"
     t.string "page_id"
+    t.jsonb "postgate_meta", default: {}, null: false
+    t.string "postgate_profile_id"
     t.integer "provider", null: false
     t.text "refresh_token"
     t.datetime "refresh_token_expires_at"
@@ -622,6 +629,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_16_120000) do
     t.bigint "workspace_id", null: false
     t.index ["client_id", "provider"], name: "index_social_accounts_on_client_id_and_provider"
     t.index ["client_id"], name: "index_social_accounts_on_client_id"
+    t.index ["postgate_profile_id"], name: "index_social_accounts_on_postgate_profile_id"
     t.index ["workspace_id", "provider"], name: "index_social_accounts_on_workspace_id_and_provider"
     t.index ["workspace_id"], name: "index_social_accounts_on_workspace_id"
   end

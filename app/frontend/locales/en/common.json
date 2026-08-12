@@ -199,5 +199,22 @@
     "thumbnail": "Video cover",
     "cover": "Cover",
     "option": "Option {{letter}}"
+  },
+  "channel": {
+    "pinterest": {
+      "label": "Pinterest"
+    },
+    "bluesky": {
+      "label": "Bluesky"
+    },
+    "mastodon": {
+      "label": "Mastodon"
+    },
+    "telegram": {
+      "label": "Telegram"
+    },
+    "google_business": {
+      "label": "Google Business"
+    }
   }
 }

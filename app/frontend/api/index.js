@@ -304,8 +304,10 @@ export const videoScenesApi = {
 // own Instagram/TikTok/etc.), so every call is scoped to a client id.
 export const socialApi = {
   list: (clientId) => api.get(`/clients/${clientId}/social_accounts`),
-  authorizeUrl: (clientId, network) =>
-    api.get(`/clients/${clientId}/social_accounts/authorize_url`, { params: { network } }),
+  // `instanceUrl` is only sent for networks that need it up front (Mastodon —
+  // the user's own instance, e.g. https://mastodon.social).
+  authorizeUrl: (clientId, network, instanceUrl) =>
+    api.get(`/clients/${clientId}/social_accounts/authorize_url`, { params: { network, instance_url: instanceUrl } }),
   connectLink: (clientId) => api.get(`/clients/${clientId}/social_accounts/connect_link`),
   reconnect: (clientId, id) => api.post(`/clients/${clientId}/social_accounts/${id}/reconnect`),
   destroy: (clientId, id) => api.delete(`/clients/${clientId}/social_accounts/${id}`),

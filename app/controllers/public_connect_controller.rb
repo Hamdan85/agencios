@@ -20,7 +20,7 @@ class PublicConnectController < ActionController::Base
   # OAuth dialog (opened in the popup by the page).
   def authorize
     result = Controllers::PublicConnect::Authorize.call(
-      token: params[:token], network: params[:network]
+      token: params[:token], network: params[:network], instance_url: params[:instance_url]
     )
     redirect_to result[:url], allow_other_host: true
   rescue Operations::Errors::Invalid

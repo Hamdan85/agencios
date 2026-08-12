@@ -15,6 +15,11 @@ import {
 import { useCurrentUser } from '@/hooks/useAuth'
 import { PageLoader, EmptyState } from '@/components/ui/feedback'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from '@/components/ui/dialog'
 import { useCopyToClipboard } from '@/components/ui/copy-button'
 import { useConfirm } from '@/components/ui/confirm-dialog'
 import { Badge, ColorBadge } from '@/components/ui/badge'
@@ -28,7 +33,9 @@ import { CAROUSEL_STYLE_LABEL } from '@/components/client/positioningFields'
 import { CarouselSlide, CarouselExampleDialog, buildExampleSlides } from '@/components/client/CarouselExample'
 import { MeetingCard } from '@/components/meeting/MeetingCard'
 import { MeetingFormDialog } from '@/components/meeting/MeetingFormDialog'
-import { POSITIONING_FIELDS, CHANNEL_META } from '@/lib/constants'
+import {
+  POSITIONING_FIELDS, CHANNEL_META, POSTGATE_NETWORKS, POSTGATE_INSTANCE_NETWORKS,
+} from '@/lib/constants'
 import { brl, date } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 
@@ -219,7 +226,7 @@ function PositioningSection({ client, onEdit }) {
 }
 
 // ── Social networks (connected per client) ──────────────────────
-function SocialCard({ provider, account, mutations }) {
+function SocialCard({ provider, account, mutations, onConnect }) {
   const { t } = useTranslation('clients')
   const meta = CHANNEL_META[provider]
   const confirm = useConfirm()
@@ -261,12 +268,65 @@ function SocialCard({ provider, account, mutations }) {
             <Unplug size={15} /> {t('social.disconnect')}
           </Button>
         ) : (
-          <Button variant="solid" size="sm" className="w-full" disabled={busy} onClick={() => mutations.connect(provider)}>
+          <Button variant="solid" size="sm" className="w-full" disabled={busy} onClick={() => onConnect(provider)}>
             {needsReauth ? <><RefreshCw size={15} /> {t('social.reconnect')}</> : <><Link2 size={15} /> {t('social.connect')}</>}
           </Button>
         )}
       </div>
     </Card>
+  )
+}
+
+// ── Mastodon connect: the instance URL must be known before we can request
+// the authorize_url (it becomes the `instance_url` query param). ──────────
+function MastodonConnectDialog({ open, onOpenChange, onSubmit, pending }) {
+  const { t } = useTranslation('clients')
+  const [instanceUrl, setInstanceUrl] = useState('')
+  const trimmed = instanceUrl.trim()
+  const valid = /^https:\/\/[^\s/]+\.[^\s/]+/i.test(trimmed)
+
+  const close = () => { setInstanceUrl(''); onOpenChange(false) }
+
+  const submit = (e) => {
+    e.preventDefault()
+    if (!valid || pending) return
+    onSubmit(trimmed)
+    setInstanceUrl('')
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => (v ? onOpenChange(true) : close())}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <IconTile icon={CHANNEL_META.mastodon.icon} color={CHANNEL_META.mastodon.color} className="mb-1 size-11" iconSize={22} />
+          <DialogTitle>{t('social.mastodon.title')}</DialogTitle>
+          <DialogDescription>{t('social.mastodon.description')}</DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={submit} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="mastodon-instance">{t('social.mastodon.instanceLabel')}</Label>
+            <Input
+              id="mastodon-instance"
+              autoFocus
+              required
+              type="url"
+              inputMode="url"
+              value={instanceUrl}
+              onChange={(e) => setInstanceUrl(e.target.value)}
+              placeholder={t('social.mastodon.instancePlaceholder')}
+            />
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={close}>{t('actions.back')}</Button>
+            <Button type="submit" disabled={!valid || pending}>
+              {pending ? t('social.mastodon.connecting') : t('social.mastodon.continue')}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -339,7 +399,10 @@ function PortalLinkSection({ client, mutation }) {
 function SocialSection({ clientId, accounts }) {
   const { t } = useTranslation('clients')
   const mutations = useSocialAccountMutations(clientId)
+  const { data: me } = useCurrentUser()
+  const postgateEnabled = !!me?.postgate_enabled
   const [linking, setLinking] = useState(false)
+  const [mastodonOpen, setMastodonOpen] = useState(false)
   const [, copyToClipboard] = useCopyToClipboard()
   // One card per network. A client may have several accounts on the same network
   // (one active, others revoked from earlier), so prefer the connected one.
@@ -347,6 +410,24 @@ function SocialSection({ clientId, accounts }) {
   for (const a of accounts || []) {
     const cur = byProvider[a.provider]
     if (!cur || a.status === 'connected') byProvider[a.provider] = a
+  }
+
+  // The original 7 networks always show; the 5 PostGate-aggregator networks
+  // only appear once the integration is turned on for this workspace.
+  const providers = Object.keys(CHANNEL_META).filter(
+    (p) => !POSTGATE_NETWORKS.includes(p) || postgateEnabled,
+  )
+
+  // Mastodon needs the instance URL up front — every other network goes
+  // straight into the popup flow.
+  function handleConnect(provider) {
+    if (POSTGATE_INSTANCE_NETWORKS.includes(provider)) { setMastodonOpen(true); return }
+    mutations.connect(provider)
+  }
+
+  function handleMastodonSubmit(instanceUrl) {
+    setMastodonOpen(false)
+    mutations.connect('mastodon', instanceUrl)
   }
 
   async function copyConnectLink() {
@@ -393,10 +474,23 @@ function SocialSection({ clientId, accounts }) {
         {t('social.manualHint')}
       </p>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {Object.keys(CHANNEL_META).map((provider) => (
-          <SocialCard key={provider} provider={provider} account={byProvider[provider]} mutations={mutations} />
+        {providers.map((provider) => (
+          <SocialCard
+            key={provider}
+            provider={provider}
+            account={byProvider[provider]}
+            mutations={mutations}
+            onConnect={handleConnect}
+          />
         ))}
       </div>
+
+      <MastodonConnectDialog
+        open={mastodonOpen}
+        onOpenChange={setMastodonOpen}
+        onSubmit={handleMastodonSubmit}
+        pending={mutations.connecting}
+      />
     </section>
   )
 }

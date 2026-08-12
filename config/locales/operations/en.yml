@@ -35,6 +35,8 @@ en:
       retry_only_failed: "You can only retry a failed publication."
       project_archived: "This post's campaign/client is archived. Reactivate it to publish."
       unsupported_media: "%{provider} doesn't support %{media}."
+      postgate_poll_timeout: "PostGate didn't confirm the publish in time — try again."
+      postgate_webhook_failed: "PostGate reported the publish failed, without further detail."
     invoices:
       paid_cannot_cancel: "A paid invoice can't be canceled."
       paid_or_canceled_cannot_edit: "Paid or canceled invoices can't be edited."

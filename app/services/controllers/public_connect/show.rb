@@ -20,7 +20,7 @@ module Controllers
           client_name: client.name,
           agency_name: workspace.name,
           brand_color: workspace.brand_primary_color,
-          networks: NETWORKS.map { |n| { key: n, connected: connected.include?(n) } }
+          networks: self.class.networks.map { |n| { key: n, connected: connected.include?(n) } }
         }
       end
     end

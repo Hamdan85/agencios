@@ -14,13 +14,22 @@ module Social
         return
       end
 
-      SocialAccount.status_connected
-                   .where(provider: Operations::Social::SyncAccountInsights::ACTIONS.keys)
-                   .find_each do |account|
+      eligible_accounts.find_each do |account|
         Operations::Social::SyncAccountInsights.call(social_account: account)
       rescue StandardError => e
         Rails.logger.warn("[Social::SyncAccountInsightsJob] account ##{account.id}: #{e.message}")
       end
+    end
+
+    private
+
+    # A direct account only when its provider has an account-insights action
+    # wired; a postgate-sourced account contributes regardless of provider (see
+    # Operations::Social::SyncAccountInsights#resolve_action).
+    def eligible_accounts
+      SocialAccount.status_connected
+                   .where(provider: Operations::Social::SyncAccountInsights::ACTIONS.keys)
+                   .or(SocialAccount.status_connected.connection_source_postgate)
     end
   end
 end

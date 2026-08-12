@@ -4,3 +4,8 @@ en:
       instagram: "Instagram's API doesn't allow deleting posts — remove it manually on Instagram."
       tiktok: "TikTok's API doesn't allow deleting published videos — remove it manually on TikTok."
       threads: "Threads' API doesn't support deleting posts — remove it manually on Threads."
+    social_publisher:
+      unsupported_network: "Unsupported network: %{provider}"
+    postgate:
+      no_board: "No Pinterest board found for this account — connect a board before publishing."
+      delete_missing_post_id: "This post has no PostGate id on record — remove it manually on the network."

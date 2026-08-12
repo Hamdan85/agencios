@@ -1,9 +1,15 @@
 # frozen_string_literal: true
 
 module Publishers
-  # The single interface for publishing a Post. Every network is integrated
-  # directly (full control + deeper analytics + no per-post markup) — callers
-  # never branch on provider.
+  # The single interface for publishing a Post. Routes per-account, per
+  # SocialAccount#connection_source:
+  #   - `direct` accounts ride today's per-network vendor pipeline (Vendors::Meta,
+  #     Vendors::TikTok, …) — fully untouched, rollback-safe.
+  #   - `postgate` accounts route through the PostGate aggregator
+  #     (Vendors::Postgate::Actions), which covers every network `DIRECT` doesn't
+  #     (Pinterest, Bluesky, Mastodon, Telegram, Google Business) plus any direct
+  #     network the workspace chose to connect via PostGate instead.
+  # Callers never branch on provider or connection_source — this seam does.
   class SocialPublisher
     DIRECT = {
       'instagram' => 'Vendors::Meta',
@@ -40,7 +46,12 @@ module Publishers
       'tiktok' => %w[video],
       'youtube' => %w[video],
       'linkedin' => %w[image carousel video text],
-      'x' => %w[image carousel video text]
+      'x' => %w[image carousel video text],
+      'pinterest' => %w[image video],
+      'bluesky' => %w[image carousel text],
+      'mastodon' => %w[image carousel video text],
+      'telegram' => %w[image carousel video text],
+      'google_business' => %w[image text]
     }.freeze
 
     # Providers where a still image can ride a video post as its cover/thumbnail
@@ -63,9 +74,14 @@ module Publishers
     def self.sync(post)      = new(post).sync
     def self.unpublish(post) = new(post).unpublish
 
-    # The vendor module for a provider.
+    # The direct vendor module for a provider. Raises for any provider that has
+    # no DIRECT entry (postgate-only networks, or a direct network reached
+    # through a postgate-sourced account — see #actions, the routing entrypoint
+    # that actually decides direct vs. postgate per account).
     def self.vendor_for(provider, workspace: nil)
-      const_name = DIRECT.fetch(provider.to_s) { raise Vendors::Base::Error, "Rede não suportada: #{provider}" }
+      const_name = DIRECT.fetch(provider.to_s) do
+        raise Vendors::Base::Error, I18n.t('vendors.social_publisher.unsupported_network', provider: provider)
+      end
       const_name.constantize
     end
 
@@ -95,8 +111,15 @@ module Publishers
 
     private
 
+    # The Actions namespace this post's account publishes/syncs/deletes through:
+    # PostGate for a postgate-sourced account (any network), the direct vendor
+    # otherwise. New (postgate-only) networks have no DIRECT entry — they can
+    # only ever reach here via a postgate-sourced account.
     def actions
-      self.class.vendor_for(@post.social_account.provider)::Actions
+      social_account = @post.social_account
+      return Vendors::Postgate::Actions if social_account.connection_source_postgate?
+
+      self.class.vendor_for(social_account.provider)::Actions
     end
   end
 end

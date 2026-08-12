@@ -107,7 +107,15 @@
     "copyConnectLink": "Copy connect link",
     "connectLinkCopied": "Link copied! Send it to the client so they can connect their own networks.",
     "connectLinkError": "Couldn't generate the link.",
-    "manualHint": "Or connect this client's networks yourself. Campaign tickets publish to these accounts."
+    "manualHint": "Or connect this client's networks yourself. Campaign tickets publish to these accounts.",
+    "mastodon": {
+      "title": "Connect Mastodon",
+      "description": "Enter the client's Mastodon instance before continuing (e.g. https://mastodon.social).",
+      "instanceLabel": "Instance URL",
+      "instancePlaceholder": "https://mastodon.social",
+      "continue": "Continue",
+      "connecting": "Connecting…"
+    }
   },
   "portal": {
     "title": "Client portal",

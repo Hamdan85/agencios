@@ -33,6 +33,10 @@ Rails.application.routes.draw do
   # ── Google Calendar workspace connect ──────────────────────────────
   get '/auth/calendar/callback', to: 'auth/calendar#callback'
 
+  # ── PostGate hosted-connect return (declared before the generic :provider
+  # callback route below so "/auth/postgate/return" isn't captured by it) ───
+  get '/auth/postgate/return', to: 'auth/postgate#return_from_connect'
+
   # ── OAuth callbacks (Calendar, social-network account connect) ─────
   match '/auth/:provider/callback', to: 'auth/omniauth#callback', via: %i[get post]
   post  '/auth/facebook/select',   to: 'auth/omniauth#choose_page'
@@ -52,6 +56,7 @@ Rails.application.routes.draw do
   namespace :webhooks do
     post 'stripe',      to: 'stripe#create'
     post 'mercadopago', to: 'mercado_pago#create'
+    post 'postgate',    to: 'postgate#create'
     # The Facebook app's event webhook keeps its original /webhooks/meta URL (the
     # path is registered in the Meta developer console) but is served by the
     # shared Meta-family handler.

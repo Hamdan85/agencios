@@ -22,4 +22,11 @@ module SystemConfig
     count = ENV.fetch('MAX_WORKSPACES_PER_USER', '1').to_i
     count.positive? ? count : Float::INFINITY
   end
+
+  # Whether the PostGate social-publishing aggregator integration is live: the
+  # API key is configured AND it hasn't been opted out via POSTGATE_DISABLED
+  # (an emergency kill switch, e.g. during a PostGate outage).
+  def postgate_enabled?
+    Vendors::Postgate::Client.configured? && ENV['POSTGATE_DISABLED'] != 'true'
+  end
 end

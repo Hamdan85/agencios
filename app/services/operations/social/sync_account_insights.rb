@@ -3,11 +3,13 @@
 module Operations
   module Social
     # Pulls profile-level analytics for one connected account and upserts a dated
-    # AccountMetric snapshot. Driven by Social::SyncAccountInsightsJob (cron). Only
-    # providers with an account-insights action contribute; others are skipped.
+    # AccountMetric snapshot. Driven by Social::SyncAccountInsightsJob (cron).
+    # A postgate-sourced account (any provider) always routes through PostGate's
+    # own account-insights action; a direct account only contributes when its
+    # provider has one wired below — others are skipped.
     class SyncAccountInsights < Operations::Base
-      # Per-provider account-insights action (uniform return shape). Add providers
-      # here as their account-level analytics are wired.
+      # Per-provider account-insights action for DIRECT accounts (uniform return
+      # shape). Add providers here as their account-level analytics are wired.
       ACTIONS = {
         'instagram' => 'Vendors::Meta::Actions::SyncAccountInsights'
       }.freeze
@@ -18,11 +20,11 @@ module Operations
       end
 
       def call
-        action = ACTIONS[@social_account.provider]
+        action = resolve_action
         return nil unless action
 
         now = Time.current
-        m = action.constantize.call(@social_account, since: now - @window, until_time: now) || {}
+        m = action.call(@social_account, since: now - @window, until_time: now) || {}
 
         @social_account.account_metrics.create!(
           workspace: @social_account.workspace,
@@ -38,6 +40,14 @@ module Operations
           total_interactions: m[:total_interactions].to_i,
           raw: m[:raw] || {}
         )
+      end
+
+      private
+
+      def resolve_action
+        return Vendors::Postgate::Actions::SyncAccountInsights if @social_account.connection_source_postgate?
+
+        ACTIONS[@social_account.provider]&.constantize
       end
     end
   end

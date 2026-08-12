@@ -199,5 +199,22 @@
     "thumbnail": "Capa do vídeo",
     "cover": "Capa",
     "option": "Opção {{letter}}"
+  },
+  "channel": {
+    "pinterest": {
+      "label": "Pinterest"
+    },
+    "bluesky": {
+      "label": "Bluesky"
+    },
+    "mastodon": {
+      "label": "Mastodon"
+    },
+    "telegram": {
+      "label": "Telegram"
+    },
+    "google_business": {
+      "label": "Perfil da Empresa no Google"
+    }
   }
 }

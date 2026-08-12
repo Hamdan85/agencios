@@ -44,7 +44,11 @@ class Ticket < ApplicationRecord
   enum :priority, { low: 0, medium: 1, high: 2 }, prefix: true
 
   WORKFLOW = %i[ideation scoping production approval scheduled published retrospective done].freeze
-  CHANNELS = %w[instagram facebook tiktok youtube linkedin x].freeze
+  # Every network SocialAccount#provider can be — direct-vendor or PostGate-routed
+  # (see connection_source). Keep in sync with SocialAccount's provider enum and
+  # Publishers::SocialPublisher::SUPPORTED_MEDIA.
+  CHANNELS = %w[instagram facebook threads tiktok youtube linkedin x pinterest bluesky mastodon
+                telegram google_business].freeze
 
   # Image creative types that ride a video post as its cover/thumbnail rather than
   # posting standalone (see Operations::Tickets::Publish). Mirrored on the frontend.

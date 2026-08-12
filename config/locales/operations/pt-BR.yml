@@ -35,6 +35,8 @@ pt-BR:
       retry_only_failed: "Só é possível tentar de novo uma publicação que falhou."
       project_archived: "A campanha/cliente deste post está arquivada. Reative para publicar."
       unsupported_media: "%{provider} não suporta %{media}."
+      postgate_poll_timeout: "O PostGate não confirmou a publicação a tempo — tente novamente."
+      postgate_webhook_failed: "O PostGate reportou falha na publicação, sem mais detalhes."
     invoices:
       paid_cannot_cancel: "Uma fatura paga não pode ser cancelada."
       paid_or_canceled_cannot_edit: "Faturas pagas ou canceladas não podem ser editadas."

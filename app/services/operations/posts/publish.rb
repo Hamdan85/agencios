@@ -12,6 +12,14 @@ module Operations
     # This is what stops a mid-retry attempt from prematurely marking the post
     # failed and spamming an alert + failure email while it is still going to
     # succeed on a later attempt.
+    #
+    # A direct-vendor account finishes synchronously — the vendor call above
+    # already blocked until the post was live — so the result is handed straight
+    # to Operations::Posts::MarkPublished. A postgate-sourced account may instead
+    # come back `pending: true` (PostGate is still processing the target
+    # server-side): the post STAYS `publishing`, no notification fires yet, and
+    # Posts::PollPostgateStatusJob takes over until PostGate (poll or webhook)
+    # settles it.
     class Publish < Operations::Base
       def initialize(post:)
         @post = post
@@ -25,22 +33,37 @@ module Operations
 
         result = Publishers::SocialPublisher.publish(@post)
 
-        @post.update!(
-          status: :published,
-          published_at: Time.current,
-          failure_reason: nil,
+        persist_postgate_id(result)
+        return handle_pending if pending?(result)
+
+        Operations::Posts::MarkPublished.call(
+          post: @post,
           external_post_id: result[:external_post_id] || result['external_post_id'],
           permalink: result[:permalink] || result['permalink']
         )
-        Broadcaster.ticket(@post.ticket, 'post_published', post_id: @post.id, permalink: @post.permalink)
-        notify('push.post.published.title', { provider: @post.social_account.provider }, @post.ticket.title)
-        email { |to| PostMailer.published(post: @post, recipient: to) }
-        clear_alert_if_resolved
-        advance_ticket_if_all_published
-        @post
       end
 
       private
+
+      def pending?(result)
+        !!(result[:pending] || result['pending'])
+      end
+
+      # The PostGate post id must survive on BOTH outcomes — the pending hand-off
+      # AND an immediate success — because metric syncs (post_stats) and unpublish
+      # (delete_post) address the post by it later.
+      def persist_postgate_id(result)
+        postgate_post_id = result[:postgate_post_id] || result['postgate_post_id']
+        @post.update!(postgate_post_id: postgate_post_id) if postgate_post_id.present?
+      end
+
+      # PostGate accepted the post but hasn't confirmed the target published yet.
+      # Leave the post `publishing` and hand off to the poll job instead of
+      # notifying/broadcasting a success we don't have yet.
+      def handle_pending
+        ::Posts::PollPostgateStatusJob.set(wait: 10.seconds).perform_later(@post.id, 1)
+        @post
+      end
 
       # An archived client is frozen — nothing new goes live under its name. The
       # cron sweep already skips these, so this only bites a manual/MCP publish of
@@ -64,48 +87,6 @@ module Operations
         return if Publishers::SocialPublisher.supports?(provider, creative.media_kind)
 
         raise Vendors::Base::Error, I18n.t('operations.posts.unsupported_media', provider: provider, media: creative.media_kind)
-      end
-
-      # A clean publish with no failed posts left clears any alert the earlier
-      # failure raised (the generated task stays for the record).
-      def clear_alert_if_resolved
-        ticket = @post.ticket
-        return unless ticket.in_alert?
-        return if ticket.posts.where(status: Post.statuses[:failed]).exists?
-
-        Operations::Tickets::ClearAlert.call(ticket: ticket)
-      end
-
-      # The ticket reaches "No ar" only once posting actually succeeds. When the
-      # last pending post of a ticket in the posting step publishes, advance it.
-      def advance_ticket_if_all_published
-        ticket = @post.ticket
-        return unless ticket.status == 'scheduled'
-        return if ticket.posts.where.not(status: Post.statuses[:published]).exists?
-
-        Operations::Tickets::ChangeStatus.call(ticket, 'published', user: nil, force: true)
-      rescue StandardError => e
-        Rails.logger.warn("[Posts::Publish] auto-advance to published failed: #{e.message}")
-      end
-
-      # Publishing runs in a background job (no acting user) — notify whoever owns
-      # the ticket: the assignee, falling back to its creator.
-      def notify(title_key, params, body)
-        Operations::Push::Notify.call(
-          user: @post.ticket.assignee || @post.ticket.created_by,
-          title_key: title_key, params: params, body: body, path: "/tickets/#{@post.ticket_id}"
-        )
-      end
-
-      # Deliver a mailer to the ticket owner (assignee → creator), guarding a
-      # missing recipient/address. Never let a mail failure mask the publish result.
-      def email
-        recipient = @post.ticket.assignee || @post.ticket.created_by
-        return if recipient.nil? || recipient.email.blank?
-
-        yield(recipient).deliver_later
-      rescue StandardError => e
-        Rails.logger.warn("[Posts::Publish] email delivery failed: #{e.message}")
       end
     end
   end

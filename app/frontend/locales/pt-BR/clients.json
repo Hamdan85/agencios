@@ -107,7 +107,15 @@
     "copyConnectLink": "Copiar link de conexão",
     "connectLinkCopied": "Link copiado! Envie ao cliente para ele conectar as próprias redes.",
     "connectLinkError": "Não foi possível gerar o link.",
-    "manualHint": "Ou conecte as redes deste cliente você mesmo. Os tickets das campanhas publicam nestas contas."
+    "manualHint": "Ou conecte as redes deste cliente você mesmo. Os tickets das campanhas publicam nestas contas.",
+    "mastodon": {
+      "title": "Conectar Mastodon",
+      "description": "Informe a instância do Mastodon do cliente antes de continuar (ex.: https://mastodon.social).",
+      "instanceLabel": "URL da instância",
+      "instancePlaceholder": "https://mastodon.social",
+      "continue": "Continuar",
+      "connecting": "Conectando…"
+    }
   },
   "portal": {
     "title": "Portal do cliente",

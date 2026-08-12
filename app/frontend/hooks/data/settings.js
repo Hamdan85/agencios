@@ -88,10 +88,11 @@ export function useSocialAccountMutations(clientId) {
     }, 800)
   }
 
-  function connect(network) {
+  // `instanceUrl` is only passed for networks that need it up front (Mastodon).
+  function connect(network, instanceUrl) {
     const popup = openBlankPopup()
     setConnecting(true)
-    socialApi.authorizeUrl(clientId, network)
+    socialApi.authorizeUrl(clientId, network, instanceUrl)
       .then((d) => {
         if (!d?.url) throw new Error('missing authorize url')
         if (popup) { popup.location.href = d.url; trackOAuthPopup(popup) }

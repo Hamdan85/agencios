@@ -33,7 +33,16 @@ module Operations
         account = @client.social_accounts.find_or_initialize_by(identity_scope(provider))
         account.workspace = @client.workspace
         account.assign_attributes(
-          @attrs.except(:provider).merge(status: :connected, last_synced_at: Time.current)
+          @attrs.except(:provider).merge(
+            status: :connected,
+            last_synced_at: Time.current,
+            # Assigned explicitly on every call (never left to a stale default) so
+            # an account that alternates between the direct OAuth flow and the
+            # PostGate hosted flow always reflects the transport it JUST connected
+            # through — reconnecting via direct flips a postgate-sourced row back
+            # to direct, and vice versa.
+            connection_source: @attrs[:connection_source].presence || 'direct'
+          )
         )
         account.save!
         revoke_others!(provider, account)

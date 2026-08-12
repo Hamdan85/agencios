@@ -2,12 +2,14 @@
 
 module Social
   # Per-provider token refresh. With no provider, sweeps every account expiring
-  # soon. Scheduled per provider via sidekiq-cron.
+  # soon. Scheduled per provider via sidekiq-cron. Postgate-sourced accounts are
+  # always skipped — PostGate refreshes tokens itself on its side.
   class RefreshTokenJob < ApplicationJob
     queue_as :low
 
     def perform(provider = nil)
-      scope = SocialAccount.status_connected.where.not(token_expires_at: nil)
+      scope = SocialAccount.status_connected.connection_source_direct
+                           .where.not(token_expires_at: nil)
                            .where(token_expires_at: ..3.days.from_now)
       scope = scope.where(provider: provider) if provider
 

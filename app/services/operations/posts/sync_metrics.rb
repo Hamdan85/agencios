@@ -18,23 +18,7 @@ module Operations
         # permanent hole in the chart that outlives the outage that caused it.
         return if m.blank?
 
-        metric = @post.post_metrics.create!(
-          captured_at: Time.current,
-          reach: m[:reach].to_i,
-          views: m[:views].to_i,
-          likes: m[:likes].to_i,
-          comments: m[:comments].to_i,
-          shares: m[:shares].to_i,
-          saves: m[:saves].to_i,
-          raw: m[:raw] || {}
-        )
-        @post.social_account.update_column(:last_synced_at, Time.current)
-        Broadcaster.ticket(@post.ticket, 'metric_updated', post_id: @post.id)
-        # Also nudge the client central (login-less portal) so campaign metrics
-        # refresh in real time for the client watching.
-        Broadcaster.portal(@post.ticket&.project&.client, 'metric_updated',
-                           post_id: @post.id, project_id: @post.ticket&.project_id)
-        metric
+        Operations::Posts::RecordMetric.call(post: @post, metrics: m)
       rescue Vendors::Base::AuthenticationError => e
         # The token is finished — an ACCOUNT problem, not a post problem. Flag it
         # so the user is asked to reconnect, then re-raise: the caller (the cron

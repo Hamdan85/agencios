@@ -5,7 +5,7 @@
 // ─────────────────────────────────────────────────────────────────
 import {
   Lightbulb, Ruler, Wand2, ShieldCheck, CalendarClock, Radio, LineChart, CheckCircle2,
-  Camera, AtSign, PlaySquare, Briefcase, Music2, Hash,
+  Camera, AtSign, PlaySquare, Briefcase, Music2, Hash, Pin, Cloud, Rss, Send, Store,
   Film, Image as ImageIcon, GalleryHorizontalEnd, Clapperboard, Megaphone,
   Sparkles, Video, LayoutTemplate,
   FileText, FileSpreadsheet, Presentation, FileArchive, File as FileIcon, Paperclip,
@@ -83,7 +83,21 @@ export const CHANNEL_META = {
   youtube:   { label: 'YouTube',   color: '#FF0000', icon: Youtube },
   linkedin:  { label: 'LinkedIn',  color: '#0A66C2', icon: Linkedin },
   x:         { label: 'X',         color: '#111111', icon: Twitter },
+  // The five networks added by the PostGate aggregator integration — connect
+  // cards for these only render when `postgate_enabled` (see hooks/useAuth).
+  pinterest:       withLabel({ color: '#E60023', icon: Pin },   'channel.pinterest.label'),
+  bluesky:         withLabel({ color: '#0285FF', icon: Cloud }, 'channel.bluesky.label'),
+  mastodon:        withLabel({ color: '#6364FF', icon: Rss },   'channel.mastodon.label'),
+  telegram:        withLabel({ color: '#26A5E4', icon: Send },  'channel.telegram.label'),
+  google_business: withLabel({ color: '#4285F4', icon: Store }, 'channel.google_business.label'),
 }
+
+// Networks connected through the PostGate-hosted OAuth page rather than a
+// direct vendor app — see docs/integrations/README.md. Connecting Mastodon
+// additionally requires the user's instance URL before the authorize_url can
+// be requested (POSTGATE_INSTANCE_NETWORKS).
+export const POSTGATE_NETWORKS = ['pinterest', 'bluesky', 'mastodon', 'telegram', 'google_business']
+export const POSTGATE_INSTANCE_NETWORKS = ['mastodon']
 
 // `networks` mirrors each creative spec's `network_fit` on the backend
 // (app/services/creatives/*.rb). A creative type is NOT channel-agnostic — a
@@ -190,6 +204,11 @@ export const SUPPORTED_MEDIA = {
   youtube:   ['video'],
   linkedin:  ['image', 'carousel', 'video', 'text'],
   x:         ['image', 'carousel', 'video', 'text'],
+  pinterest:       ['image', 'video'],
+  bluesky:         ['image', 'carousel', 'text'],
+  mastodon:        ['image', 'carousel', 'video', 'text'],
+  telegram:        ['image', 'carousel', 'video', 'text'],
+  google_business: ['image', 'text'],
 }
 
 // Mirrors Creative#media_kind: derive the publishable media kind of a creative.

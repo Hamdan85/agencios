@@ -670,6 +670,25 @@ en:
         x:
           label: X
           sub: Sign in with your X account
+        pinterest:
+          label: Pinterest
+          sub: Sign in with your Pinterest account
+        bluesky:
+          label: Bluesky
+          sub: Sign in with your Bluesky account
+        mastodon:
+          label: Mastodon
+          sub: Sign in with your Mastodon account
+        telegram:
+          label: Telegram
+          sub: Connect your Telegram channel
+        google_business:
+          label: Google Business
+          sub: Connect your Google Business Profile
+      mastodon:
+        instance_label: Mastodon instance URL
+        instance_placeholder: https://mastodon.social
+        continue: Continue →
       invalid:
         title: Invalid link
         heading: Invalid or expired link

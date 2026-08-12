@@ -670,6 +670,25 @@ pt-BR:
         x:
           label: X
           sub: Entre com sua conta do X
+        pinterest:
+          label: Pinterest
+          sub: Entre com sua conta do Pinterest
+        bluesky:
+          label: Bluesky
+          sub: Entre com sua conta do Bluesky
+        mastodon:
+          label: Mastodon
+          sub: Entre com sua conta do Mastodon
+        telegram:
+          label: Telegram
+          sub: Conecte seu canal do Telegram
+        google_business:
+          label: Perfil da Empresa no Google
+          sub: Conecte seu Perfil da Empresa no Google
+      mastodon:
+        instance_label: URL da instância do Mastodon
+        instance_placeholder: https://mastodon.social
+        continue: Continuar →
       invalid:
         title: Link inválido
         heading: Link inválido ou expirado

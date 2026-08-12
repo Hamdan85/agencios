@@ -24,7 +24,10 @@ module Controllers
           # Whether the user may still create another workspace (per-user limit).
           can_create_workspace: user.can_create_workspace?,
           # Public key the browser uses as the Web Push applicationServerKey.
-          vapid_public_key: Rails.application.credentials.dig(:vapid, :public_key)
+          vapid_public_key: Rails.application.credentials.dig(:vapid, :public_key),
+          # Whether the PostGate aggregator networks (Pinterest, Bluesky, Mastodon,
+          # Telegram, Google Business) are offered as connect options.
+          postgate_enabled: SystemConfig.postgate_enabled?
         }
         payload[:membership] = { role: membership&.role } if @include_membership
         payload
