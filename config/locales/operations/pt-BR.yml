@@ -13,6 +13,7 @@ pt-BR:
       approval_needs_creative: "Adicione ao menos um criativo pronto antes de enviar para aprovação."
       project_archived: "A campanha \"%{project}\" está arquivada — reative-a para criar tickets."
       creative_not_ready: "Há um criativo selecionado que ainda não está pronto."
+      invalid_cover: "A capa precisa ser uma imagem pronta deste ticket."
       publish_in_progress: "Há uma publicação em andamento — aguarde ela concluir antes de publicar novamente."
       select_creative: "Selecione ao menos um criativo para postar."
       define_channel: "Defina ao menos um canal."

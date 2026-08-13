@@ -13,12 +13,15 @@ import { creativeToMedia } from '@/lib/media'
 import { Spinner, EmptyState, AiRewritingOverlay } from '@/components/ui/feedback'
 import { DateTimePicker } from '@/components/ui/date-picker'
 import { ChannelIcons } from '@/components/ui/iconography'
-import { creativeMeta, channelMeta, creativeMediaKind, resolvePostRouting, isCoverType } from '@/lib/constants'
+import {
+  creativeMeta, channelMeta, creativeMediaKind, resolvePostRouting, isCoverType,
+  THUMBNAIL_CAPABLE, HIDDEN_CREATIVE_TYPES,
+} from '@/lib/constants'
 import AiFillButton from './AiFillButton'
 import { dt } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 import {
-  Send, Clock, Zap, MessageCircle, MessageSquareText, Link2, CheckCircle2, AlertCircle, Loader2, ImagePlus, Radio, Ban, Eye, ChevronDown, ChevronUp, CalendarX2, RotateCcw,
+  Send, Clock, Zap, MessageCircle, MessageSquareText, Link2, CheckCircle2, AlertCircle, Loader2, ImagePlus, Radio, Ban, Eye, ChevronDown, ChevronUp, CalendarX2, RotateCcw, Camera,
 } from 'lucide-react'
 
 // Copy is resolved lazily (getters) so it follows the active locale — same
@@ -29,6 +32,7 @@ const MEDIA_LABEL = {
   get carousel() { return tr('posting.media.carousel') },
   get video() { return tr('posting.media.video') },
   get text() { return tr('posting.media.text') },
+  get story() { return tr('posting.media.story') },
 }
 
 const POST_STATUS = {
@@ -44,9 +48,10 @@ const POST_STATUS = {
 // support its media; a cover/thumbnail image rides the video where supported.
 // The ticket only reaches "No ar" when a post actually succeeds.
 export default function PostingPanel({
-  ticket, creatives = [], posts = [], onSave, onPublish, publishing = false,
+  ticket, creatives = [], posts = [], attachments = [], onSave, onPublish, publishing = false,
   onAiAction, acting = false, filling = false, onUnpublish, unpublishingId,
   onCancelPost, cancelingId, onRetryPost, retryingId, color = '#EC4899',
+  onFromAttachment, attachingFile = false,
 }) {
   const { t } = useTranslation('ticket')
   const lightbox = useLightbox()
@@ -55,13 +60,16 @@ export default function PostingPanel({
   const ready = creatives.filter((c) => c?.status === 'ready' && (c?.asset_urls?.length || 0) > 0)
 
   // The types scoped in Escopo (mirrored column → scoping field bag), plus any
-  // extra type that already has a ready creative so nothing is hidden.
+  // extra type that already has a ready creative so nothing is hidden. Cover
+  // types never render as slots (they feed the "Capa do vídeo" picker instead),
+  // and hidden types (ad) only appear when a legacy ready creative exists.
   const displayTypes = useMemo(() => {
     const scoped = Array.isArray(ticket?.creative_types) && ticket.creative_types.length
       ? ticket.creative_types
       : (Array.isArray(ticket?.fields?.scoping?.creative_types) ? ticket.fields.scoping.creative_types : [])
     const readyTypes = ready.map((c) => c.creative_type)
     return [...new Set([...scoped, ...readyTypes])].filter(Boolean)
+      .filter((t) => !isCoverType(t) && (!HIDDEN_CREATIVE_TYPES.includes(t) || readyTypes.includes(t)))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ticket?.id, JSON.stringify(ticket?.creative_types), ready.length])
 
@@ -70,6 +78,8 @@ export default function PostingPanel({
   // detail row) — fall back to it so both surfaces show the same value.
   const initialScheduledAt = fields.scheduled_at || ticket?.scheduled_at
   const [selectedByType, setSelectedByType] = useState({})
+  const [coverId, setCoverId] = useState(null)
+  const [promotingId, setPromotingId] = useState(null)
   const [mode, setMode] = useState(fields.post_mode || (initialScheduledAt ? 'scheduled' : 'immediate'))
   const [scheduledAt, setScheduledAt] = useState(initialScheduledAt ? String(initialScheduledAt).slice(0, 16) : '')
   const [firstComment, setFirstComment] = useState(fields.first_comment || '')
@@ -105,7 +115,8 @@ export default function PostingPanel({
   }, [JSON.stringify(fields.captions), fields.first_comment])
 
   // Default each type's selection to the saved one, else the only ready creative
-  // of that type.
+  // of that type. The cover pick seeds from the saved field, else the lone ready
+  // cover-type creative (the old auto-pairing, now made visible).
   useEffect(() => {
     const savedIds = Array.isArray(fields.creative_ids)
       ? fields.creative_ids.map(String)
@@ -118,6 +129,9 @@ export default function PostingPanel({
       else if (group.length === 1) next[t] = String(group[0].id)
     })
     setSelectedByType(next)
+    const savedCover = fields.cover_creative_id && ready.find((c) => String(c.id) === String(fields.cover_creative_id))
+    const coverTyped = ready.filter((c) => isCoverType(c.creative_type))
+    setCoverId(savedCover ? String(savedCover.id) : (coverTyped.length === 1 ? String(coverTyped[0].id) : null))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ticket?.id, ready.length, displayTypes.length])
 
@@ -125,7 +139,36 @@ export default function PostingPanel({
     () => displayTypes.map((t) => ready.find((c) => String(c.id) === selectedByType[t])).filter(Boolean),
     [displayTypes, ready, selectedByType],
   )
-  const routing = useMemo(() => resolvePostRouting(selectedCreatives, channels), [selectedCreatives, channels])
+
+  // The cover strip: any ready still image of the ticket can be the video's
+  // cover, and any image FILE can be promoted into one on pick (no re-upload).
+  const hasVideoSelected = selectedCreatives.some((c) => c.creative_type !== 'story' && creativeMediaKind(c) === 'video')
+  const showCover = hasVideoSelected && channels.some((ch) => THUMBNAIL_CAPABLE.includes(ch))
+  const coverCandidates = useMemo(() => ready.filter((c) => creativeMediaKind(c) === 'image'), [ready])
+  const promotedAttachmentIds = useMemo(
+    () => new Set(creatives.map((c) => c?.metadata?.attachment_id).filter(Boolean).map(String)),
+    [creatives],
+  )
+  const coverFiles = useMemo(
+    () => (Array.isArray(attachments) ? attachments : [])
+      .filter((a) => a.kind === 'image' && !promotedAttachmentIds.has(String(a.id))),
+    [attachments, promotedAttachmentIds],
+  )
+  const coverCreative = (showCover && coverId && coverCandidates.find((c) => String(c.id) === coverId)) || null
+
+  const promoteFileToCover = (att) => {
+    if (!onFromAttachment || attachingFile) return
+    setPromotingId(att.id)
+    onFromAttachment({ attachment_id: att.id, creative_type: 'cover' }, {
+      onSuccess: (data) => { if (data?.creative?.id) setCoverId(String(data.creative.id)); setPromotingId(null) },
+      onError: () => setPromotingId(null),
+    })
+  }
+
+  const routing = useMemo(
+    () => resolvePostRouting(selectedCreatives, channels, coverCreative),
+    [selectedCreatives, channels, coverCreative],
+  )
   const anyPost = routing.some((r) => r.posts.length > 0)
 
   const saveField = (key, value) => onSave?.({ [key]: value })
@@ -139,6 +182,7 @@ export default function PostingPanel({
     if (!canPublish) return
     onPublish?.({
       creative_ids: selectedCreatives.map((c) => c.id),
+      cover_creative_id: coverCreative ? coverCreative.id : undefined,
       mode,
       scheduled_at: mode === 'scheduled' ? scheduledAt : undefined,
     })
@@ -180,7 +224,7 @@ export default function PostingPanel({
                     <span className="inline-flex items-center gap-1.5 rounded-lg px-2 py-0.5 text-xs font-bold" style={{ background: `${tm.color}18`, color: tm.color }}>
                       <TmIcon size={12} strokeWidth={2.4} /> {tm.label}
                     </span>
-                    {isCoverType(type) && <span className="text-[11px] text-ink-faint">{t('posting.coverHint')}</span>}
+                    {type === 'story' && <span className="text-[11px] text-ink-faint">{t('posting.storyHint')}</span>}
                   </div>
                   {group.length === 0 ? (
                     <p className="rounded-xl border border-dashed border-border px-3.5 py-2.5 text-xs text-ink-faint">
@@ -245,6 +289,64 @@ export default function PostingPanel({
           )}
         </div>
 
+        {/* the video's cover: any still image of the ticket — a ready creative,
+            or a ticket file promoted on pick (no re-upload). Only rendered when
+            a video is selected and a channel can actually take a thumbnail. */}
+        {showCover && (
+          <div className="space-y-2">
+            <div className="flex items-baseline gap-1.5">
+              <Label className="flex items-center gap-1.5"><Camera size={13} style={{ color }} /> {t('posting.cover.title')}</Label>
+              <span className="text-[11px] text-ink-faint">{t('posting.cover.note')}</span>
+            </div>
+            {coverCandidates.length === 0 && coverFiles.length === 0 ? (
+              <p className="rounded-xl border border-dashed border-border px-3.5 py-2.5 text-xs text-ink-faint">
+                {t('posting.cover.empty')}
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {coverCandidates.map((c) => {
+                  const active = coverId === String(c.id)
+                  return (
+                    <button
+                      key={`c-${c.id}`}
+                      type="button"
+                      onClick={() => setCoverId(active ? null : String(c.id))}
+                      aria-pressed={active}
+                      aria-label={t('posting.cover.selectAria')}
+                      className={cn(
+                        'relative size-16 overflow-hidden rounded-xl border-2 transition-all',
+                        active ? 'border-brand ring-2 ring-brand/20' : 'border-border hover:border-brand/40',
+                      )}
+                    >
+                      <MediaThumb url={c.asset_urls?.[0]} alt={creativeMeta(c.creative_type).label} />
+                      {active && (
+                        <span className="absolute right-1 top-1 grid size-5 place-items-center rounded-full bg-brand text-white shadow">
+                          <CheckCircle2 size={11} />
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
+                {coverFiles.map((a) => (
+                  <button
+                    key={`a-${a.id}`}
+                    type="button"
+                    onClick={() => promoteFileToCover(a)}
+                    disabled={attachingFile}
+                    aria-label={t('posting.cover.promoteAria')}
+                    className="relative size-16 overflow-hidden rounded-xl border-2 border-dashed border-border opacity-80 transition-all hover:border-brand/40 hover:opacity-100"
+                  >
+                    <MediaThumb url={a.preview_url || a.url} alt={a.display_name || a.filename} />
+                    {promotingId === a.id && (
+                      <span className="absolute inset-0 grid place-items-center bg-white/60"><Spinner size={14} /></span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* per-channel routing preview: what actually goes where */}
         {selectedCreatives.length > 0 && (
           <div className="space-y-1.5 rounded-xl border border-border bg-surface-muted/50 p-3.5">
@@ -260,6 +362,7 @@ export default function PostingPanel({
                 ) : (
                   <span className="text-ink-muted">
                     {chPosts.map((p) => {
+                      if (p.story) return MEDIA_LABEL.story
                       const media = MEDIA_LABEL[creativeMediaKind(p.creative)] || t('posting.media.post')
                       return p.cover ? t('posting.withCover', { media }) : media
                     }).join(', ')}
@@ -383,6 +486,11 @@ export default function PostingPanel({
                       <div className="flex min-w-0 items-center gap-2">
                         <ChannelIcons channels={[post.provider]} />
                         <span className="truncate text-sm font-semibold text-ink">{channelMeta(post.provider).label}</span>
+                        {post.story && (
+                          <Badge className="bg-surface-muted px-1.5 text-[10px] tracking-normal text-ink-muted">
+                            {MEDIA_LABEL.story}
+                          </Badge>
+                        )}
                       </div>
                       {post.scheduled_at && post.status === 'scheduled' && (
                         <span className="text-xs text-ink-muted"><span className="hidden sm:inline">· </span>{dt(post.scheduled_at)}</span>

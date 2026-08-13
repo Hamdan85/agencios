@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '@/i18n'
-import { statusMeta, CREATIVE_TYPE_META, CHANNEL_META, creativeTypesForChannels } from '@/lib/constants'
+import { statusMeta, CREATIVE_TYPE_META, CHANNEL_META, creativeTypesForChannels, HIDDEN_CREATIVE_TYPES } from '@/lib/constants'
 import { Card } from '@/components/ui/card'
 import { Input, Textarea } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -568,7 +568,11 @@ export default function FieldGroup({ ticket, posts, subtasks = [], onSave, savin
         const selected = Array.isArray(value) ? value : []
         control = (
           <div className="flex flex-wrap gap-2">
-            {Object.entries(CREATIVE_TYPE_META).map(([key, meta]) => {
+            {/* Hidden types (ad) never render as an option — only as an already-
+                selected chip on a legacy ticket, so it can still be unpicked. */}
+            {Object.entries(CREATIVE_TYPE_META)
+              .filter(([key]) => !HIDDEN_CREATIVE_TYPES.includes(key) || selected.includes(key))
+              .map(([key, meta]) => {
               const Ct = meta.icon
               const active = selected.includes(key)
               // Enabled only when a chosen channel supports the type. With no

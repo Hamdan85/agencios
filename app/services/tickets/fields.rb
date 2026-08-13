@@ -17,7 +17,7 @@ module Tickets
       'approval' => [],
       # Publication: the PostingPanel's working state (per-network captions etc.)
       # + what Operations::Tickets::Publish persists about the chosen posting.
-      'scheduled' => %w[creative_id creative_ids post_mode scheduled_at first_comment link_in_bio captions],
+      'scheduled' => %w[creative_id creative_ids cover_creative_id post_mode scheduled_at first_comment link_in_bio captions],
       # No ar is read-only monitoring (posts + PostMetrics are real records).
       'published' => [],
       # Retrospective: the performance review (lessons auto-drafted from metrics).

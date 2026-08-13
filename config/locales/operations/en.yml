@@ -13,6 +13,7 @@ en:
       approval_needs_creative: "Add at least one ready creative before sending it for approval."
       project_archived: "The campaign \"%{project}\" is archived — reactivate it to create tickets."
       creative_not_ready: "One of the selected creatives isn't ready yet."
+      invalid_cover: "The cover must be a ready image from this ticket."
       publish_in_progress: "A publish is already in progress — wait for it to finish before publishing again."
       select_creative: "Select at least one creative to post."
       define_channel: "Set at least one channel."

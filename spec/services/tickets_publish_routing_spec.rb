@@ -77,7 +77,7 @@ RSpec.describe Operations::Tickets::Publish do
     expect(media).to contain_exactly({ 'creative_id' => reel.id.to_s })
   end
 
-  it 'bundles video + cover + story into ONE Instagram post with a story reshare flag' do
+  it 'publishes the story creative as its OWN Instagram story post beside the video' do
     connect('instagram')
     ticket = ticket_on(%w[instagram])
     reel = creative(ticket, 'reel')
@@ -86,26 +86,53 @@ RSpec.describe Operations::Tickets::Publish do
 
     result = described_class.call(ticket: ticket, user: user, creative_ids: [reel.id, thumb.id, story.id])
 
-    posts = Post.where(id: result[:posts]).to_a
-    expect(posts.size).to eq(1)
-    expect(posts.first.media).to eq(
-      'creative_id' => reel.id.to_s,
-      'cover_creative_id' => thumb.id.to_s,
-      'share_to_story' => true
+    media = Post.where(id: result[:posts]).map(&:media)
+    expect(media).to contain_exactly(
+      { 'creative_id' => story.id.to_s, 'story' => true },
+      { 'creative_id' => reel.id.to_s, 'cover_creative_id' => thumb.id.to_s }
     )
   end
 
-  it 'gives TikTok the video only — no story reshare (no story API)' do
-    connect('tiktok')
-    ticket = ticket_on(%w[tiktok])
+  it 'skips the story on networks without a story API — never demoting it to feed' do
+    connect('tiktok', 'facebook')
+    ticket = ticket_on(%w[tiktok facebook])
     reel = creative(ticket, 'reel')
     story = creative(ticket, 'story')
 
     result = described_class.call(ticket: ticket, user: user, creative_ids: [reel.id, story.id])
 
     posts = Post.where(id: result[:posts]).to_a
-    expect(posts.size).to eq(1)
-    expect(posts.first.media).to eq('creative_id' => reel.id.to_s)
+    expect(posts.size).to eq(2) # one video per channel; the story posts nowhere
+    expect(posts.map(&:media)).to all(eq('creative_id' => reel.id.to_s))
+  end
+
+  it 'uses the explicit posting-step cover pick over the auto-paired cover type' do
+    connect('instagram')
+    ticket = ticket_on(%w[instagram])
+    reel = creative(ticket, 'reel')
+    img = creative(ticket, 'feed_image')
+
+    result = described_class.call(
+      ticket: ticket, user: user, creative_ids: [reel.id, img.id], cover_creative_id: img.id
+    )
+
+    media = Post.where(id: result[:posts]).map(&:media)
+    # The image does double duty: it posts standalone AND rides the reel as cover.
+    expect(media).to contain_exactly(
+      { 'creative_id' => reel.id.to_s, 'cover_creative_id' => img.id.to_s },
+      { 'creative_id' => img.id.to_s }
+    )
+    expect(ticket.reload.fields_for('scheduled')['cover_creative_id']).to eq(img.id.to_s)
+  end
+
+  it 'rejects a cover pick that is not a ready image of the ticket' do
+    connect('instagram')
+    ticket = ticket_on(%w[instagram])
+    reel = creative(ticket, 'reel')
+
+    expect do
+      described_class.call(ticket: ticket, user: user, creative_ids: [reel.id], cover_creative_id: 999_999)
+    end.to raise_error(Operations::Errors::Invalid)
   end
 
   it 'skips channels that support none of the selected media' do

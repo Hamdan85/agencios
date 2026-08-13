@@ -56,4 +56,10 @@ class Post < ApplicationRecord
     id = media.is_a?(Hash) ? media['cover_creative_id'] : nil
     id && ticket.creatives.find_by(id: id)
   end
+
+  # A post routed to the Stories surface (Publishers::PostBundle sets
+  # media["story"]) — published via the network's story endpoint, not the feed.
+  def story?
+    media.is_a?(Hash) && media['story'].present?
+  end
 end

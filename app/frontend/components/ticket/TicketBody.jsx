@@ -82,6 +82,7 @@ export default function TicketBody({
           ticket={ticket}
           creatives={creatives}
           posts={posts}
+          attachments={attachments}
           onSave={saveFields}
           onPublish={(payload) => mut.publish.mutate(payload)}
           publishing={mut.publish.isPending}
@@ -94,6 +95,8 @@ export default function TicketBody({
           cancelingId={mut.removePost.isPending ? mut.removePost.variables : null}
           onRetryPost={(postId) => mut.retryPost.mutate(postId)}
           retryingId={mut.retryPost.isPending ? mut.retryPost.variables : null}
+          onFromAttachment={(payload, opts) => mut.creativeFromAttachment.mutate(payload, opts)}
+          attachingFile={mut.creativeFromAttachment.isPending}
         />
       ) : (
         <FieldGroup

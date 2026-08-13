@@ -16,12 +16,14 @@ module Operations
       MODES = %w[immediate scheduled].freeze
 
 
-      def initialize(ticket:, user:, creative_ids: nil, creative_id: nil, mode: 'immediate', scheduled_at: nil)
+      def initialize(ticket:, user:, creative_ids: nil, creative_id: nil, mode: 'immediate', scheduled_at: nil,
+                     cover_creative_id: nil)
         @ticket = ticket
         @user = user
         @creative_ids = (Array(creative_ids).presence || Array(creative_id)).map(&:to_s).compact_blank.uniq
         @mode = mode.to_s.presence_in(MODES) || 'immediate'
         @scheduled_at = scheduled_at
+        @cover_creative_id = cover_creative_id.to_s.presence
       end
 
       def call
@@ -53,6 +55,9 @@ module Operations
           raise Operations::Errors::Invalid,
                 I18n.t('operations.tickets.publish_in_progress')
         end
+        if @cover_creative_id && (cover_creative.nil? || cover_creative.media_kind != 'image')
+          raise Operations::Errors::Invalid, I18n.t('operations.tickets.invalid_cover')
+        end
         return unless @mode == 'scheduled' && publish_at.nil?
 
         raise Operations::Errors::Invalid,
@@ -61,6 +66,16 @@ module Operations
 
       def creatives
         @creatives ||= @ticket.creatives.where(id: @creative_ids).to_a
+      end
+
+      # The still image the team picked at the posting step to ride the video as
+      # its cover/thumbnail — any ready image creative of the ticket, not just the
+      # cover types (nil falls back to PostBundle's auto-pairing by type).
+      def cover_creative
+        return @cover_creative if defined?(@cover_creative)
+
+        @cover_creative = @cover_creative_id &&
+                          @ticket.creatives.status_ready.find_by(id: @cover_creative_id)
       end
 
       # Immediate posts go out now; scheduled ones at the chosen moment (falls back
@@ -86,7 +101,8 @@ module Operations
       end
 
       def persist_fields
-        values = { 'creative_ids' => @creative_ids, 'creative_id' => @creative_ids.first, 'post_mode' => @mode }
+        values = { 'creative_ids' => @creative_ids, 'creative_id' => @creative_ids.first, 'post_mode' => @mode,
+                   'cover_creative_id' => @cover_creative_id }
         values['scheduled_at'] = publish_at if @mode == 'scheduled' && publish_at
         Operations::Tickets::UpdateFields.call(ticket: @ticket, status: 'scheduled', values: values)
       end
@@ -110,7 +126,9 @@ module Operations
           next [] unless account
 
           caption = captions[channel.to_s].presence || base_caption
-          Publishers::PostBundle.for_channel(channel: channel, creatives: creatives, skipped: @skipped).map do |media|
+          Publishers::PostBundle.for_channel(
+            channel: channel, creatives: creatives, skipped: @skipped, cover: cover_creative, account: account
+          ).map do |media|
             Operations::Posts::Create.call(
               ticket: @ticket, social_account: account,
               scheduled_at: publish_at, caption: caption, media: media

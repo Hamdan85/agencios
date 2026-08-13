@@ -235,31 +235,62 @@ export const isCoverType = (type) => COVER_TYPES.includes(type)
 // image can be attached to a video post as its cover/thumbnail.
 export const THUMBNAIL_CAPABLE = ['instagram', 'youtube']
 
-// Mirror of Operations::Tickets::Publish#plan_channel: given the selected
-// creatives (one per scoped type) and the ticket's channels, resolve what will
-// actually post on each channel — dropping unsupported media and pairing a cover
-// image onto the video post where the network supports it. Returns one entry per
-// channel: { channel, posts: [{ creative, cover }], skipped: [creative] }.
-export const resolvePostRouting = (creatives, channels = []) => {
+// Mirrors Publishers::SocialPublisher::STORY_CAPABLE — networks whose API can
+// publish to the Stories surface. A story creative only ever posts as a story:
+// anywhere else it is skipped, never demoted to a feed post.
+export const STORY_CAPABLE = ['instagram']
+
+// Creative types hidden from scoping/pickers (kept in CREATIVE_TYPE_META so
+// existing creatives still render). `ad` has no publishing path — there is no
+// Ads API integration — so offering it only creates confusion.
+export const HIDDEN_CREATIVE_TYPES = ['ad']
+
+// Mirror of Publishers::PostBundle: given the selected creatives (one per scoped
+// type) and the ticket's channels, resolve what will actually post on each
+// channel — the story creative publishes to the Stories surface on story-capable
+// networks (skipped elsewhere), unsupported media is dropped, and a cover image
+// (the explicit coverCreative pick, else a cover-type creative) rides the video
+// post where the network supports it. A cover that is not part of the selected
+// bundle only rides — it never posts standalone. Returns one entry per channel:
+// { channel, posts: [{ creative, cover, story }], skipped: [creative] }.
+export const resolvePostRouting = (creatives, channels = [], coverCreative = null) => {
   const list = (Array.isArray(creatives) ? creatives : []).filter(Boolean)
   return (Array.isArray(channels) ? channels : []).map((channel) => {
     const supported = SUPPORTED_MEDIA[channel] || []
-    const hasVideo = list.some((c) => creativeMediaKind(c) === 'video' && supported.includes('video'))
-    const cover = list.find((c) => isCoverType(c.creative_type))
+    const story = list.find((c) => c.creative_type === 'story')
+    const feed = list.filter((c) => c !== story)
+    const hasVideo = feed.some((c) => !isCoverType(c.creative_type) && creativeMediaKind(c) === 'video' && supported.includes('video'))
+    const cover = coverCreative || feed.find((c) => isCoverType(c.creative_type))
     const attachCover = !!cover && hasVideo && THUMBNAIL_CAPABLE.includes(channel)
 
     const posts = []
     const skipped = []
-    list.forEach((c) => {
+    if (story) {
+      if (STORY_CAPABLE.includes(channel) && supported.includes(creativeMediaKind(story))) {
+        posts.push({ creative: story, cover: null, story: true })
+      } else {
+        skipped.push(story)
+      }
+    }
+    feed.forEach((c) => {
       if (isCoverType(c.creative_type)) return
       const kind = creativeMediaKind(c)
-      if (supported.includes(kind)) posts.push({ creative: c, cover: attachCover && kind === 'video' ? cover : null })
+      if (supported.includes(kind)) posts.push({ creative: c, cover: attachCover && kind === 'video' ? cover : null, story: false })
       else skipped.push(c)
     })
-    if (cover && !attachCover) {
-      if (supported.includes(creativeMediaKind(cover))) posts.push({ creative: cover, cover: null })
-      else skipped.push(cover)
-    }
+    // Cover-type creatives never post standalone when a video is in the bundle
+    // (they either ride it as its cover or are dropped); with no video they post
+    // on their own. An explicit pick that is a regular creative already posted.
+    feed.filter((c) => isCoverType(c.creative_type)).forEach((c) => {
+      if (hasVideo) {
+        if (c === cover && !attachCover) skipped.push(c)
+        return
+      }
+      if (supported.includes(creativeMediaKind(c))) posts.push({ creative: c, cover: null, story: false })
+      else skipped.push(c)
+    })
+    // An explicit cover from outside the bundle with no video to ride here.
+    if (cover && !list.includes(cover) && hasVideo && !attachCover) skipped.push(cover)
     return { channel, posts, skipped }
   })
 }
@@ -270,10 +301,11 @@ export const creativeMeta = (key) => CREATIVE_TYPE_META[key] || { label: key || 
 
 // The creative types that fit the given channels. With no channel selected we
 // fall back to every type (nothing to narrow by yet); otherwise we keep only the
-// types whose `networks` intersect the chosen channels.
+// types whose `networks` intersect the chosen channels. Hidden types (see
+// HIDDEN_CREATIVE_TYPES) are never offered.
 export const creativeTypesForChannels = (channels) => {
   const chosen = (Array.isArray(channels) ? channels : []).filter(Boolean)
-  const keys = Object.keys(CREATIVE_TYPE_META)
+  const keys = Object.keys(CREATIVE_TYPE_META).filter((key) => !HIDDEN_CREATIVE_TYPES.includes(key))
   if (chosen.length === 0) return keys
   return keys.filter((key) => CREATIVE_TYPE_META[key].networks?.some((n) => chosen.includes(n)))
 }

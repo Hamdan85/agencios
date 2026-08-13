@@ -18,7 +18,9 @@ module Prompts
     UPDATE_PROJECT_TOOL = 'update_project'
 
     PROJECT_STATUSES = %w[active paused archived completed].freeze
-    CREATIVE_TYPES = %w[reel carousel feed_image story ugc_video ad thumbnail].freeze
+    # `ad` is intentionally absent: without an Ads API integration it is not a
+    # publishable deliverable, so the planner never scopes it.
+    CREATIVE_TYPES = %w[reel carousel feed_image story ugc_video thumbnail].freeze
     CHANNELS = Ticket::CHANNELS
     PRIORITIES = %w[low medium high].freeze
     # A proposed ticket card carries ONLY what the approval view shows. The heavy

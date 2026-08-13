@@ -385,7 +385,8 @@
       "carousel": "carrossel",
       "video": "vídeo",
       "text": "texto",
-      "post": "post"
+      "post": "post",
+      "story": "story"
     },
     "withCover": "{{media}} + capa",
     "status": {
@@ -402,7 +403,14 @@
       "title": "Nenhum tipo definido",
       "description": "Volte ao Escopo e escolha os tipos de criativo deste ticket."
     },
-    "coverHint": "— vira capa do vídeo, ou post se não houver vídeo",
+    "storyHint": "— publica como story (Instagram)",
+    "cover": {
+      "title": "Capa do vídeo",
+      "note": "aparece no Instagram e no YouTube",
+      "empty": "Nenhuma imagem no ticket — envie um arquivo ou gere uma imagem na Produção.",
+      "selectAria": "Selecionar como capa",
+      "promoteAria": "Usar este arquivo como capa"
+    },
     "noneReady": "Nenhum {{type}} pronto — gere ou anexe um na Produção.",
     "previewAria": "Visualizar criativo",
     "routingTitle": "O que vai para cada canal",

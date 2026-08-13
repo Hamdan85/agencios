@@ -42,7 +42,9 @@ module Vendors
 
         def publish_instagram
           creation_id =
-            if video_url.present?
+            if story_post?
+              build_story_container
+            elsif video_url.present?
               build_reel_container
             elsif image_urls.size > 1
               build_carousel_container
@@ -57,35 +59,26 @@ module Vendors
           poll_ig_container!(creation_id)
           media = PublishMedia.call(social_account: @social_account, creation_id:)
           media_id = media['id']
-          reshare_to_story if share_to_story?
           { external_post_id: media_id, permalink: ig_permalink(media_id) }
         end
 
-        # The combined post flow: after the Reel is live, reshare the SAME video to
-        # the account's story (a STORIES container of the same video_url). Set at
-        # the posting step via media["share_to_story"]. Best-effort — a story
-        # failure must never fail the feed post.
-        def share_to_story?
-          video_url.present? && @post.media.is_a?(Hash) && @post.media['share_to_story']
+        # A post routed to the Stories surface at the posting step
+        # (Publishers::PostBundle sets media["story"]). Image or video — the
+        # STORIES container takes either; captions/stickers are not supported by
+        # the API and are simply not sent.
+        def story_post?
+          @post.media.is_a?(Hash) && @post.media['story']
         end
 
-        def reshare_to_story
-          creation_id = CreateStoryContainer.call(
-            social_account: @social_account, video_url: video_url
-          ).fetch('id')
-          poll_ig_container!(creation_id)
-          story = PublishMedia.call(social_account: @social_account, creation_id:)
-          stash_story_id(story['id']) if story.is_a?(Hash)
-        rescue StandardError => e
-          Rails.logger.warn("[Meta::PublishPost] story reshare failed for post #{@post.id}: #{e.message}")
-        end
+        def build_story_container
+          if video_url.present?
+            CreateStoryContainer.call(social_account: @social_account, video_url:).fetch('id')
+          else
+            url = image_urls.first
+            raise Vendors::Base::Error, 'Nenhuma mídia para publicar no story.' if url.blank?
 
-        def stash_story_id(id)
-          return if id.blank?
-
-          @post.update!(media: @post.media.merge('story_external_id' => id))
-        rescue StandardError
-          nil
+            CreateStoryContainer.call(social_account: @social_account, image_url: url).fetch('id')
+          end
         end
 
         def build_single_image_container

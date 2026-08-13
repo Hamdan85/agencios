@@ -18,6 +18,7 @@ module Controllers
           user: user,
           creative_ids: @params[:creative_ids],
           creative_id: @params[:creative_id],
+          cover_creative_id: @params[:cover_creative_id],
           mode: @params[:mode] || 'immediate',
           scheduled_at: @params[:scheduled_at]
         )

@@ -9,6 +9,7 @@ module PostPayload
   def unpublished_at = object.unpublished_at&.iso8601
   def provider = object.social_account&.provider
   def username = object.social_account&.username
+  def story = object.story?
   def client_name = object.ticket&.project&.client&.name
   def campaign_name = object.ticket&.project&.name
   def creative_type = object.resolved_creative_type

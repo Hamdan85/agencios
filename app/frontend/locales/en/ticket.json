@@ -385,7 +385,8 @@
       "carousel": "carousel",
       "video": "video",
       "text": "text",
-      "post": "post"
+      "post": "post",
+      "story": "story"
     },
     "withCover": "{{media}} + cover",
     "status": {
@@ -402,7 +403,14 @@
       "title": "No types defined",
       "description": "Go back to Scoping and pick this ticket's creative types."
     },
-    "coverHint": "— becomes the video cover, or a post if there's no video",
+    "storyHint": "— publishes as a story (Instagram)",
+    "cover": {
+      "title": "Video cover",
+      "note": "shows on Instagram and YouTube",
+      "empty": "No image on this ticket — upload a file or generate an image in Production.",
+      "selectAria": "Select as cover",
+      "promoteAria": "Use this file as the cover"
+    },
     "noneReady": "No {{type}} ready — generate or attach one in Production.",
     "previewAria": "Preview creative",
     "routingTitle": "What goes to each channel",
